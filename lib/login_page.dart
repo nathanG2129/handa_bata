@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
 	  appBar: AppBar(
 		title: const Text('Login'),
 	  ),
-	  body: SingleChildScrollView(
+	  body: Padding(
 		padding: const EdgeInsets.all(40.0),
 		child: Form(
 		  key: _formKey,
@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
 				'Mobile App Edition',
 				style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
 			  ),
-			  const SizedBox(height: 150),
+			  const SizedBox(height: 75),
 			  TextFormField(
 				controller: _usernameController,
 				decoration: InputDecoration(

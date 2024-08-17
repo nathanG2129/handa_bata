@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart'; // Import the new login_page.dart file
 
 void main() {
   runApp(MyApp());
@@ -66,7 +67,7 @@ class SplashPage extends StatelessWidget {
                     minHeight: 65,
                   ),
                   child: const Text(
-                    'Play Now',
+                    'Login',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -94,7 +95,7 @@ class SplashPage extends StatelessWidget {
                     minHeight: 65,
                   ),
                   child: const Text(
-                    'Login as Guest',
+                    'Play Now',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -129,25 +130,6 @@ class MyHomePage extends StatelessWidget {
       body: const Center(
         child: Text(
           'Home Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: const Center(
-        child: Text(
-          'Login Page',
           style: TextStyle(fontSize: 24),
         ),
       ),

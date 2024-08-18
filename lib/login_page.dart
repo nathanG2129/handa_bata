@@ -138,19 +138,3 @@ class _LoginPageState extends State<LoginPage> {
 	);
   }
 }
-
-class RegistrationPage extends StatelessWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-	return Scaffold(
-	  appBar: AppBar(
-		title: Text('Register'),
-	  ),
-	  body: Center(
-		child: Text('Registration Page'),
-	  ),
-	);
-  }
-}

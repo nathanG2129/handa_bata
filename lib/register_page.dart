@@ -21,6 +21,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _hasUppercase = false;
   bool _hasNumber = false;
   bool _hasSymbol = false;
+  bool _isPasswordFieldTouched = false;
 
   void _register() {
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
@@ -64,6 +65,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
       validator: validator,
       onChanged: (value) {
         if (controller == _passwordController) {
+          setState(() {
+            _isPasswordFieldTouched = true;
+          });
           _validatePassword(value);
         }
       },
@@ -178,23 +182,25 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 obscureText: true,
                 validator: _passwordValidator,
               ),
-              const SizedBox(height: 10),
-              _buildPasswordRequirement(
-                text: 'At least 8 characters',
-                isValid: _isPasswordLengthValid,
-              ),
-              _buildPasswordRequirement(
-                text: 'Includes an uppercase letter',
-                isValid: _hasUppercase,
-              ),
-              _buildPasswordRequirement(
-                text: 'Includes a number',
-                isValid: _hasNumber,
-              ),
-              _buildPasswordRequirement(
-                text: 'Includes a symbol',
-                isValid: _hasSymbol,
-              ),
+              if (_isPasswordFieldTouched) ...[
+                const SizedBox(height: 10),
+                _buildPasswordRequirement(
+                  text: 'At least 8 characters',
+                  isValid: _isPasswordLengthValid,
+                ),
+                _buildPasswordRequirement(
+                  text: 'Includes an uppercase letter',
+                  isValid: _hasUppercase,
+                ),
+                _buildPasswordRequirement(
+                  text: 'Includes a number',
+                  isValid: _hasNumber,
+                ),
+                _buildPasswordRequirement(
+                  text: 'Includes a symbol',
+                  isValid: _hasSymbol,
+                ),
+              ],
               const SizedBox(height: 20),
               _buildTextFormField(
                 controller: _confirmPasswordController,

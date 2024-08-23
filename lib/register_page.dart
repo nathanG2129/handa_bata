@@ -16,6 +16,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isPrivacyPolicyAccepted = false;
+  bool _showPrivacyPolicyError = false;
 
   bool _isPasswordLengthValid = false;
   bool _hasUppercase = false;
@@ -24,6 +25,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _isPasswordFieldTouched = false;
 
   void _register() {
+    setState(() {
+      _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
+    });
+
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
       // Perform registration
     }
@@ -235,6 +240,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ],
               ),
+              if (_showPrivacyPolicyError)
+                const Text(
+                  'You must accept the privacy policy to register.',
+                  style: TextStyle(color: Colors.red),
+                ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _register,

@@ -1,4 +1,4 @@
-package com.example.handa_bata
+package com.example.handabatamae
 
 import io.flutter.embedding.android.FlutterActivity
 

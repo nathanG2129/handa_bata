@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_page.dart'; // Make sure to import the login page
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
+  const RegistrationPage({super.key});
 
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
@@ -245,7 +245,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 },
                 child: const Text('Have an account? Login instead'),

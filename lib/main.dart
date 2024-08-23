@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'login_page.dart'; // Import the new login_page.dart file
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -52,7 +54,7 @@ class SplashPage extends StatelessWidget {
                 // Navigate to the login page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
               child: Ink(
@@ -80,7 +82,7 @@ class SplashPage extends StatelessWidget {
                 // Navigate to the home page as a guest
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MyHomePage(title: 'Handa Bata')),
+                  MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Handa Bata')),
                 );
               },
               child: Ink(
@@ -119,7 +121,7 @@ class SplashPage extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   final String title;
 
-  MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

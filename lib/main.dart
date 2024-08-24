@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Import the new login_page.dart file
+import 'login_page.dart'; // Import the login_page.dart file
+import 'play_page.dart'; // Import the home_page.dart file
+
 
 void main() {
   runApp(const MyApp());
@@ -82,7 +84,7 @@ class SplashPage extends StatelessWidget {
                 // Navigate to the home page as a guest
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Handa Bata')),
+                  MaterialPageRoute(builder: (context) => const HomePage(title: 'Handa Bata')),
                 );
               },
               child: Ink(
@@ -118,23 +120,3 @@ class SplashPage extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  final String title;
-
-  const MyHomePage({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: const Center(
-        child: Text(
-          'Home Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}

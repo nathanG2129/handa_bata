@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'play_page.dart'; // Import the home_page.dart file
+import 'register_page.dart'; // Import the register_page.dart file
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -125,22 +126,6 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class RegistrationPage extends StatelessWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
-      body: Center(
-        child: const Text('Registration Page'),
       ),
     );
   }

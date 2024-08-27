@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Import the login_page.dart file
-import 'play_page.dart'; // Import the home_page.dart file
+import 'login_page.dart';
+import 'play_page.dart'; // Import the login_page.dart file
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -64,7 +64,7 @@ class SplashPage extends StatelessWidget {
                 // Navigate to the home page as a guest
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomePage(title: 'Handa Bata')),
+                  MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
                 );
               },
               child: Ink(

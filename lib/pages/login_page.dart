@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/auth_service.dart';
 import 'play_page.dart'; // Import the home_page.dart file
 import 'register_page.dart'; // Import the register_page.dart file
 
@@ -15,14 +16,27 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _staySignedIn = false;
 
-  void _login() {
+  final AuthService _authService = AuthService();
+
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      // Simulate a login process
-      // After successful login, navigate to HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage(title: 'Home Page')),
-      );
+      final username = _usernameController.text;
+      final password = _passwordController.text;
+
+      final user = await _authService.signInWithUsernameAndPassword(username, password);
+
+      if (user != null) {
+        // Navigate to HomePage after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please try again.')),
+        );
+      }
     }
   }
 
@@ -118,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                   // Navigate to the registration page
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const RegistrationPage()),
+                    MaterialPageRoute(builder: (context) => RegistrationPage()),
                   );
                 },
                 child: const Text('Register'),

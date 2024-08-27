@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Make sure to import the login page
+import '/auth_service.dart';
+import 'login_page.dart';
+import 'play_page.dart'; // Ensure PlayPage is imported
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -24,13 +26,38 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _hasSymbol = false;
   bool _isPasswordFieldTouched = false;
 
-  void _register() {
+  final AuthService _authService = AuthService();
+
+  void _register() async {
     setState(() {
       _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      // Perform registration
+      final username = _usernameController.text;
+      final email = _emailController.text;
+      final birthday = _birthdayController.text;
+      final password = _passwordController.text;
+
+      final user = await _authService.registerWithEmailAndPassword(
+        username: username,
+        email: email,
+        birthday: birthday,
+        password: password,
+      );
+
+      if (user != null) {
+        // Navigate to play_page after successful registration
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PlayPage(title: '',)), // Ensure PlayPage is imported
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration failed. Please try again.')),
+        );
+      }
     }
   }
 

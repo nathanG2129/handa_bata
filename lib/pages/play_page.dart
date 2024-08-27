@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'user_profile.dart';
 
-class HomePage extends StatefulWidget {
+class PlayPage extends StatefulWidget {
   final String title;
 
-  const HomePage({Key? key, required this.title}) : super(key: key);
+  const PlayPage({super.key, required this.title});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _PlayPageState createState() => _PlayPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _PlayPageState extends State<PlayPage> {
   bool _isUserProfileVisible = false;
 
   void _toggleUserProfile() {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
 import 'play_page.dart'; // Ensure PlayPage is imported
+import '../helpers/validation_helpers.dart'; // Import the validation helpers
+import '../helpers/widget_helpers.dart'; // Import the widget helpers
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -75,82 +77,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  Widget _buildTextFormField({
-    required TextEditingController controller,
-    required String labelText,
-    required String? Function(String?) validator,
-    bool obscureText = false,
-    bool readOnly = false,
-    VoidCallback? onTap,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30.0), // Oblong shape
-        ),
-      ),
-      obscureText: obscureText,
-      readOnly: readOnly,
-      onTap: onTap,
-      validator: validator,
-      onChanged: (value) {
-        if (controller == _passwordController) {
-          setState(() {
-            _isPasswordFieldTouched = true;
-          });
-          _validatePassword(value);
-        }
-      },
-    );
-  }
-
-  void _validatePassword(String value) {
-    setState(() {
-      _isPasswordLengthValid = value.length >= 8;
-      _hasUppercase = value.contains(RegExp(r'[A-Z]'));
-      _hasNumber = value.contains(RegExp(r'\d'));
-      _hasSymbol = value.contains(RegExp(r'[!@#\$&*~]'));
-    });
-  }
-
-  String? _passwordValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    if (!_isPasswordLengthValid || !_hasUppercase || !_hasNumber || !_hasSymbol) {
-      return 'Password does not meet the requirements';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    final RegExp emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
-  Widget _buildPasswordRequirement({required String text, required bool isValid}) {
-    return Row(
-      children: [
-        Icon(
-          isValid ? Icons.check : Icons.close,
-          color: isValid ? Colors.green : Colors.red,
-        ),
-        const SizedBox(width: 8),
-        Text(text),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,7 +104,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               const SizedBox(height: 20),
-              _buildTextFormField(
+              buildTextFormField(
                 controller: _usernameController,
                 labelText: 'Username',
                 validator: (value) {
@@ -189,13 +115,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 },
               ),
               const SizedBox(height: 20),
-              _buildTextFormField(
+              buildTextFormField(
                 controller: _emailController,
                 labelText: 'Email',
-                validator: _validateEmail,
+                validator: validateEmail,
               ),
               const SizedBox(height: 20),
-              _buildTextFormField(
+              buildTextFormField(
                 controller: _birthdayController,
                 labelText: 'Birthday',
                 readOnly: true,
@@ -208,33 +134,46 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 },
               ),
               const SizedBox(height: 20),
-              _buildTextFormField(
+              buildTextFormField(
                 controller: _passwordController,
                 labelText: 'Password',
                 obscureText: true,
-                validator: _passwordValidator,
+                validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
+                onChanged: (value) {
+                  setState(() {
+                    _isPasswordFieldTouched = true;
+                  });
+                  validatePassword(value, (isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol) {
+                    setState(() {
+                      _isPasswordLengthValid = isPasswordLengthValid;
+                      _hasUppercase = hasUppercase;
+                      _hasNumber = hasNumber;
+                      _hasSymbol = hasSymbol;
+                    });
+                  });
+                },
               ),
               if (_isPasswordFieldTouched) ...[
                 const SizedBox(height: 10),
-                _buildPasswordRequirement(
+                buildPasswordRequirement(
                   text: 'At least 8 characters',
                   isValid: _isPasswordLengthValid,
                 ),
-                _buildPasswordRequirement(
+                buildPasswordRequirement(
                   text: 'Includes an uppercase letter',
                   isValid: _hasUppercase,
                 ),
-                _buildPasswordRequirement(
+                buildPasswordRequirement(
                   text: 'Includes a number',
                   isValid: _hasNumber,
                 ),
-                _buildPasswordRequirement(
+                buildPasswordRequirement(
                   text: 'Includes a symbol',
                   isValid: _hasSymbol,
                 ),
               ],
               const SizedBox(height: 20),
-              _buildTextFormField(
+              buildTextFormField(
                 controller: _confirmPasswordController,
                 labelText: 'Confirm Password',
                 obscureText: true,

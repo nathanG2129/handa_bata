@@ -4,7 +4,7 @@ import 'play_page.dart'; // Import the home_page.dart file
 import 'register_page.dart'; // Import the register_page.dart file
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -132,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                   // Navigate to the registration page
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => RegistrationPage()),
+                    MaterialPageRoute(builder: (context) => const RegistrationPage()),
                   );
                 },
                 child: const Text('Register'),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/auth_service.dart';
+import '../services/auth_service.dart';
 import 'login_page.dart';
 import 'play_page.dart'; // Ensure PlayPage is imported
 

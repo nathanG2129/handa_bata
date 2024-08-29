@@ -4,6 +4,8 @@ import 'login_page.dart';
 import 'play_page.dart'; // Ensure PlayPage is imported
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -30,37 +32,67 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   final AuthService _authService = AuthService();
 
-  void _register() async {
-    setState(() {
-      _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
-    });
+ void _register() async {
+  setState(() {
+    _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
+  });
 
-    if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      final username = _usernameController.text;
-      final email = _emailController.text;
-      final birthday = _birthdayController.text;
-      final password = _passwordController.text;
+  if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
+    final username = _usernameController.text;
+    final email = _emailController.text;
+    final birthday = _birthdayController.text;
+    final password = _passwordController.text;
 
-      final user = await _authService.registerWithEmailAndPassword(
-        username: username,
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
-        birthday: birthday,
         password: password,
       );
 
+      User? user = userCredential.user;
       if (user != null) {
-        // Navigate to play_page after successful registration
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const PlayPage(title: '',)), // Ensure PlayPage is imported
-        );
-      } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed. Please try again.')),
-        );
+        // Save additional user data to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'username': username,
+          'email': email,
+          'birthday': birthday,
+          'createdAt': Timestamp.now(),
+        });
+
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+          _showEmailVerificationDialog();
+        }
       }
+    } on FirebaseAuthException catch (e) {
+      // Handle error
+      print('Error: $e');
     }
+  }
+}
+
+   void _showEmailVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Verify your email'),
+          content: const Text('A verification link has been sent to your email. Please check your email to verify your account.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _selectDate(BuildContext context) async {

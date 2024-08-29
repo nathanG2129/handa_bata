@@ -76,4 +76,6 @@ class AuthService {
       return null;
     }
   }
+
+  fetchUserData(String uid) {}
 }

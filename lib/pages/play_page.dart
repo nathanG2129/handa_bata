@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:handabatamae/pages/login_page.dart';
+import '../models/user_model.dart';
+import '/services/auth_service.dart';
 import 'user_profile.dart';
 
 class PlayPage extends StatefulWidget {
@@ -12,6 +16,23 @@ class PlayPage extends StatefulWidget {
 
 class _PlayPageState extends State<PlayPage> {
   bool _isUserProfileVisible = false;
+  UserModel? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  void _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      UserModel? userModel = await AuthService().fetchUserData(user.uid);
+      setState(() {
+        _user = userModel;
+      });
+    }
+  }
 
   void _toggleUserProfile() {
     setState(() {
@@ -24,6 +45,18 @@ class _PlayPageState extends State<PlayPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService().signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+              );
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -31,6 +64,8 @@ class _PlayPageState extends State<PlayPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                if (_user != null)
+                  Text('Welcome, ${_user!.username}'),
                 ElevatedButton(
                   onPressed: _toggleUserProfile,
                   style: ElevatedButton.styleFrom(

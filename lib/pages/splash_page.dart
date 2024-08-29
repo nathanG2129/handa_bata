@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
-import 'play_page.dart'; // Import the login_page.dart file
+import 'play_page.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
+
+  Future<void> _signInAnonymously(BuildContext context) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
+      );
+    } catch (e) {
+      // Handle error
+      print('Failed to sign in anonymously: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +75,7 @@ class SplashPage extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(30), // Ensure ripple effect respects border radius
               onTap: () {
-                // Navigate to the home page as a guest
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
-                );
+                _signInAnonymously(context); // Sign in anonymously and navigate to PlayPage
               },
               child: Ink(
                 decoration: BoxDecoration(

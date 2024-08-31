@@ -13,6 +13,7 @@ class UserProfile {
   final List<int> unlockedBadge;
   final List<int> unlockedBanner;
   final String email; // Add email field
+  final String birthday; // Add birthday field
 
   UserProfile({
     required this.profileId,
@@ -29,6 +30,7 @@ class UserProfile {
     required this.unlockedBadge,
     required this.unlockedBanner,
     required this.email, // Initialize email field
+    required this.birthday, // Initialize birthday field
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +49,7 @@ class UserProfile {
       'unlockedBadge': unlockedBadge,
       'unlockedBanner': unlockedBanner,
       'email': email, // Include email in the map
+      'birthday': birthday, // Include birthday in the map
     };
   }
 }

@@ -70,6 +70,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             'unlockedBadge': List<int>.filled(40, 0),
             'unlockedBanner': List<int>.filled(10, 0),
             'email': email, // Store email within the ProfileData document
+            'birthday': birthday, // Store birthday within the ProfileData document
           });
 
           if (!user.emailVerified) {

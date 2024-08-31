@@ -6,7 +6,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname) async {
+  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname, String birthday) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
@@ -27,7 +27,9 @@ class AuthService {
           totalBadgeUnlocked: 0,
           totalStageCleared: 0,
           unlockedBadge: List<int>.filled(40, 0),
-          unlockedBanner: List<int>.filled(10, 0),
+          unlockedBanner: List<int>.filled(10, 0), 
+          email: '', 
+          birthday: birthday, // Store birthday within the ProfileData document
         );
 
         // Create ProfileData collection within the user's document

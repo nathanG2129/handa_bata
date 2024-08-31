@@ -54,24 +54,22 @@ class _RegistrationPageState extends State<RegistrationPage> {
           // Generate a random profile ID
           String profileId = FirebaseFirestore.instance.collection('User').doc().id;
 
-          // Save additional user data to Firestore
-          await FirebaseFirestore.instance.collection('User').doc(user.uid).set({
-            'profile': {
-              'profileId': profileId,
-              'nickname': username,
-              'avatarId': 0,
-              'badgeShowcase': [0, 0, 0],
-              'bannerId': 0,
-              'exp': 0,
-              'expCap': 100,
-              'hasShownCongrats': false,
-              'level': 1,
-              'totalBadgeUnlocked': 0,
-              'totalStageCleared': 0,
-              'unlockedBadge': List<int>.filled(40, 0),
-              'unlockedBanner': List<int>.filled(10, 0),
-            },
-            'games': {}, // Placeholder for the Game collection
+          // Create ProfileData collection within the user's document
+          await FirebaseFirestore.instance.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set({
+            'avatarId': 0,
+            'badgeShowcase': [0, 0, 0],
+            'bannerId': 0,
+            'exp': 0,
+            'expCap': 100,
+            'hasShownCongrats': false,
+            'level': 1,
+            'nickname': username,
+            'profileId': profileId,
+            'totalBadgeUnlocked': 0,
+            'totalStageCleared': 0,
+            'unlockedBadge': List<int>.filled(40, 0),
+            'unlockedBanner': List<int>.filled(10, 0),
+            'email': email, // Store email within the ProfileData document
           });
 
           if (!user.emailVerified) {

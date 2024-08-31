@@ -30,9 +30,10 @@ class AuthService {
           unlockedBanner: List<int>.filled(10, 0),
         );
 
-        await _firestore.collection('User').doc(user.uid).set({
-          'profile': userProfile.toMap(),
-          'games': {}, // Placeholder for the Game collection
+        // Create ProfileData collection within the user's document
+        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set({
+          ...userProfile.toMap(),
+          'email': email, // Store email within the ProfileData document
         });
       }
 
@@ -53,20 +54,16 @@ class AuthService {
     }
   }
 
-  Future<User?> signInWithUsernameAndPassword(String username, String password) async {
+  Future<String?> getEmailByUsername(String username) async {
     try {
       // Query Firestore to find the user by username
-      QuerySnapshot querySnapshot = await _firestore.collection('User').where('profile.nickname', isEqualTo: username).get();
+      QuerySnapshot querySnapshot = await _firestore.collectionGroup('ProfileData').where('nickname', isEqualTo: username).get();
       if (querySnapshot.docs.isEmpty) {
         return null;
       }
 
       // Get the email associated with the username
-      String email = querySnapshot.docs.first.get('profile.email');
-
-      // Sign in with email and password
-      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return result.user;
+      return querySnapshot.docs.first.get('email');
     } catch (e) {
       print(e.toString());
       return null;

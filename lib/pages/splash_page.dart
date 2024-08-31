@@ -11,7 +11,7 @@ class SplashPage extends StatelessWidget {
       UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => UserProfile(title: 'Handa Bata', onClose: () {},)),
+        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
       );
     } catch (e) {
       // Handle error

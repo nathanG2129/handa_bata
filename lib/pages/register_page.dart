@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
 import 'login_page.dart';
-import 'play_page.dart'; // Ensure PlayPage is imported
+// Ensure PlayPage is imported
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,8 +28,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _hasNumber = false;
   bool _hasSymbol = false;
   bool _isPasswordFieldTouched = false;
-
-  final AuthService _authService = AuthService();
 
   void _register() async {
     setState(() {

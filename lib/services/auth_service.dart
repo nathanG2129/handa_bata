@@ -1,27 +1,40 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Register with email and password
-  Future<User?> registerWithEmailAndPassword({
-    required String username,
-    required String email,
-    required String birthday,
-    required String password,
-  }) async {
+  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
 
-      // Add user details to Firestore
-      await _firestore.collection('users').doc(user?.uid).set({
-        'username': username,
-        'email': email,
-        'birthday': birthday,
-      });
+      if (user != null) {
+        String profileId = _firestore.collection('User').doc().id;
+
+        UserProfile userProfile = UserProfile(
+          profileId: profileId,
+          nickname: nickname,
+          avatarId: 0,
+          badgeShowcase: [0, 0, 0],
+          bannerId: 0,
+          exp: 0,
+          expCap: 100,
+          hasShownCongrats: false,
+          level: 1,
+          totalBadgeUnlocked: 0,
+          totalStageCleared: 0,
+          unlockedBadge: List<int>.filled(40, 0),
+          unlockedBanner: List<int>.filled(10, 0),
+        );
+
+        await _firestore.collection('User').doc(user.uid).set({
+          'profile': userProfile.toMap(),
+          'games': {}, // Placeholder for the Game collection
+        });
+      }
 
       return user;
     } catch (e) {
@@ -30,35 +43,8 @@ class AuthService {
     }
   }
 
-  // Fetch email by username
-  Future<String?> _getEmailByUsername(String username) async {
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('users')
-          .where('username', isEqualTo: username)
-          .limit(1)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        return querySnapshot.docs.first['email'];
-      } else {
-        return null;
-      }
-    } catch (e) {
-      print(e.toString());
-      return null;
-    }
-  }
-
-  // Sign in with username and password
-  Future<User?> signInWithUsernameAndPassword(String username, String password) async {
-    try {
-      String? email = await _getEmailByUsername(username);
-      if (email == null) {
-        print('No user found with that username.');
-        return null;
-      }
-
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return result.user;
     } catch (e) {
@@ -67,15 +53,31 @@ class AuthService {
     }
   }
 
-  // Sign out
-  Future<void> signOut() async {
+  Future<User?> signInWithUsernameAndPassword(String username, String password) async {
     try {
-      return await _auth.signOut();
+      // Query Firestore to find the user by username
+      QuerySnapshot querySnapshot = await _firestore.collection('User').where('profile.nickname', isEqualTo: username).get();
+      if (querySnapshot.docs.isEmpty) {
+        return null;
+      }
+
+      // Get the email associated with the username
+      String email = querySnapshot.docs.first.get('profile.email');
+
+      // Sign in with email and password
+      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return result.user;
     } catch (e) {
       print(e.toString());
       return null;
     }
   }
 
-  fetchUserData(String uid) {}
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      print(e.toString());
+    }
+  }
 }

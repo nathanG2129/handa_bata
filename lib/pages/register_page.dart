@@ -32,46 +32,61 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   final AuthService _authService = AuthService();
 
- void _register() async {
-  setState(() {
-    _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
-  });
+  void _register() async {
+    setState(() {
+      _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
+    });
 
-  if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-    final username = _usernameController.text;
-    final email = _emailController.text;
-    final birthday = _birthdayController.text;
-    final password = _passwordController.text;
+    if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
+      final username = _usernameController.text;
+      final email = _emailController.text;
+      final birthday = _birthdayController.text;
+      final password = _passwordController.text;
 
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
 
-      User? user = userCredential.user;
-      if (user != null) {
-        // Save additional user data to Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'username': username,
-          'email': email,
-          'birthday': birthday,
-          'createdAt': Timestamp.now(),
-        });
+        User? user = userCredential.user;
+        if (user != null) {
+          // Generate a random profile ID
+          String profileId = FirebaseFirestore.instance.collection('User').doc().id;
 
-        if (!user.emailVerified) {
-          await user.sendEmailVerification();
-          _showEmailVerificationDialog();
+          // Save additional user data to Firestore
+          await FirebaseFirestore.instance.collection('User').doc(user.uid).set({
+            'profile': {
+              'profileId': profileId,
+              'nickname': username,
+              'avatarId': 0,
+              'badgeShowcase': [0, 0, 0],
+              'bannerId': 0,
+              'exp': 0,
+              'expCap': 100,
+              'hasShownCongrats': false,
+              'level': 1,
+              'totalBadgeUnlocked': 0,
+              'totalStageCleared': 0,
+              'unlockedBadge': List<int>.filled(40, 0),
+              'unlockedBanner': List<int>.filled(10, 0),
+            },
+            'games': {}, // Placeholder for the Game collection
+          });
+
+          if (!user.emailVerified) {
+            await user.sendEmailVerification();
+            _showEmailVerificationDialog();
+          }
         }
+      } on FirebaseAuthException catch (e) {
+        // Handle error
+        print('Error: $e');
       }
-    } on FirebaseAuthException catch (e) {
-      // Handle error
-      print('Error: $e');
     }
   }
-}
 
-   void _showEmailVerificationDialog() {
+  void _showEmailVerificationDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {

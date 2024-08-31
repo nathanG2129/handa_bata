@@ -1,33 +1,49 @@
-class UserModel {
-  final String uid;
-  final String username;
-  final String email;
-  final String profilePictureUrl;
+class UserProfile {
+  String profileId;
+  String nickname;
+  int avatarId;
+  List<int> badgeShowcase;
+  int bannerId;
+  int exp;
+  int expCap;
+  bool hasShownCongrats;
+  int level;
+  int totalBadgeUnlocked;
+  int totalStageCleared;
+  List<int> unlockedBadge;
+  List<int> unlockedBanner;
 
-  UserModel({
-    required this.uid,
-    required this.username,
-    required this.email,
-    required this.profilePictureUrl,
+  UserProfile({
+    required this.profileId,
+    required this.nickname,
+    required this.avatarId,
+    required this.badgeShowcase,
+    required this.bannerId,
+    required this.exp,
+    required this.expCap,
+    required this.hasShownCongrats,
+    required this.level,
+    required this.totalBadgeUnlocked,
+    required this.totalStageCleared,
+    required this.unlockedBadge,
+    required this.unlockedBanner,
   });
 
-  // Factory method to create a UserModel from a map (e.g., from Firestore)
-  factory UserModel.fromMap(Map<String, dynamic> data) {
-    return UserModel(
-      uid: data['uid'],
-      username: data['username'],
-      email: data['email'],
-      profilePictureUrl: data['profilePictureUrl'],
-    );
-  }
-
-  // Method to convert UserModel to a map (e.g., for Firestore)
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
-      'username': username,
-      'email': email,
-      'profilePictureUrl': profilePictureUrl,
+      'profileId': profileId,
+      'nickname': nickname,
+      'avatarId': avatarId,
+      'badgeShowcase': badgeShowcase,
+      'bannerId': bannerId,
+      'exp': exp,
+      'expCap': expCap,
+      'hasShownCongrats': hasShownCongrats,
+      'level': level,
+      'totalBadgeUnlocked': totalBadgeUnlocked,
+      'totalStageCleared': totalStageCleared,
+      'unlockedBadge': unlockedBadge,
+      'unlockedBanner': unlockedBanner,
     };
   }
 }

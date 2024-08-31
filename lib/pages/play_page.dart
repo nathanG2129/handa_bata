@@ -1,111 +1,237 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:handabatamae/pages/login_page.dart';
-import '../models/user_model.dart';
-import '/services/auth_service.dart';
-import 'user_profile.dart';
+import 'dart:ui';
+import 'account_settings.dart'; // Import the new file
 
-class PlayPage extends StatefulWidget {
-  final String title;
+class UserProfile extends StatefulWidget {
+  final VoidCallback onClose;
 
-  const PlayPage({super.key, required this.title});
+  const UserProfile({super.key, required this.onClose, required String title});
 
   @override
-  _PlayPageState createState() => _PlayPageState();
+  _UserProfileState createState() => _UserProfileState();
 }
 
-class _PlayPageState extends State<PlayPage> {
-  bool _isUserProfileVisible = false;
-  UserModel? _user;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserData();
-  }
-
-  void _fetchUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      UserModel? userModel = await AuthService().fetchUserData(user.uid);
-      setState(() {
-        _user = userModel;
-      });
-    }
-  }
-
-  void _toggleUserProfile() {
-    setState(() {
-      _isUserProfileVisible = !_isUserProfileVisible;
-    });
-  }
+class _UserProfileState extends State<UserProfile> {
+  bool showAccountSettings = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await AuthService().signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
-              );
-            },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Center(
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        child: Center(
+          child: Card(
+            margin: const EdgeInsets.all(20),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                if (_user != null)
-                  Text('Welcome, ${_user!.username}'),
-                ElevatedButton(
-                  onPressed: _toggleUserProfile,
-                  style: ElevatedButton.styleFrom(
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      color: Colors.lightBlue[100],
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.grey,
+                            child: Icon(Icons.person, size: 40, color: Colors.white),
+                          ),
+                          SizedBox(width: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Username',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'Level: 10',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                    textStyle: const TextStyle(fontSize: 24),
-                  ),
-                  child: const Text('User Profile'),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: PopupMenuButton<String>(
+                        icon: Icon(Icons.more_horiz, size: 30), // Bigger ellipsis icon
+                        onSelected: (String result) {
+                          setState(() {
+                            showAccountSettings = result == 'Account Settings';
+                          });
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'User Profile',
+                            child: Text('User Profile'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'Account Settings',
+                            child: Text('Account Settings'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 50),
-                ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Adventure mode
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 100),
-                    textStyle: const TextStyle(fontSize: 24),
-                  ),
-                  child: const Text('Adventure'),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Arcade mode
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 100),
-                    textStyle: const TextStyle(fontSize: 24),
-                  ),
-                  child: const Text('Arcade'),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: showAccountSettings ? AccountSettings() : _buildUserProfile(),
                 ),
               ],
             ),
           ),
-          if (_isUserProfileVisible)
-            UserProfile(onClose: _toggleUserProfile),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildUserProfile() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Badges',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Card(
+                      color: Colors.lightBlue[100],
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '10',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Stages',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Cleared',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Card(
+                      color: Colors.lightBlue[100],
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '5',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Favorite Badges',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.star, size: 40, color: Colors.amber),
+                    SizedBox(height: 10),
+                    Text(
+                      'Badge 1',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.star, size: 40, color: Colors.amber),
+                    SizedBox(height: 10),
+                    Text(
+                      'Badge 2',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.star, size: 40, color: Colors.amber),
+                    SizedBox(height: 10),
+                    Text(
+                      'Badge 3',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: widget.onClose,
+          child: const Text('Close'),
+        ),
+      ],
     );
   }
 }

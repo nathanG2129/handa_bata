@@ -84,12 +84,12 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user == null) {
-        return null;
+        return UserProfile.guestProfile;
       }
 
       QuerySnapshot querySnapshot = await _firestore.collection('User').doc(user.uid).collection('ProfileData').get();
       if (querySnapshot.docs.isEmpty) {
-        return null;
+        return UserProfile.guestProfile;
       }
 
       var document = querySnapshot.docs.first;
@@ -113,7 +113,17 @@ class AuthService {
       );
     } catch (e) {
       print(e.toString());
-      return null;
+      return UserProfile.guestProfile;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _auth.signOut();
+      // Clear any cached user data if necessary
+      print('User logged out successfully');
+    } catch (e) {
+      print('Error logging out: $e');
     }
   }
 }

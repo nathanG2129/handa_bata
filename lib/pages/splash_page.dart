@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 import 'play_page.dart';
+import 'package:handabatamae/services/auth_service.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 
   Future<void> _signInAnonymously(BuildContext context) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+      AuthService authService = AuthService();
+      await authService.logout(); // Ensure any previous session is cleared
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),

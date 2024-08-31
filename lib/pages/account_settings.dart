@@ -3,7 +3,9 @@ import '/services/auth_service.dart';
 import '/models/user_model.dart';
 
 class AccountSettings extends StatefulWidget {
-  const AccountSettings({super.key});
+  final VoidCallback onClose;
+
+  const AccountSettings({super.key, required this.onClose});
 
   @override
   _AccountSettingsState createState() => _AccountSettingsState();
@@ -23,7 +25,7 @@ class _AccountSettingsState extends State<AccountSettings> {
     AuthService authService = AuthService();
     UserProfile? userProfile = await authService.getUserProfile();
     setState(() {
-      _userProfile = userProfile;
+      _userProfile = userProfile ?? UserProfile.guestProfile;
       _isLoading = false;
     });
   }
@@ -38,44 +40,53 @@ class _AccountSettingsState extends State<AccountSettings> {
       return Center(child: Text('Failed to load user data'));
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFieldContainer('Username', _userProfile!.nickname, true),
-        _buildFieldContainer('Birthday', _userProfile!.birthday, false),
-        _buildFieldContainer('Email', _userProfile!.email, true),
-        _buildFieldContainer('Password', '********', true),
-        const SizedBox(height: 20),
-        const Text(
-          'Account Removal',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-          style: TextStyle(fontSize: 16),
-        ),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: () {
-              // Handle account removal
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              textStyle: const TextStyle(fontSize: 16),
-              minimumSize: const Size(150, 40), // Set minimum size to constrain the button
-            ),
-            child: const Text(
-              'Delete Account',
-              style: TextStyle(color: Colors.white), // Ensure text color is set to white
-            ),
+    return GestureDetector(
+      onTap: widget.onClose,
+      child: Container(
+        color: Colors.transparent,
+        child: GestureDetector(
+          onTap: () {},
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFieldContainer('Nickname', _userProfile!.nickname, true),
+              _buildFieldContainer('Birthday', _userProfile!.birthday, false),
+              _buildFieldContainer('Email', _userProfile!.email, true),
+              _buildFieldContainer('Password', '********', true),
+              const SizedBox(height: 20),
+              const Text(
+                'Account Removal',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Handle account removal
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    textStyle: const TextStyle(fontSize: 16),
+                    minimumSize: const Size(150, 40), // Set minimum size to constrain the button
+                  ),
+                  child: const Text(
+                    'Delete Account',
+                    style: TextStyle(color: Colors.white), // Ensure text color is set to white
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 

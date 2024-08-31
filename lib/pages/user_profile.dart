@@ -31,92 +31,100 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Future<void> _fetchUserProfile() async {
     AuthService authService = AuthService();
     UserProfile? userProfile = await authService.getUserProfile();
-    if (userProfile != null) {
-      setState(() {
+    setState(() {
+      if (userProfile != null) {
         nickname = userProfile.nickname;
         avatarId = userProfile.avatarId;
         level = userProfile.level;
         totalBadges = userProfile.totalBadgeUnlocked;
         totalStagesCleared = userProfile.totalStageCleared;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+      } else {
+        nickname = UserProfile.guestProfile.nickname;
+        avatarId = UserProfile.guestProfile.avatarId;
+        level = UserProfile.guestProfile.level;
+        totalBadges = UserProfile.guestProfile.totalBadgeUnlocked;
+        totalStagesCleared = UserProfile.guestProfile.totalStageCleared;
+      }
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-      child: Container(
-        color: Colors.black.withOpacity(0.5),
-        child: Center(
-          child: Card(
-            margin: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
+    return GestureDetector(
+      onTap: widget.onClose,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+        child: Container(
+          color: Colors.black.withOpacity(0.5),
+          child: Center(
+            child: GestureDetector(
+              onTap: () {},
+              child: Card(
+                margin: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      color: Colors.lightBlue[100],
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey,
-                            child: Icon(Icons.person, size: 40, color: Colors.white),
-                          ),
-                          SizedBox(width: 20),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Stack(
+                      children: [
+                        Container(
+                          color: Colors.lightBlue[100],
+                          padding: const EdgeInsets.all(20.0),
+                          child: Row(
                             children: [
-                              Text(
-                                nickname,
-                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.grey,
+                                child: Icon(Icons.person, size: 40, color: Colors.white),
                               ),
-                              Text(
-                                'Level: $level',
-                                style: TextStyle(fontSize: 16),
+                              SizedBox(width: 20),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    nickname,
+                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Level: $level',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: PopupMenuButton<String>(
+                            icon: Icon(Icons.more_horiz, size: 30),
+                            onSelected: (String result) {
+                              setState(() {
+                                showAccountSettings = result == 'Account Settings';
+                              });
+                            },
+                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                              const PopupMenuItem<String>(
+                                value: 'User Profile',
+                                child: Text('User Profile'),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'Account Settings',
+                                child: Text('Account Settings'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: PopupMenuButton<String>(
-                        icon: Icon(Icons.more_horiz, size: 30),
-                        onSelected: (String result) {
-                          setState(() {
-                            showAccountSettings = result == 'Account Settings';
-                          });
-                        },
-                        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(
-                            value: 'User Profile',
-                            child: Text('User Profile'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'Account Settings',
-                            child: Text('Account Settings'),
-                          ),
-                        ],
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: showAccountSettings ? AccountSettings(onClose: widget.onClose) : _buildUserProfile(),
                     ),
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: showAccountSettings ? AccountSettings() : _buildUserProfile(),
-                ),
-              ],
+              ),
             ),
           ),
         ),

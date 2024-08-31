@@ -12,8 +12,8 @@ class UserProfile {
   final int totalStageCleared;
   final List<int> unlockedBadge;
   final List<int> unlockedBanner;
-  final String email; // Add email field
-  final String birthday; // Add birthday field
+  final String email;
+  final String birthday;
 
   UserProfile({
     required this.profileId,
@@ -29,8 +29,8 @@ class UserProfile {
     required this.totalStageCleared,
     required this.unlockedBadge,
     required this.unlockedBanner,
-    required this.email, // Initialize email field
-    required this.birthday, // Initialize birthday field
+    required this.email,
+    required this.birthday,
   });
 
   Map<String, dynamic> toMap() {
@@ -48,8 +48,27 @@ class UserProfile {
       'totalStageCleared': totalStageCleared,
       'unlockedBadge': unlockedBadge,
       'unlockedBanner': unlockedBanner,
-      'email': email, // Include email in the map
-      'birthday': birthday, // Include birthday in the map
+      'email': email,
+      'birthday': birthday,
     };
   }
+
+  // Default guest profile
+  static final UserProfile guestProfile = UserProfile(
+    profileId: 'guest',
+    nickname: 'Guest',
+    avatarId: 0,
+    badgeShowcase: [],
+    bannerId: 0,
+    exp: 0,
+    expCap: 100,
+    hasShownCongrats: false,
+    level: 1,
+    totalBadgeUnlocked: 0,
+    totalStageCleared: 0,
+    unlockedBadge: [],
+    unlockedBanner: [],
+    email: 'guest@example.com',
+    birthday: '01/01/2000',
+  );
 }

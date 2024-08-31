@@ -1,16 +1,50 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import '/services/auth_service.dart';
+import '/models/user_model.dart';
 
-class AccountSettings extends StatelessWidget {
+class AccountSettings extends StatefulWidget {
+  const AccountSettings({super.key});
+
+  @override
+  _AccountSettingsState createState() => _AccountSettingsState();
+}
+
+class _AccountSettingsState extends State<AccountSettings> {
+  UserProfile? _userProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    AuthService authService = AuthService();
+    UserProfile? userProfile = await authService.getUserProfile();
+    setState(() {
+      _userProfile = userProfile;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (_userProfile == null) {
+      return Center(child: Text('Failed to load user data'));
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldContainer('Username', 'user123', true),
-        _buildFieldContainer('Birthday', '01/01/1990', false),
-        _buildFieldContainer('Email', 'user@example.com', true),
+        _buildFieldContainer('Username', _userProfile!.nickname, true),
+        _buildFieldContainer('Birthday', _userProfile!.birthday, false),
+        _buildFieldContainer('Email', _userProfile!.email, true),
         _buildFieldContainer('Password', '********', true),
         const SizedBox(height: 20),
         const Text(
@@ -27,7 +61,7 @@ class AccountSettings extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: ElevatedButton(
             onPressed: () {
-              // Handle delete account button press
+              // Handle account removal
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -62,7 +96,7 @@ class AccountSettings extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   details,
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 16),
                 ),
               ],
             ),

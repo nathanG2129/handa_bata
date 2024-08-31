@@ -79,4 +79,41 @@ class AuthService {
       print(e.toString());
     }
   }
+
+  Future<UserProfile?> getUserProfile() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) {
+        return null;
+      }
+
+      QuerySnapshot querySnapshot = await _firestore.collection('User').doc(user.uid).collection('ProfileData').get();
+      if (querySnapshot.docs.isEmpty) {
+        return null;
+      }
+
+      var document = querySnapshot.docs.first;
+      Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+      return UserProfile(
+        profileId: data['profileId'],
+        nickname: data['nickname'],
+        avatarId: data['avatarId'],
+        badgeShowcase: List<int>.from(data['badgeShowcase']),
+        bannerId: data['bannerId'],
+        exp: data['exp'],
+        expCap: data['expCap'],
+        hasShownCongrats: data['hasShownCongrats'],
+        level: data['level'],
+        totalBadgeUnlocked: data['totalBadgeUnlocked'],
+        totalStageCleared: data['totalStageCleared'],
+        unlockedBadge: List<int>.from(data['unlockedBadge']),
+        unlockedBanner: List<int>.from(data['unlockedBanner']),
+        email: data['email'],
+        birthday: data['birthday'],
+      );
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
 }

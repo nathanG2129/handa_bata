@@ -1,18 +1,45 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'account_settings.dart'; // Import the new file
+import 'account_settings.dart';
+import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/models/user_model.dart'; // Ensure this import is present
 
-class UserProfile extends StatefulWidget {
+class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
 
-  const UserProfile({super.key, required this.onClose});
+  const UserProfilePage({super.key, required this.onClose});
 
   @override
-  _UserProfileState createState() => _UserProfileState();
+  _UserProfilePageState createState() => _UserProfilePageState();
 }
 
-class _UserProfileState extends State<UserProfile> {
+class _UserProfilePageState extends State<UserProfilePage> {
   bool showAccountSettings = false;
+  int totalBadges = 0;
+  int totalStagesCleared = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    AuthService authService = AuthService();
+    UserProfile? userProfile = await authService.getUserProfile();
+    if (userProfile != null) {
+      setState(() {
+        totalBadges = userProfile.totalBadgeUnlocked;
+        totalStagesCleared = userProfile.totalStageCleared;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +86,7 @@ class _UserProfileState extends State<UserProfile> {
                       top: 10,
                       right: 10,
                       child: PopupMenuButton<String>(
-                        icon: Icon(Icons.more_horiz, size: 30), // Bigger ellipsis icon
+                        icon: Icon(Icons.more_horiz, size: 30),
                         onSelected: (String result) {
                           setState(() {
                             showAccountSettings = result == 'Account Settings';
@@ -92,6 +119,10 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildUserProfile() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -103,7 +134,7 @@ class _UserProfileState extends State<UserProfile> {
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
                   children: [
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -123,8 +154,8 @@ class _UserProfileState extends State<UserProfile> {
                         width: 50,
                         height: 50,
                         alignment: Alignment.center,
-                        child: const Text(
-                          '10',
+                        child: Text(
+                          '$totalBadges',
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -138,7 +169,7 @@ class _UserProfileState extends State<UserProfile> {
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
                   children: [
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -158,8 +189,8 @@ class _UserProfileState extends State<UserProfile> {
                         width: 50,
                         height: 50,
                         alignment: Alignment.center,
-                        child: const Text(
-                          '5',
+                        child: Text(
+                          '$totalStagesCleared',
                           style: TextStyle(fontSize: 16),
                         ),
                       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'user_profile.dart';
+import 'package:handabatamae/pages/user_profile.dart';
 
 class PlayPage extends StatefulWidget {
   final String title;
@@ -68,7 +68,7 @@ class _PlayPageState extends State<PlayPage> {
             ),
           ),
           if (_isUserProfileVisible)
-            UserProfile(onClose: _toggleUserProfile),
+            UserProfilePage(onClose: _toggleUserProfile),
         ],
       ),
     );

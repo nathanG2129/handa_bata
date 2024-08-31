@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'account_settings.dart';
 import 'package:handabatamae/services/auth_service.dart';
-import 'package:handabatamae/models/user_model.dart'; // Ensure this import is present
+import 'package:handabatamae/models/user_model.dart';
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
@@ -18,6 +18,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
   int totalBadges = 0;
   int totalStagesCleared = 0;
   bool _isLoading = true;
+  String nickname = '';
+  int avatarId = 0;
+  int level = 0;
 
   @override
   void initState() {
@@ -30,6 +33,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     UserProfile? userProfile = await authService.getUserProfile();
     if (userProfile != null) {
       setState(() {
+        nickname = userProfile.nickname;
+        avatarId = userProfile.avatarId;
+        level = userProfile.level;
         totalBadges = userProfile.totalBadgeUnlocked;
         totalStagesCleared = userProfile.totalStageCleared;
         _isLoading = false;
@@ -70,11 +76,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Username',
+                                nickname,
                                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                'Level: 10',
+                                'Level: $level',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ],

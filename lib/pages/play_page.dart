@@ -82,7 +82,7 @@ class _PlayPageState extends State<PlayPage> {
           if (_isUserProfileVisible)
             UserProfilePage(onClose: _toggleUserProfile),
           Positioned(
-            top: 50,
+            top: 60,
             left: 20,
             child: Container(
               constraints: const BoxConstraints(

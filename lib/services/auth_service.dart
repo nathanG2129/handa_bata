@@ -28,15 +28,19 @@ class AuthService {
           totalStageCleared: 0,
           unlockedBadge: List<int>.filled(40, 0),
           unlockedBanner: List<int>.filled(10, 0), 
-          email: '', 
+          email: email, 
           birthday: birthday, // Store birthday within the ProfileData document
         );
 
         // Create ProfileData collection within the user's document
-        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set({
-          ...userProfile.toMap(),
-          'email': email, // Store email within the ProfileData document
-        });
+        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set(userProfile.toMap());
+
+        // Initialize GameSaveData collection with documents
+        CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
+
+        await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
+        await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
+        await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
       }
 
       return user;

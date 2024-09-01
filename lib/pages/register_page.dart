@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-// Ensure PlayPage is imported
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart'; // Import the AuthService
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -29,6 +29,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _hasSymbol = false;
   bool _isPasswordFieldTouched = false;
 
+  final AuthService _authService = AuthService();
+
   void _register() async {
     setState(() {
       _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
@@ -41,39 +43,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       final password = _passwordController.text;
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+        User? user = await _authService.registerWithEmailAndPassword(email, password, username, birthday);
 
-        User? user = userCredential.user;
-        if (user != null) {
-          // Generate a random profile ID
-          String profileId = FirebaseFirestore.instance.collection('User').doc().id;
-
-          // Create ProfileData collection within the user's document
-          await FirebaseFirestore.instance.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set({
-            'avatarId': 0,
-            'badgeShowcase': [0, 0, 0],
-            'bannerId': 0,
-            'exp': 0,
-            'expCap': 100,
-            'hasShownCongrats': false,
-            'level': 1,
-            'nickname': username,
-            'profileId': profileId,
-            'totalBadgeUnlocked': 0,
-            'totalStageCleared': 0,
-            'unlockedBadge': List<int>.filled(40, 0),
-            'unlockedBanner': List<int>.filled(10, 0),
-            'email': email, // Store email within the ProfileData document
-            'birthday': birthday, // Store birthday within the ProfileData document
-          });
-
-          if (!user.emailVerified) {
-            await user.sendEmailVerification();
-            _showEmailVerificationDialog();
-          }
+        if (user != null && !user.emailVerified) {
+          await user.sendEmailVerification();
+          _showEmailVerificationDialog();
         }
       } on FirebaseAuthException catch (e) {
         // Handle error

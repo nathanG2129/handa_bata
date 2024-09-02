@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import '../helpers/dialog_helpers.dart'; // Import the dialog helpers
@@ -88,12 +89,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               buildTextFormField(
                 controller: _usernameController,
                 labelText: 'Username',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
-                  }
-                  return null;
-                },
+                validator: validateUsername, // Use the new validateUsername function
               ),
               const SizedBox(height: 20),
               buildTextFormField(

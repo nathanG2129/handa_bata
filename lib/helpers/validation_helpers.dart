@@ -31,3 +31,13 @@ void validatePassword(String value, Function(bool, bool, bool, bool) updatePassw
 
   updatePasswordValidation(isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol);
 }
+
+String? validateUsername(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Please enter your username';
+  }
+  if (value.length < 4 || value.length > 16) {
+    return 'Username must be between 4 and 16 characters';
+  }
+  return null;
+}

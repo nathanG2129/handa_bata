@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
+import '../helpers/dialog_helpers.dart'; // Import the dialog helpers
+import '../helpers/date_helpers.dart'; // Import the date helpers
+import '../helpers/privacy_policy_error.dart'; // Import the privacy policy error widget
+import '../helpers/register_buttons.dart'; // Import the register buttons widget
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart'; // Import the AuthService
 
 class RegistrationPage extends StatefulWidget {
@@ -47,50 +49,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         if (user != null && !user.emailVerified) {
           await user.sendEmailVerification();
-          _showEmailVerificationDialog();
+          showEmailVerificationDialog(context);
         }
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Error: $e');
       }
-    }
-  }
-
-  void _showEmailVerificationDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Verify your email'),
-          content: const Text('A verification link has been sent to your email. Please check your email to verify your account.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _birthdayController.text = "${picked.toLocal()}".split(' ')[0];
-      });
     }
   }
 
@@ -142,7 +106,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 controller: _birthdayController,
                 labelText: 'Birthday',
                 readOnly: true,
-                onTap: () => _selectDate(context),
+                onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your birthday';
@@ -223,26 +187,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ],
               ),
-              if (_showPrivacyPolicyError)
-                const Text(
-                  'You must accept the privacy policy to register.',
-                  style: TextStyle(color: Colors.red),
-                ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _register,
-                child: const Text('Join'),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
-                child: const Text('Have an account? Login instead'),
-              ),
+              PrivacyPolicyError(showError: _showPrivacyPolicyError),
+              RegisterButtons(onRegister: _register),
             ],
           ),
         ),

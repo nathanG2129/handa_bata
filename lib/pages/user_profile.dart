@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'account_settings.dart';
-import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/widgets/user_profile_widgets.dart';
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
@@ -15,12 +16,10 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   bool showAccountSettings = false;
-  int totalBadges = 0;
-  int totalStagesCleared = 0;
   bool _isLoading = true;
-  String nickname = '';
-  int avatarId = 0;
-  int level = 0;
+  UserProfile? _userProfile;
+
+  final UserProfileService _userProfileService = UserProfileService();
 
   @override
   void initState() {
@@ -29,22 +28,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _fetchUserProfile() async {
-    AuthService authService = AuthService();
-    UserProfile? userProfile = await authService.getUserProfile();
     setState(() {
-      if (userProfile != null) {
-        nickname = userProfile.nickname;
-        avatarId = userProfile.avatarId;
-        level = userProfile.level;
-        totalBadges = userProfile.totalBadgeUnlocked;
-        totalStagesCleared = userProfile.totalStageCleared;
-      } else {
-        nickname = UserProfile.guestProfile.nickname;
-        avatarId = UserProfile.guestProfile.avatarId;
-        level = UserProfile.guestProfile.level;
-        totalBadges = UserProfile.guestProfile.totalBadgeUnlocked;
-        totalStagesCleared = UserProfile.guestProfile.totalStageCleared;
-      }
+      _isLoading = true;
+    });
+
+    UserProfile? userProfile = await _userProfileService.fetchUserProfile();
+
+    if (!mounted) return;
+
+    setState(() {
+      _userProfile = userProfile ?? UserProfile.guestProfile;
       _isLoading = false;
     });
   }
@@ -70,29 +63,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         Container(
                           color: Colors.lightBlue[100],
                           padding: const EdgeInsets.all(20.0),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: Colors.grey,
-                                child: Icon(Icons.person, size: 40, color: Colors.white),
-                              ),
-                              SizedBox(width: 20),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    nickname,
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    'Level: $level',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                          child: _isLoading
+                              ? Center(child: CircularProgressIndicator())
+                              : _userProfile != null
+                                  ? UserProfileHeader(
+                                      nickname: _userProfile!.nickname,
+                                      avatarId: _userProfile!.avatarId,
+                                      level: _userProfile!.level,
+                                    )
+                                  : const SizedBox.shrink(),
                         ),
                         Positioned(
                           top: 10,
@@ -137,140 +116,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
       return Center(child: CircularProgressIndicator());
     }
 
+    if (_userProfile == null) {
+      return Center(child: Text('Failed to load user profile.'));
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Total',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Badges',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 10),
-                    Card(
-                      color: Colors.lightBlue[100],
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$totalBadges',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Stages',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Cleared',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 10),
-                    Card(
-                      color: Colors.lightBlue[100],
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$totalStagesCleared',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+        UserProfileStats(
+          totalBadges: _userProfile!.totalBadgeUnlocked,
+          totalStagesCleared: _userProfile!.totalStageCleared,
         ),
         const SizedBox(height: 20),
-        const Text(
-          'Favorite Badges',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Icon(Icons.star, size: 40, color: Colors.amber),
-                    SizedBox(height: 10),
-                    Text(
-                      'Badge 1',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Icon(Icons.star, size: 40, color: Colors.amber),
-                    SizedBox(height: 10),
-                    Text(
-                      'Badge 2',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Icon(Icons.star, size: 40, color: Colors.amber),
-                    SizedBox(height: 10),
-                    Text(
-                      'Badge 3',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        const FavoriteBadges(),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: widget.onClose,

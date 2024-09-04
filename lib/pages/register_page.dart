@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import '../helpers/dialog_helpers.dart'; // Import the dialog helpers
 import '../helpers/date_helpers.dart'; // Import the date helpers
-import '../helpers/privacy_policy_error.dart'; // Import the privacy policy error widget
-import '../helpers/register_buttons.dart'; // Import the register buttons widget
+import '../widgets/privacy_policy_error.dart'; // Import the privacy policy error widget
+import '../widgets/register_buttons.dart'; // Import the register buttons widget
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart'; // Import the AuthService
 

@@ -33,11 +33,11 @@ class _AccountSettingsState extends State<AccountSettings> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_userProfile == null) {
-      return Center(child: Text('Failed to load user data'));
+      return const Center(child: Text('Failed to load user data'));
     }
 
     return GestureDetector(

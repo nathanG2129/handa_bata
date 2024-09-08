@@ -64,7 +64,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           color: Colors.lightBlue[100],
                           padding: const EdgeInsets.all(20.0),
                           child: _isLoading
-                              ? Center(child: CircularProgressIndicator())
+                              ? const Center(child: CircularProgressIndicator())
                               : _userProfile != null
                                   ? UserProfileHeader(
                                       nickname: _userProfile!.nickname,
@@ -77,7 +77,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           top: 10,
                           right: 10,
                           child: PopupMenuButton<String>(
-                            icon: Icon(Icons.more_horiz, size: 30),
+                            icon: const Icon(Icons.more_horiz, size: 30),
                             onSelected: (String result) {
                               setState(() {
                                 showAccountSettings = result == 'Account Settings';
@@ -113,11 +113,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildUserProfile() {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_userProfile == null) {
-      return Center(child: Text('Failed to load user profile.'));
+      return const Center(child: Text('Failed to load user profile.'));
     }
 
     return Column(

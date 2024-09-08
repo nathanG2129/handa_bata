@@ -8,32 +8,32 @@ class UserProfileHeader extends StatelessWidget {
   final int level;
 
   const UserProfileHeader({
-    Key? key,
+    super.key,
     required this.nickname,
     required this.avatarId,
     required this.level,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
+        const CircleAvatar(
           radius: 50,
           backgroundColor: Colors.grey,
           child: Icon(Icons.person, size: 40, color: Colors.white),
         ),
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               nickname,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Text(
               'Level: $level',
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),
@@ -47,10 +47,10 @@ class UserProfileStats extends StatelessWidget {
   final int totalStagesCleared;
 
   const UserProfileStats({
-    Key? key,
+    super.key,
     required this.totalBadges,
     required this.totalStagesCleared,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +62,7 @@ class UserProfileStats extends StatelessWidget {
             padding: const EdgeInsets.all(20.0),
             child: Row(
               children: [
-                Column(
+                const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -84,7 +84,7 @@ class UserProfileStats extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       '$totalBadges',
-                      style: TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ),
                 ),
@@ -97,7 +97,7 @@ class UserProfileStats extends StatelessWidget {
             padding: const EdgeInsets.all(20.0),
             child: Row(
               children: [
-                Column(
+                const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -119,7 +119,7 @@ class UserProfileStats extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       '$totalStagesCleared',
-                      style: TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ),
                 ),
@@ -133,18 +133,18 @@ class UserProfileStats extends StatelessWidget {
 }
 
 class FavoriteBadges extends StatelessWidget {
-  const FavoriteBadges({Key? key}) : super(key: key);
+  const FavoriteBadges({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        const Text(
+        Text(
           'Favorite Badges',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 10),
-        const Row(
+        SizedBox(height: 10),
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Card(

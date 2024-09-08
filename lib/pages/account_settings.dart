@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '/services/auth_service.dart';
-import '/models/user_model.dart';
+import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/models/user_model.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -28,6 +28,48 @@ class _AccountSettingsState extends State<AccountSettings> {
       _userProfile = userProfile ?? UserProfile.guestProfile;
       _isLoading = false;
     });
+  }
+
+  Future<void> _deleteAccount() async {
+    AuthService authService = AuthService();
+    try {
+      await authService.deleteUserAccount();
+      // Navigate back or show a success message
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Handle error
+      print('Error deleting account: $e');
+    }
+  }
+
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Account Deletion'),
+          content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteAccount();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -68,9 +110,7 @@ class _AccountSettingsState extends State<AccountSettings> {
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle account removal
-                  },
+                  onPressed: _showDeleteAccountDialog,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

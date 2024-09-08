@@ -130,4 +130,19 @@ class AuthService {
       print('Error logging out: $e');
     }
   }
+
+  Future<void> deleteUserAccount() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        // Delete user document from Firestore
+        await _firestore.collection('User').doc(user.uid).delete();
+        // Delete user from Firebase Authentication
+        await user.delete();
+      }
+    } catch (e) {
+      print('Error deleting user account: $e');
+      throw e;
+    }
+  }
 }

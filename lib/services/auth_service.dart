@@ -6,7 +6,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname, String birthday) async {
+  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname, String birthday, {String role = 'user'}) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
@@ -39,6 +39,12 @@ class AuthService {
         await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
         await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
         await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
+
+        // Store user role in Firestore
+        await _firestore.collection('User').doc(user.uid).set({
+          'email': email,
+          'role': role,
+        });
       }
 
       return user;
@@ -153,6 +159,19 @@ class AuthService {
     } catch (e) {
       print('Error deleting user account: $e');
       rethrow;
+    }
+  }
+
+  Future<String?> getUserRole(String uid) async {
+    try {
+      DocumentSnapshot docSnapshot = await _firestore.collection('User').doc(uid).get();
+      if (docSnapshot.exists) {
+        return docSnapshot['role'];
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching user role: $e');
+      return null;
     }
   }
 }

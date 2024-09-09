@@ -12,10 +12,8 @@ class AuthService {
       User? user = result.user;
 
       if (user != null) {
-        String profileId = _firestore.collection('User').doc().id;
-
         UserProfile userProfile = UserProfile(
-          profileId: profileId,
+          profileId: user.uid, // Use the user's UID as the profile ID
           nickname: nickname,
           avatarId: 0,
           badgeShowcase: [0, 0, 0],
@@ -33,7 +31,7 @@ class AuthService {
         );
 
         // Create ProfileData collection within the user's document
-        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(profileId).set(userProfile.toMap());
+        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
 
         // Initialize GameSaveData collection with documents
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
@@ -47,6 +45,19 @@ class AuthService {
     } catch (e) {
       print(e.toString());
       return null;
+    }
+  }
+
+  Future<void> updateUserProfile(String field, String newValue) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        // Update the specific field in the user's document in Firestore
+        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).update({field: newValue});
+      }
+    } catch (e) {
+      print('Error updating user profile: $e');
+      throw e;
     }
   }
 
@@ -91,13 +102,12 @@ class AuthService {
         return UserProfile.guestProfile;
       }
 
-      QuerySnapshot querySnapshot = await _firestore.collection('User').doc(user.uid).collection('ProfileData').get();
-      if (querySnapshot.docs.isEmpty) {
+      DocumentSnapshot profileDoc = await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).get();
+      if (!profileDoc.exists) {
         return UserProfile.guestProfile;
       }
 
-      var document = querySnapshot.docs.first;
-      Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+      Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
       return UserProfile(
         profileId: data['profileId'],
         nickname: data['nickname'],

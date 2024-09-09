@@ -180,40 +180,67 @@ class _AccountSettingsState extends State<AccountSettings> {
   }
 
   Widget _buildFieldContainer(String title, String details, bool showChangeButton) {
-    return Container(
-      padding: const EdgeInsets.all(10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  details,
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-          if (showChangeButton)
-            TextButton(
-              onPressed: () {
-                _showChangeNicknameDialog();
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                textStyle: const TextStyle(fontSize: 16),
+      if (title == 'Email') {
+          return Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                  Text(
+                                      title,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                      details,
+                                      style: const TextStyle(fontSize: 16),
+                                  ),
+                              ],
+                          ),
+                      ),
+                  ],
               ),
-              child: const Text('Change'),
-            ),
-        ],
-      ),
-    );
+          );
+      } else {
+          return Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                  Text(
+                                      title,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                      details,
+                                      style: const TextStyle(fontSize: 16),
+                                  ),
+                              ],
+                          ),
+                      ),
+                      if (showChangeButton)
+                          TextButton(
+                              onPressed: () {
+                                  _showChangeNicknameDialog();
+                              },
+                              style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  textStyle: const TextStyle(fontSize: 16),
+                              ),
+                              child: const Text('Change'),
+                          ),
+                  ],
+              ),
+          );
+      }
   }
 }

@@ -143,7 +143,7 @@ class _AccountSettingsState extends State<AccountSettings> {
             children: [
               _buildFieldContainer('Nickname', _userProfile!.nickname, true),
               _buildFieldContainer('Birthday', _userProfile!.birthday, false),
-              _buildFieldContainer('Email', _userProfile!.email, true),
+              _buildFieldContainer('Email', _userProfile!.email, false), // Remove the Change button for Email
               _buildFieldContainer('Password', '********', true),
               const SizedBox(height: 20),
               const Text(
@@ -180,67 +180,40 @@ class _AccountSettingsState extends State<AccountSettings> {
   }
 
   Widget _buildFieldContainer(String title, String details, bool showChangeButton) {
-      if (title == 'Email') {
-          return Container(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                  Text(
-                                      title,
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                      details,
-                                      style: const TextStyle(fontSize: 16),
-                                  ),
-                              ],
-                          ),
-                      ),
-                  ],
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  details,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          if (showChangeButton && title != 'Email') // Conditionally show the button
+            TextButton(
+              onPressed: () {
+                _showChangeNicknameDialog();
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                textStyle: const TextStyle(fontSize: 16),
               ),
-          );
-      } else {
-          return Container(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                  Text(
-                                      title,
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                      details,
-                                      style: const TextStyle(fontSize: 16),
-                                  ),
-                              ],
-                          ),
-                      ),
-                      if (showChangeButton)
-                          TextButton(
-                              onPressed: () {
-                                  _showChangeNicknameDialog();
-                              },
-                              style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  textStyle: const TextStyle(fontSize: 16),
-                              ),
-                              child: const Text('Change'),
-                          ),
-                  ],
-              ),
-          );
-      }
+              child: const Text('Change'),
+            ),
+        ],
+      ),
+    );
   }
 }

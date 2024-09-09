@@ -42,6 +42,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
     });
   }
 
+  void _onNicknameChanged() {
+    _fetchUserProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -99,7 +103,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(20.0),
-                      child: showAccountSettings ? AccountSettings(onClose: widget.onClose) : _buildUserProfile(),
+                      child: showAccountSettings
+                          ? AccountSettings(
+                              onClose: () {
+                                setState(() {
+                                  showAccountSettings = false;
+                                });
+                                _fetchUserProfile(); // Refresh user profile after closing account settings
+                              },
+                              onNicknameChanged: _onNicknameChanged, // Pass the callback
+                            )
+                          : _buildUserProfile(),
                     ),
                   ],
                 ),

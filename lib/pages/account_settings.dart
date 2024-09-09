@@ -4,8 +4,9 @@ import 'package:handabatamae/models/user_model.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
+  final VoidCallback onNicknameChanged; // Add this callback
 
-  const AccountSettings({super.key, required this.onClose});
+  const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged});
 
   @override
   _AccountSettingsState createState() => _AccountSettingsState();
@@ -28,6 +29,54 @@ class _AccountSettingsState extends State<AccountSettings> {
       _userProfile = userProfile ?? UserProfile.guestProfile;
       _isLoading = false;
     });
+  }
+
+  Future<void> _updateNickname(String newNickname) async {
+    AuthService authService = AuthService();
+    try {
+      await authService.updateUserProfile('nickname', newNickname);
+      await _fetchUserProfile(); // Refresh the user profile
+      widget.onNicknameChanged(); // Call the callback
+    } catch (e) {
+      print('Error updating nickname: $e');
+    }
+  }
+
+  void _showChangeNicknameDialog() {
+    final TextEditingController _controller = TextEditingController(text: _userProfile?.nickname ?? '');
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Nickname'),
+          content: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              labelText: 'New Nickname',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _updateNickname(_controller.text);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _deleteAccount() async {
@@ -155,7 +204,7 @@ class _AccountSettingsState extends State<AccountSettings> {
           if (showChangeButton)
             TextButton(
               onPressed: () {
-                // Handle change button press
+                _showChangeNicknameDialog();
               },
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

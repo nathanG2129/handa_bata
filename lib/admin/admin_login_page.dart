@@ -82,7 +82,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   style: TextStyle(fontSize: 46, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
                 const SizedBox(height: 75),
-                Container(
+                SizedBox(
                   width: 400, // Set the desired width
                   child: Column(
                     children: [

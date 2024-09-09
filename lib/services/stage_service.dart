@@ -5,7 +5,7 @@ class StageService {
 
   Future<List<Map<String, dynamic>>> fetchStages(String language) async {
     try {
-      QuerySnapshot querySnapshot = await _firestore.collection('Game').doc('Stages').collection(language).get();
+      QuerySnapshot querySnapshot = await _firestore.collection('Game').doc('Stage').collection(language).get();
       if (querySnapshot.docs.isEmpty) {
         print('No stages found for language: $language');
       }
@@ -18,6 +18,28 @@ class StageService {
     } catch (e) {
       print('Error fetching stages: $e');
       return [];
+    }
+  }
+
+  Future<void> addStage(String language, String stageName, List<Map<String, dynamic>> questions) async {
+    try {
+      await _firestore.collection('Game').doc('Stage').collection(language).doc(stageName).set({
+        'questions': questions,
+      });
+      print('Stage $stageName added successfully.');
+    } catch (e) {
+      print('Error adding stage: $e');
+    }
+  }
+
+  Future<void> updateStage(String language, String stageName, List<Map<String, dynamic>> questions) async {
+    try {
+      await _firestore.collection('Game').doc('Stage').collection(language).doc(stageName).update({
+        'questions': questions,
+      });
+      print('Stage $stageName updated successfully.');
+    } catch (e) {
+      print('Error updating stage: $e');
     }
   }
 }

@@ -43,7 +43,7 @@ class _AccountSettingsState extends State<AccountSettings> {
   }
 
   void _showChangeNicknameDialog() {
-    final TextEditingController _controller = TextEditingController(text: _userProfile?.nickname ?? '');
+    final TextEditingController controller = TextEditingController(text: _userProfile?.nickname ?? '');
 
     showDialog(
       context: context,
@@ -51,7 +51,7 @@ class _AccountSettingsState extends State<AccountSettings> {
         return AlertDialog(
           title: const Text('Change Nickname'),
           content: TextField(
-            controller: _controller,
+            controller: controller,
             decoration: InputDecoration(
               labelText: 'New Nickname',
               border: OutlineInputBorder(
@@ -69,7 +69,7 @@ class _AccountSettingsState extends State<AccountSettings> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _updateNickname(_controller.text);
+                await _updateNickname(controller.text);
               },
               child: const Text('Save'),
             ),

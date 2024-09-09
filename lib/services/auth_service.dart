@@ -57,7 +57,7 @@ class AuthService {
       }
     } catch (e) {
       print('Error updating user profile: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -152,7 +152,7 @@ class AuthService {
       }
     } catch (e) {
       print('Error deleting user account: $e');
-      throw e;
+      rethrow;
     }
   }
 }

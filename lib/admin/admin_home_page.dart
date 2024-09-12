@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import '../services/stage_service.dart';
-import 'edit_stage_page.dart';
-import 'add_stage_page.dart';
+import '/services/stage_service.dart';
+import '/admin/add_stage_page.dart';
+import '/admin/edit_stage_page.dart';
 
 class AdminHomePage extends StatefulWidget {
-  const AdminHomePage({super.key});
-
   @override
   _AdminHomePageState createState() => _AdminHomePageState();
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
   final StageService _stageService = StageService();
-  List<Map<String, dynamic>> _stages = [];
   String _selectedLanguage = 'en';
+  List<Map<String, dynamic>> _stages = [];
 
   @override
   void initState() {
@@ -24,7 +22,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _fetchStages() async {
     List<Map<String, dynamic>> stages = await _stageService.fetchStages(_selectedLanguage);
     setState(() {
-      _stages = stages;
+      _stages = stages.map((stage) {
+        int questionCount = (stage['questions'] as List<dynamic>?)?.length ?? 0;
+        return {
+          'stageName': stage['stageName'],
+          'questionCount': questionCount,
+        };
+      }).toList();
     });
   }
 
@@ -62,103 +66,69 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _deleteStage(String stageName) async {
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete the stage "$stageName"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm) {
-      await _stageService.deleteStage(_selectedLanguage, stageName);
-      _fetchStages();
-    }
+    await _stageService.deleteStage(_selectedLanguage, stageName);
+    _fetchStages();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Panel'),
+        title: Text('Admin Home Page'),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      body: Column(
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _editEnglishStages,
-                    child: Text('English'),
-                  ),
-                  SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _editFilipinoStages,
-                    child: Text('Filipino'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _navigateToAddStage,
-                child: Text('Add Stage'),
+                onPressed: _editEnglishStages,
+                child: Text('Edit English Stages'),
               ),
-              SizedBox(height: 20),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: [
-                      DataColumn(label: Text('Stage Name')),
-                      DataColumn(label: Text('Questions')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows: _stages.map((stage) {
-                      return DataRow(cells: [
-                        DataCell(Text(stage['stageName'] ?? '')),
-                        DataCell(Text(stage['questions'] != null ? stage['questions'].toString() : '')),
-                        DataCell(
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => _navigateToEditStage(stage['stageName']),
-                                child: Text('Edit'),
-                              ),
-                              SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: () => _deleteStage(stage['stageName']),
-                                child: Text('Delete'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ]);
-                    }).toList(),
-                  ),
-                ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: _editFilipinoStages,
+                child: Text('Edit Filipino Stages'),
               ),
             ],
           ),
-        ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _stages.length,
+              itemBuilder: (context, index) {
+                final stage = _stages[index];
+                return Center(
+                  child: Container(
+                    width: 300, // Adjust the width as needed
+                    child: Card(
+                      child: ListTile(
+                        title: Text(stage['stageName']),
+                        subtitle: Text('Questions: ${stage['questionCount']}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: () => _navigateToEditStage(stage['stageName']),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () => _deleteStage(stage['stageName']),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAddStage,
+        child: Icon(Icons.add),
       ),
     );
   }

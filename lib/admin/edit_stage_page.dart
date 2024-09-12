@@ -8,15 +8,8 @@ class EditStagePage extends StatefulWidget {
   final String category;
   final String stageName;
   final List<Map<String, dynamic>> questions;
-  final String category;
 
-  const EditStagePage({
-    super.key,
-    required this.language,
-    required this.stageName,
-    required this.questions,
-    required this.category,
-  });
+  const EditStagePage({super.key, required this.language, required this.category, required this.stageName, required this.questions});
 
   @override
   _EditStagePageState createState() => _EditStagePageState();
@@ -28,7 +21,6 @@ class _EditStagePageState extends State<EditStagePage> {
   late TextEditingController _stageNameController;
   late String _stageName;
   late List<Map<String, dynamic>> _questions;
-  late String _selectedCategory;
 
   @override
   void initState() {
@@ -46,7 +38,6 @@ class _EditStagePageState extends State<EditStagePage> {
         'space': question['space'] ?? [],
       };
     }).toList();
-    _selectedCategory = widget.category;
   }
 
   void _addQuestion() {
@@ -63,10 +54,16 @@ class _EditStagePageState extends State<EditStagePage> {
   }
 
   void _saveStage() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      await _stageService.updateStage(widget.language, _selectedCategory, _stageName, _questions);
-      Navigator.pop(context);
+    final stageName = _stageNameController.text;
+    if (stageName.isNotEmpty && _questions.isNotEmpty) {
+      await _stageService.updateStage(widget.language, widget.category, stageName, {
+        'stageName': stageName,
+        'questions': _questions,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stage updated successfully.')));
+      Navigator.pop(context); // Go back to the previous page
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a stage name and add at least one question.')));
     }
   }
 
@@ -122,32 +119,6 @@ class _EditStagePageState extends State<EditStagePage> {
                     },
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                items: ['Quake', 'Storm', 'Volcanic', 'Drought', 'Tsunami', 'Flood']
-                    .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                decoration: InputDecoration(labelText: 'Category'),
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                items: ['Quake', 'Storm', 'Volcanic', 'Drought', 'Tsunami', 'Flood']
-                    .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                decoration: InputDecoration(labelText: 'Category'),
               ),
               SizedBox(height: 20),
               ElevatedButton(

@@ -85,6 +85,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _deleteStage(String category, String stageName) async {
     await _stageService.deleteStage(_selectedLanguage, category, stageName);
     _fetchStages();
+<<<<<<< HEAD
   }
 
   void _selectCategory(String category) {
@@ -92,6 +93,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
       _selectedCategory = category;
       _fetchStages();
     });
+=======
+>>>>>>> 2b82e4b069e647a37159e023a13e2488a8bf81b2
   }
 
   @override

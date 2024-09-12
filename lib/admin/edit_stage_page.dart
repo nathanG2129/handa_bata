@@ -137,6 +137,19 @@ class _EditStagePageState extends State<EditStagePage> {
                 decoration: InputDecoration(labelText: 'Category'),
               ),
               SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: ['Quake', 'Storm', 'Volcanic', 'Drought', 'Tsunami', 'Flood']
+                    .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value!;
+                  });
+                },
+                decoration: InputDecoration(labelText: 'Category'),
+              ),
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _addQuestion,
                 child: Text('Add Question'),

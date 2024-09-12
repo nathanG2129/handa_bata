@@ -5,7 +5,11 @@ class AddStagePage extends StatefulWidget {
   final String language;
   final String category;
 
+<<<<<<< HEAD
   const AddStagePage({super.key, required this.language, required this.category});
+=======
+  AddStagePage({required this.language});
+>>>>>>> 2b82e4b069e647a37159e023a13e2488a8bf81b2
 
   @override
   _AddStagePageState createState() => _AddStagePageState();

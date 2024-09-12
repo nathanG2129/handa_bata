@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import '../services/stage_service.dart';
-import 'edit_stage_page.dart';
-import 'add_stage_page.dart';
+import '/services/stage_service.dart';
+import '/admin/add_stage_page.dart';
+import '/admin/edit_stage_page.dart';
 
 class AdminHomePage extends StatefulWidget {
-  const AdminHomePage({super.key});
-
   @override
   _AdminHomePageState createState() => _AdminHomePageState();
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
   final StageService _stageService = StageService();
-  List<Map<String, dynamic>> _stages = [];
   String _selectedLanguage = 'en';
+  Map<String, List<Map<String, dynamic>>> _categorizedStages = {};
 
   @override
   void initState() {
@@ -22,9 +20,32 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _fetchStages() async {
-    List<Map<String, dynamic>> stages = await _stageService.fetchStages(_selectedLanguage);
+    List<Map<String, dynamic>> stages = await _stageService.fetchStages(_selectedLanguage, _selectedCategory);
+    print('Fetched stages: $stages');
     setState(() {
-      _stages = stages;
+      _categorizedStages = {
+        'Quake': [],
+        'Storm': [],
+        'Volcanic': [],
+        'Drought': [],
+        'Tsunami': [],
+        'Flood': [],
+      };
+      for (var stage in stages) {
+        int questionCount = (stage['questions'] as List<dynamic>?)?.length ?? 0;
+        String category = stage['category'] ?? 'Uncategorized';
+        if (_categorizedStages.containsKey(category)) {
+          _categorizedStages[category]!.add({
+            'stageName': stage['stageName'],
+            'questionCount': questionCount,
+          });
+        } else {
+          _categorizedStages['Uncategorized']!.add({
+            'stageName': stage['stageName'],
+            'questionCount': questionCount,
+          });
+        }
+      }
     });
   }
 
@@ -45,120 +66,118 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _navigateToAddStage() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => AddStagePage(language: _selectedLanguage)),
+      MaterialPageRoute(builder: (context) => AddStagePage(language: _selectedLanguage, category: _selectedCategory)),
     ).then((_) {
       _fetchStages();
     });
   }
 
-  void _navigateToEditStage(String stageName) async {
-    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, stageName);
+  void _navigateToEditStage(String category, String stageName) async {
+    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, category, stageName);
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, stageName: stageName, questions: questions)),
+      MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, stageName: stageName, questions: questions, category: '',)),
     ).then((_) {
       _fetchStages();
     });
   }
 
-  void _deleteStage(String stageName) async {
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete the stage "$stageName"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+  void _deleteStage(String category, String stageName) async {
+    await _stageService.deleteStage(_selectedLanguage, category, stageName);
+    _fetchStages();
+  }
 
-    if (confirm) {
-      await _stageService.deleteStage(_selectedLanguage, stageName);
+  void _selectCategory(String category) {
+    setState(() {
+      _selectedCategory = category;
       _fetchStages();
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Panel'),
+        title: Text('Admin Home Page'),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      body: Column(
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _editEnglishStages,
-                    child: Text('English'),
-                  ),
-                  SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _editFilipinoStages,
-                    child: Text('Filipino'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _navigateToAddStage,
-                child: Text('Add Stage'),
+                onPressed: _editEnglishStages,
+                child: Text('Edit English Stages'),
               ),
-              SizedBox(height: 20),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: [
-                      DataColumn(label: Text('Stage Name')),
-                      DataColumn(label: Text('Questions')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows: _stages.map((stage) {
-                      return DataRow(cells: [
-                        DataCell(Text(stage['stageName'] ?? '')),
-                        DataCell(Text(stage['questions'] != null ? stage['questions'].toString() : '')),
-                        DataCell(
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => _navigateToEditStage(stage['stageName']),
-                                child: Text('Edit'),
-                              ),
-                              SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: () => _deleteStage(stage['stageName']),
-                                child: Text('Delete'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ]);
-                    }).toList(),
-                  ),
-                ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: _editFilipinoStages,
+                child: Text('Edit Filipino Stages'),
               ),
             ],
           ),
-        ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 2 columns
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.8, // Adjust the aspect ratio to make the items smaller
+                ),
+                itemCount: _categorizedStages.length,
+                itemBuilder: (context, index) {
+                  String category = _categorizedStages.keys.elementAt(index);
+                  List<Map<String, dynamic>> stages = _categorizedStages[category]!;
+                  return Card(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            category,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: stages.length,
+                            itemBuilder: (context, stageIndex) {
+                              final stage = stages[stageIndex];
+                              return ListTile(
+                                title: Text(stage['stageName']),
+                                subtitle: Text('Questions: ${stage['questionCount']}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      onPressed: () => _navigateToEditStage(category, stage['stageName']),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () => _deleteStage(category, stage['stageName']),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAddStage,
+        child: Icon(Icons.add),
       ),
     );
   }

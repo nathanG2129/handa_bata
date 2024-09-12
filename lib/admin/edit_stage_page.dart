@@ -5,8 +5,15 @@ class EditStagePage extends StatefulWidget {
   final String language;
   final String stageName;
   final List<Map<String, dynamic>> questions;
+  final String category;
 
-  const EditStagePage({super.key, required this.language, required this.stageName, required this.questions});
+  const EditStagePage({
+    super.key,
+    required this.language,
+    required this.stageName,
+    required this.questions,
+    required this.category,
+  });
 
   @override
   _EditStagePageState createState() => _EditStagePageState();
@@ -17,6 +24,7 @@ class _EditStagePageState extends State<EditStagePage> {
   final StageService _stageService = StageService();
   late String _stageName;
   late List<Map<String, dynamic>> _questions;
+  late String _selectedCategory;
 
   @override
   void initState() {
@@ -32,6 +40,7 @@ class _EditStagePageState extends State<EditStagePage> {
         'space': question['space'] ?? [],
       };
     }).toList();
+    _selectedCategory = widget.category;
   }
 
   void _addQuestion() {
@@ -50,7 +59,7 @@ class _EditStagePageState extends State<EditStagePage> {
   void _saveStage() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      await _stageService.updateStage(widget.language, _stageName, _questions);
+      await _stageService.updateStage(widget.language, _selectedCategory, _stageName, _questions);
       Navigator.pop(context);
     }
   }
@@ -101,6 +110,19 @@ class _EditStagePageState extends State<EditStagePage> {
                 onSaved: (value) {
                   _stageName = value!;
                 },
+              ),
+              SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: ['Quake', 'Storm', 'Volcanic', 'Drought', 'Tsunami', 'Flood']
+                    .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value!;
+                  });
+                },
+                decoration: InputDecoration(labelText: 'Category'),
               ),
               SizedBox(height: 20),
               ElevatedButton(

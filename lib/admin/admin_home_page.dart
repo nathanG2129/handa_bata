@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/stage_service.dart';
-import 'add_stage_page.dart';
 import 'edit_stage_page.dart';
+import 'add_stage_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -47,19 +47,45 @@ class _AdminHomePageState extends State<AdminHomePage> {
       context,
       MaterialPageRoute(builder: (context) => AddStagePage(language: _selectedLanguage)),
     ).then((_) {
-      // Refresh the stages list after returning from the AddStagePage
       _fetchStages();
     });
   }
 
-  void _navigateToEditStage(String stageName, List<Map<String, dynamic>> questions) {
+  void _navigateToEditStage(String stageName) async {
+    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, stageName);
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, stageName: stageName, questions: questions)),
     ).then((_) {
-      // Refresh the stages list after returning from the EditStagePage
       _fetchStages();
     });
+  }
+
+  void _deleteStage(String stageName) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete the stage "$stageName"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm) {
+      await _stageService.deleteStage(_selectedLanguage, stageName);
+      _fetchStages();
+    }
   }
 
   @override
@@ -108,9 +134,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         DataCell(Text(stage['stageName'] ?? '')),
                         DataCell(Text(stage['questions'] != null ? stage['questions'].toString() : '')),
                         DataCell(
-                          ElevatedButton(
-                            onPressed: () => _navigateToEditStage(stage['stageName'], stage['questions']),
-                            child: Text('Edit'),
+                          Row(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => _navigateToEditStage(stage['stageName']),
+                                child: Text('Edit'),
+                              ),
+                              SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () => _deleteStage(stage['stageName']),
+                                child: Text('Delete'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ]);

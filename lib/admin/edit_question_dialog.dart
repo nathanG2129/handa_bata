@@ -3,6 +3,7 @@ import 'matching_type_section.dart';
 import 'multiple_choice_section.dart';
 import 'identification_section.dart';
 import 'question_type_dropdown.dart';
+import 'fill_in_the_blanks_section.dart'; // Import the new file
 
 class EditQuestionDialog extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -31,10 +32,29 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
   void _initializeControllers() {
     _optionControllersSection1 = [];
     _optionControllersSection2 = [];
-    _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
+    _answerPairs = [];
+    _optionControllers = [];
+
+    // Retain only the question text when switching types
+    String questionText = _question['question'];
+    _question = {'question': questionText, 'type': _question['type']};
+
+    if (_question['type'] == 'Matching Type') {
+      _question['section1'] = [];
+      _question['section2'] = [];
+      _question['answerPairs'] = [];
+    } else if (_question['type'] == 'Fill in the Blanks') {
+      _question['options'] = [];
+      _question['answer'] = [];
+    } else {
+      _question['options'] = [];
+      _question['answer'] = '';
+    }
+
     if (_question['type'] == 'Matching Type') {
       _optionControllersSection1 = _createControllers(_question['section1']);
       _optionControllersSection2 = _createControllers(_question['section2']);
+      _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
     } else {
       _optionControllers = _createControllers(_question['options']);
     }
@@ -65,6 +85,13 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       _question['answerPairs'] = _answerPairs;
     } else {
       _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+      if (_question['type'] == 'Fill in the Blanks') {
+        _question['answer'] = _question['answer'].map((index) => int.tryParse(index.toString()) ?? 0).toList();
+      }
+      // Remove fields specific to Matching Type
+      _question.remove('section1');
+      _question.remove('section2');
+      _question.remove('answerPairs');
     }
     widget.onSave(_question);
     Navigator.pop(context);
@@ -103,13 +130,22 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                 onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
                 onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
               ),
-            if (_question['type'] == 'Multiple Choice' || _question['type'] == 'Fill in the Blanks')
+            if (_question['type'] == 'Multiple Choice')
               MultipleChoiceSection(
                 question: _question,
                 optionControllers: _optionControllers,
                 addOption: () => _addOption(_optionControllers, _question['options']),
                 removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
                 onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
+              ),
+            if (_question['type'] == 'Fill in the Blanks')
+              FillInTheBlanksSection(
+                question: _question,
+                optionControllers: _optionControllers,
+                addOption: () => _addOption(_optionControllers, _question['options']),
+                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
+                onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
               ),
             if (_question['type'] == 'Matching Type')
               MatchingTypeSection(

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'matching_type_section.dart';
+import 'multiple_choice_section.dart';
+import 'identification_section.dart';
+import 'question_type_dropdown.dart';
 
 class EditQuestionDialog extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -13,46 +17,55 @@ class EditQuestionDialog extends StatefulWidget {
 class _EditQuestionDialogState extends State<EditQuestionDialog> {
   late Map<String, dynamic> _question;
   late List<TextEditingController> _optionControllers;
+  late List<TextEditingController> _optionControllersSection1;
+  late List<TextEditingController> _optionControllersSection2;
+  late List<Map<String, String>> _answerPairs;
 
   @override
   void initState() {
     super.initState();
     _question = Map<String, dynamic>.from(widget.question);
-    _initializeQuestionFields();
-    _optionControllers = List.generate(
-      _question['options'].length,
-      (index) => TextEditingController(text: _question['options'][index]),
-    );
+    _initializeControllers();
   }
 
-  void _initializeQuestionFields() {
-    if (_question['type'] == 'Fill in the Blanks' || _question['type'] == 'Multiple Choice' || _question['type'] == 'Matching Type') {
-      _question['answer'] ??= 0;
-      _question['options'] ??= <String>[];
-    } else if (_question['type'] == 'Identification') {
-      _question['answer'] ??= '';
-      _question['answerLength'] ??= 0;
-      _question['options'] ??= <String>[];
-      _question['space'] ??= <String>[];
+  void _initializeControllers() {
+    _optionControllersSection1 = [];
+    _optionControllersSection2 = [];
+    _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
+    if (_question['type'] == 'Matching Type') {
+      _optionControllersSection1 = _createControllers(_question['section1']);
+      _optionControllersSection2 = _createControllers(_question['section2']);
+    } else {
+      _optionControllers = _createControllers(_question['options']);
     }
   }
 
-  void _addOption() {
+  List<TextEditingController> _createControllers(List<dynamic> items) {
+    return List.generate(items.length, (index) => TextEditingController(text: items[index]));
+  }
+
+  void _addOption(List<TextEditingController> controllers, List<dynamic> items) {
     setState(() {
-      _question['options'].add('');
-      _optionControllers.add(TextEditingController());
+      items.add('');
+      controllers.add(TextEditingController());
     });
   }
 
-  void _removeOption(int index) {
+  void _removeOption(List<TextEditingController> controllers, List<dynamic> items, int index) {
     setState(() {
-      _question['options'].removeAt(index);
-      _optionControllers.removeAt(index);
+      items.removeAt(index);
+      controllers.removeAt(index);
     });
   }
 
   void _save() {
-    _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+    if (_question['type'] == 'Matching Type') {
+      _question['section1'] = _optionControllersSection1.map((controller) => controller.text).toList();
+      _question['section2'] = _optionControllersSection2.map((controller) => controller.text).toList();
+      _question['answerPairs'] = _answerPairs;
+    } else {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+    }
     widget.onSave(_question);
     Navigator.pop(context);
   }
@@ -64,18 +77,14 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       content: SingleChildScrollView(
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
+            QuestionTypeDropdown(
               value: _question['type'],
-              items: ['Identification', 'Multiple Choice', 'Matching Type', 'Fill in the Blanks']
-                  .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                  .toList(),
               onChanged: (value) {
                 setState(() {
                   _question['type'] = value!;
-                  _initializeQuestionFields();
+                  _initializeControllers();
                 });
               },
-              decoration: InputDecoration(labelText: 'Question Type'),
             ),
             TextFormField(
               initialValue: _question['question'],
@@ -84,80 +93,37 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                 _question['question'] = value;
               },
             ),
-            if (_question['type'] == 'Identification') ...[
-              TextFormField(
-                initialValue: _question['answer'],
-                decoration: InputDecoration(labelText: 'Answer'),
-                onChanged: (value) {
-                  _question['answer'] = value;
-                },
+            if (_question['type'] == 'Identification')
+              IdentificationSection(
+                question: _question,
+                optionControllers: _optionControllers,
+                addOption: () => _addOption(_optionControllers, _question['options']),
+                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                onAnswerChanged: (value) => setState(() => _question['answer'] = value),
+                onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
+                onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
               ),
-              TextFormField(
-                initialValue: _question['answerLength'].toString(),
-                decoration: InputDecoration(labelText: 'Answer Length'),
-                onChanged: (value) {
-                  _question['answerLength'] = int.tryParse(value) ?? 0;
-                },
+            if (_question['type'] == 'Multiple Choice' || _question['type'] == 'Fill in the Blanks')
+              MultipleChoiceSection(
+                question: _question,
+                optionControllers: _optionControllers,
+                addOption: () => _addOption(_optionControllers, _question['options']),
+                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
               ),
-              ..._optionControllers.map((controller) {
-                int index = _optionControllers.indexOf(controller);
-                return Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: controller,
-                        decoration: InputDecoration(labelText: 'Option ${index + 1}'),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _removeOption(index),
-                    ),
-                  ],
-                );
-              }).toList(),
-              ElevatedButton(
-                onPressed: _addOption,
-                child: Text('Add Option'),
+            if (_question['type'] == 'Matching Type')
+              MatchingTypeSection(
+                question: _question,
+                optionControllersSection1: _optionControllersSection1,
+                optionControllersSection2: _optionControllersSection2,
+                answerPairs: _answerPairs,
+                addOptionSection1: () => _addOption(_optionControllersSection1, _question['section1']),
+                addOptionSection2: () => _addOption(_optionControllersSection2, _question['section2']),
+                removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
+                removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
+                removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
+                addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
               ),
-              TextFormField(
-                initialValue: (_question['space'] as List<dynamic>?)?.join(', ') ?? '',
-                decoration: InputDecoration(labelText: 'Space (comma separated)'),
-                onChanged: (value) {
-                  _question['space'] = value.split(',').map((e) => e.trim()).toList();
-                },
-              ),
-            ],
-            if (_question['type'] == 'Multiple Choice' || _question['type'] == 'Fill in the Blanks' || _question['type'] == 'Matching Type') ...[
-              TextFormField(
-                initialValue: _question['answer'].toString(),
-                decoration: InputDecoration(labelText: 'Answer (index)'),
-                onChanged: (value) {
-                  _question['answer'] = int.tryParse(value) ?? 0;
-                },
-              ),
-              ..._optionControllers.map((controller) {
-                int index = _optionControllers.indexOf(controller);
-                return Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: controller,
-                        decoration: InputDecoration(labelText: 'Option ${index + 1}'),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _removeOption(index),
-                    ),
-                  ],
-                );
-              }).toList(),
-              ElevatedButton(
-                onPressed: _addOption,
-                child: Text('Add Option'),
-              ),
-            ],
           ],
         ),
       ),

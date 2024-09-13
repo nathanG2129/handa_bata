@@ -36,6 +36,9 @@ class _EditStagePageState extends State<EditStagePage> {
         'answerLength': question['answerLength'] ?? 0,
         'options': question['options'] ?? [],
         'space': question['space'] ?? [],
+        'section1': question['section1'] ?? [],
+        'section2': question['section2'] ?? [],
+        'answerPairs': question['answerPairs'] ?? [],
       };
     }).toList();
   }
@@ -49,6 +52,9 @@ class _EditStagePageState extends State<EditStagePage> {
         'answerLength': 0,
         'options': [],
         'space': [],
+        'section1': [],
+        'section2': [],
+        'answerPairs': [],
       });
     });
   }
@@ -102,6 +108,10 @@ class _EditStagePageState extends State<EditStagePage> {
       return indices
           .where((index) => index >= 0 && index < question['options'].length)
           .map<String>((index) => question['options'][index].toString())
+          .toList();
+    } else if (question['type'] == 'Matching Type') {
+      return (question['answerPairs'] as List<dynamic>)
+          .map<String>((pair) => '${pair['section1']} - ${pair['section2']}')
           .toList();
     }
     return [];
@@ -157,6 +167,7 @@ class _EditStagePageState extends State<EditStagePage> {
                       ),
                       itemCount: _questions.length,
                       itemBuilder: (context, index) {
+                        final question = _questions[index];
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           child: Padding(
@@ -165,7 +176,7 @@ class _EditStagePageState extends State<EditStagePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Question ${index + 1}: ${_questions[index]['question']}',
+                                  'Question ${index + 1}: ${question['question']}',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 SizedBox(height: 8.0),
@@ -178,7 +189,14 @@ class _EditStagePageState extends State<EditStagePage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              if (_questions[index]['options'] != null && _questions[index]['options'].isNotEmpty)
+                                              if (question['type'] == 'Matching Type') ...[
+                                                Text('Section 1 Options:'),
+                                                ...question['section1'].map<Widget>((option) => Text(option)).toList(),
+                                                SizedBox(height: 8.0),
+                                                Text('Section 2 Options:'),
+                                                ...question['section2'].map<Widget>((option) => Text(option)).toList(),
+                                              ],
+                                              if (question['type'] != 'Matching Type' && question['options'] != null && question['options'].isNotEmpty)
                                                 Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
@@ -186,7 +204,7 @@ class _EditStagePageState extends State<EditStagePage> {
                                                     Wrap(
                                                       spacing: 8.0, // Space between items
                                                       runSpacing: 4.0, // Space between lines
-                                                      children: _questions[index]['options'].map<Widget>((option) {
+                                                      children: question['options'].map<Widget>((option) {
                                                         return Text('- $option');
                                                       }).toList(),
                                                     ),
@@ -201,12 +219,12 @@ class _EditStagePageState extends State<EditStagePage> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            if (_questions[index]['answer'] != null)
+                                            if (question['answer'] != null)
                                               Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text('Answer:'),
-                                                  ..._getAnswerOptions(_questions[index]).map<Widget>((option) {
+                                                  ..._getAnswerOptions(question).map<Widget>((option) {
                                                     return Text(option); // Display the answer as a single string
                                                   }).toList(),
                                                 ],

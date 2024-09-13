@@ -40,9 +40,14 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       _optionControllersSection1 = _createControllers(_question['section1'] ?? []);
       _optionControllersSection2 = _createControllers(_question['section2'] ?? []);
       _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
+      _question.remove('answer'); // Remove answer field for Matching Type
     } else if (_question['type'] == 'Fill in the Blanks') {
       _optionControllers = _createControllers(_question['options'] ?? []);
       _question['answer'] = List<int>.from(_question['answer'] ?? []);
+    } else if (_question['type'] == 'Identification') {
+      _optionControllers = _createControllers(_question['options'] ?? []);
+      _question['answer'] = _question['answer'] ?? '';
+      _question['answerLength'] = _question['answerLength'] ?? 0; // Ensure answerLength is present for Identification
     } else {
       _optionControllers = _createControllers(_question['options'] ?? []);
       _question['answer'] = _question['answer'] ?? '';
@@ -72,6 +77,7 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       _question['section1'] = _optionControllersSection1.map((controller) => controller.text).toList();
       _question['section2'] = _optionControllersSection2.map((controller) => controller.text).toList();
       _question['answerPairs'] = _answerPairs;
+      _question.remove('answer'); // Remove answer field for Matching Type
     } else {
       _question['options'] = _optionControllers.map((controller) => controller.text).toList();
       if (_question['type'] == 'Fill in the Blanks') {
@@ -97,12 +103,14 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
           children: [
             QuestionTypeDropdown(
               value: _question['type'],
-                onChanged: (value) {
-                setState(() {
-                  _question['type'] = value!;
-                  _initializeControllers();
-                });
-                },
+              onChanged: isNewQuestion
+                  ? (value) {
+                      setState(() {
+                        _question['type'] = value!;
+                        _initializeControllers();
+                      });
+                    }
+                  : (value) {}, // Provide an empty function if not a new question
             ),
             TextFormField(
               initialValue: _question['question'],

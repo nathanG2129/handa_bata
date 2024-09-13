@@ -35,28 +35,17 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
     _answerPairs = [];
     _optionControllers = [];
 
-    // Retain only the question text when switching types
-    String questionText = _question['question'];
-    _question = {'question': questionText, 'type': _question['type']};
-
+    // Initialize controllers based on the question type
     if (_question['type'] == 'Matching Type') {
-      _question['section1'] = [];
-      _question['section2'] = [];
-      _question['answerPairs'] = [];
-    } else if (_question['type'] == 'Fill in the Blanks') {
-      _question['options'] = [];
-      _question['answer'] = [];
-    } else {
-      _question['options'] = [];
-      _question['answer'] = '';
-    }
-
-    if (_question['type'] == 'Matching Type') {
-      _optionControllersSection1 = _createControllers(_question['section1']);
-      _optionControllersSection2 = _createControllers(_question['section2']);
+      _optionControllersSection1 = _createControllers(_question['section1'] ?? []);
+      _optionControllersSection2 = _createControllers(_question['section2'] ?? []);
       _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
+    } else if (_question['type'] == 'Fill in the Blanks') {
+      _optionControllers = _createControllers(_question['options'] ?? []);
+      _question['answer'] = List<int>.from(_question['answer'] ?? []);
     } else {
-      _optionControllers = _createControllers(_question['options']);
+      _optionControllers = _createControllers(_question['options'] ?? []);
+      _question['answer'] = _question['answer'] ?? '';
     }
   }
 
@@ -99,6 +88,8 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    bool isNewQuestion = widget.question['id'] == null; // Assuming 'id' is null for new questions
+
     return AlertDialog(
       title: Text('Edit Question'),
       content: SingleChildScrollView(
@@ -106,12 +97,12 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
           children: [
             QuestionTypeDropdown(
               value: _question['type'],
-              onChanged: (value) {
+                onChanged: (value) {
                 setState(() {
                   _question['type'] = value!;
                   _initializeControllers();
                 });
-              },
+                },
             ),
             TextFormField(
               initialValue: _question['question'],

@@ -4,13 +4,13 @@ class MatchingTypeSection extends StatefulWidget {
   final Map<String, dynamic> question;
   final List<TextEditingController> optionControllersSection1;
   final List<TextEditingController> optionControllersSection2;
-  final List<Map<String, String>> answerPairs;
+  final List<Map<String, String>> answerPairs; // Changed to store options
   final VoidCallback addOptionSection1;
   final VoidCallback addOptionSection2;
   final ValueChanged<int> removeOptionSection1;
   final ValueChanged<int> removeOptionSection2;
   final ValueChanged<int> removeAnswerPair;
-  final ValueChanged<Map<String, String>> addAnswerPair;
+  final ValueChanged<Map<String, String>> addAnswerPair; // Changed to store options
 
   const MatchingTypeSection({
     super.key,
@@ -102,12 +102,12 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedSection1Option,
-                items: widget.question['section1']
-                    .map<DropdownMenuItem<String>>((option) => DropdownMenuItem<String>(
-                          value: option,
-                          child: Text(option),
-                        ))
-                    .toList(),
+                items: widget.optionControllersSection1.map((controller) {
+                  return DropdownMenuItem<String>(
+                    value: controller.text,
+                    child: Text(controller.text),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     selectedSection1Option = value;
@@ -119,12 +119,12 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedSection2Option,
-                items: widget.question['section2']
-                    .map<DropdownMenuItem<String>>((option) => DropdownMenuItem<String>(
-                          value: option,
-                          child: Text(option),
-                        ))
-                    .toList(),
+                items: widget.optionControllersSection2.map((controller) {
+                  return DropdownMenuItem<String>(
+                    value: controller.text,
+                    child: Text(controller.text),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     selectedSection2Option = value;
@@ -136,7 +136,13 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
             IconButton(
               icon: Icon(Icons.add),
               onPressed: selectedSection1Option != null && selectedSection2Option != null
-                  ? () => widget.addAnswerPair({'section1': selectedSection1Option!, 'section2': selectedSection2Option!})
+                  ? () {
+                      widget.addAnswerPair({'section1': selectedSection1Option!, 'section2': selectedSection2Option!});
+                      setState(() {
+                        selectedSection1Option = null;
+                        selectedSection2Option = null;
+                      });
+                    }
                   : null,
             ),
           ],

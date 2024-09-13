@@ -89,6 +89,24 @@ class _EditStagePageState extends State<EditStagePage> {
     });
   }
 
+  List<String> _getAnswerOptions(Map<String, dynamic> question) {
+    if (question['type'] == 'Identification') {
+      return [question['answer']]; // Return the answer as a single string
+    } else if (question['answer'] is int) {
+      int index = question['answer'];
+      if (index >= 0 && index < question['options'].length) {
+        return [question['options'][index].toString()];
+      }
+    } else if (question['answer'] is List) {
+      List<int> indices = (question['answer'] as List<dynamic>).map<int>((e) => e as int).toList();
+      return indices
+          .where((index) => index >= 0 && index < question['options'].length)
+          .map<String>((index) => question['options'][index].toString())
+          .toList();
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,13 +145,19 @@ class _EditStagePageState extends State<EditStagePage> {
               ),
               SizedBox(height: 20),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _questions.length,
-                  itemBuilder: (context, index) {
-                    return Center(
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
-                        child: Card(
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 3, // Adjusted to make the cards shorter
+                      ),
+                      itemCount: _questions.length,
+                      itemBuilder: (context, index) {
+                        return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -145,24 +169,54 @@ class _EditStagePageState extends State<EditStagePage> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 SizedBox(height: 8.0),
-                                if (_questions[index]['options'] != null && _questions[index]['options'].isNotEmpty)
-                                  Column(
+                                Expanded(
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Options:'),
-                                      ..._questions[index]['options'].map<Widget>((option) {
-                                        return Text('- $option');
-                                      }).toList(),
+                                      Expanded(
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              if (_questions[index]['options'] != null && _questions[index]['options'].isNotEmpty)
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text('Options:'),
+                                                    Wrap(
+                                                      spacing: 8.0, // Space between items
+                                                      runSpacing: 4.0, // Space between lines
+                                                      children: _questions[index]['options'].map<Widget>((option) {
+                                                        return Text('- $option');
+                                                      }).toList(),
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 16.0), // Add some spacing between the columns
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (_questions[index]['answer'] != null)
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text('Answer:'),
+                                                  ..._getAnswerOptions(_questions[index]).map<Widget>((option) {
+                                                    return Text(option); // Display the answer as a single string
+                                                  }).toList(),
+                                                ],
+                                              ),
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                if (_questions[index]['answer'] != null && _questions[index]['answer'].isNotEmpty)
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Answer:'),
-                                      Text('- ${_questions[index]['answer']}'),
-                                    ],
-                                  ),
+                                ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
@@ -179,10 +233,10 @@ class _EditStagePageState extends State<EditStagePage> {
                               ],
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: 20),

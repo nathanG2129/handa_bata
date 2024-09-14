@@ -131,82 +131,83 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
   Widget build(BuildContext context) {
     bool isNewQuestion = widget.question['id'] == null; // Assuming 'id' is null for new questions
 
-    return AlertDialog(
-      title: Text('Edit Question'),
-      content: SingleChildScrollView(
-        child: Column(
-          children: [
-            QuestionTypeDropdown(
-              value: _question['type'],
-              onChanged: isNewQuestion
-                  ? (value) {
-                      setState(() {
-                        _question['type'] = value!;
-                        _initializeControllers();
-                      });
-                    }
-                  : (value) {}, // Provide an empty function if not a new question
+    return Dialog(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.35, // Set dialog width to 35% of screen width
+        child: AlertDialog(
+          title: Text('Edit Question'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                QuestionTypeDropdown(
+                  value: _question['type'],
+                  onChanged: isNewQuestion
+                      ? (value) {
+                          setState(() {
+                            _question['type'] = value!;
+                            _initializeControllers();
+                          });
+                        }
+                      : (value) {}, // Provide an empty function if not a new question
+                ),
+                if (_question['type'] == 'Identification')
+                  IdentificationSection(
+                    question: _question,
+                    optionControllers: _optionControllers,
+                    addOption: () => _addOption(_optionControllers, _question['options']),
+                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                    onAnswerChanged: (value) => setState(() => _question['answer'] = value),
+                    onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
+                    onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
+                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                  ),
+                if (_question['type'] == 'Multiple Choice')
+                  MultipleChoiceSection(
+                    question: _question,
+                    optionControllers: _optionControllers,
+                    addOption: () => _addOption(_optionControllers, _question['options']),
+                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                    onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
+                  ),
+                if (_question['type'] == 'Fill in the Blanks')
+                  FillInTheBlanksSection(
+                    question: _question,
+                    optionControllers: _optionControllers,
+                    addOption: () => _addOption(_optionControllers, _question['options']),
+                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
+                    onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
+                  ),
+                if (_question['type'] == 'Matching Type')
+                  MatchingTypeSection(
+                    question: _question,
+                    optionControllersSection1: _optionControllersSection1,
+                    optionControllersSection2: _optionControllersSection2,
+                    answerPairs: _answerPairs,
+                    addOptionSection1: () => _addOption(_optionControllersSection1, _question['section1']),
+                    addOptionSection2: () => _addOption(_optionControllersSection2, _question['section2']),
+                    removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
+                    removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
+                    removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
+                    addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
+                  ),
+              ],
             ),
-            TextFormField(
-              initialValue: _question['question'],
-              decoration: InputDecoration(labelText: 'Question'),
-              onChanged: (value) {
-                _question['question'] = value;
-              },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
             ),
-            if (_question['type'] == 'Identification')
-              IdentificationSection(
-                question: _question,
-                optionControllers: _optionControllers,
-                addOption: () => _addOption(_optionControllers, _question['options']),
-                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                onAnswerChanged: (value) => setState(() => _question['answer'] = value),
-                onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
-                onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
-              ),
-            if (_question['type'] == 'Multiple Choice')
-              MultipleChoiceSection(
-                question: _question,
-                optionControllers: _optionControllers,
-                addOption: () => _addOption(_optionControllers, _question['options']),
-                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
-              ),
-            if (_question['type'] == 'Fill in the Blanks')
-              FillInTheBlanksSection(
-                question: _question,
-                optionControllers: _optionControllers,
-                addOption: () => _addOption(_optionControllers, _question['options']),
-                removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
-                onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
-              ),
-            if (_question['type'] == 'Matching Type')
-              MatchingTypeSection(
-                question: _question,
-                optionControllersSection1: _optionControllersSection1,
-                optionControllersSection2: _optionControllersSection2,
-                answerPairs: _answerPairs,
-                addOptionSection1: () => _addOption(_optionControllersSection1, _question['section1']),
-                addOptionSection2: () => _addOption(_optionControllersSection2, _question['section2']),
-                removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
-                removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
-                removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
-                addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
-              ),
+            TextButton(
+              onPressed: _save,
+              child: Text('Save'),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: _save,
-          child: Text('Save'),
-        ),
-      ],
     );
   }
 }
+        
+     

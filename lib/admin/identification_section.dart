@@ -8,6 +8,7 @@ class IdentificationSection extends StatelessWidget {
   final ValueChanged<String> onAnswerChanged;
   final ValueChanged<String> onAnswerLengthChanged;
   final ValueChanged<String> onSpaceChanged;
+  final ValueChanged<String> onQuestionChanged; // Add this callback
 
   const IdentificationSection({
     super.key,
@@ -18,47 +19,104 @@ class IdentificationSection extends StatelessWidget {
     required this.onAnswerChanged,
     required this.onAnswerLengthChanged,
     required this.onSpaceChanged,
+    required this.onQuestionChanged, // Add this parameter
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextFormField(
-          initialValue: question['answer'],
-          decoration: InputDecoration(labelText: 'Answer'),
-          onChanged: onAnswerChanged,
-        ),
-        TextFormField(
-          initialValue: question['answerLength'].toString(),
-          decoration: InputDecoration(labelText: 'Answer Length'),
-          onChanged: onAnswerLengthChanged,
-        ),
-        ...optionControllers.map((controller) {
-          int index = optionControllers.indexOf(controller);
-          return Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  decoration: InputDecoration(labelText: 'Option ${index + 1}'),
+        Card(
+          margin: EdgeInsets.all(8.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Question Details',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () => removeOption(index),
-              ),
-            ],
-          );
-        }).toList(),
-        ElevatedButton(
-          onPressed: addOption,
-          child: Text('Add Option'),
+                SizedBox(height: 8.0),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  child: TextFormField(
+                    initialValue: question['question'],
+                    decoration: InputDecoration(labelText: 'Question'),
+                    onChanged: onQuestionChanged, // Use the callback
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  child: TextFormField(
+                    initialValue: question['answer'],
+                    decoration: InputDecoration(labelText: 'Answer'),
+                    onChanged: onAnswerChanged,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  child: TextFormField(
+                    initialValue: question['answerLength'].toString(),
+                    decoration: InputDecoration(labelText: 'Answer Length'),
+                    onChanged: onAnswerLengthChanged,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  child: TextFormField(
+                    initialValue: (question['space'] as List<dynamic>?)?.join(', ') ?? '',
+                    decoration: InputDecoration(labelText: 'Space (comma separated)'),
+                    onChanged: onSpaceChanged,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        TextFormField(
-          initialValue: (question['space'] as List<dynamic>?)?.join(', ') ?? '',
-          decoration: InputDecoration(labelText: 'Space (comma separated)'),
-          onChanged: onSpaceChanged,
+        Card(
+          margin: EdgeInsets.all(8.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Options',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8.0),
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
+                  children: List.generate(optionControllers.length, (index) {
+                    return SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 35% of the available width
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: optionControllers[index],
+                              decoration: InputDecoration(labelText: 'Option ${index + 1}'),
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => removeOption(index),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+                SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: addOption,
+                  child: Text('Add Option'),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );

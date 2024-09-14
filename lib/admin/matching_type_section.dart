@@ -78,6 +78,11 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: widget.addOptionSection1,
+                  child: Text('Add Option to Section 1'),
+                ),
+                SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -102,11 +107,6 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                     );
                   }).toList(),
                 ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: widget.addOptionSection1,
-                  child: Text('Add Option to Section 1'),
-                ),
               ],
             ),
           ),
@@ -122,6 +122,11 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                 Text(
                   'Options Section 2',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: widget.addOptionSection2,
+                  child: Text('Add Option to Section 2'),
                 ),
                 SizedBox(height: 8.0),
                 Wrap(
@@ -147,11 +152,6 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                       ),
                     );
                   }).toList(),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: widget.addOptionSection2,
-                  child: Text('Add Option to Section 2'),
                 ),
               ],
             ),

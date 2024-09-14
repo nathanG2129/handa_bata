@@ -91,12 +91,17 @@ class IdentificationSection extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: addOption,
+                  child: Text('Add Option'),
+                ),
+                SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
                   children: List.generate(optionControllers.length, (index) {
                     return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 35% of the available width
+                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
                       child: Row(
                         children: [
                           Expanded(
@@ -113,11 +118,6 @@ class IdentificationSection extends StatelessWidget {
                       ),
                     );
                   }),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: addOption,
-                  child: Text('Add Option'),
                 ),
               ],
             ),

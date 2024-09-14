@@ -6,16 +6,15 @@ class MultipleChoiceSection extends StatelessWidget {
   final VoidCallback addOption;
   final ValueChanged<int> removeOption;
   final ValueChanged<String> onAnswerChanged;
-  final ValueChanged<String> onQuestionChanged; // Add this callback
+  final ValueChanged<String> onQuestionChanged;
 
-  const MultipleChoiceSection({
-    super.key,
+  MultipleChoiceSection({
     required this.question,
     required this.optionControllers,
     required this.addOption,
     required this.removeOption,
     required this.onAnswerChanged,
-    required this.onQuestionChanged, // Add this parameter
+    required this.onQuestionChanged,
   });
 
   @override
@@ -69,17 +68,23 @@ class MultipleChoiceSection extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: addOption,
+                  child: Text('Add Option'),
+                ),
+                SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
-                  children: List.generate(optionControllers.length, (index) {
+                  children: optionControllers.map((controller) {
+                    int index = optionControllers.indexOf(controller);
                     return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 35% of the available width
+                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
                       child: Row(
                         children: [
                           Expanded(
                             child: TextFormField(
-                              controller: optionControllers[index],
+                              controller: controller,
                               decoration: InputDecoration(labelText: 'Option ${index + 1}'),
                             ),
                           ),
@@ -90,12 +95,7 @@ class MultipleChoiceSection extends StatelessWidget {
                         ],
                       ),
                     );
-                  }),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: addOption,
-                  child: Text('Add Option'),
+                  }).toList(),
                 ),
               ],
             ),

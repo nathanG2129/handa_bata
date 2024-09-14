@@ -43,10 +43,10 @@ class _EditStagePageState extends State<EditStagePage> {
     }).toList();
   }
 
-  void _addQuestion() {
+  void _addQuestion(String type) {
     setState(() {
       _questions.add({
-        'type': 'Identification',
+        'type': type,
         'question': '',
         'answer': '',
         'answerLength': 0,
@@ -149,9 +149,29 @@ class _EditStagePageState extends State<EditStagePage> {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _addQuestion,
-                child: Text('Add Question'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _addQuestion('Multiple Choice'),
+                    child: Text('Add Multiple Choice'),
+                  ),
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () => _addQuestion('Fill in the Blanks'),
+                    child: Text('Add Fill in the Blanks'),
+                  ),
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () => _addQuestion('Matching Type'),
+                    child: Text('Add Matching Type'),
+                  ),
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () => _addQuestion('Identification'),
+                    child: Text('Add Identification'),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
               Expanded(
@@ -175,9 +195,20 @@ class _EditStagePageState extends State<EditStagePage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Question ${index + 1}: ${question['question']}',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        'Question ${index + 1}: ${question['question']}',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Text(
+                                      question['type'],
+                                      style: TextStyle(fontStyle: FontStyle.italic),
+                                    ),
+                                  ],
                                 ),
                                 SizedBox(height: 8.0),
                                 Expanded(

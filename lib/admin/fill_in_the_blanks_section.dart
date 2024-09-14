@@ -61,6 +61,11 @@ class FillInTheBlanksSection extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: addOption,
+                  child: Text('Add Option'),
+                ),
+                SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -86,11 +91,6 @@ class FillInTheBlanksSection extends StatelessWidget {
                     );
                   }).toList(),
                 ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: addOption,
-                  child: Text('Add Option'),
-                ),
               ],
             ),
           ),
@@ -106,6 +106,14 @@ class FillInTheBlanksSection extends StatelessWidget {
                 Text(
                   'Correct Answers (Indexes)',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: () {
+                    question['answer'].add(0);
+                    (context as Element).markNeedsBuild(); // Force rebuild to update UI
+                  },
+                  child: Text('Add Answer Index'),
                 ),
                 SizedBox(height: 8.0),
                 Wrap(
@@ -134,14 +142,6 @@ class FillInTheBlanksSection extends StatelessWidget {
                       ),
                     );
                   }),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: () {
-                    question['answer'].add(0);
-                    (context as Element).markNeedsBuild(); // Force rebuild to update UI
-                  },
-                  child: Text('Add Answer Index'),
                 ),
               ],
             ),

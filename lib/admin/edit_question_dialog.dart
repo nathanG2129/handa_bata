@@ -40,17 +40,34 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       _optionControllersSection1 = _createControllers(_question['section1'] ?? []);
       _optionControllersSection2 = _createControllers(_question['section2'] ?? []);
       _answerPairs = List<Map<String, String>>.from(_question['answerPairs']?.map((pair) => Map<String, String>.from(pair)) ?? []);
-      _question.remove('answer'); // Remove answer field for Matching Type
+      _question.remove('answer'); // Remove unnecessary fields
+      _question.remove('answerLength');
+      _question.remove('space');
+      _question.remove('options');
     } else if (_question['type'] == 'Fill in the Blanks') {
       _optionControllers = _createControllers(_question['options'] ?? []);
       _question['answer'] = List<int>.from(_question['answer'] ?? []);
+      _question.remove('answerLength'); // Remove unnecessary fields
+      _question.remove('space');
+      _question.remove('section1');
+      _question.remove('section2');
+      _question.remove('answerPairs');
     } else if (_question['type'] == 'Identification') {
       _optionControllers = _createControllers(_question['options'] ?? []);
       _question['answer'] = _question['answer'] ?? '';
-      _question['answerLength'] = _question['answerLength'] ?? 0; // Ensure answerLength is present for Identification
-    } else {
+      _question['answerLength'] = _question['answerLength'] ?? 0; // Ensure necessary fields are present
+      _question['space'] = _question['space'] ?? [];
+      _question.remove('section1'); // Remove unnecessary fields
+      _question.remove('section2');
+      _question.remove('answerPairs');
+    } else if (_question['type'] == 'Multiple Choice') {
       _optionControllers = _createControllers(_question['options'] ?? []);
       _question['answer'] = _question['answer'] ?? '';
+      _question.remove('answerLength'); // Remove unnecessary fields
+      _question.remove('space');
+      _question.remove('section1');
+      _question.remove('section2');
+      _question.remove('answerPairs');
     }
   }
 
@@ -77,13 +94,31 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
       _question['section1'] = _optionControllersSection1.map((controller) => controller.text).toList();
       _question['section2'] = _optionControllersSection2.map((controller) => controller.text).toList();
       _question['answerPairs'] = _answerPairs;
-      _question.remove('answer'); // Remove answer field for Matching Type
-    } else {
+      _question.remove('answer'); // Remove unnecessary fields
+      _question.remove('answerLength');
+      _question.remove('space');
+      _question.remove('options');
+    } else if (_question['type'] == 'Fill in the Blanks') {
       _question['options'] = _optionControllers.map((controller) => controller.text).toList();
-      if (_question['type'] == 'Fill in the Blanks') {
-        _question['answer'] = _question['answer'].map((index) => int.tryParse(index.toString()) ?? 0).toList();
-      }
-      // Remove fields specific to Matching Type
+      _question['answer'] = _question['answer'].map((index) => int.tryParse(index.toString()) ?? 0).toList();
+      _question.remove('answerLength'); // Remove unnecessary fields
+      _question.remove('space');
+      _question.remove('section1');
+      _question.remove('section2');
+      _question.remove('answerPairs');
+    } else if (_question['type'] == 'Identification') {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+      _question['answer'] = _question['answer'] ?? '';
+      _question['answerLength'] = _question['answerLength'] ?? 0; // Ensure necessary fields are present
+      _question['space'] = _question['space'] ?? [];
+      _question.remove('section1'); // Remove unnecessary fields
+      _question.remove('section2');
+      _question.remove('answerPairs');
+    } else if (_question['type'] == 'Multiple Choice') {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+      _question['answer'] = _question['answer'] ?? '';
+      _question.remove('answerLength'); // Remove unnecessary fields
+      _question.remove('space');
       _question.remove('section1');
       _question.remove('section2');
       _question.remove('answerPairs');

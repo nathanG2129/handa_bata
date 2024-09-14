@@ -168,6 +168,7 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                     addOption: () => _addOption(_optionControllers, _question['options']),
                     removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
                     onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
+                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
                   ),
                 if (_question['type'] == 'Fill in the Blanks')
                   FillInTheBlanksSection(
@@ -209,5 +210,3 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
     );
   }
 }
-        
-     

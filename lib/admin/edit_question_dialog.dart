@@ -176,8 +176,9 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                     optionControllers: _optionControllers,
                     addOption: () => _addOption(_optionControllers, _question['options']),
                     removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
+                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = int.tryParse(value as String) ?? 0), // Updated call
                     onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
+                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
                   ),
                 if (_question['type'] == 'Matching Type')
                   MatchingTypeSection(
@@ -190,11 +191,12 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                     removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
                     removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
                     removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
-                    addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
-                  ),
-              ],
-            ),
+                  addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
+                  onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                ),
+            ],
           ),
+        ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),

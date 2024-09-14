@@ -26,6 +26,7 @@ class IdentificationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        SizedBox(height: 16.0), // Add margin above the question details
         Card(
           margin: EdgeInsets.all(8.0),
           child: Padding(
@@ -39,31 +40,34 @@ class IdentificationSection extends StatelessWidget {
                 ),
                 SizedBox(height: 8.0),
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['question'],
                     decoration: InputDecoration(labelText: 'Question'),
                     onChanged: onQuestionChanged, // Use the callback
                   ),
                 ),
+                SizedBox(height: 8.0), // Add margin between fields
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['answer'],
                     decoration: InputDecoration(labelText: 'Answer'),
                     onChanged: onAnswerChanged,
                   ),
                 ),
+                SizedBox(height: 8.0), // Add margin between fields
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['answerLength'].toString(),
                     decoration: InputDecoration(labelText: 'Answer Length'),
                     onChanged: onAnswerLengthChanged,
                   ),
                 ),
+                SizedBox(height: 8.0), // Add margin between fields
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 15% of the available width
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: (question['space'] as List<dynamic>?)?.join(', ') ?? '',
                     decoration: InputDecoration(labelText: 'Space (comma separated)'),
@@ -74,6 +78,7 @@ class IdentificationSection extends StatelessWidget {
             ),
           ),
         ),
+        SizedBox(height: 16.0), // Add margin between sections
         Card(
           margin: EdgeInsets.all(8.0),
           child: Padding(

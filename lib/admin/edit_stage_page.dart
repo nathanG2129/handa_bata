@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/stage_service.dart';
-import 'edit_question_dialog.dart';
-import 'question_list_item.dart';
+import 'admin_widgets/edit_question_dialog.dart';
+import 'admin_widgets/question_list_item.dart';
 
 class EditStagePage extends StatefulWidget {
   final String language;

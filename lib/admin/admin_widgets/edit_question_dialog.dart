@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'matching_type_section.dart';
-import 'multiple_choice_section.dart';
-import 'identification_section.dart';
-import 'fill_in_the_blanks_section.dart'; // Import the new file
+import '../types/matching_type_section.dart';
+import '../types/multiple_choice_section.dart';
+import '../types/identification_section.dart';
+import '../types/fill_in_the_blanks_section.dart'; // Import the new file
 
 class EditQuestionDialog extends StatefulWidget {
   final Map<String, dynamic> question;

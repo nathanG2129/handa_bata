@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../types/matching_type_section.dart';
 import '../types/multiple_choice_section.dart';
 import '../types/identification_section.dart';
-import '../types/fill_in_the_blanks_section.dart'; // Import the new file
+import '../types/fill_in_the_blanks_section.dart'; 
 
 class EditQuestionDialog extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -128,8 +128,6 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    bool isNewQuestion = widget.question['id'] == null; // Assuming 'id' is null for new questions
-
     return Dialog(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.35, // Set dialog width to 35% of screen width

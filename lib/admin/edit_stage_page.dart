@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/stage_service.dart';
 import 'admin_widgets/edit_question_dialog.dart';
-import 'admin_widgets/question_list_item.dart';
 
 class EditStagePage extends StatefulWidget {
   final String language;
@@ -19,7 +18,6 @@ class _EditStagePageState extends State<EditStagePage> {
   final _formKey = GlobalKey<FormState>();
   final StageService _stageService = StageService();
   late TextEditingController _stageNameController;
-  late String _stageName;
   late List<Map<String, dynamic>> _questions;
 
   @override
@@ -27,7 +25,6 @@ class _EditStagePageState extends State<EditStagePage> {
     super.initState();
     _stageNameController = TextEditingController(text: widget.stageName);
     _questions = List<Map<String, dynamic>>.from(widget.questions);
-    _stageName = widget.stageName;
     _questions = widget.questions.map((question) {
       return {
         'type': question['type'] ?? 'Identification',
@@ -143,7 +140,6 @@ class _EditStagePageState extends State<EditStagePage> {
                       return null;
                     },
                     onSaved: (value) {
-                      _stageName = value!;
                     },
                   ),
                 ),

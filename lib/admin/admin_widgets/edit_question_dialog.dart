@@ -88,44 +88,6 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
     });
   }
 
-  void _save() {
-    if (_question['type'] == 'Matching Type') {
-      _question['section1'] = _optionControllersSection1.map((controller) => controller.text).toList();
-      _question['section2'] = _optionControllersSection2.map((controller) => controller.text).toList();
-      _question['answerPairs'] = _answerPairs;
-      _question.remove('answer'); // Remove unnecessary fields
-      _question.remove('answerLength');
-      _question.remove('space');
-      _question.remove('options');
-    } else if (_question['type'] == 'Fill in the Blanks') {
-      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
-      _question['answer'] = (_question['answer'] is List) ? List<int>.from(_question['answer']) : [];
-      _question.remove('answerLength'); // Remove unnecessary fields
-      _question.remove('space');
-      _question.remove('section1');
-      _question.remove('section2');
-      _question.remove('answerPairs');
-    } else if (_question['type'] == 'Identification') {
-      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
-      _question['answer'] = _question['answer'] ?? '';
-      _question['answerLength'] = _question['answerLength'] ?? 0; // Ensure necessary fields are present
-      _question['space'] = _question['space'] ?? [];
-      _question.remove('section1'); // Remove unnecessary fields
-      _question.remove('section2');
-      _question.remove('answerPairs');
-    } else if (_question['type'] == 'Multiple Choice') {
-      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
-      _question['answer'] = _question['answer'] ?? '';
-      _question.remove('answerLength'); // Remove unnecessary fields
-      _question.remove('space');
-      _question.remove('section1');
-      _question.remove('section2');
-      _question.remove('answerPairs');
-    }
-    widget.onSave(_question);
-    Navigator.pop(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -186,11 +148,7 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: _save,
-              child: Text('Save'),
+              child: Text('Close'),
             ),
           ],
         ),

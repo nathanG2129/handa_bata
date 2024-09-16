@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
 import 'admin_widgets/edit_question_dialog.dart';
 
@@ -134,10 +136,14 @@ class _EditStagePageState extends State<EditStagePage> {
         false;
   }
 
-  Widget _buildQuestionCard(int index) {
+   Widget _buildQuestionCard(int index) {
     final question = _questions[index];
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0.0), // Square corners
+        side: const BorderSide(color: Colors.black, width: 2.0), // Black border
+      ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -149,12 +155,12 @@ class _EditStagePageState extends State<EditStagePage> {
                 Flexible(
                   child: Text(
                     'Question ${index + 1}: ${question['question']}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.vt323(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20),
                   ),
                 ),
                 Text(
                   question['type'],
-                  style: TextStyle(fontStyle: FontStyle.italic),
+                  style: GoogleFonts.vt323(fontStyle: FontStyle.italic, color: Colors.black, fontSize: 20),
                 ),
               ],
             ),
@@ -169,22 +175,22 @@ class _EditStagePageState extends State<EditStagePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (question['type'] == 'Matching Type') ...[
-                            Text('Section 1 Options:'),
-                            ...question['section1'].map<Widget>((option) => Text(option)).toList(),
+                            Text('Section 1 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+                            ...question['section1'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
                             SizedBox(height: 8.0),
-                            Text('Section 2 Options:'),
-                            ...question['section2'].map<Widget>((option) => Text(option)).toList(),
+                            Text('Section 2 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+                            ...question['section2'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
                           ],
                           if (question['type'] != 'Matching Type' && question['options'] != null && question['options'].isNotEmpty)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Options:'),
+                                Text('Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
                                 Wrap(
                                   spacing: 8.0, // Space between items
                                   runSpacing: 4.0, // Space between lines
                                   children: question['options'].map<Widget>((option) {
-                                    return Text('- $option');
+                                    return Text('- $option', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20));
                                   }).toList(),
                                 ),
                               ],
@@ -202,9 +208,9 @@ class _EditStagePageState extends State<EditStagePage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Answer:'),
+                              Text('Answer:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
                               ..._getAnswerOptions(question).map<Widget>((option) {
-                                return Text(option); // Display the answer as a single string
+                                return Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)); // Display the answer as a single string
                               }).toList(),
                             ],
                           ),
@@ -239,22 +245,38 @@ class _EditStagePageState extends State<EditStagePage> {
       children: [
         ElevatedButton(
           onPressed: () => _addQuestion('Multiple Choice'),
-          child: Text('Add Multiple Choice'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF381c64),
+            shadowColor: Colors.transparent,
+          ),
+          child: Text('Add Multiple Choice', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
         SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Fill in the Blanks'),
-          child: Text('Add Fill in the Blanks'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF381c64),
+            shadowColor: Colors.transparent,
+          ),
+          child: Text('Add Fill in the Blanks', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
         SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Matching Type'),
-          child: Text('Add Matching Type'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF381c64),
+            shadowColor: Colors.transparent,
+          ),
+          child: Text('Add Matching Type', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
         SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Identification'),
-          child: Text('Add Identification'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF381c64),
+            shadowColor: Colors.transparent,
+          ),
+          child: Text('Add Identification', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
       ],
     );
@@ -264,59 +286,102 @@ class _EditStagePageState extends State<EditStagePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Edit Stage'),
+      child: MaterialApp(
+        theme: ThemeData(
+          textTheme: GoogleFonts.vt323TextTheme().apply(bodyColor: Colors.white, displayColor: Colors.white),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Center(
-                  child: Container(
-                    width: 300,
-                    child: TextFormField(
-                      controller: _stageNameController,
-                      decoration: InputDecoration(labelText: 'Stage Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a stage name';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
+        home: Scaffold(
+          backgroundColor: const Color(0xFF381c64),
+          appBar: AppBar(
+            title: Text('Edit Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
+            backgroundColor: const Color(0xFF381c64),
+          ),
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
                 ),
-                SizedBox(height: 20),
-                _buildQuestionButtons(),
-                SizedBox(height: 20),
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 3, // Adjusted to make the cards shorter
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 300,
+                          child: TextFormField(
+                            controller: _stageNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Stage Name',
+                              labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                              ),
+                            ),
+                            style: const TextStyle(color: Colors.white),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a stage name';
+                              }
+                              return null;
+                            },
+                          ),
                         ),
-                        itemCount: _questions.length,
-                        itemBuilder: (context, index) => _buildQuestionCard(index),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      _buildQuestionButtons(),
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: Center(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
+                            child: GridView.builder(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 3, // Adjusted to make the cards shorter
+                              ),
+                              itemCount: _questions.length,
+                              itemBuilder: (context, index) => _buildQuestionCard(index),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _saveStage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF1B33A),
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(0.0),
+                            side: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                        ),
+                        child: Text('Save Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _saveStage,
-                  child: Text('Save Stage'),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -9,7 +9,7 @@ class FillInTheBlanksSection extends StatelessWidget {
   final void Function(int, String) onOptionChanged; // Updated signature
   final ValueChanged<String> onQuestionChanged; // Add this callback
 
-  FillInTheBlanksSection({
+  const FillInTheBlanksSection({super.key, 
     required this.question,
     required this.optionControllers,
     required this.addOption,
@@ -23,24 +23,24 @@ class FillInTheBlanksSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 16.0), // Add margin above the question details
+        const SizedBox(height: 16.0), // Add margin above the question details
         Card(
-          margin: EdgeInsets.all(8.0),
+          margin: const EdgeInsets.all(8.0),
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Question Details',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['question'],
-                    decoration: InputDecoration(labelText: 'Question'),
+                    decoration: const InputDecoration(labelText: 'Question'),
                     onChanged: onQuestionChanged, // Use the callback
                   ),
                 ),
@@ -48,24 +48,24 @@ class FillInTheBlanksSection extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 16.0), // Add margin between sections
+        const SizedBox(height: 16.0), // Add margin between sections
         Card(
-          margin: EdgeInsets.all(8.0),
+          margin: const EdgeInsets.all(8.0),
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Options',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 ElevatedButton(
                   onPressed: addOption,
-                  child: Text('Add Option'),
+                  child: const Text('Add Option'),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -83,7 +83,7 @@ class FillInTheBlanksSection extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             onPressed: () => removeOption(index),
                           ),
                         ],
@@ -95,27 +95,27 @@ class FillInTheBlanksSection extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 16.0), // Add margin between sections
+        const SizedBox(height: 16.0), // Add margin between sections
         Card(
-          margin: EdgeInsets.all(8.0),
+          margin: const EdgeInsets.all(8.0),
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Correct Answers (Indexes)',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 ElevatedButton(
                   onPressed: () {
                     question['answer'].add(0);
                     (context as Element).markNeedsBuild(); // Force rebuild to update UI
                   },
-                  child: Text('Add Answer Index'),
+                  child: const Text('Add Answer Index'),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -132,7 +132,7 @@ class FillInTheBlanksSection extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             onPressed: () {
                               question['answer'].removeAt(index);
                               (context as Element).markNeedsBuild(); // Force rebuild to update UI

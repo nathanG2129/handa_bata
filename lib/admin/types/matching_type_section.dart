@@ -87,9 +87,9 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
     ValueChanged<int> removeOption,
   ) {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: const EdgeInsets.all(8.0),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -97,12 +97,12 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
               title,
               style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             ElevatedButton(
               onPressed: addOption,
-              child: Text('Add Option'),
+              child: const Text('Add Option'),
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             Wrap(
               spacing: 8.0,
               runSpacing: 8.0,
@@ -119,7 +119,7 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete),
+                        icon: const Icon(Icons.delete),
                         onPressed: () => removeOption(index),
                       ),
                     ],
@@ -135,9 +135,9 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
 
   Widget _buildAnswerPairsSection(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: const EdgeInsets.all(8.0),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -145,7 +145,7 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
               'Answer Pairs',
               style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             ...widget.answerPairs.map((pair) {
               int index = widget.answerPairs.indexOf(pair);
               return Row(
@@ -154,12 +154,12 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                     child: Text('${pair['section1']} - ${pair['section2']}'),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => widget.removeAnswerPair(index),
                   ),
                 ],
               );
-            }).toList(),
+            }),
             Row(
               children: [
                 Expanded(
@@ -176,7 +176,7 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                         selectedSection1Option = value;
                       });
                     },
-                    decoration: InputDecoration(labelText: 'Section 1 Option'),
+                    decoration: const InputDecoration(labelText: 'Section 1 Option'),
                   ),
                 ),
                 Expanded(
@@ -193,11 +193,11 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                         selectedSection2Option = value;
                       });
                     },
-                    decoration: InputDecoration(labelText: 'Section 2 Option'),
+                    decoration: const InputDecoration(labelText: 'Section 2 Option'),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: selectedSection1Option != null && selectedSection2Option != null
                       ? () {
                           widget.addAnswerPair({'section1': selectedSection1Option!, 'section2': selectedSection2Option!});

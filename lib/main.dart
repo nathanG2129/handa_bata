@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(), // Use the conditional HomePage
+      home: const HomePage(), // Use the conditional HomePage
     );
   }
 }

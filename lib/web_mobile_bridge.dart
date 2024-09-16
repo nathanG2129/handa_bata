@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:handabatamae/admin/admin_home_page.dart';
 // import 'package:handabatamae/admin/admin_login_page.dart';

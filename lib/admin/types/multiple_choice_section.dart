@@ -8,7 +8,7 @@ class MultipleChoiceSection extends StatelessWidget {
   final ValueChanged<String> onAnswerChanged;
   final ValueChanged<String> onQuestionChanged;
 
-  MultipleChoiceSection({
+  const MultipleChoiceSection({super.key, 
     required this.question,
     required this.optionControllers,
     required this.addOption,
@@ -21,33 +21,33 @@ class MultipleChoiceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 16.0), // Add margin above the question details
+        const SizedBox(height: 16.0), // Add margin above the question details
         Card(
-          margin: EdgeInsets.all(8.0),
+          margin: const EdgeInsets.all(8.0),
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Question Details',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['question'],
-                    decoration: InputDecoration(labelText: 'Question'),
+                    decoration: const InputDecoration(labelText: 'Question'),
                     onChanged: onQuestionChanged, // Use the callback
                   ),
                 ),
-                SizedBox(height: 8.0), // Add margin between fields
+                const SizedBox(height: 8.0), // Add margin between fields
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
                   child: TextFormField(
                     initialValue: question['answer'].toString(),
-                    decoration: InputDecoration(labelText: 'Answer (index)'),
+                    decoration: const InputDecoration(labelText: 'Answer (index)'),
                     onChanged: onAnswerChanged,
                   ),
                 ),
@@ -55,24 +55,24 @@ class MultipleChoiceSection extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 16.0), // Add margin between sections
+        const SizedBox(height: 16.0), // Add margin between sections
         Card(
-          margin: EdgeInsets.all(8.0),
+          margin: const EdgeInsets.all(8.0),
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Options',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 ElevatedButton(
                   onPressed: addOption,
-                  child: Text('Add Option'),
+                  child: const Text('Add Option'),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
@@ -89,7 +89,7 @@ class MultipleChoiceSection extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             onPressed: () => removeOption(index),
                           ),
                         ],

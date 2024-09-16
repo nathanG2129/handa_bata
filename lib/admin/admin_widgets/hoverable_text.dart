@@ -5,7 +5,7 @@ class HoverableText extends StatefulWidget {
   final String text;
   final VoidCallback onTap;
 
-  const HoverableText({required this.text, required this.onTap, Key? key}) : super(key: key);
+  const HoverableText({required this.text, required this.onTap, super.key});
 
   @override
   _HoverableTextState createState() => _HoverableTextState();

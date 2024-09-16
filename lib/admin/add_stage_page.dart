@@ -53,23 +53,23 @@ class _AddStageDialogState extends State<AddStageDialog> {
                       color: Colors.white, // Changed text color to white
                       fontSize: 60, // Increased font size
                       shadows: [
-                        Shadow(
+                        const Shadow(
                           offset: Offset(-2, -2), // Top-left shadow
                           color: Colors.black,
                         ),
-                        Shadow(
+                        const Shadow(
                           offset: Offset(2, -2), // Top-right shadow
                           color: Colors.black,
                         ),
-                        Shadow(
+                        const Shadow(
                           offset: Offset(2, 2), // Bottom-right shadow
                           color: Colors.black,
                         ),
-                        Shadow(
+                        const Shadow(
                           offset: Offset(-2, 2), // Bottom-left shadow
                           color: Colors.black,
                         ),
-                        Shadow(
+                        const Shadow(
                           offset: Offset(0, 5), // Offset for the shadow in y-direction
                           blurRadius: 0.0, // No blur
                           color: Colors.black, // Black color

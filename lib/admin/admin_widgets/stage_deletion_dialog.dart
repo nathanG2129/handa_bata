@@ -5,7 +5,7 @@ class StageDeletionDialog extends StatelessWidget {
   final String stageName;
   final BuildContext context;
 
-  const StageDeletionDialog({required this.stageName, required this.context, Key? key}) : super(key: key);
+  const StageDeletionDialog({required this.stageName, required this.context, super.key});
 
   Future<bool> show() async {
     return await showDialog(
@@ -14,7 +14,7 @@ class StageDeletionDialog extends StatelessWidget {
         return AlertDialog(
           title: Text('Confirm Deletion', style: GoogleFonts.vt323(color: Colors.white)),
           content: Text('Are you sure you want to delete the stage "$stageName"?', style: GoogleFonts.vt323(color: Colors.white)),
-          backgroundColor: Color(0xFF381c64),
+          backgroundColor: const Color(0xFF381c64),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),

@@ -179,7 +179,7 @@ class _EditStagePageState extends State<EditStagePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Center(
-                      child: Container(
+                      child: SizedBox(
                         width: 300,
                         child: TextFormField(
                           controller: _stageNameController,
@@ -216,7 +216,7 @@ class _EditStagePageState extends State<EditStagePage> {
                     const SizedBox(height: 20),
                     Expanded(
                       child: Center(
-                        child: Container(
+                        child: SizedBox(
                           width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
                           child: GridView.builder(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

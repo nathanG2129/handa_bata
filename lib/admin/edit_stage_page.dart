@@ -65,12 +65,12 @@ class _EditStagePageState extends State<EditStagePage> {
         'questions': _questions,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stage updated successfully.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stage updated successfully.')));
         Navigator.pop(context); // Go back to the previous page
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a stage name and add at least one question.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a stage name and add at least one question.')));
       }
     }
   }
@@ -133,16 +133,16 @@ class _EditStagePageState extends State<EditStagePage> {
     return (await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Confirm Exit'),
-            content: Text('Do you wish to exit this page? Your changes will be lost!'),
+            title: const Text('Confirm Exit'),
+            content: const Text('Do you wish to exit this page? Your changes will be lost!'),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No'),
+                child: const Text('No'),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes'),
+                child: const Text('Yes'),
               ),
             ],
           ),
@@ -150,10 +150,10 @@ class _EditStagePageState extends State<EditStagePage> {
         false;
   }
 
-  Widget _buildQuestionCard(int index) {
+    Widget _buildQuestionCard(int index) {
     final question = _questions[index];
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(0.0), // Square corners
         side: const BorderSide(color: Colors.black, width: 2.0), // Black border
@@ -178,7 +178,7 @@ class _EditStagePageState extends State<EditStagePage> {
                 ),
               ],
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +191,7 @@ class _EditStagePageState extends State<EditStagePage> {
                           if (question['type'] == 'Matching Type') ...[
                             Text('Section 1 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
                             ...question['section1'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
-                            SizedBox(height: 8.0),
+                            const SizedBox(height: 8.0),
                             Text('Section 2 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
                             ...question['section2'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
                           ],
@@ -213,22 +213,24 @@ class _EditStagePageState extends State<EditStagePage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 16.0), // Add some spacing between the columns
+                  const SizedBox(width: 16.0), // Add some spacing between the columns
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (question['answer'] != null)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Answer:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-                              ..._getAnswerOptions(question).map<Widget>((option) {
-                                return Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)); // Display the answer as a single string
-                              }).toList(),
-                            ],
-                          ),
-                      ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (question['answer'] != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Answer:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+                                ..._getAnswerOptions(question).map<Widget>((option) {
+                                  return Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)); // Display the answer as a single string
+                                }).toList(),
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -238,11 +240,11 @@ class _EditStagePageState extends State<EditStagePage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(Icons.edit),
+                  icon: const Icon(Icons.edit),
                   onPressed: () => _editQuestion(index),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () => _removeQuestion(index),
                 ),
               ],
@@ -265,7 +267,7 @@ class _EditStagePageState extends State<EditStagePage> {
           ),
           child: Text('Add Multiple Choice', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Fill in the Blanks'),
           style: ElevatedButton.styleFrom(
@@ -274,7 +276,7 @@ class _EditStagePageState extends State<EditStagePage> {
           ),
           child: Text('Add Fill in the Blanks', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Matching Type'),
           style: ElevatedButton.styleFrom(
@@ -283,7 +285,7 @@ class _EditStagePageState extends State<EditStagePage> {
           ),
           child: Text('Add Matching Type', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         ElevatedButton(
           onPressed: () => _addQuestion('Identification'),
           style: ElevatedButton.styleFrom(
@@ -362,7 +364,7 @@ class _EditStagePageState extends State<EditStagePage> {
                           child: Container(
                             width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
                             child: GridView.builder(
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 10,
                                 mainAxisSpacing: 10,

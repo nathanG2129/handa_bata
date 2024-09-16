@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MatchingTypeSection extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -11,7 +12,6 @@ class MatchingTypeSection extends StatefulWidget {
   final ValueChanged<int> removeOptionSection2;
   final ValueChanged<int> removeAnswerPair;
   final ValueChanged<Map<String, String>> addAnswerPair; // Changed to store options
-  final ValueChanged<String> onQuestionChanged; // Add this callback
 
   const MatchingTypeSection({
     super.key,
@@ -24,8 +24,7 @@ class MatchingTypeSection extends StatefulWidget {
     required this.removeOptionSection1,
     required this.removeOptionSection2,
     required this.removeAnswerPair,
-    required this.addAnswerPair,
-    required this.onQuestionChanged, // Add this parameter
+    required this.addAnswerPair, required void Function(dynamic value) onQuestionChanged,
   });
 
   @override
@@ -38,207 +37,182 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 16.0), // Add margin above the question details
-        Card(
-          margin: EdgeInsets.all(8.0),
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Question Details',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8.0),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
-                  child: TextFormField(
-                    initialValue: widget.question['question'],
-                    decoration: InputDecoration(labelText: 'Question'),
-                    onChanged: widget.onQuestionChanged, // Use the callback
-                  ),
-                ),
-              ],
+    return Dialog(
+      backgroundColor: Colors.white, // Set dialog background to white
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0.0), // Square corners
+        side: const BorderSide(color: Colors.black, width: 2.0), // Black and slightly thick border
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0), // Reduced padding
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Matching Type Question',
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 30,
+              ),
             ),
-          ),
-        ),
-        SizedBox(height: 16.0), // Add margin between sections
-        Card(
-          margin: EdgeInsets.all(8.0),
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Options Section 1',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: widget.addOptionSection1,
-                  child: Text('Add Option to Section 1'),
-                ),
-                SizedBox(height: 8.0),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: widget.optionControllersSection1.map((controller) {
-                    int index = widget.optionControllersSection1.indexOf(controller);
-                    return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller,
-                              decoration: InputDecoration(labelText: 'Option ${index + 1}'),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => widget.removeOptionSection1(index),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+            const SizedBox(height: 15), // Reduced spacing
+            _buildOptionsSection(
+              context,
+              'Options Section 1',
+              widget.optionControllersSection1,
+              widget.addOptionSection1,
+              widget.removeOptionSection1,
             ),
-          ),
-        ),
-        SizedBox(height: 16.0), // Add margin between sections
-        Card(
-          margin: EdgeInsets.all(8.0),
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Options Section 2',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8.0),
-                ElevatedButton(
-                  onPressed: widget.addOptionSection2,
-                  child: Text('Add Option to Section 2'),
-                ),
-                SizedBox(height: 8.0),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: widget.optionControllersSection2.map((controller) {
-                    int index = widget.optionControllersSection2.indexOf(controller);
-                    return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: controller,
-                              decoration: InputDecoration(labelText: 'Option ${index + 1}'),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => widget.removeOptionSection2(index),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+            const SizedBox(height: 16.0), // Add margin between sections
+            _buildOptionsSection(
+              context,
+              'Options Section 2',
+              widget.optionControllersSection2,
+              widget.addOptionSection2,
+              widget.removeOptionSection2,
             ),
-          ),
+            const SizedBox(height: 16.0), // Add margin between sections
+            _buildAnswerPairsSection(context),
+          ],
         ),
-        SizedBox(height: 16.0), // Add margin between sections
-        Card(
-          margin: EdgeInsets.all(8.0),
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Answer Pairs',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8.0),
-                ...widget.answerPairs.map((pair) {
-                  int index = widget.answerPairs.indexOf(pair);
-                  return Row(
+      ),
+    );
+  }
+
+  Widget _buildOptionsSection(
+    BuildContext context,
+    String title,
+    List<TextEditingController> optionControllers,
+    VoidCallback addOption,
+    ValueChanged<int> removeOption,
+  ) {
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: addOption,
+              child: Text('Add Option'),
+            ),
+            SizedBox(height: 8.0),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: optionControllers.map((controller) {
+                int index = optionControllers.indexOf(controller);
+                return SizedBox(
+                  width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
+                  child: Row(
                     children: [
                       Expanded(
-                        child: Text('${pair['section1']} - ${pair['section2']}'),
+                        child: TextFormField(
+                          controller: controller,
+                          decoration: InputDecoration(labelText: 'Option ${index + 1}'),
+                        ),
                       ),
                       IconButton(
                         icon: Icon(Icons.delete),
-                        onPressed: () => widget.removeAnswerPair(index),
+                        onPressed: () => removeOption(index),
                       ),
                     ],
-                  );
-                }).toList(),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedSection1Option,
-                        items: widget.optionControllersSection1.map((controller) {
-                          return DropdownMenuItem<String>(
-                            value: controller.text,
-                            child: Text(controller.text),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnswerPairsSection(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Answer Pairs',
+              style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8.0),
+            ...widget.answerPairs.map((pair) {
+              int index = widget.answerPairs.indexOf(pair);
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text('${pair['section1']} - ${pair['section2']}'),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () => widget.removeAnswerPair(index),
+                  ),
+                ],
+              );
+            }).toList(),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedSection1Option,
+                    items: widget.optionControllersSection1.map((controller) {
+                      return DropdownMenuItem<String>(
+                        value: controller.text,
+                        child: Text(controller.text),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedSection1Option = value;
+                      });
+                    },
+                    decoration: InputDecoration(labelText: 'Section 1 Option'),
+                  ),
+                ),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedSection2Option,
+                    items: widget.optionControllersSection2.map((controller) {
+                      return DropdownMenuItem<String>(
+                        value: controller.text,
+                        child: Text(controller.text),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedSection2Option = value;
+                      });
+                    },
+                    decoration: InputDecoration(labelText: 'Section 2 Option'),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: selectedSection1Option != null && selectedSection2Option != null
+                      ? () {
+                          widget.addAnswerPair({'section1': selectedSection1Option!, 'section2': selectedSection2Option!});
                           setState(() {
-                            selectedSection1Option = value;
+                            selectedSection1Option = null;
+                            selectedSection2Option = null;
                           });
-                        },
-                        decoration: InputDecoration(labelText: 'Section 1 Option'),
-                      ),
-                    ),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedSection2Option,
-                        items: widget.optionControllersSection2.map((controller) {
-                          return DropdownMenuItem<String>(
-                            value: controller.text,
-                            child: Text(controller.text),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSection2Option = value;
-                          });
-                        },
-                        decoration: InputDecoration(labelText: 'Section 2 Option'),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: selectedSection1Option != null && selectedSection2Option != null
-                          ? () {
-                              widget.addAnswerPair({'section1': selectedSection1Option!, 'section2': selectedSection2Option!});
-                              setState(() {
-                                selectedSection1Option = null;
-                                selectedSection2Option = null;
-                              });
-                            }
-                          : null,
-                    ),
-                  ],
+                        }
+                      : null,
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

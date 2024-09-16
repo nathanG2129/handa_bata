@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../types/matching_type_section.dart';
 import '../types/multiple_choice_section.dart';
 import '../types/identification_section.dart';
@@ -103,74 +104,93 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
     }
 
     widget.onSave(_question);
-    Navigator.pop(context);
-  }
-
+                Navigator.pop(context);
+        }
+        
   @override
   Widget build(BuildContext context) {
+    final double dialogWidth = MediaQuery.of(context).size.width * 0.4; // Set the width to 40% of the screen width
+  
     return Dialog(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.35, // Set dialog width to 35% of screen width
-        child: AlertDialog(
-          title: Text('Edit Question'),
-          content: SingleChildScrollView(
-            child: Column(
+        width: dialogWidth, // Set the width of the dialog
+        padding: const EdgeInsets.all(12.0), // Add padding to the container
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Edit Question',
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 30,
+              ),
+            ),
+            const SizedBox(height: 15), // Reduced spacing
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    if (_question['type'] == 'Identification')
+                      IdentificationSection(
+                        question: _question,
+                        optionControllers: _optionControllers,
+                        addOption: () => _addOption(_optionControllers, _question['options']),
+                        removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                        onAnswerChanged: (value) => setState(() => _question['answer'] = value),
+                        onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
+                        onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
+                        onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                      ),
+                    if (_question['type'] == 'Multiple Choice')
+                      MultipleChoiceSection(
+                        question: _question,
+                        optionControllers: _optionControllers,
+                        addOption: () => _addOption(_optionControllers, _question['options']),
+                        removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                        onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? value),
+                        onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                      ),
+                    if (_question['type'] == 'Fill in the Blanks')
+                      FillInTheBlanksSection(
+                        question: _question,
+                        optionControllers: _optionControllers,
+                        addOption: () => _addOption(_optionControllers, _question['options']),
+                        removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
+                        onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
+                        onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
+                        onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                      ),
+                    if (_question['type'] == 'Matching Type')
+                      MatchingTypeSection(
+                        question: _question,
+                        optionControllersSection1: _optionControllersSection1,
+                        optionControllersSection2: _optionControllersSection2,
+                        answerPairs: _answerPairs,
+                        addOptionSection1: () => _addOption(_optionControllersSection1, _question['section1']),
+                        addOptionSection2: () => _addOption(_optionControllersSection2, _question['section2']),
+                        removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
+                        removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
+                        removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
+                        addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
+                        onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 15), // Reduced spacing
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (_question['type'] == 'Identification')
-                  IdentificationSection(
-                    question: _question,
-                    optionControllers: _optionControllers,
-                    addOption: () => _addOption(_optionControllers, _question['options']),
-                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (value) => setState(() => _question['answer'] = value),
-                    onAnswerLengthChanged: (value) => setState(() => _question['answerLength'] = int.tryParse(value) ?? 0),
-                    onSpaceChanged: (value) => setState(() => _question['space'] = value.split(',').map((e) => e.trim()).toList()),
-                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
-                  ),
-                if (_question['type'] == 'Multiple Choice')
-                  MultipleChoiceSection(
-                    question: _question,
-                    optionControllers: _optionControllers,
-                    addOption: () => _addOption(_optionControllers, _question['options']),
-                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? value),
-                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
-                  ),
-                if (_question['type'] == 'Fill in the Blanks')
-                  FillInTheBlanksSection(
-                    question: _question,
-                    optionControllers: _optionControllers,
-                    addOption: () => _addOption(_optionControllers, _question['options']),
-                    removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
-                    onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
-                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
-                  ),
-                if (_question['type'] == 'Matching Type')
-                  MatchingTypeSection(
-                    question: _question,
-                    optionControllersSection1: _optionControllersSection1,
-                    optionControllersSection2: _optionControllersSection2,
-                    answerPairs: _answerPairs,
-                    addOptionSection1: () => _addOption(_optionControllersSection1, _question['section1']),
-                    addOptionSection2: () => _addOption(_optionControllersSection2, _question['section2']),
-                    removeOptionSection1: (index) => _removeOption(_optionControllersSection1, _question['section1'], index),
-                    removeOptionSection2: (index) => _removeOption(_optionControllersSection2, _question['section2'], index),
-                    removeAnswerPair: (index) => setState(() => _answerPairs.removeAt(index)),
-                    addAnswerPair: (pair) => setState(() => _answerPairs.add(pair)),
-                    onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
-                  ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: _save,
+                  child: Text('Save'),
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: _save,
-              child: Text('Save'),
             ),
           ],
         ),

@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
 import 'admin_widgets/edit_question_dialog.dart';
+import 'admin_widgets/question_card.dart'; // Import the new file
+import 'admin_widgets/question_buttons.dart'; // Import the new file
 
 class EditStagePage extends StatefulWidget {
   final String language;
@@ -150,252 +152,105 @@ class _EditStagePageState extends State<EditStagePage> {
         false;
   }
 
-    Widget _buildQuestionCard(int index) {
-    final question = _questions[index];
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0.0), // Square corners
-        side: const BorderSide(color: Colors.black, width: 2.0), // Black border
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF381c64),
+        appBar: AppBar(
+          title: Text('Edit Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
+          backgroundColor: const Color(0xFF381c64),
+          iconTheme: const IconThemeData(color: Colors.white), // Set the back button color to white
+        ),
+        body: Stack(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    'Question ${index + 1}: ${question['question']}',
-                    style: GoogleFonts.vt323(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20),
-                  ),
-                ),
-                Text(
-                  question['type'],
-                  style: GoogleFonts.vt323(fontStyle: FontStyle.italic, color: Colors.black, fontSize: 20),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (question['type'] == 'Matching Type') ...[
-                            Text('Section 1 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-                            ...question['section1'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
-                            const SizedBox(height: 8.0),
-                            Text('Section 2 Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-                            ...question['section2'].map<Widget>((option) => Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))).toList(),
-                          ],
-                          if (question['type'] != 'Matching Type' && question['options'] != null && question['options'].isNotEmpty)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Options:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-                                Wrap(
-                                  spacing: 8.0, // Space between items
-                                  runSpacing: 4.0, // Space between lines
-                                  children: question['options'].map<Widget>((option) {
-                                    return Text('- $option', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20));
-                                  }).toList(),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16.0), // Add some spacing between the columns
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (question['answer'] != null)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Answer:', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-                                ..._getAnswerOptions(question).map<Widget>((option) {
-                                  return Text(option, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)); // Display the answer as a single string
-                                }).toList(),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+            Positioned.fill(
+              child: SvgPicture.asset(
+                'assets/backgrounds/background.svg',
+                fit: BoxFit.cover,
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _editQuestion(index),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 300,
+                        child: TextFormField(
+                          controller: _stageNameController,
+                          decoration: InputDecoration(
+                            labelText: 'Stage Name',
+                            labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
+                            filled: true,
+                            fillColor: Colors.transparent,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(0.0),
+                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(0.0),
+                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(0.0),
+                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a stage name';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    buildQuestionButtons(_addQuestion),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: Center(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
+                          child: GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 3, // Adjusted to make the cards shorter
+                            ),
+                            itemCount: _questions.length,
+                            itemBuilder: (context, index) => buildQuestionCard(index, _questions, _editQuestion, _removeQuestion, _getAnswerOptions),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _saveStage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF1B33A),
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          side: const BorderSide(color: Colors.black, width: 2.0),
+                        ),
+                      ),
+                      child: Text('Save Stage', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _removeQuestion(index),
-                ),
-              ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildQuestionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ElevatedButton(
-          onPressed: () => _addQuestion('Multiple Choice'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF381c64),
-            shadowColor: Colors.transparent,
-          ),
-          child: Text('Add Multiple Choice', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: () => _addQuestion('Fill in the Blanks'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF381c64),
-            shadowColor: Colors.transparent,
-          ),
-          child: Text('Add Fill in the Blanks', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: () => _addQuestion('Matching Type'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF381c64),
-            shadowColor: Colors.transparent,
-          ),
-          child: Text('Add Matching Type', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: () => _addQuestion('Identification'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF381c64),
-            shadowColor: Colors.transparent,
-          ),
-          child: Text('Add Identification', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-        ),
-      ],
-    );
-  }
-
-      @override
-    Widget build(BuildContext context) {
-      return WillPopScope(
-        onWillPop: _onWillPop,
-        child: Scaffold(
-          backgroundColor: const Color(0xFF381c64),
-          appBar: AppBar(
-            title: Text('Edit Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
-            backgroundColor: const Color(0xFF381c64),
-          ),
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: SvgPicture.asset(
-                  'assets/backgrounds/background.svg',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 300,
-                          child: TextFormField(
-                            controller: _stageNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Stage Name',
-                              labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
-                              filled: true,
-                              fillColor: Colors.transparent,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(0.0),
-                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(0.0),
-                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(0.0),
-                                borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                              ),
-                            ),
-                            style: const TextStyle(color: Colors.white),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a stage name';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildQuestionButtons(),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: Center(
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
-                            child: GridView.builder(
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                                childAspectRatio: 3, // Adjusted to make the cards shorter
-                              ),
-                              itemCount: _questions.length,
-                              itemBuilder: (context, index) => _buildQuestionCard(index),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _saveStage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF1B33A),
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0.0),
-                            side: const BorderSide(color: Colors.black, width: 2.0),
-                          ),
-                        ),
-                        child: Text('Save Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
+}

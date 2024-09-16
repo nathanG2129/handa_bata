@@ -64,10 +64,14 @@ class _EditStagePageState extends State<EditStagePage> {
         'stageName': stageName,
         'questions': _questions,
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stage updated successfully.')));
-      Navigator.pop(context); // Go back to the previous page
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stage updated successfully.')));
+        Navigator.pop(context); // Go back to the previous page
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a stage name and add at least one question.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a stage name and add at least one question.')));
+      }
     }
   }
 
@@ -102,11 +106,21 @@ class _EditStagePageState extends State<EditStagePage> {
         return [question['options'][index].toString()];
       }
     } else if (question['answer'] is List) {
-      List<int> indices = (question['answer'] as List<dynamic>).map<int>((e) => e as int).toList();
-      return indices
-          .where((index) => index >= 0 && index < question['options'].length)
-          .map<String>((index) => question['options'][index].toString())
-          .toList();
+      if (question['type'] == 'Fill in the Blanks') {
+        // Handle Fill in the Blanks type
+        List<String> answers = (question['answer'] as List<dynamic>).map<String>((e) => e.toString()).toList();
+        return answers
+            .where((answer) => int.tryParse(answer) != null && int.parse(answer) >= 0 && int.parse(answer) < question['options'].length)
+            .map<String>((answer) => question['options'][int.parse(answer)].toString())
+            .toList();
+      } else {
+        // Handle other types
+        List<int> indices = (question['answer'] as List<dynamic>).map<int>((e) => e as int).toList();
+        return indices
+            .where((index) => index >= 0 && index < question['options'].length)
+            .map<String>((index) => question['options'][index].toString())
+            .toList();
+      }
     } else if (question['type'] == 'Matching Type') {
       return (question['answerPairs'] as List<dynamic>)
           .map<String>((pair) => '${pair['section1']} - ${pair['section2']}')
@@ -136,7 +150,7 @@ class _EditStagePageState extends State<EditStagePage> {
         false;
   }
 
-   Widget _buildQuestionCard(int index) {
+  Widget _buildQuestionCard(int index) {
     final question = _questions[index];
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8.0),
@@ -282,15 +296,11 @@ class _EditStagePageState extends State<EditStagePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: MaterialApp(
-        theme: ThemeData(
-          textTheme: GoogleFonts.vt323TextTheme().apply(bodyColor: Colors.white, displayColor: Colors.white),
-        ),
-        home: Scaffold(
+      @override
+    Widget build(BuildContext context) {
+      return WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
           backgroundColor: const Color(0xFF381c64),
           appBar: AppBar(
             title: Text('Edit Stage', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
@@ -384,7 +394,6 @@ class _EditStagePageState extends State<EditStagePage> {
             ],
           ),
         ),
-      ),
-    );
+      );
+    }
   }
-}

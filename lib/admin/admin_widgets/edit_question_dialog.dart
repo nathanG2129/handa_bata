@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../types/matching_type_section.dart';
 import '../types/multiple_choice_section.dart';
 import '../types/identification_section.dart';
-import '../types/fill_in_the_blanks_section.dart'; 
+import '../types/fill_in_the_blanks_section.dart';
 
 class EditQuestionDialog extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -88,6 +88,24 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
     });
   }
 
+  void _save() {
+    if (_question['type'] == 'Matching Type') {
+      _question['section1'] = _optionControllersSection1.map((controller) => controller.text).toList();
+      _question['section2'] = _optionControllersSection2.map((controller) => controller.text).toList();
+      _question['answerPairs'] = _answerPairs;
+    } else if (_question['type'] == 'Fill in the Blanks') {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+      _question['answer'] = List<int>.from(_question['answer'].map((e) => int.tryParse(e.toString()) ?? 0)); // Ensure answers are integers
+    } else if (_question['type'] == 'Identification') {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+    } else if (_question['type'] == 'Multiple Choice') {
+      _question['options'] = _optionControllers.map((controller) => controller.text).toList();
+    }
+
+    widget.onSave(_question);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -115,7 +133,7 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                     optionControllers: _optionControllers,
                     addOption: () => _addOption(_optionControllers, _question['options']),
                     removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? 0),
+                    onAnswerChanged: (value) => setState(() => _question['answer'] = int.tryParse(value) ?? value),
                     onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
                   ),
                 if (_question['type'] == 'Fill in the Blanks')
@@ -124,7 +142,7 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
                     optionControllers: _optionControllers,
                     addOption: () => _addOption(_optionControllers, _question['options']),
                     removeOption: (index) => _removeOption(_optionControllers, _question['options'], index),
-                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = int.tryParse(value as String) ?? 0), // Updated call
+                    onAnswerChanged: (index, value) => setState(() => _question['answer'][index] = value), // Updated call
                     onOptionChanged: (index, value) => setState(() => _question['options'][index] = value), // Updated call
                     onQuestionChanged: (value) => setState(() => _question['question'] = value), // Pass the callback
                   ),
@@ -148,7 +166,11 @@ class _EditQuestionDialogState extends State<EditQuestionDialog> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Close'),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: _save,
+              child: Text('Save'),
             ),
           ],
         ),

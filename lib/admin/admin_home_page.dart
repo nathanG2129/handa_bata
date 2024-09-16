@@ -58,10 +58,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
-  void _navigateToAddStage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => AddStagePage(language: _selectedLanguage, category: _selectedCategory)),
+  void _showAddStageDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddStageDialog(language: _selectedLanguage, category: _selectedCategory);
+      },
     ).then((_) {
       _fetchStages();
     });
@@ -133,7 +135,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           const SizedBox(height: 20),
                           AddStageButton(
                             selectedLanguage: _selectedLanguage,
-                            onPressed: _navigateToAddStage,
+                            onPressed: _showAddStageDialog,
                           ),
                           const SizedBox(height: 20),
                           Expanded(

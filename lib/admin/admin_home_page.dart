@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'admin_stage_page.dart';
+import 'admin_avatar_page.dart';
+import 'admin_badge_page.dart';
+import 'admin_banner_page.dart';
 
 class AdminHomePage extends StatelessWidget {
   const AdminHomePage({super.key});
@@ -10,6 +13,27 @@ class AdminHomePage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AdminStagePage()),
+    );
+  }
+
+  void _navigateToAvatarPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminAvatarPage()),
+    );
+  }
+
+  void _navigateToBadgePage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminBadgePage()),
+    );
+  }
+
+  void _navigateToBannerPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminBannerPage()),
     );
   }
 
@@ -40,24 +64,18 @@ class AdminHomePage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           AdminButton(
-                            text: 'Button 1',
-                            onPressed: () {
-                              // Add your functionality here
-                            },
+                            text: 'Manage Avatars',
+                            onPressed: () => _navigateToAvatarPage(context),
                           ),
                           const SizedBox(height: 20),
                           AdminButton(
-                            text: 'Button 2',
-                            onPressed: () {
-                              // Add your functionality here
-                            },
+                            text: 'Manage Badges',
+                            onPressed: () => _navigateToBadgePage(context),
                           ),
                           const SizedBox(height: 20),
                           AdminButton(
-                            text: 'Button 3',
-                            onPressed: () {
-                              // Add your functionality here
-                            },
+                            text: 'Manage Banners',
+                            onPressed: () => _navigateToBannerPage(context),
                           ),
                           const SizedBox(height: 20),
                           AdminButton(

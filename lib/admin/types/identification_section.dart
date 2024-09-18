@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class IdentificationSection extends StatelessWidget {
   final Map<String, dynamic> question;
@@ -34,9 +35,9 @@ class IdentificationSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Question Details',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8.0),
                 SizedBox(
@@ -86,9 +87,9 @@ class IdentificationSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Options',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8.0),
                 ElevatedButton(

@@ -8,7 +8,8 @@ class MultipleChoiceSection extends StatelessWidget {
   final ValueChanged<String> onAnswerChanged;
   final ValueChanged<String> onQuestionChanged;
 
-  const MultipleChoiceSection({super.key, 
+  const MultipleChoiceSection({
+    super.key,
     required this.question,
     required this.optionControllers,
     required this.addOption,

@@ -24,22 +24,48 @@ class _EditStagePageState extends State<EditStagePage> {
   late TextEditingController _stageNameController;
   late List<Map<String, dynamic>> _questions;
 
-  @override
+    @override
   void initState() {
     super.initState();
     _stageNameController = TextEditingController(text: widget.stageName);
     _questions = widget.questions.map((question) {
-      return {
+      Map<String, dynamic> formattedQuestion = {
         'type': question['type'] ?? 'Identification',
         'question': question['question'] ?? '',
-        'answer': question['answer'] ?? '',
-        'answerLength': question['answerLength'] ?? 0,
-        'options': question['options'] ?? [],
-        'space': question['space'] ?? [],
-        'section1': question['section1'] ?? [],
-        'section2': question['section2'] ?? [],
-        'answerPairs': question['answerPairs'] ?? [],
       };
+  
+      switch (formattedQuestion['type']) {
+        case 'Matching Type':
+          formattedQuestion['section1'] = question['section1'] ?? [];
+          formattedQuestion['section2'] = question['section2'] ?? [];
+          formattedQuestion['answerPairs'] = question['answerPairs'] ?? [];
+          break;
+        case 'Fill in the Blanks':
+          formattedQuestion['options'] = question['options'] ?? [];
+          formattedQuestion['answer'] = (question['answer'] is List) ? List<int>.from(question['answer']) : [];
+          break;
+        case 'Identification':
+          formattedQuestion['answer'] = question['answer'] ?? '';
+          formattedQuestion['answerLength'] = question['answerLength'] ?? 0;
+          formattedQuestion['options'] = question['options'] ?? [];
+          formattedQuestion['space'] = question['space'] ?? [];
+          break;
+        case 'Multiple Choice':
+          formattedQuestion['answer'] = question['answer'] ?? '';
+          formattedQuestion['options'] = question['options'] ?? [];
+          break;
+        default:
+          formattedQuestion['answer'] = question['answer'] ?? '';
+          formattedQuestion['answerLength'] = question['answerLength'] ?? 0;
+          formattedQuestion['options'] = question['options'] ?? [];
+          formattedQuestion['space'] = question['space'] ?? [];
+          formattedQuestion['section1'] = question['section1'] ?? [];
+          formattedQuestion['section2'] = question['section2'] ?? [];
+          formattedQuestion['answerPairs'] = question['answerPairs'] ?? [];
+          break;
+      }
+  
+      return formattedQuestion;
     }).toList();
   }
 

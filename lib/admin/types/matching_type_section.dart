@@ -12,6 +12,7 @@ class MatchingTypeSection extends StatefulWidget {
   final ValueChanged<int> removeOptionSection2;
   final ValueChanged<int> removeAnswerPair;
   final ValueChanged<Map<String, String>> addAnswerPair; // Changed to store options
+  final ValueChanged<String> onQuestionChanged; // Added this callback
 
   const MatchingTypeSection({
     super.key,
@@ -24,7 +25,8 @@ class MatchingTypeSection extends StatefulWidget {
     required this.removeOptionSection1,
     required this.removeOptionSection2,
     required this.removeAnswerPair,
-    required this.addAnswerPair, required void Function(dynamic value) onQuestionChanged,
+    required this.addAnswerPair,
+    required this.onQuestionChanged, // Added this parameter
   });
 
   @override
@@ -37,45 +39,52 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.white, // Set dialog background to white
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0.0), // Square corners
-        side: const BorderSide(color: Colors.black, width: 2.0), // Black and slightly thick border
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0), // Reduced padding
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Matching Type Question',
-              style: GoogleFonts.vt323(
-                color: Colors.black,
-                fontSize: 30,
-              ),
+    return Column(
+      children: [
+        const SizedBox(height: 16.0), // Add margin above the question details
+        Card(
+          margin: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Question Details',
+                  style: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8.0),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.20, // Set width to 20% of the available width
+                  child: TextFormField(
+                    initialValue: widget.question['question'],
+                    decoration: const InputDecoration(labelText: 'Question'),
+                    onChanged: widget.onQuestionChanged, // Use the callback
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 15), // Reduced spacing
-            _buildOptionsSection(
-              context,
-              'Options Section 1',
-              widget.optionControllersSection1,
-              widget.addOptionSection1,
-              widget.removeOptionSection1,
-            ),
-            const SizedBox(height: 16.0), // Add margin between sections
-            _buildOptionsSection(
-              context,
-              'Options Section 2',
-              widget.optionControllersSection2,
-              widget.addOptionSection2,
-              widget.removeOptionSection2,
-            ),
-            const SizedBox(height: 16.0), // Add margin between sections
-            _buildAnswerPairsSection(context),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: 16.0), // Add margin between sections
+        _buildOptionsSection(
+          context,
+          'Options Section 1',
+          widget.optionControllersSection1,
+          widget.addOptionSection1,
+          widget.removeOptionSection1,
+        ),
+        const SizedBox(height: 16.0), // Add margin between sections
+        _buildOptionsSection(
+          context,
+          'Options Section 2',
+          widget.optionControllersSection2,
+          widget.addOptionSection2,
+          widget.removeOptionSection2,
+        ),
+        const SizedBox(height: 16.0), // Add margin between sections
+        _buildAnswerPairsSection(context),
+      ],
     );
   }
 
@@ -159,7 +168,7 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                   ),
                 ],
               );
-            }),
+            }).toList(),
             Row(
               children: [
                 Expanded(

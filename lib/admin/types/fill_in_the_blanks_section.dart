@@ -9,7 +9,8 @@ class FillInTheBlanksSection extends StatelessWidget {
   final void Function(int, String) onOptionChanged; // Updated signature
   final ValueChanged<String> onQuestionChanged; // Add this callback
 
-  const FillInTheBlanksSection({super.key, 
+  const FillInTheBlanksSection({
+    super.key,
     required this.question,
     required this.optionControllers,
     required this.addOption,
@@ -121,7 +122,7 @@ class FillInTheBlanksSection extends StatelessWidget {
                   runSpacing: 8.0,
                   children: List.generate(question['answer'].length, (index) {
                     return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 64) * 0.1, // Adjust width for 10% of the available width
+                      width: (MediaQuery.of(context).size.width - 64) * 0.05, // Adjust width for 5% of the available width
                       child: Row(
                         children: [
                           Expanded(

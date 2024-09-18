@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'admin_pages/avatar/stage/admin_stage_page.dart';
 import 'admin_pages/avatar/admin_avatar_page.dart';
-import 'admin_badge_page.dart';
+import 'admin_pages/badge/admin_badge_page.dart';
 import 'admin_banner_page.dart';
 
 class AdminHomePage extends StatelessWidget {

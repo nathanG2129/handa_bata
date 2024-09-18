@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/stage_service.dart';
+import 'package:handabatamae/services/stage_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddStageDialog extends StatefulWidget {

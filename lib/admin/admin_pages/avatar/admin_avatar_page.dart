@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/avatar_service.dart';
+import '../../../services/avatar_service.dart';
 import 'edit_avatar_page.dart';
 import 'add_avatar_page.dart';
-import 'admin_widgets/avatar_deletion_dialog.dart';
+import '../../admin_widgets/avatar_deletion_dialog.dart';
 
 class AdminAvatarPage extends StatefulWidget {
   const AdminAvatarPage({super.key});

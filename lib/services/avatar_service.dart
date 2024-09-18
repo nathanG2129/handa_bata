@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AvatarService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final DocumentReference _avatarDoc = FirebaseFirestore.instance.collection('Game').doc('Avatar');
 
   Future<List<Map<String, dynamic>>> fetchAvatars() async {

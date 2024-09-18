@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/stage_service.dart';
-import 'admin_widgets/edit_question_dialog.dart';
-import 'admin_widgets/question_card.dart'; // Import the new file
-import 'admin_widgets/question_buttons.dart'; // Import the new file
+import 'package:handabatamae/services/stage_service.dart';
+import 'package:handabatamae/admin/admin_widgets/edit_question_dialog.dart';
+import 'package:handabatamae/admin/admin_widgets/question_card.dart'; // Import the new file
+import 'package:handabatamae/admin/admin_widgets/question_buttons.dart'; // Import the new file
 
 class EditStagePage extends StatefulWidget {
   final String language;

@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/stage_service.dart';
+import 'package:handabatamae/services/stage_service.dart';
 import 'edit_stage_page.dart';
 import 'add_stage_page.dart';
-import 'admin_widgets/hoverable_text.dart';
-import 'admin_widgets/stage_deletion_dialog.dart';
+import 'package:handabatamae/admin/admin_widgets/hoverable_text.dart';
+import 'package:handabatamae/admin/admin_widgets/stage_deletion_dialog.dart';
 
 class AdminStagePage extends StatefulWidget {
   const AdminStagePage({super.key});

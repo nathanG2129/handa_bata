@@ -22,13 +22,20 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   Future<void> _logout() async {
-    AuthService authService = AuthService();
-    await authService.logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const SplashPage()),
-      (Route<dynamic> route) => false,
-    );
+    try {
+      AuthService authService = AuthService();
+      await authService.logout();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const SplashPage()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override

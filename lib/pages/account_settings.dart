@@ -24,11 +24,22 @@ class _AccountSettingsState extends State<AccountSettings> {
 
   Future<void> _fetchUserProfile() async {
     AuthService authService = AuthService();
-    UserProfile? userProfile = await authService.getUserProfile();
-    setState(() {
-      _userProfile = userProfile ?? UserProfile.guestProfile;
-      _isLoading = false;
-    });
+    try {
+      UserProfile? userProfile = await authService.getUserProfile();
+      if (!mounted) return;
+      setState(() {
+        _userProfile = userProfile ?? UserProfile.guestProfile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user profile: $e')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _updateNickname(String newNickname) async {
@@ -38,7 +49,10 @@ class _AccountSettingsState extends State<AccountSettings> {
       await _fetchUserProfile(); // Refresh the user profile
       widget.onNicknameChanged(); // Call the callback
     } catch (e) {
-      print('Error updating nickname: $e');
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating nickname: $e')),
+      );
     }
   }
 
@@ -87,7 +101,9 @@ class _AccountSettingsState extends State<AccountSettings> {
       Navigator.of(context).pop();
     } catch (e) {
       // Handle error
-      print('Error deleting account: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting account: $e')),
+      );
     }
   }
 

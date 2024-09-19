@@ -16,7 +16,9 @@ class SplashPage extends StatelessWidget {
       );
     } catch (e) {
       // Handle error
-      print('Failed to sign in anonymously: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign in anonymously: $e')),
+      );
     }
   }
 

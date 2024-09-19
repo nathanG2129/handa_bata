@@ -32,14 +32,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _isLoading = true;
     });
 
-    UserProfile? userProfile = await _userProfileService.fetchUserProfile();
+    try {
+      UserProfile? userProfile = await _userProfileService.fetchUserProfile();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _userProfile = userProfile ?? UserProfile.guestProfile;
-      _isLoading = false;
-    });
+      setState(() {
+        _userProfile = userProfile ?? UserProfile.guestProfile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _onNicknameChanged() {

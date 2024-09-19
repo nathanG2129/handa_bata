@@ -53,7 +53,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         }
       } on FirebaseAuthException catch (e) {
         // Handle error
-        print('Error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }

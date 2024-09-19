@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'play_page.dart'; // Import the home_page.dart file
@@ -23,29 +25,36 @@ class _LoginPageState extends State<LoginPage> {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      // Fetch the email associated with the username from Firestore
-      final email = await _authService.getEmailByUsername(username);
+      try {
+        // Fetch the email associated with the username from Firestore
+        final email = await _authService.getEmailByUsername(username);
 
-      if (email != null) {
-        // Sign in with email and password using Firebase Auth
-        final user = await _authService.signInWithEmailAndPassword(email, password);
+        if (email != null) {
+          // Sign in with email and password using Firebase Auth
+          final user = await _authService.signInWithEmailAndPassword(email, password);
 
-        if (user != null) {
-          // Navigate to PlayPage after successful login
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
-          );
+          if (user != null) {
+            // Navigate to PlayPage after successful login
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
+            );
+          } else {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Login failed. Please try again.')),
+            );
+          }
         } else {
-          // Show error message
+          // Show error message if username is not found
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login failed. Please try again.')),
+            const SnackBar(content: Text('Username not found. Please try again.')),
           );
         }
-      } else {
-        // Show error message if username is not found
+      } catch (e) {
+        // Handle error
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Username not found. Please try again.')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }

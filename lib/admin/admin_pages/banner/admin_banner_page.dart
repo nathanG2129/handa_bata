@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../services/banner_service.dart';
+import '../../../../../../services/banner_service.dart';
 import 'edit_banner_page.dart';
 import 'add_banner_page.dart';
-import 'package:handabatamae/admin/banner_deletion_dialog.dart';
+import 'package:handabatamae/admin/admin_pages/banner/banner_deletion_dialog.dart';
 
 class AdminBannerPage extends StatefulWidget {
   const AdminBannerPage({super.key});

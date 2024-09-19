@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../services/banner_service.dart';
+import '../../../../../../services/banner_service.dart';
 
 class EditBannerDialog extends StatefulWidget {
   final Map<String, dynamic> banner;

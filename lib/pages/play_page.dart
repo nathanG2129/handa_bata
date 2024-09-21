@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/widgets/adventure_button.dart';
+import 'package:handabatamae/widgets/arcade_button.dart';
 import 'splash_page.dart';
 
 class PlayPage extends StatefulWidget {
@@ -25,16 +27,20 @@ class _PlayPageState extends State<PlayPage> {
     try {
       AuthService authService = AuthService();
       await authService.logout();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SplashPage()),
-        (Route<dynamic> route) => false,
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SplashPage()),
+          (Route<dynamic> route) => false,
+        );
+      }
     } catch (e) {
-      // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -61,26 +67,16 @@ class _PlayPageState extends State<PlayPage> {
                     child: const Text('User Profile'),
                   ),
                   const SizedBox(height: 50),
-                  ElevatedButton(
+                  AdventureButton(
                     onPressed: () {
                       // Navigate to Adventure mode
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 100),
-                      textStyle: const TextStyle(fontSize: 24),
-                    ),
-                    child: const Text('Adventure'),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
+                  ArcadeButton(
                     onPressed: () {
                       // Navigate to Arcade mode
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 100),
-                      textStyle: const TextStyle(fontSize: 24),
-                    ),
-                    child: const Text('Arcade'),
                   ),
                 ],
               ),

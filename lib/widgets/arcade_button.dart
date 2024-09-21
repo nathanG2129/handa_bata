@@ -38,7 +38,7 @@ class _ArcadeButtonState extends State<ArcadeButton> {
         height: 300,
         child: AnimatedScale(
           scale: _scale,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 165),
           curve: Curves.easeInOut,
           child: Stack(
             alignment: Alignment.centerRight,

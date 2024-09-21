@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
@@ -49,6 +50,12 @@ class _PlayPageState extends State<PlayPage> {
     return Scaffold(
       body: Stack(
         children: [
+          SvgPicture.asset(
+            'assets/backgrounds/background.svg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 50), // Adjust the top padding as needed
@@ -93,7 +100,7 @@ class _PlayPageState extends State<PlayPage> {
                 maxHeight: 100, // Adjust the height as needed
               ),
               child: IconButton(
-                icon: const Icon(Icons.logout, size: 33), // Adjust the icon size as needed
+                icon: const Icon(Icons.logout, size: 33, color: Colors.white), // Adjust the icon size and color as needed
                 onPressed: _logout,
               ),
             ),

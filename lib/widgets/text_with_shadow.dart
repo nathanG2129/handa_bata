@@ -7,10 +7,10 @@ class TextWithShadow extends StatelessWidget {
   final double fontSize;
 
   const TextWithShadow({
-    Key? key,
+    super.key,
     required this.text,
     required this.fontSize,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +23,9 @@ class TextWithShadow extends StatelessWidget {
             color: Colors.transparent,
             shadows: [
               const Shadow(
-                offset: Offset(0, 5.0),
+                offset: Offset(0, 6.5),
                 blurRadius: 0.0,
-                color: Colors.black,
+                color: Color(0xFF241242), // Updated shadow color
               ),
             ],
           ),

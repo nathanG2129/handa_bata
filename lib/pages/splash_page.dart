@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'login_page.dart';
 import 'play_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/text_with_shadow.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 
-  static const double titleFontSize = 100;
+  static const double titleFontSize = 90;
   static const double subtitleFontSize = 85;
   static const double buttonWidthFactor = 0.8;
   static const double buttonHeight = 55;
@@ -42,72 +44,6 @@ class SplashPage extends StatelessWidget {
     }
   }
 
-  Widget _buildTextWithShadow(String text, double fontSize) {
-    return Stack(
-      children: [
-        // Shadow text
-        Text(
-          text,
-          style: GoogleFonts.vt323(
-            fontSize: fontSize,
-            color: Colors.transparent,
-            shadows: [
-              const Shadow(
-                offset: Offset(0, shadowOffsetY), // Shadow only at the bottom
-                blurRadius: 0.0,
-                color: Colors.black,
-              ),
-            ],
-          ),
-        ),
-        // Border text
-        Text(
-          text,
-          style: GoogleFonts.vt323(
-            fontSize: fontSize,
-            foreground: Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = borderStrokeWidth
-              ..color = Colors.black,
-          ),
-        ),
-        // Solid text
-        Text(
-          text,
-          style: GoogleFonts.vt323(fontSize: fontSize, color: Colors.white),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildButton(BuildContext context, String text, Color color, Color textColor, VoidCallback onTap) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(30), // Ensure ripple effect respects border radius
-      onTap: onTap,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(30), // Oblong shape
-            border: Border.all(color: Colors.white, width: 2), // White border
-          ),
-          child: Container(
-            alignment: Alignment.center,
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * buttonWidthFactor, // Width set to 80% of screen width
-              minHeight: buttonHeight,
-            ),
-            child: Text(
-              text,
-              style: GoogleFonts.rubik(color: textColor, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,22 +64,21 @@ class SplashPage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        _buildTextWithShadow('Handa Bata', titleFontSize),
+                        const TextWithShadow(text: 'Handa Bata', fontSize: titleFontSize),
                         Transform.translate(
                           offset: const Offset(0, verticalOffset), // Adjust this value to control the vertical offset
-                          child: _buildTextWithShadow('Mobile', subtitleFontSize),
+                          child: const TextWithShadow(text: 'Mobile', fontSize: subtitleFontSize),
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 0), // Adjust this value to control the space between the titles and the buttons
-                _buildButton(
-                  context,
-                  'Login',
-                  const Color(0xFF351B61), // Login button color
-                  Colors.white,
-                  () {
+                CustomButton(
+                  text: 'Login',
+                  color: const Color(0xFF351B61), // Login button color
+                  textColor: Colors.white,
+                  onTap: () {
                     // Navigate to the login page
                     Navigator.push(
                       context,
@@ -152,12 +87,11 @@ class SplashPage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: buttonSpacing),
-                _buildButton(
-                  context,
-                  'Play Now',
-                  const Color(0xFFF1B33A), // Play Now button color
-                  Colors.black,
-                  () {
+                CustomButton(
+                  text: 'Play Now',
+                  color: const Color(0xFFF1B33A), // Play Now button color
+                  textColor: Colors.black,
+                  onTap: () {
                     _signInAnonymously(context); // Sign in anonymously and navigate to PlayPage
                   },
                 ),

@@ -36,7 +36,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             // Navigate to AdminHomePage after successful login
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => AdminHomePage()),
+              MaterialPageRoute(builder: (context) => const AdminHomePage()),
             );
           } else {
             // Show error message if the user is not an admin

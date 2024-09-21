@@ -79,7 +79,7 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
           ),
         ),
         backgroundColor: const Color(0xFF381c64),
-        body: Container(
+        body: SizedBox(
           height: double.infinity,
           width: double.infinity,
           child: Stack(

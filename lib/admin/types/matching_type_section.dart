@@ -168,7 +168,7 @@ class _MatchingTypeSectionState extends State<MatchingTypeSection> {
                   ),
                 ],
               );
-            }).toList(),
+            }),
             Row(
               children: [
                 Expanded(

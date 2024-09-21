@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import '../helpers/dialog_helpers.dart'; // Import the dialog helpers
 import '../helpers/date_helpers.dart'; // Import the date helpers
 import '../widgets/privacy_policy_error.dart'; // Import the privacy policy error widget
-import '../widgets/register_buttons.dart'; // Import the register buttons widget
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart'; // Import the AuthService
+import '../styles/input_styles.dart'; // Import the InputStyles
+import '../widgets/custom_button.dart'; // Import the CustomButton
+import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -24,7 +28,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isPrivacyPolicyAccepted = false;
   bool _showPrivacyPolicyError = false;
-
   bool _isPasswordLengthValid = false;
   bool _hasUppercase = false;
   bool _hasNumber = false;
@@ -63,132 +66,180 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(40.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'Handa Bata',
-                style: TextStyle(fontSize: 46, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
-              const Text(
-                'Mobile App Edition',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Register',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
-              const SizedBox(height: 20),
-              buildTextFormField(
-                controller: _usernameController,
-                labelText: 'Username',
-                validator: validateUsername, // Use the new validateUsername function
-              ),
-              const SizedBox(height: 20),
-              buildTextFormField(
-                controller: _emailController,
-                labelText: 'Email',
-                validator: validateEmail,
-              ),
-              const SizedBox(height: 20),
-              buildTextFormField(
-                controller: _birthdayController,
-                labelText: 'Birthday',
-                readOnly: true,
-                onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your birthday';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              buildTextFormField(
-                controller: _passwordController,
-                labelText: 'Password',
-                obscureText: true,
-                validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
-                onChanged: (value) {
-                  setState(() {
-                    _isPasswordFieldTouched = true;
-                  });
-                  validatePassword(value, (isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol) {
-                    setState(() {
-                      _isPasswordLengthValid = isPasswordLengthValid;
-                      _hasUppercase = hasUppercase;
-                      _hasNumber = hasNumber;
-                      _hasSymbol = hasSymbol;
-                    });
-                  });
-                },
-              ),
-              if (_isPasswordFieldTouched) ...[
-                const SizedBox(height: 10),
-                buildPasswordRequirement(
-                  text: 'At least 8 characters',
-                  isValid: _isPasswordLengthValid,
-                ),
-                buildPasswordRequirement(
-                  text: 'Includes an uppercase letter',
-                  isValid: _hasUppercase,
-                ),
-                buildPasswordRequirement(
-                  text: 'Includes a number',
-                  isValid: _hasNumber,
-                ),
-                buildPasswordRequirement(
-                  text: 'Includes a symbol',
-                  isValid: _hasSymbol,
-                ),
-              ],
-              const SizedBox(height: 20),
-              buildTextFormField(
-                controller: _confirmPasswordController,
-                labelText: 'Confirm Password',
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  }
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _isPrivacyPolicyAccepted,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _isPrivacyPolicyAccepted = value ?? false;
-                      });
-                    },
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'I have read the Privacy Policy and agree to the Terms of Service',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-              PrivacyPolicyError(showError: _showPrivacyPolicyError),
-              RegisterButtons(onRegister: _register),
-            ],
+      body: Stack(
+        children: [
+          SvgPicture.asset(
+            'assets/backgrounds/background.svg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Column(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          const TextWithShadow(text: 'Handa Bata', fontSize: 85),
+                          Transform.translate(
+                            offset: const Offset(0, -20.0),
+                            child: Column(
+                              children: [
+                                const TextWithShadow(text: 'Mobile', fontSize: 75),
+                                const SizedBox(height: 0), // Reduced height
+                                Text(
+                                  'Register',
+                                  style: GoogleFonts.vt323(
+                                    fontSize: 30,
+                                    color: Colors.white,
+                                    shadows: [
+                                      const Shadow(
+                                        offset: Offset(0, 3.0),
+                                        blurRadius: 0.0,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10), // Reduced height
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: InputStyles.inputDecoration('Username'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            validator: validateUsername, // Use the new validateUsername function
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputStyles.inputDecoration('Email'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            validator: validateEmail,
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _birthdayController,
+                            decoration: InputStyles.inputDecoration('Birthday'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            readOnly: true,
+                            onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your birthday';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputStyles.inputDecoration('Password'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            obscureText: true,
+                            validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
+                            onChanged: (value) {
+                              setState(() {
+                                _isPasswordFieldTouched = true;
+                              });
+                              validatePassword(value, (isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol) {
+                                setState(() {
+                                  _isPasswordLengthValid = isPasswordLengthValid;
+                                  _hasUppercase = hasUppercase;
+                                  _hasNumber = hasNumber;
+                                  _hasSymbol = hasSymbol;
+                                });
+                              });
+                            },
+                          ),
+                          if (_isPasswordFieldTouched) ...[
+                            const SizedBox(height: 10),
+                            buildPasswordRequirement(
+                              text: 'At least 8 characters',
+                              isValid: _isPasswordLengthValid,
+                            ),
+                            buildPasswordRequirement(
+                              text: 'Includes an uppercase letter',
+                              isValid: _hasUppercase,
+                            ),
+                            buildPasswordRequirement(
+                              text: 'Includes a number',
+                              isValid: _hasNumber,
+                            ),
+                            buildPasswordRequirement(
+                              text: 'Includes a symbol',
+                              isValid: _hasSymbol,
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            decoration: InputStyles.inputDecoration('Confirm Password'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _isPrivacyPolicyAccepted,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isPrivacyPolicyAccepted = value!;
+                                  });
+                                },
+                              ),
+                              const Flexible(
+                                child: Text(
+                                  'I have read and understood the Privacy Policy and agree to the Terms of Service',
+                                  style: TextStyle(color: Colors.white), // Changed text color to white
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_showPrivacyPolicyError)
+                            PrivacyPolicyError(showError: _showPrivacyPolicyError),
+                          const SizedBox(height: 20),
+                          CustomButton(
+                            text: 'Register',
+                            color: const Color(0xFF351B61),
+                            textColor: Colors.white,
+                            onTap: _register,
+                          ),
+                          const SizedBox(height: 20),
+                          CustomButton(
+                            text: 'Have an Account? Login instead',
+                            color: Colors.white,
+                            textColor: Colors.black,
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

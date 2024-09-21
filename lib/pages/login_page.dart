@@ -1,9 +1,12 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'play_page.dart'; // Import the home_page.dart file
-import 'register_page.dart'; // Import the register_page.dart file
+import 'play_page.dart';
+import 'register_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/text_with_shadow.dart';
+import '../styles/input_styles.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,37 +29,39 @@ class _LoginPageState extends State<LoginPage> {
       final password = _passwordController.text;
 
       try {
-        // Fetch the email associated with the username from Firestore
         final email = await _authService.getEmailByUsername(username);
 
         if (email != null) {
-          // Sign in with email and password using Firebase Auth
           final user = await _authService.signInWithEmailAndPassword(email, password);
 
           if (user != null) {
-            // Navigate to PlayPage after successful login
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
-            );
+            _navigateToPlayPage();
           } else {
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login failed. Please try again.')),
-            );
+            _showSnackBar('Login failed. Please try again.');
           }
         } else {
-          // Show error message if username is not found
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Username not found. Please try again.')),
-          );
+          _showSnackBar('Username not found. Please try again.');
         }
       } catch (e) {
-        // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        _showSnackBar('Error: $e');
       }
+    }
+  }
+
+  void _navigateToPlayPage() {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
+      );
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
   }
 
@@ -67,99 +72,148 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'Handa Bata',
-                style: TextStyle(fontSize: 46, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
-              const Text(
-                'Mobile App Edition',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
-              ),
-              const SizedBox(height: 75),
-              TextFormField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0), // Oblong shape
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0), // Oblong shape
-                  ),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10), // Space between password field and the row of buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Checkbox(
-                        value: _staySignedIn,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            _staySignedIn = value!;
-                          });
-                        },
-                      ),
-                      const Text('Stay signed in'),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: _forgotPassword,
-                    child: const Text('Forgot password?'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10), // Space between the row of buttons and the login button
-              ElevatedButton(
-                onPressed: _login,
-                child: const Text('Login'),
-              ),
-              const SizedBox(height: 10), // Space between the login button and the register button
-              ElevatedButton(
-                onPressed: () {
-                  // Navigate to the registration page
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegistrationPage()),
-                  );
-                },
-                child: const Text('Register'),
-              ),
-            ],
+      body: Stack(
+        children: [
+          SvgPicture.asset(
+            'assets/backgrounds/background.svg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 120.0),
+                child: Column(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          const TextWithShadow(text: 'Handa Bata', fontSize: 85),
+                          Transform.translate(
+                            offset: const Offset(0, -20.0),
+                            child: Column(
+                              children: [
+                                const TextWithShadow(text: 'Mobile', fontSize: 75),
+                                const SizedBox(height: 30),
+                                Text(
+                                  'Welcome Back',
+                                  style: GoogleFonts.vt323(
+                                    fontSize: 30,
+                                    color: Colors.white,
+                                    shadows: [
+                                      const Shadow(
+                                        offset: Offset(0, 3.0),
+                                        blurRadius: 0.0,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: InputStyles.inputDecoration('Username'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your username';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputStyles.inputDecoration('Password'),
+                            style: const TextStyle(color: Colors.white), // Changed text color to white
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  Checkbox(
+                                    value: _staySignedIn,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _staySignedIn = value!;
+                                      });
+                                    },
+                                  ),
+                                  const Text(
+                                    'Stay signed in',
+                                    style: TextStyle(
+                                      color: Colors.white, // Changed text color to white
+                                      fontSize: 16, // Added fontSize variable
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TextButton(
+                                onPressed: _forgotPassword,
+                                child: const Text(
+                                  'Forgot password?',
+                                  style: TextStyle(
+                                    color: Colors.white, // Changed text color to white
+                                    fontSize: 16, // Added fontSize variable
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 30),
+                          CustomButton(
+                            text: 'Login',
+                            color: const Color(0xFF351B61),
+                            textColor: Colors.white,
+                            onTap: _login,
+                          ),
+                          const SizedBox(height: 20),
+                          CustomButton(
+                            text: 'Register',
+                            color: const Color(0xFFF1B33A),
+                            textColor: Colors.black,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const RegistrationPage()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            left: 10,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 36), // Increased size
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

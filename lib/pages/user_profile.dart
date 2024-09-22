@@ -93,7 +93,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       nickname: _userProfile!.nickname, // Pass nickname
                                       avatarId: _userProfile!.avatarId,
                                       level: _userProfile!.level,
-                                      textStyle: GoogleFonts.rubik(color: Colors.white), // White font color for username and level
+                                      currentExp: _userProfile!.exp, 
+                                      maxExp: _userProfile!.expCap,
+                                      textStyle: GoogleFonts.rubik(color: Colors.white),  // White font color for username and level
                                     )
                                   : const SizedBox.shrink(),
                         ),

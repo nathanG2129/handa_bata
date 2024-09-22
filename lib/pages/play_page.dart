@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
@@ -65,11 +66,14 @@ class _PlayPageState extends State<PlayPage> {
                   ElevatedButton(
                     onPressed: _toggleUserProfile,
                     style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF241242), // Text color
+                      backgroundColor: Colors.white, // Background color
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: BorderRadius.zero, // Purely rectangular with sharp edges
+                        side: BorderSide(color: Color(0xFF241242), width: 1.0), // Border color and width
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                      textStyle: const TextStyle(fontSize: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Adjusted padding for smaller size
+                      textStyle: GoogleFonts.rubik(fontSize: 20), // Using Rubik font
                     ),
                     child: const Text('User Profile'),
                   ),

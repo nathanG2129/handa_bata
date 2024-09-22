@@ -3,7 +3,10 @@ import 'dart:ui';
 import 'account_settings.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
-import 'package:handabatamae/widgets/user_profile_widgets.dart';
+import 'package:handabatamae/widgets/user_profile_header.dart'; // Import UserProfileHeader
+import 'package:handabatamae/widgets/user_profile_stats.dart'; // Import UserProfileStats
+import 'package:handabatamae/widgets/favorite_badges.dart'; // Import FavoriteBadges
+import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
@@ -11,6 +14,7 @@ class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key, required this.onClose});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UserProfilePageState createState() => _UserProfilePageState();
 }
 
@@ -69,13 +73,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
               onTap: () {},
               child: Card(
                 margin: const EdgeInsets.all(20),
+                shape: const RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
+                  borderRadius: BorderRadius.zero, // Purely rectangular
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Stack(
                       children: [
                         Container(
-                          color: Colors.lightBlue[100],
+                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
                           padding: const EdgeInsets.all(20.0),
                           child: _isLoading
                               ? const Center(child: CircularProgressIndicator())
@@ -84,6 +92,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       nickname: _userProfile!.nickname,
                                       avatarId: _userProfile!.avatarId,
                                       level: _userProfile!.level,
+                                      textStyle: GoogleFonts.rubik(color: Colors.white), // White font color for username and level
                                     )
                                   : const SizedBox.shrink(),
                         ),
@@ -91,7 +100,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           top: 10,
                           right: 10,
                           child: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_horiz, size: 30),
+                            icon: const Icon(Icons.more_horiz, size: 30, color: Colors.white), // White ellipses
                             onSelected: (String result) {
                               setState(() {
                                 showAccountSettings = result == 'Account Settings';
@@ -153,11 +162,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
         const SizedBox(height: 20),
         const FavoriteBadges(),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: widget.onClose,
-          child: const Text('Close'),
-        ),
       ],
     );
   }

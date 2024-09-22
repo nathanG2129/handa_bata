@@ -48,7 +48,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
       final password = _passwordController.text;
 
       try {
-        User? user = await _authService.registerWithEmailAndPassword(email, password, username, birthday);
+        User? user = await _authService.registerWithEmailAndPassword(
+          email,
+          password,
+          username,
+          username, // Pass username as nickname
+          birthday,
+          role: 'user', // Pass the role parameter
+        );
 
         if (user != null && !user.emailVerified) {
           await user.sendEmailVerification();

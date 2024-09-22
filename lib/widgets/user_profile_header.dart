@@ -1,42 +1,43 @@
 import 'package:flutter/material.dart';
-// Import Google Fonts
 
 class UserProfileHeader extends StatelessWidget {
+  final String username;
   final String nickname;
   final int avatarId;
   final int level;
   final TextStyle textStyle;
 
   const UserProfileHeader({
-    super.key,
+    Key? key,
+    required this.username,
     required this.nickname,
     required this.avatarId,
     required this.level,
     required this.textStyle,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        const CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.grey,
-          child: Icon(Icons.person, size: 40, color: Colors.white),
+        Text(
+          username,
+          style: textStyle.copyWith(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(width: 20),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              nickname,
-              style: textStyle.copyWith(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            Text(
-              'Level: $level',
-              style: textStyle.copyWith(fontSize: 16, color: Colors.white),
-            ),
-          ],
+        const SizedBox(height: 4),
+        Text(
+          nickname,
+          style: textStyle.copyWith(fontSize: 18),
+        ),
+        const SizedBox(height: 8),
+        CircleAvatar(
+          radius: 60,
+          backgroundImage: AssetImage('assets/avatars/avatar_$avatarId.png'),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Level $level',
+          style: textStyle,
         ),
       ],
     );

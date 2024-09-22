@@ -6,7 +6,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> registerWithEmailAndPassword(String email, String password, String nickname, String birthday, {String role = 'user'}) async {
+  Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
@@ -14,6 +14,7 @@ class AuthService {
       if (user != null) {
         UserProfile userProfile = UserProfile(
           profileId: user.uid, // Use the user's UID as the profile ID
+          username: username, // Add username
           nickname: nickname,
           avatarId: 0,
           badgeShowcase: [0, 0, 0],
@@ -67,8 +68,15 @@ class AuthService {
     }
   }
 
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithUsernameAndPassword(String username, String password) async {
     try {
+      // Query Firestore to get the email associated with the username
+      String? email = await getEmailByUsername(username);
+      if (email == null) {
+        print('No user found with username: $username');
+        return null;
+      }
+
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return result.user;
     } catch (e) {
@@ -80,7 +88,7 @@ class AuthService {
   Future<String?> getEmailByUsername(String username) async {
     try {
       // Query Firestore to find the user by username
-      QuerySnapshot querySnapshot = await _firestore.collectionGroup('ProfileData').where('nickname', isEqualTo: username).get();
+      QuerySnapshot querySnapshot = await _firestore.collectionGroup('ProfileData').where('username', isEqualTo: username).get();
       if (querySnapshot.docs.isEmpty) {
         return null;
       }
@@ -116,6 +124,7 @@ class AuthService {
       Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
       return UserProfile(
         profileId: data['profileId'],
+        username: data['username'], // Add username
         nickname: data['nickname'],
         avatarId: data['avatarId'],
         badgeShowcase: List<int>.from(data['badgeShowcase']),

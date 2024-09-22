@@ -89,7 +89,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ? const Center(child: CircularProgressIndicator())
                               : _userProfile != null
                                   ? UserProfileHeader(
-                                      nickname: _userProfile!.nickname,
+                                      username: _userProfile!.username, // Pass username
+                                      nickname: _userProfile!.nickname, // Pass nickname
                                       avatarId: _userProfile!.avatarId,
                                       level: _userProfile!.level,
                                       textStyle: GoogleFonts.rubik(color: Colors.white), // White font color for username and level

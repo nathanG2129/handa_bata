@@ -22,12 +22,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      // Fetch the email associated with the username from Firestore
-      final email = await _authService.getEmailByUsername(username);
-
-      if (email != null) {
-        // Sign in with email and password using Firebase Auth
-        final user = await _authService.signInWithEmailAndPassword(email, password);
+      try {
+        // Sign in with username and password using Firebase Auth
+        final user = await _authService.signInWithUsernameAndPassword(username, password);
 
         if (user != null) {
           // Check if the user has admin privileges
@@ -50,10 +47,10 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             const SnackBar(content: Text('Login failed. Please try again.')),
           );
         }
-      } else {
+      } catch (e) {
         // Show error message if username is not found
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Username not found. Please try again.')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }

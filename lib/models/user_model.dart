@@ -1,5 +1,6 @@
 class UserProfile {
   final String profileId;
+  final String username;
   final String nickname;
   final int avatarId;
   final List<int> badgeShowcase;
@@ -17,6 +18,7 @@ class UserProfile {
 
   UserProfile({
     required this.profileId,
+    required this.username,
     required this.nickname,
     required this.avatarId,
     required this.badgeShowcase,
@@ -36,6 +38,7 @@ class UserProfile {
   Map<String, dynamic> toMap() {
     return {
       'profileId': profileId,
+      'username': username,
       'nickname': nickname,
       'avatarId': avatarId,
       'badgeShowcase': badgeShowcase,
@@ -56,6 +59,7 @@ class UserProfile {
   // Default guest profile
   static final UserProfile guestProfile = UserProfile(
     profileId: 'guest',
+    username: 'Guest',
     nickname: 'Guest',
     avatarId: 0,
     badgeShowcase: [],
@@ -69,6 +73,6 @@ class UserProfile {
     unlockedBadge: [],
     unlockedBanner: [],
     email: 'guest@example.com',
-    birthday: '01/01/2000',
+    birthday: '2000-01-01',
   );
 }

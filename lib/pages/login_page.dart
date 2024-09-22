@@ -29,18 +29,12 @@ class _LoginPageState extends State<LoginPage> {
       final password = _passwordController.text;
 
       try {
-        final email = await _authService.getEmailByUsername(username);
+        final user = await _authService.signInWithUsernameAndPassword(username, password);
 
-        if (email != null) {
-          final user = await _authService.signInWithEmailAndPassword(email, password);
-
-          if (user != null) {
-            _navigateToPlayPage();
-          } else {
-            _showSnackBar('Login failed. Please try again.');
-          }
+        if (user != null) {
+          _navigateToPlayPage();
         } else {
-          _showSnackBar('Username not found. Please try again.');
+          _showSnackBar('Login failed. Please try again.');
         }
       } catch (e) {
         _showSnackBar('Error: $e');

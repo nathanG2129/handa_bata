@@ -13,6 +13,8 @@ On how to run the application, do the following:
 #
 ![Path Tutorial](https://github.com/user-attachments/assets/b41a3494-3f68-4bbc-8849-4a60eca178a3)
 #
+- You may need to enable Developer Mode. Search for Developer Settings on Windows and enable the setting for installing apps from any source.
+- Once everything is set, restart VS Code.
 - To access admin panel, do "flutter run -d chrome" to open a chrome tab that starts at the admin login screen.
 - Use your credentials based on what I've sent to manage questions, banners, badges and avatars.
 

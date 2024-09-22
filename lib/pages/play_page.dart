@@ -93,8 +93,6 @@ class _PlayPageState extends State<PlayPage> {
               ),
             ),
           ),
-          if (_isUserProfileVisible)
-            UserProfilePage(onClose: _toggleUserProfile),
           Positioned(
             top: 60,
             left: 20,
@@ -109,6 +107,8 @@ class _PlayPageState extends State<PlayPage> {
               ),
             ),
           ),
+          if (_isUserProfileVisible)
+            UserProfilePage(onClose: _toggleUserProfile),
         ],
       ),
     );

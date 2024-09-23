@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 class ArcadeButton extends StatefulWidget {
   final VoidCallback onPressed;
 
-  const ArcadeButton({Key? key, required this.onPressed}) : super(key: key);
+  const ArcadeButton({super.key, required this.onPressed});
 
   @override
   _ArcadeButtonState createState() => _ArcadeButtonState();

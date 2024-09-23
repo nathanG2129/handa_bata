@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AdventureButton extends StatefulWidget {
   final VoidCallback onPressed;
 
-  const AdventureButton({Key? key, required this.onPressed}) : super(key: key);
+  const AdventureButton({super.key, required this.onPressed});
 
   @override
   _AdventureButtonState createState() => _AdventureButtonState();

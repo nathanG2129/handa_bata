@@ -5,6 +5,8 @@ import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
 import 'package:handabatamae/widgets/arcade_button.dart';
+import 'adventure_page.dart'; // Import AdventurePage
+import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
 
 class PlayPage extends StatefulWidget {
@@ -80,13 +82,19 @@ class _PlayPageState extends State<PlayPage> {
                   const SizedBox(height: 50),
                   AdventureButton(
                     onPressed: () {
-                      // Navigate to Adventure mode
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdventurePage()),
+                      );
                     },
                   ),
                   const SizedBox(height: 20),
                   ArcadeButton(
                     onPressed: () {
-                      // Navigate to Arcade mode
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ArcadePage()),
+                      );
                     },
                   ),
                 ],

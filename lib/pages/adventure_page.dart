@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
+import 'stages_page.dart'; // Import StagesPage
 import 'package:handabatamae/widgets/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
@@ -16,6 +17,7 @@ class _AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
+  static const double questListHeight = 415; // Set the height of the quest list
 
   @override
   void initState() {
@@ -29,7 +31,17 @@ class _AdventurePageState extends State<AdventurePage> {
     print('Fetched categories: $categories');
     setState(() {
       _categories = categories;
+      _sortCategories();
       _isLoading = false;
+    });
+  }
+
+  void _sortCategories() {
+    const order = ['Quake', 'Storm', 'Volcano', 'Drought', 'Flood', 'Tsunami'];
+    _categories.sort((a, b) {
+      final aIndex = order.indexOf(order.firstWhere((element) => a['name'].contains(element), orElse: () => ''));
+      final bIndex = order.indexOf(order.firstWhere((element) => b['name'].contains(element), orElse: () => ''));
+      return aIndex.compareTo(bIndex);
     });
   }
 
@@ -68,7 +80,7 @@ class _AdventurePageState extends State<AdventurePage> {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 50), // Adjust the top padding as needed
+                padding: const EdgeInsets.only(top: 75), // Adjust the top padding as needed
                 child: AdventureButton(
                   onPressed: () {
                     // Define the action for the Adventure button if needed
@@ -82,26 +94,35 @@ class _AdventurePageState extends State<AdventurePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start, // Align to the start
                       children: [
-                        const SizedBox(height: 20), // Adjust the height to position the first button closer
+                        const SizedBox(height: 30), // Adjust the height to position the first button closer
                         _isLoading
                             ? const CircularProgressIndicator()
-                            : SizedBox(
-                                height: 420, // Adjust the height to show only 4 quests at a time
+                            : Container(
+                                height: questListHeight, // Set the height of the quest list
                                 child: ListView.builder(
+                                  padding: const EdgeInsets.only(top: 0), // Remove extra space at the top
                                   itemCount: _categories.length,
                                   itemBuilder: (context, index) {
                                     final category = _categories[index];
                                     final buttonColor = _getButtonColor(category['name']);
                                     return Padding(
-                                      padding: const EdgeInsets.only(bottom: 20), // Apply margin only to the bottom
+                                      padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20), // Apply margin only to the bottom except for the last item
                                       child: Align(
                                         alignment: Alignment.center,
                                         child: SizedBox(
                                           width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-                                          height: 75, // Fixed height
+                                          height: 85, // Fixed height
                                           child: ElevatedButton(
                                             onPressed: () {
-                                              // Define the action for the category button
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => StagesPage(
+                                                    questName: category['name'],
+                                                    category: category['id'], // Pass the category ID
+                                                  ),
+                                                ),
+                                              );
                                             },
                                             style: ElevatedButton.styleFrom(
                                               foregroundColor: Colors.white, // Text color

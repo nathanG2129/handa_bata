@@ -4,26 +4,45 @@ class StageService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<List<Map<String, dynamic>>> fetchStages(String language, String category) async {
-    QuerySnapshot snapshot = await _firestore
-        .collection('Game')
-        .doc('Stage')
-        .collection(language)
-        .doc(category)
-        .collection('stages')
-        .get();
-    return snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    try {
+      print('Fetching stages for language: $language, category: $category');
+      QuerySnapshot snapshot = await _firestore
+          .collection('Game')
+          .doc('Stage')
+          .collection(language)
+          .doc(category)
+          .collection('stages')
+          .get();
+      if (snapshot.docs.isEmpty) {
+        print('No stages found for category: $category');
+      } else {
+        print('Stages found: ${snapshot.docs.length}');
+      }
+      return snapshot.docs.map((doc) {
+        print('Fetched stage document: ${doc.id}');
+        return doc.data() as Map<String, dynamic>;
+      }).toList();
+    } catch (e) {
+      print('Error fetching stages: $e');
+      return [];
+    }
   }
 
   Future<Map<String, dynamic>> fetchStageDocument(String language, String category, String stageName) async {
-    DocumentSnapshot doc = await _firestore
-        .collection('Game')
-        .doc('Stage')
-        .collection(language)
-        .doc(category)
-        .collection('stages')
-        .doc(stageName)
-        .get();
-    return doc.data() as Map<String, dynamic>;
+    try {
+      DocumentSnapshot doc = await _firestore
+          .collection('Game')
+          .doc('Stage')
+          .collection(language)
+          .doc(category)
+          .collection('stages')
+          .doc(stageName)
+          .get();
+      return doc.data() as Map<String, dynamic>;
+    } catch (e) {
+      print('Error fetching stage document: $e');
+      return {};
+    }
   }
 
   Future<List<Map<String, dynamic>>> fetchQuestions(String language, String category, String stageName) async {
@@ -33,7 +52,6 @@ class StageService {
   }
 
   Future<void> addStage(String language, String category, String stageName, Map<String, dynamic> stageData) async {
-    // Add the stage document
     await _firestore
         .collection('Game')
         .doc('Stage')
@@ -79,14 +97,12 @@ class StageService {
       } else {
         print('Categories found: ${snapshot.docs.length}');
       }
-      
       List<Map<String, dynamic>> categories = snapshot.docs.map((doc) {
         print('Fetched category document: ${doc.id}');
         return {
           'id': doc.id,
           'name': doc['name'],
           'description': doc['description'],
-          
         };
       }).toList();
       print('Fetched categories from Firestore: $categories');

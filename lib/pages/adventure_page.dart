@@ -106,9 +106,9 @@ class _AdventurePageState extends State<AdventurePage> {
                                             style: ElevatedButton.styleFrom(
                                               foregroundColor: Colors.white, // Text color
                                               backgroundColor: buttonColor, // Set background color based on category
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: const BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                side: const BorderSide(color: Colors.black, width: 2.0), // Black border
+                                              shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                                                side: BorderSide(color: Colors.black, width: 2.0), // Black border
                                               ),
                                             ),
                                             child: Stack(

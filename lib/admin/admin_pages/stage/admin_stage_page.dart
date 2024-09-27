@@ -91,9 +91,6 @@ class _AdminStagePageState extends State<AdminStagePage> {
         void _showEditCategoryDialog() async {
       try {
         final selectedCategory = _categories.firstWhere((category) => category['id'] == _selectedCategory, orElse: () => {});
-        if (selectedCategory == null) {
-          throw Exception('Selected category not found.');
-        }
     
         // Check if the required fields are present
         bool needsUpdate = false;

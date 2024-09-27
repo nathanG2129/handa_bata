@@ -8,6 +8,10 @@ import 'edit_stage_page.dart';
 import 'add_stage_page.dart';
 import 'package:handabatamae/admin/admin_widgets/hoverable_text.dart';
 import 'package:handabatamae/admin/admin_widgets/stage_deletion_dialog.dart';
+import 'edit_category_dialog.dart';
+import 'package:handabatamae/admin/admin_widgets/add_stage_button.dart';
+import 'package:handabatamae/admin/admin_widgets/category_dropdown.dart';
+import 'package:handabatamae/admin/admin_widgets/stage_data_table.dart';
 
 class AdminStagePage extends StatefulWidget {
   const AdminStagePage({super.key});
@@ -20,16 +24,31 @@ class AdminStagePage extends StatefulWidget {
 class _AdminStagePageState extends State<AdminStagePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
+  List<Map<String, dynamic>> _categories = [];
   String _selectedLanguage = 'en';
-  String _selectedCategory = 'Storm'; // Default category
+  String _selectedCategory = 'Storm';
 
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
     _fetchStages();
   }
 
-  void _fetchStages() async {
+  Future<void> _fetchCategories() async {
+    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage);
+    setState(() {
+      _categories = categories.map((category) {
+        return {
+          'id': category['id'],
+          'name': category['name'] ?? 'Unnamed Category',
+          'description': category['description'] ?? 'No description available',
+        };
+      }).toList();
+    });
+  }
+
+  Future<void> _fetchStages() async {
     List<Map<String, dynamic>> stages = await _stageService.fetchStages(_selectedLanguage, _selectedCategory);
     print('Fetched stages: $stages');
     setState(() {
@@ -68,6 +87,71 @@ class _AdminStagePageState extends State<AdminStagePage> {
       _fetchStages();
     });
   }
+
+        void _showEditCategoryDialog() async {
+      try {
+        final selectedCategory = _categories.firstWhere((category) => category['id'] == _selectedCategory, orElse: () => {});
+        if (selectedCategory == null) {
+          throw Exception('Selected category not found.');
+        }
+    
+        // Check if the required fields are present
+        bool needsUpdate = false;
+        if (selectedCategory['name'] == null) {
+          selectedCategory['name'] = 'Unnamed Category';
+          needsUpdate = true;
+        }
+        if (selectedCategory['description'] == null) {
+          selectedCategory['description'] = 'No description available';
+          needsUpdate = true;
+        }
+        if (selectedCategory['color'] == null) {
+          selectedCategory['color'] = 'defaultColor';
+          needsUpdate = true;
+        }
+        if (selectedCategory['position'] == null) {
+          selectedCategory['position'] = 0;
+          needsUpdate = true;
+        }
+    
+        // Update the category if necessary
+        if (needsUpdate) {
+          await _stageService.updateCategory(_selectedLanguage, _selectedCategory, {
+            'name': selectedCategory['name'],
+            'description': selectedCategory['description'],
+            'color': selectedCategory['color'],
+            'position': selectedCategory['position'],
+          });
+          // Refresh categories after update
+          await _fetchCategories();
+        }
+    
+        // Show the edit dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return EditCategoryDialog(
+              language: _selectedLanguage,
+              categoryId: _selectedCategory,
+              initialName: selectedCategory['name'],
+              initialDescription: selectedCategory['description'],
+              initialColor: selectedCategory['color'], // Pass initial color
+              initialPosition: selectedCategory['position'], // Pass initial position
+            );
+          },
+        ).then((_) {
+          _fetchCategories();
+        });
+      } catch (e) {
+        print('Error: $e');
+        // Handle the error, e.g., show a message to the user
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selected category not found.')),
+          );
+        });
+      }
+    }
 
   void _navigateToEditStage(String stageName) async {
     print('Navigating to edit stage: $stageName');
@@ -159,6 +243,18 @@ class _AdminStagePageState extends State<AdminStagePage> {
                             onPressed: _showAddStageDialog,
                           ),
                           const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _showEditCategoryDialog,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF381c64),
+                              shadowColor: Colors.transparent, // Remove button highlight
+                            ),
+                            child: Text(
+                              'Edit Stage Category',
+                              style: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                           Expanded(
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -177,126 +273,6 @@ class _AdminStagePageState extends State<AdminStagePage> {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class CategoryDropdown extends StatelessWidget {
-  final String selectedCategory;
-  final ValueChanged<String> onCategoryChanged;
-
-  const CategoryDropdown({
-    super.key,
-    required this.selectedCategory,
-    required this.onCategoryChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: selectedCategory,
-      dropdownColor: const Color(0xFF381c64),
-      onChanged: (String? newValue) {
-        if (newValue != null) {
-          onCategoryChanged(newValue);
-        }
-      },
-      items: <String>['Storm', 'Quake', 'Volcanic', 'Drought', 'Tsunami', 'Flood']
-          .map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value, style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class AddStageButton extends StatelessWidget {
-  final String selectedLanguage;
-  final VoidCallback onPressed;
-
-  const AddStageButton({
-    super.key,
-    required this.selectedLanguage,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF381c64),
-        shadowColor: Colors.transparent, // Remove button highlight
-      ),
-      child: Text(
-        selectedLanguage == 'en' ? 'Add English Stage' : 'Add Filipino Stage',
-        style: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
-      ),
-    );
-  }
-}
-
-class StageDataTable extends StatelessWidget {
-  final List<Map<String, dynamic>> stages;
-  final ValueChanged<String> onEditStage;
-  final ValueChanged<String> onDeleteStage;
-
-  const StageDataTable({
-    super.key,
-    required this.stages,
-    required this.onEditStage,
-    required this.onDeleteStage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white, // Set card background to white
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0.0), // Square corners
-        side: const BorderSide(color: Colors.black, width: 2.0), // Black border
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0), // Add padding inside the card
-        child: DataTable(
-          columns: [
-            DataColumn(label: Text('Stage Name', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
-            DataColumn(label: Text('Number of Questions', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
-            DataColumn(label: Text('Actions', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
-          ],
-          rows: stages.map((stage) {
-            String stageName = stage['stageName'] ?? '';
-            int questionCount = stage['questions'] != null ? (stage['questions'] as List).length : 0;
-            return DataRow(cells: [
-              DataCell(Text(stageName, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
-              DataCell(Text(questionCount.toString(), style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
-              DataCell(
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: stageName.isNotEmpty ? () => onEditStage(stageName) : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF381c64),
-                      ),
-                      child: Text('Edit', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: stageName.isNotEmpty ? () => onDeleteStage(stageName) : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      child: Text('Delete', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-                    ),
-                  ],
-                ),
-              ),
-            ]);
-          }).toList(),
         ),
       ),
     );

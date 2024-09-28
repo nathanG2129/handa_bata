@@ -97,7 +97,7 @@ class _AdventurePageState extends State<AdventurePage> {
                         const SizedBox(height: 30), // Adjust the height to position the first button closer
                         _isLoading
                             ? const CircularProgressIndicator()
-                            : Container(
+                            : SizedBox(
                                 height: questListHeight, // Set the height of the quest list
                                 child: ListView.builder(
                                   padding: const EdgeInsets.only(top: 0), // Remove extra space at the top

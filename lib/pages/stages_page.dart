@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/widgets/stage_dialog.dart'; // Import the new dialog file
 
 class StagesPage extends StatefulWidget {
   final String questName;
@@ -33,6 +34,11 @@ class _StagesPageState extends State<StagesPage> {
       _stages = stages;
       _isLoading = false;
     });
+  }
+
+  Future<int> _fetchNumberOfQuestions(int stageIndex) async {
+    // Replace with actual logic to fetch the number of questions for the stage
+    return 10; // Example: 10 questions
   }
 
   @override
@@ -110,41 +116,44 @@ class _StagesPageState extends State<StagesPage> {
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(top: 0), // Remove extra space at the top
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(35), // Adjust padding as needed
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, // 3 columns
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 50,
+                        ),
                         itemCount: _stages.length,
                         itemBuilder: (context, index) {
-                          final stage = _stages[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20), // Adjust padding as needed
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // Define the action when a stage is tapped
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white, // Text color
-                                backgroundColor: Colors.grey, // Background color
-                                shape: const CircleBorder(), // Circular button
-                                padding: const EdgeInsets.all(20), // Adjust padding for circular shape
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    stage['stageName'] ?? 'Unknown Stage',
-                                    style: GoogleFonts.rubik(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    stage['description'] ?? 'No description available',
-                                    style: GoogleFonts.rubik(
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
+                          final rowIndex = index ~/ 3;
+                          final columnIndex = index % 3;
+                          final isEvenRow = rowIndex % 2 == 0;
+                          final stageIndex = isEvenRow
+                              ? index
+                              : (rowIndex + 1) * 3 - columnIndex - 1;
+                          final stageNumber = stageIndex + 1;
+
+                          return ElevatedButton(
+                            onPressed: () async {
+                              int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
+                              Map<String, dynamic> stageData = _stages[stageIndex];
+                              showStageDialog(context, stageNumber, widget.questName, numberOfQuestions, stageData);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white, // Text color
+                              backgroundColor: Colors.grey, // Background color
+                              shape: const CircleBorder(), // Circular button
+                              padding: const EdgeInsets.all(20), // Adjust padding for circular shape
+                              minimumSize: const Size(60, 60) 
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$stageNumber',
+                                style: GoogleFonts.rubik(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           );

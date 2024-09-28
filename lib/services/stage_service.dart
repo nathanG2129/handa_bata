@@ -38,6 +38,7 @@ class StageService {
           .collection('stages')
           .doc(stageName)
           .get();
+      print('Fetched stage document: ${doc.id}');
       return doc.data() as Map<String, dynamic>;
     } catch (e) {
       print('Error fetching stage document: $e');
@@ -46,9 +47,18 @@ class StageService {
   }
 
   Future<List<Map<String, dynamic>>> fetchQuestions(String language, String category, String stageName) async {
-    Map<String, dynamic> stageDocument = await fetchStageDocument(language, category, stageName);
-    List<Map<String, dynamic>> questions = List<Map<String, dynamic>>.from(stageDocument['questions'] ?? []);
-    return questions;
+    try {
+      Map<String, dynamic> stageDocument = await fetchStageDocument(language, category, stageName);
+      if (stageDocument.isEmpty) {
+        throw Exception('Stage document is empty');
+      }
+      List<Map<String, dynamic>> questions = List<Map<String, dynamic>>.from(stageDocument['questions'] ?? []);
+      print('Fetched questions: $questions');
+      return questions;
+    } catch (e) {
+      print('Error fetching questions: $e');
+      return [];
+    }
   }
 
   Future<void> addStage(String language, String category, String stageName, Map<String, dynamic> stageData) async {

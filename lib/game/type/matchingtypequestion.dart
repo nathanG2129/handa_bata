@@ -6,10 +6,10 @@ class MatchingTypeQuestion extends StatelessWidget {
   final Function(Map<String, String>) onMatchingCompleted;
 
   const MatchingTypeQuestion({
-    Key? key,
+    super.key,
     required this.questionData,
     required this.onMatchingCompleted,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

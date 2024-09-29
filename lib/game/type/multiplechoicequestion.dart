@@ -9,12 +9,12 @@ class MultipleChoiceQuestion extends StatefulWidget {
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
 
   const MultipleChoiceQuestion({
-    Key? key,
+    super.key,
     required this.questionData,
     required this.selectedOptionIndex,
     required this.onOptionSelected,
     required this.onOptionsShown,
-  }) : super(key: key);
+  });
 
   @override
   _MultipleChoiceQuestionState createState() => _MultipleChoiceQuestionState();

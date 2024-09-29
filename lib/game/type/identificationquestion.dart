@@ -8,12 +8,12 @@ class IdentificationQuestion extends StatelessWidget {
   final Function(String) onAnswerSubmitted;
 
   const IdentificationQuestion({
-    Key? key,
+    super.key,
     required this.questionData,
     required this.controller,
     required this.isCorrect,
     required this.onAnswerSubmitted,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class IdentificationQuestion extends StatelessWidget {
         const SizedBox(height: 16),
         TextField(
           controller: controller,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Type your answer here',
             border: OutlineInputBorder(),
           ),

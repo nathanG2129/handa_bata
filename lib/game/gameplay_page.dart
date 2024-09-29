@@ -14,12 +14,12 @@ class GameplayPage extends StatefulWidget {
   final Map<String, dynamic> stageData;
 
   const GameplayPage({
-    Key? key,
+    super.key,
     required this.language,
     required this.category,
     required this.stageName,
     required this.stageData,
-  }) : super(key: key);
+  });
 
   @override
   _GameplayPageState createState() => _GameplayPageState();
@@ -251,7 +251,7 @@ class _GameplayPageState extends State<GameplayPage> {
 class ProgressBar extends StatelessWidget {
   final double progress;
 
-  const ProgressBar({Key? key, required this.progress}) : super(key: key);
+  const ProgressBar({super.key, required this.progress});
 
   @override
   Widget build(BuildContext context) {

@@ -184,10 +184,9 @@ class _GameplayPageState extends State<GameplayPage> {
         break;
       case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
+          key: ValueKey(_currentQuestionIndex), // Ensure the widget is rebuilt for each question
           questionData: currentQuestion,
-          onMatchingCompleted: (matching) {
-            // Handle matching completion
-          },
+          onOptionsShown: _startTimer, // Start the timer when options are shown
         );
         break;
       case 'Identification':

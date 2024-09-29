@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/stage_dialog.dart'; // Import the new dialog file
@@ -137,14 +138,24 @@ class _StagesPageState extends State<StagesPage> {
                             onPressed: () async {
                               int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
                               Map<String, dynamic> stageData = _stages[stageIndex];
-                              showStageDialog(context, stageNumber, widget.questName, numberOfQuestions, stageData);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GameplayPage(
+                                    language: 'en',
+                                    category: widget.category,
+                                    stageName: 'Stage $stageNumber',
+                                    stageData: stageData,
+                                  ),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white, // Text color
                               backgroundColor: Colors.grey, // Background color
                               shape: const CircleBorder(), // Circular button
                               padding: const EdgeInsets.all(20), // Adjust padding for circular shape
-                              minimumSize: const Size(60, 60) 
+                              minimumSize: const Size(60, 60),
                             ),
                             child: Center(
                               child: Text(

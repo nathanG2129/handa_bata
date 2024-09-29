@@ -22,9 +22,13 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   bool showOptions = false;
   List<String> section1Options = [];
   List<String> section2Options = [];
-  List<Map<String, String>> answerPairs = [];
+  List<Map<String, String>> userPairs = [];
   List<Color> pairColors = [];
+  List<Color> usedColors = [];
   String questionText = '';
+  List<Map<String, String>> correctAnswers = [];
+  int correctPairCount = 0;
+  int incorrectPairCount = 0;
 
   @override
   void initState() {
@@ -42,26 +46,35 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       section1Options = List<String>.from(widget.questionData['section1'] ?? []);
       section2Options = List<String>.from(widget.questionData['section2'] ?? []);
-      answerPairs = List<Map<String, String>>.from(
+      correctAnswers = List<Map<String, String>>.from(
         widget.questionData['answerPairs']?.map((item) => {
           'section1': item['section1'] as String,
           'section2': item['section2'] as String,
         }) ?? [],
       );
+
+      // Debug prints
+      debugPrint('Section 1 Options: $section1Options');
+      debugPrint('Section 2 Options: $section2Options');
+      debugPrint('Correct Answers: $correctAnswers');
+
+      userPairs = [];
+      pairColors = [];
+      usedColors = [];
       questionText = widget.questionData['question'] ?? 'No question available';
+      correctPairCount = 0;
+      incorrectPairCount = 0;
     });
-    debugPrint('Section 1 Options: $section1Options');
-    debugPrint('Section 2 Options: $section2Options');
-    debugPrint('Answer Pairs: $answerPairs');
-    debugPrint('Question Text: $questionText');
   }
 
   void _handleSection1OptionTap(String option) {
     setState(() {
       if (selectedSection1Option == option) {
         selectedSection1Option = null;
+        debugPrint('Deselected section1 option: $option');
       } else {
         selectedSection1Option = option;
+        debugPrint('Selected section1 option: $option');
         if (selectedSection2Option != null) {
           _matchOptions();
         }
@@ -73,8 +86,10 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       if (selectedSection2Option == option) {
         selectedSection2Option = null;
+        debugPrint('Deselected section2 option: $option');
       } else {
         selectedSection2Option = option;
+        debugPrint('Selected section2 option: $option');
         if (selectedSection1Option != null) {
           _matchOptions();
         }
@@ -84,36 +99,89 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
 
   void _matchOptions() {
     if (selectedSection1Option != null && selectedSection2Option != null) {
-      answerPairs.add({
-        'section1': selectedSection1Option!,
-        'section2': selectedSection2Option!,
+      setState(() {
+        userPairs.add({
+          'section1': selectedSection1Option!,
+          'section2': selectedSection2Option!,
+        });
+        Color newColor = _generateUniqueColor();
+        pairColors.add(newColor);
+        usedColors.add(newColor);
+        debugPrint('Matched Pair: Section 1 - $selectedSection1Option, Section 2 - $selectedSection2Option with color $newColor');
+        selectedSection1Option = null;
+        selectedSection2Option = null;
+
+        // Check if all pairs are matched
+        if (userPairs.length == section1Options.length) {
+          _checkAnswer();
+        }
       });
-      pairColors.add(_generateColor(answerPairs.length - 1));
-      debugPrint('Matched Pair: Section 1 - $selectedSection1Option, Section 2 - $selectedSection2Option');
-      selectedSection1Option = null;
-      selectedSection2Option = null;
     }
   }
 
   void _cancelSelection(String section1Option, String section2Option) {
     setState(() {
-      int index = answerPairs.indexWhere((pair) =>
+      int index = userPairs.indexWhere((pair) =>
           pair['section1'] == section1Option && pair['section2'] == section2Option);
       if (index != -1) {
-        answerPairs.removeAt(index);
+        usedColors.remove(pairColors[index]);
+        userPairs.removeAt(index);
         pairColors.removeAt(index);
+        debugPrint('Canceled Pair: Section 1 - $section1Option, Section 2 - $section2Option');
       }
     });
   }
 
-  Color _generateColor(int index) {
-    // Generate a color based on the index
-    final colors = [Colors.blue, Colors.green, Colors.red, Colors.orange, Colors.purple];
-    return colors[index % colors.length];
+  void _checkAnswer() {
+    // Convert pairs to strings for comparison
+    List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
+    List<String> correctAnswerStrings = correctAnswers.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
+
+    // Sort the lists for comparison
+    userPairStrings.sort();
+    correctAnswerStrings.sort();
+
+    debugPrint('User Pair Strings: $userPairStrings');
+    debugPrint('Correct Answer Strings: $correctAnswerStrings');
+
+    setState(() {
+      correctPairCount = 0;
+      incorrectPairCount = 0;
+      for (int i = 0; i < userPairs.length; i++) {
+        String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
+        if (correctAnswerStrings.contains(userPairString)) {
+          pairColors[i] = Colors.green; // Correct pair
+          correctPairCount++;
+        } else {
+          pairColors[i] = Colors.red; // Incorrect pair
+          incorrectPairCount++;
+        }
+      }
+    });
+
+    bool isCorrect = userPairStrings.length == correctAnswerStrings.length &&
+        userPairStrings.every((pair) => correctAnswerStrings.contains(pair));
+
+    if (isCorrect) {
+      debugPrint('All pairs matched correctly!');
+    } else {
+      debugPrint('Some pairs are incorrect.');
+    }
+  }
+
+  Color _generateUniqueColor() {
+    final colors = [Colors.blue, Colors.yellow, Colors.pink, Colors.orange, Colors.purple];
+    for (Color color in colors) {
+      if (!usedColors.contains(color)) {
+        return color;
+      }
+    }
+    // If all colors are used, start reusing colors
+    return colors[usedColors.length % colors.length];
   }
 
   Color? _getPairColor(String option, String section) {
-    int index = answerPairs.indexWhere((pair) => pair[section] == option);
+    int index = userPairs.indexWhere((pair) => pair[section] == option);
     if (index != -1 && index < pairColors.length) {
       return pairColors[index];
     }
@@ -162,21 +230,21 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         child: Column(
                           children: section1Options.map((option) {
                             bool isSelected = selectedSection1Option == option;
-                            bool isMatched = answerPairs.any((pair) => pair['section1'] == option);
+                            bool isMatched = userPairs.any((pair) => pair['section1'] == option);
                             Color? pairColor = _getPairColor(option, 'section1');
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
                               child: ElevatedButton(
                                 onPressed: () {
                                   if (isMatched) {
-                                    _cancelSelection(option, answerPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
+                                    _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
                                   } else {
                                     _handleSection1OptionTap(option);
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                  backgroundColor: isSelected || isMatched ? pairColor ?? Colors.blue : Colors.white,
+                                  backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
                                   padding: const EdgeInsets.all(16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
@@ -197,21 +265,21 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         child: Column(
                           children: section2Options.map((option) {
                             bool isSelected = selectedSection2Option == option;
-                            bool isMatched = answerPairs.any((pair) => pair['section2'] == option);
+                            bool isMatched = userPairs.any((pair) => pair['section2'] == option);
                             Color? pairColor = _getPairColor(option, 'section2');
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
                               child: ElevatedButton(
                                 onPressed: () {
                                   if (isMatched) {
-                                    _cancelSelection(answerPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
+                                    _cancelSelection(userPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
                                   } else {
                                     _handleSection2OptionTap(option);
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                  backgroundColor: isSelected || isMatched ? pairColor ?? Colors.blue : Colors.white,
+                                  backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
                                   padding: const EdgeInsets.all(16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
@@ -228,6 +296,14 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      'Correct Pairs: $correctPairCount, Incorrect Pairs: $incorrectPairCount',
+                      style: GoogleFonts.rubik(fontSize: 24, color: Colors.blue),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),

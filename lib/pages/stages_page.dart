@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:handabatamae/widgets/stage_dialog.dart'; // Import the new dialog file
 
 class StagesPage extends StatefulWidget {
   final String questName;
@@ -136,7 +135,6 @@ class _StagesPageState extends State<StagesPage> {
 
                           return ElevatedButton(
                             onPressed: () async {
-                              int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
                               Map<String, dynamic> stageData = _stages[stageIndex];
                               Navigator.push(
                                 context,

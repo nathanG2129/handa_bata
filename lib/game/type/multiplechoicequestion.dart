@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/text_with_shadow.dart';
@@ -23,16 +24,25 @@ class MultipleChoiceQuestion extends StatefulWidget {
 class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   String? resultMessage;
   bool showOptions = false;
+  Timer? _timer; // Timer to handle the delay
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 5), () {
-      setState(() {
-        showOptions = true;
-        widget.onOptionsShown(); // Notify that options are shown
-      });
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          showOptions = true;
+          widget.onOptionsShown(); // Notify that options are shown
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer if it exists
+    super.dispose();
   }
 
   @override
@@ -159,14 +169,6 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      'Correct Answer: ${options[correctOptionIndex]}',
-                      style: GoogleFonts.rubik(fontSize: 24, color: Colors.blue),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
                 ],
               ),
           ],

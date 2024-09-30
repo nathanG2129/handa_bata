@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -29,17 +30,26 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   List<Map<String, String>> correctAnswers = [];
   int correctPairCount = 0;
   int incorrectPairCount = 0;
+  Timer? _timer; // Timer to handle the delay
 
   @override
   void initState() {
     super.initState();
     _initializeOptions();
-    Future.delayed(const Duration(seconds: 5), () {
-      setState(() {
-        showOptions = true;
-        widget.onOptionsShown(); // Notify that options are shown
-      });
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          showOptions = true;
+          widget.onOptionsShown(); // Notify that options are shown
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer if it exists
+    super.dispose();
   }
 
   void _initializeOptions() {

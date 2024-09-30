@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -24,11 +26,14 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   List<String?> selectedOptions = [];
   List<bool> optionSelected = [];
   bool isAnswerCorrect = false;
+  bool showOptions = false; // State variable to track if the options should be shown
+  Timer? _timer; // Timer to handle the delay
 
   @override
   void initState() {
     super.initState();
     _initializeOptions();
+    _showIntroduction();
   }
 
   @override
@@ -36,13 +41,33 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     super.didUpdateWidget(oldWidget);
     if (widget.questionData != oldWidget.questionData) {
       _initializeOptions();
+      _showIntroduction();
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer if it exists
+    super.dispose();
   }
 
   void _initializeOptions() {
     setState(() {
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
+    });
+  }
+
+  void _showIntroduction() {
+    setState(() {
+      showOptions = false;
+    });
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          showOptions = true;
+        });
+      }
     });
   }
 
@@ -108,7 +133,7 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       if (word == '<input>') {
         questionWidgets.add(
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -141,56 +166,75 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
     return Column(
       children: [
-        Center(
-          child: Column(
+        if (!showOptions)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const TextWithShadow(
+                  text: 'Fill in the Blanks',
+                  fontSize: 40, // Adjusted font size to 40
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: questionWidgets,
+                ),
+              ],
+            ),
+          ),
+        if (showOptions)
+          Column(
             children: [
-              const TextWithShadow(
-                text: 'Fill in the Blanks',
-                fontSize: 48,
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: questionWidgets,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Wrap(
                 alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: questionWidgets,
+                children: options.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  String option = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _handleOptionSelection(index, option);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                        backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(color: Colors.black, width: 2),
+                        ),
+                      ),
+                      child: Text(
+                        option,
+                        style: GoogleFonts.vt323(fontSize: 24),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
+              const SizedBox(height: 16),
+              if (!selectedOptions.contains(null))
+                Text(
+                  isAnswerCorrect ? 'Correct!' : 'Incorrect!',
+                  style: GoogleFonts.vt323(fontSize: 24, color: isAnswerCorrect ? Colors.green : Colors.red),
+                ),
             ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          alignment: WrapAlignment.center,
-          children: options.asMap().entries.map((entry) {
-            int index = entry.key;
-            String option = entry.value;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  _handleOptionSelection(index, option);
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                  backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
-                  padding: const EdgeInsets.all(16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: const BorderSide(color: Colors.black, width: 2),
-                  ),
-                ),
-                child: Text(
-                  option,
-                  style: GoogleFonts.vt323(fontSize: 24),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 16),
-        if (!selectedOptions.contains(null))
-          Text(
-            isAnswerCorrect ? 'Correct!' : 'Incorrect!',
-            style: GoogleFonts.vt323(fontSize: 24, color: isAnswerCorrect ? Colors.green : Colors.red),
           ),
       ],
     );

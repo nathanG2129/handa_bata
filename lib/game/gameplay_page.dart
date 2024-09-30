@@ -182,18 +182,18 @@ class _GameplayPageState extends State<GameplayPage> {
           onAnswerSubmitted: _handleTextAnswerSubmission,
         );
         break;
-      case 'Matching Type':
+        case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
           key: ValueKey(_currentQuestionIndex), // Ensure the widget is rebuilt for each question
           questionData: currentQuestion,
           onOptionsShown: _startTimer, // Start the timer when options are shown
+          onAnswerChecked: () => _handleTextAnswerSubmission(''), // Create a VoidCallback
         );
         break;
       case 'Identification':
         questionWidget = IdentificationQuestion(
           questionData: currentQuestion,
           controller: _controller,
-          isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleTextAnswerSubmission,
         );
         break;

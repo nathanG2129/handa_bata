@@ -48,7 +48,13 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   @override
   Widget build(BuildContext context) {
     List<String> options = List<String>.from(widget.questionData['options'] ?? []);
-    int? correctOptionIndex = widget.questionData['answer'];
+    int? correctOptionIndex;
+
+    try {
+      correctOptionIndex = int.parse(widget.questionData['answer'].toString());
+    } catch (e) {
+      correctOptionIndex = null;
+    }
 
     if (correctOptionIndex == null || correctOptionIndex < 0 || correctOptionIndex >= options.length) {
       return Center(

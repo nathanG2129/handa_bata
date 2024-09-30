@@ -6,11 +6,13 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 class MatchingTypeQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
+  final VoidCallback onAnswerChecked; // Callback to notify when the answer is checked
 
   const MatchingTypeQuestion({
     super.key,
     required this.questionData,
     required this.onOptionsShown,
+    required this.onAnswerChecked,
   });
 
   @override
@@ -177,6 +179,9 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     } else {
       debugPrint('Some pairs are incorrect.');
     }
+
+    // Notify that the answer has been checked
+    widget.onAnswerChecked();
   }
 
   Color _generateUniqueColor() {

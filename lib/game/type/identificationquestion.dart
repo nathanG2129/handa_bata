@@ -7,12 +7,14 @@ class IdentificationQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final TextEditingController controller;
   final Function(String) onAnswerSubmitted;
+  final VoidCallback onOptionsShown; // Add the callback to start the timer
 
   const IdentificationQuestion({
     super.key,
     required this.questionData,
     required this.controller,
     required this.onAnswerSubmitted,
+    required this.onOptionsShown, // Add the callback to the constructor
   });
 
   @override
@@ -26,6 +28,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
   List<bool> optionSelected = [];
   List<String> uniqueOptions = [];
   bool isCorrect = false;
+  bool isCheckingAnswer = false; // Flag to indicate when the answer is being checked
 
   @override
   void initState() {
@@ -68,6 +71,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
         setState(() {
           showInput = true;
         });
+        widget.onOptionsShown(); // Call the callback to start the timer
       }
     });
   }
@@ -112,6 +116,10 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
   }
 
   void _checkAnswer() {
+    setState(() {
+      isCheckingAnswer = true; // Set the flag to true when checking the answer
+    });
+
     String userAnswer = '';
     for (int i = 0; i < widget.questionData['answerLength']; i++) {
       userAnswer += selectedOptions[i]?.split('_')[0] ?? '_';
@@ -125,6 +133,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
 
     setState(() {
       isCorrect = userAnswer == widget.questionData['answer'];
+      isCheckingAnswer = true; // Keep the flag true to show the result
     });
 
     // Call the callback regardless of whether the answer is correct or not
@@ -194,7 +203,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
                 margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
                 padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: isCorrect ? Colors.green : Colors.white,
+                  color: isCheckingAnswer ? (isCorrect ? Colors.green : Colors.red) : Colors.white, // Change color based on correctness
                   border: Border.all(
                     color: Colors.black,
                     width: 2,

@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/type/multiplechoicequestion.dart';
-import 'package:handabatamae/game/type/FillInTheBlanksQuestion.dart';
-import 'package:handabatamae/game/type/MatchingTypeQuestion.dart';
-import 'package:handabatamae/game/type/IdentificationQuestion.dart';
+import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
+import 'package:handabatamae/game/type/matchingtypequestion.dart';
+import 'package:handabatamae/game/type/identificationquestion.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -180,9 +180,10 @@ class _GameplayPageState extends State<GameplayPage> {
           controller: _controller,
           isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleTextAnswerSubmission,
+          onOptionsShown: _startTimer, // Pass the callback to start the timer
         );
         break;
-        case 'Matching Type':
+      case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
           key: ValueKey(_currentQuestionIndex), // Ensure the widget is rebuilt for each question
           questionData: currentQuestion,
@@ -195,6 +196,7 @@ class _GameplayPageState extends State<GameplayPage> {
           questionData: currentQuestion,
           controller: _controller,
           onAnswerSubmitted: _handleTextAnswerSubmission,
+          onOptionsShown: _startTimer, // Pass the callback to start the timer
         );
         break;
       default:

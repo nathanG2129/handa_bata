@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -9,6 +8,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final TextEditingController controller;
   final bool isCorrect;
   final Function(String) onAnswerSubmitted;
+  final VoidCallback onOptionsShown; // Add the callback to start the timer
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -16,6 +16,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.controller,
     required this.isCorrect,
     required this.onAnswerSubmitted,
+    required this.onOptionsShown, // Add the callback to the constructor
   });
 
   @override
@@ -67,6 +68,7 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         setState(() {
           showOptions = true;
         });
+        widget.onOptionsShown(); // Call the callback to start the timer
       }
     });
   }

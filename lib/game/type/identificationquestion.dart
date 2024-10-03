@@ -18,10 +18,10 @@ class IdentificationQuestion extends StatefulWidget {
   });
 
   @override
-  _IdentificationQuestionState createState() => _IdentificationQuestionState();
+  IdentificationQuestionState createState() => IdentificationQuestionState();
 }
 
-class _IdentificationQuestionState extends State<IdentificationQuestion> {
+class IdentificationQuestionState extends State<IdentificationQuestion> {
   bool showInput = false;
   Timer? _timer; // Timer to handle the delay
   List<String?> selectedOptions = [];
@@ -29,6 +29,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
   List<String> uniqueOptions = [];
   bool isCorrect = false;
   bool isCheckingAnswer = false; // Flag to indicate when the answer is being checked
+  bool showCorrectAnswer = false; // Flag to indicate when to show the correct answer
 
   @override
   void initState() {
@@ -133,11 +134,22 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
 
     setState(() {
       isCorrect = userAnswer == widget.questionData['answer'];
-      isCheckingAnswer = true; // Keep the flag true to show the result
     });
 
     // Call the callback regardless of whether the answer is correct or not
     widget.onAnswerSubmitted(userAnswer);
+
+    // Add a delay before showing the result
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        showCorrectAnswer = true; // Show the correct answer after the delay
+      });
+    });
+  }
+
+  // Add a method to force check the answer
+  void forceCheckAnswer() {
+    _checkAnswer();
   }
 
   @override
@@ -162,6 +174,22 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
       }
       answerText += selectedOptions[i]?.split('_')[0] ?? '_';
       currentWordLength++;
+    }
+
+    // Show the correct answer if the flag is set
+    if (showCorrectAnswer) {
+      answerText = '';
+      selectedIndex = 0;
+      currentWordLength = 0;
+      for (int i = 0; i < widget.questionData['answerLength']; i++) {
+        if (currentWordLength == spaces[selectedIndex]) {
+          answerText += ' ';
+          currentWordLength = 0;
+          selectedIndex++;
+        }
+        answerText += widget.questionData['answer'][i];
+        currentWordLength++;
+      }
     }
 
     return Column(
@@ -203,7 +231,7 @@ class _IdentificationQuestionState extends State<IdentificationQuestion> {
                 margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
                 padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: isCheckingAnswer ? (isCorrect ? Colors.green : Colors.red) : Colors.white, // Change color based on correctness
+                  color: showCorrectAnswer ? Colors.green : (isCheckingAnswer ? (isCorrect ? Colors.green : Colors.red) : Colors.white), // Change color based on correctness
                   border: Border.all(
                     color: Colors.black,
                     width: 2,

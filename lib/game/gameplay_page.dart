@@ -36,6 +36,7 @@ class _GameplayPageState extends State<GameplayPage> {
   int? _selectedOptionIndex;
   bool? _isCorrect;
   final TextEditingController _controller = TextEditingController();
+  final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
 
   @override
   void initState() {
@@ -70,10 +71,39 @@ class _GameplayPageState extends State<GameplayPage> {
         if (_progress <= 0) {
           _progress = 0;
           _timer?.cancel();
-          _nextQuestion();
+          _forceCheckAnswer(); // Force check the answer when the timer reaches zero
+          Future.delayed(const Duration(seconds: 3), () {
+            _nextQuestion();
+          });
         }
       });
     });
+  }
+
+  void _forceCheckAnswer() {
+    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    String? questionType = currentQuestion['type'];
+
+    switch (questionType) {
+      case 'Multiple Choice':
+        if (_selectedOptionIndex == null) {
+          _handleAnswerSelection(-1); // Pass an invalid index to indicate no selection
+        }
+        break;
+      case 'Fill in the Blanks':
+      case 'Identification':
+        if (questionType == 'Identification') {
+          _identificationQuestionKey.currentState?.forceCheckAnswer();
+        } else {
+          _handleTextAnswerSubmission(_controller.text);
+        }
+        break;
+      case 'Matching Type':
+        _handleTextAnswerSubmission(''); // Handle matching type as needed
+        break;
+      default:
+        print('Unknown question type');
+    }
   }
 
   void _nextQuestion() {
@@ -190,6 +220,7 @@ class _GameplayPageState extends State<GameplayPage> {
         break;
       case 'Identification':
         questionWidget = IdentificationQuestion(
+          key: _identificationQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           controller: _controller,
           onAnswerSubmitted: _handleTextAnswerSubmission,

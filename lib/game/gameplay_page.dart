@@ -29,10 +29,10 @@ class _GameplayPageState extends State<GameplayPage> {
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;
-  Timer? _timer;
-  double _progress = 1.0;
   bool _isLoading = true;
   bool _hasError = false;
+  Timer? _timer;
+  double _progress = 1.0;
   int? _selectedOptionIndex;
   bool? _isCorrect;
   final TextEditingController _controller = TextEditingController();
@@ -46,9 +46,6 @@ class _GameplayPageState extends State<GameplayPage> {
   void _initializeQuestions() {
     try {
       List<Map<String, dynamic>> questions = List<Map<String, dynamic>>.from(widget.stageData['questions'] ?? []);
-      if (questions.isEmpty) {
-        throw Exception('No questions found');
-      }
       questions.shuffle(Random());
       setState(() {
         _questions = questions;

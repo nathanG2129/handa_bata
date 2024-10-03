@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/widgets/stage_dialog.dart'; // Import the stage_dialog
 
 class StagesPage extends StatefulWidget {
   final String questName;
@@ -136,16 +137,12 @@ class _StagesPageState extends State<StagesPage> {
                           return ElevatedButton(
                             onPressed: () async {
                               Map<String, dynamic> stageData = _stages[stageIndex];
-                              Navigator.push(
+                              showStageDialog(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => GameplayPage(
-                                    language: 'en',
-                                    category: widget.category,
-                                    stageName: 'Stage $stageNumber',
-                                    stageData: stageData,
-                                  ),
-                                ),
+                                stageNumber,
+                                widget.questName,
+                                await _fetchNumberOfQuestions(stageIndex),
+                                stageData,
                               );
                             },
                             style: ElevatedButton.styleFrom(

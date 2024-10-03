@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPage
 
-void showStageDialog(BuildContext context, int stageNumber, String questName, int numberOfQuestions, Map<String, dynamic> stageData) {
+void showStageDialog(
+  BuildContext context,
+  int stageNumber,
+  String questName,
+  int numberOfQuestions,
+  Map<String, dynamic> stageData,
+) {
   // Convert questName to plural form
   String pluralQuestName = questName.endsWith('s') ? questName : '${questName}s';
 

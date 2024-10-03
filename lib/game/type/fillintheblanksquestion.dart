@@ -28,6 +28,8 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   List<bool> optionSelected = [];
   bool isAnswerCorrect = false;
   bool showOptions = false; // State variable to track if the options should be shown
+  bool showCorrectAnswers = false; // State variable to track if the correct answers should be shown
+  bool showUserAnswers = false; // State variable to track if the user's answers should be shown
   Timer? _timer; // Timer to handle the delay
 
   @override
@@ -115,6 +117,20 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
 
     widget.onAnswerSubmitted(userAnswer);
+
+    // Show user answers after a delay
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        showUserAnswers = true;
+      });
+
+      // Show correct answers after an additional delay
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() {
+          showCorrectAnswers = true;
+        });
+      });
+    });
   }
 
   @override
@@ -133,17 +149,21 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
+        Color boxColor = Colors.white;
+        if (showUserAnswers) {
+          boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
+        }
         questionWidgets.add(
           Container(
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: boxColor,
               border: Border.all(color: Colors.black),
               borderRadius: BorderRadius.circular(4.0),
             ),
             child: Text(
-              selectedOptions[inputIndex] ?? '____',
+              showCorrectAnswers ? options[answer[inputIndex]] : (selectedOptions[inputIndex] ?? '____'),
               style: GoogleFonts.vt323(fontSize: 24, color: Colors.black),
             ),
           ),
@@ -186,7 +206,7 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
               ],
             ),
           ),
-        if (showOptions)
+        if (showOptions && !showCorrectAnswers)
           Column(
             children: [
               Center(
@@ -238,7 +258,65 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                 ),
             ],
           ),
+        if (showCorrectAnswers)
+          Column(
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: _buildCorrectAnswerWidgets(questionText, options, answer),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
       ],
     );
+  }
+
+  List<Widget> _buildCorrectAnswerWidgets(String questionText, List<String> options, List<int> answer) {
+    List<Widget> correctAnswerWidgets = [];
+    int inputIndex = 0;
+
+    questionText.split(' ').forEach((word) {
+      if (word == '<input>') {
+        correctAnswerWidgets.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              border: Border.all(color: Colors.black),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: Text(
+              options[answer[inputIndex++]],
+              style: GoogleFonts.vt323(fontSize: 24, color: Colors.black),
+            ),
+          ),
+        );
+      } else {
+        correctAnswerWidgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              word,
+              style: GoogleFonts.rubik(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      }
+    });
+
+    return correctAnswerWidgets;
   }
 }

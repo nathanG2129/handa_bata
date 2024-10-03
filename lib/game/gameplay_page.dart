@@ -64,7 +64,7 @@ class _GameplayPageState extends State<GameplayPage> {
   void _startTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    _timer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 25), (timer) {
       setState(() {
         _progress -= 0.01;
         if (_progress <= 0) {

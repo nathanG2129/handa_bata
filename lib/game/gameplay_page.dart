@@ -38,6 +38,7 @@ class _GameplayPageState extends State<GameplayPage> {
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
+  final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
 
   @override
   void initState() {
@@ -92,12 +93,10 @@ class _GameplayPageState extends State<GameplayPage> {
         }
         break;
       case 'Fill in the Blanks':
+        _fillInTheBlanksQuestionKey.currentState?.forceCheckAnswer(); // Call the forceCheckAnswer method of FillInTheBlanksQuestion
+        break;
       case 'Identification':
-        if (questionType == 'Identification') {
-          _identificationQuestionKey.currentState?.forceCheckAnswer();
-        } else {
-          _handleTextAnswerSubmission(_controller.text);
-        }
+        _identificationQuestionKey.currentState?.forceCheckAnswer();
         break;
       case 'Matching Type':
         _handleTextAnswerSubmission(''); // Handle matching type as needed
@@ -204,6 +203,7 @@ class _GameplayPageState extends State<GameplayPage> {
         break;
       case 'Fill in the Blanks':
         questionWidget = FillInTheBlanksQuestion(
+          key: _fillInTheBlanksQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           controller: _controller,
           isCorrect: _isCorrect ?? false,

@@ -20,32 +20,24 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   });
 
   @override
-  _FillInTheBlanksQuestionState createState() => _FillInTheBlanksQuestionState();
+  FillInTheBlanksQuestionState createState() => FillInTheBlanksQuestionState();
 }
 
-class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
+class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
+  bool showOptions = false;
+  bool showUserAnswers = false;
+  bool showCorrectAnswers = false;
+  bool showAllRed = false; // New state variable to show all blanks as red
+  Timer? _timer; // Timer to handle the delay
   List<String?> selectedOptions = [];
   List<bool> optionSelected = [];
   bool isAnswerCorrect = false;
-  bool showOptions = false; // State variable to track if the options should be shown
-  bool showCorrectAnswers = false; // State variable to track if the correct answers should be shown
-  bool showUserAnswers = false; // State variable to track if the user's answers should be shown
-  Timer? _timer; // Timer to handle the delay
 
   @override
   void initState() {
     super.initState();
     _initializeOptions();
     _showIntroduction();
-  }
-
-  @override
-  void didUpdateWidget(FillInTheBlanksQuestion oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.questionData != oldWidget.questionData) {
-      _initializeOptions();
-      _showIntroduction();
-    }
   }
 
   @override
@@ -133,6 +125,20 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
   }
 
+  // Add a method to force check the answer
+  void forceCheckAnswer() {
+    setState(() {
+      showAllRed = true; // Show all blanks as red
+    });
+
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        showAllRed = false;
+        showCorrectAnswers = true;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
@@ -150,7 +156,9 @@ class _FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
         Color boxColor = Colors.white;
-        if (showUserAnswers) {
+        if (showAllRed) {
+          boxColor = Colors.red;
+        } else if (showUserAnswers) {
           boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
         }
         questionWidgets.add(

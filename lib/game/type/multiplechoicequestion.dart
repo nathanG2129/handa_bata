@@ -18,14 +18,15 @@ class MultipleChoiceQuestion extends StatefulWidget {
   });
 
   @override
-  _MultipleChoiceQuestionState createState() => _MultipleChoiceQuestionState();
+  MultipleChoiceQuestionState createState() => MultipleChoiceQuestionState();
 }
 
-class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
+class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   String? resultMessage;
   bool showOptions = false;
   bool showSelectedAnswer = false;
   bool showAllAnswers = false;
+  bool showAllRed = false; // New state variable to show all options as red
   Timer? _timer; // Timer to handle the delay
 
   @override
@@ -62,6 +63,20 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
         setState(() {
           showAllAnswers = true;
         });
+      });
+    });
+  }
+
+  // Add a method to force check the answer
+  void forceCheckAnswer() {
+    setState(() {
+      showAllRed = true; // Show all options as red
+    });
+
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        showAllRed = false;
+        showAllAnswers = true;
       });
     });
   }
@@ -131,7 +146,10 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                 itemBuilder: (context, index) {
                   Color buttonColor = Colors.white;
                   Color textColor = Colors.black;
-                  if (showSelectedAnswer && index == widget.selectedOptionIndex) {
+                  if (showAllRed) {
+                    buttonColor = Colors.red;
+                    textColor = Colors.white;
+                  } else if (showSelectedAnswer && index == widget.selectedOptionIndex) {
                     buttonColor = widget.selectedOptionIndex == correctOptionIndex ? Colors.green : Colors.red;
                     textColor = Colors.white;
                   } else if (showAllAnswers) {

@@ -37,6 +37,7 @@ class _GameplayPageState extends State<GameplayPage> {
   bool? _isCorrect;
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
+  final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
 
   @override
   void initState() {
@@ -83,11 +84,11 @@ class _GameplayPageState extends State<GameplayPage> {
   void _forceCheckAnswer() {
     Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
     String? questionType = currentQuestion['type'];
-
+  
     switch (questionType) {
       case 'Multiple Choice':
         if (_selectedOptionIndex == null) {
-          _handleAnswerSelection(-1); // Pass an invalid index to indicate no selection
+          _multipleChoiceQuestionKey.currentState?.forceCheckAnswer();
         }
         break;
       case 'Fill in the Blanks':
@@ -194,7 +195,7 @@ class _GameplayPageState extends State<GameplayPage> {
     switch (questionType) {
       case 'Multiple Choice':
         questionWidget = MultipleChoiceQuestion(
-          key: ValueKey(_currentQuestionIndex), // Ensure the widget is rebuilt for each question
+          key: _multipleChoiceQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           selectedOptionIndex: _selectedOptionIndex,
           onOptionSelected: _handleAnswerSelection,

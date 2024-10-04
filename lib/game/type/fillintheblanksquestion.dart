@@ -7,7 +7,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final TextEditingController controller;
   final bool isCorrect;
-  final Function(String) onAnswerSubmitted;
+  final Function(Map<String, dynamic>) onAnswerSubmitted; // Change the type here
   final VoidCallback onOptionsShown; // Add the callback to start the timer
   final VoidCallback nextQuestion; // Add the callback for the next question
 
@@ -16,7 +16,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.questionData,
     required this.controller,
     required this.isCorrect,
-    required this.onAnswerSubmitted,
+    required this.onAnswerSubmitted, // Change the type here
     required this.onOptionsShown,
     required this.nextQuestion, // Add the callback for the next question
   });
@@ -109,86 +109,114 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
   
-    // Debug printing
-    print('User Answer: $userAnswer');
-    print('Correct Answer: $correctAnswer');
+    int correctCount = 0;
+    int wrongCount = 0;
+    bool isFullyCorrect = true;
   
+    for (int i = 0; i < selectedOptions.length; i++) {
+      if (selectedOptions[i] == correctOptions[i]) {
+        correctCount++;
+      } else {
+        wrongCount++;
+        isFullyCorrect = false; // If any answer is wrong, set this to false
+      }
+    }
+  
+    setState(() {
+      isAnswerCorrect = userAnswer == correctAnswer;
+    });
+  
+    widget.onAnswerSubmitted({
+      'answer': userAnswer,
+      'correctCount': correctCount,
+      'wrongCount': wrongCount,
+      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+    });
+  
+    // Show user answers after a delay
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
-        isAnswerCorrect = userAnswer == correctAnswer;
+        showUserAnswers = true;
       });
   
-      widget.onAnswerSubmitted(userAnswer);
-  
-      // Show user answers after a delay
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          showUserAnswers = true;
-        });
-  
-        // If the answer is incorrect, show the correct answers
-        if (!isAnswerCorrect) {
-          Future.delayed(const Duration(seconds: 2), () {
-            setState(() {
-              selectedOptions = correctOptions;
-            });
-  
-            // Call nextQuestion after showing the correct answers
-            Future.delayed(const Duration(seconds: 4), () {
-              widget.nextQuestion();
-            });
+      // If the answer is incorrect, show the correct answers
+      if (!isAnswerCorrect) {
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            selectedOptions = correctOptions;
           });
-        } else {
-          // Call nextQuestion after a delay even if the answer is correct
+  
+          // Call nextQuestion after showing the correct answers
           Future.delayed(const Duration(seconds: 4), () {
             widget.nextQuestion();
           });
-        }
-      });
+        });
+      } else {
+        // Call nextQuestion after a delay even if the answer is correct
+        Future.delayed(const Duration(seconds: 4), () {
+          widget.nextQuestion();
+        });
+      }
+    });
   }
   
   // Add a method to force check the answer
-  void forceCheckAnswer() {
+   void forceCheckAnswer() {
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
   
-    // Debug printing
-    print('User Answer: $userAnswer');
-    print('Correct Answer: $correctAnswer');
+    int correctCount = 0;
+    int wrongCount = 0;
+    bool isFullyCorrect = true;
   
+    for (int i = 0; i < selectedOptions.length; i++) {
+      if (selectedOptions[i] == correctOptions[i]) {
+        correctCount++;
+      } else {
+        wrongCount++;
+        isFullyCorrect = false; // If any answer is wrong, set this to false
+      }
+    }
+  
+    setState(() {
+      isAnswerCorrect = userAnswer == correctAnswer;
+    });
+  
+    widget.onAnswerSubmitted({
+      'answer': userAnswer,
+      'correctCount': correctCount,
+      'wrongCount': wrongCount,
+      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+    });
+  
+    // Show user answers after a delay
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
-        isAnswerCorrect = userAnswer == correctAnswer;
+        showUserAnswers = true;
       });
   
-      widget.onAnswerSubmitted(userAnswer);
-  
-      // Show user answers after a delay
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          showUserAnswers = true;
-        });
-  
-        // If the answer is incorrect, show the correct answers
-        if (!isAnswerCorrect) {
-          Future.delayed(const Duration(seconds: 2), () {
-            setState(() {
-              selectedOptions = correctOptions;
-            });
-  
-            // Call nextQuestion after showing the correct answers
-            Future.delayed(const Duration(seconds: 4), () {
-              widget.nextQuestion();
-            });
+      // If the answer is incorrect, show the correct answers
+      if (!isAnswerCorrect) {
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            selectedOptions = correctOptions;
           });
-        } else {
-          // Call nextQuestion after a delay even if the answer is correct
+  
+          // Call nextQuestion after showing the correct answers
           Future.delayed(const Duration(seconds: 4), () {
             widget.nextQuestion();
           });
-        }
-      });
+        });
+      } else {
+        // Call nextQuestion after a delay even if the answer is correct
+        Future.delayed(const Duration(seconds: 4), () {
+          widget.nextQuestion();
+        });
+      }
+    });
   }
 
   // Add a method to reset the state
@@ -217,11 +245,6 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     String questionText = widget.questionData['question'];
     List<String> options = List<String>.from(widget.questionData['options']);
     List<int> answer = List<int>.from(widget.questionData['answer']);
-  
-    // Debug printing
-    print('Question Text: $questionText');
-    print('Options: $options');
-    print('Answer: $answer');
   
     List<Widget> questionWidgets = [];
     int inputIndex = 0;

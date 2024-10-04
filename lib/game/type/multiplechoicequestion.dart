@@ -6,7 +6,7 @@ import '../../widgets/text_with_shadow.dart';
 class MultipleChoiceQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final int? selectedOptionIndex; // Allow null values
-  final Function(int) onOptionSelected;
+  final Function(int, bool) onOptionSelected; // Update the callback to include correctness
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
 
   const MultipleChoiceQuestion({
@@ -50,16 +50,17 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   }
 
   void _handleOptionSelected(int index) {
-    widget.onOptionSelected(index);
+    bool isCorrect = index == int.parse(widget.questionData['answer'].toString());
+    widget.onOptionSelected(index, isCorrect);
     setState(() {
-      resultMessage = index == int.parse(widget.questionData['answer'].toString()) ? 'Correct' : 'Wrong';
+      resultMessage = isCorrect ? 'Correct' : 'Wrong';
     });
-
+  
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
       });
-
+  
       Future.delayed(const Duration(seconds: 1), () {
         setState(() {
           showAllAnswers = true;

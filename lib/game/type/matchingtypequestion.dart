@@ -20,19 +20,19 @@ class MatchingTypeQuestion extends StatefulWidget {
 }
 
 class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
-  String? selectedSection1Option;
-  String? selectedSection2Option;
-  bool showOptions = false;
   List<String> section1Options = [];
   List<String> section2Options = [];
   List<Map<String, String>> userPairs = [];
+  List<Map<String, String>> correctAnswers = [];
   List<Color> pairColors = [];
   List<Color> usedColors = [];
+  String? selectedSection1Option;
+  String? selectedSection2Option;
+  bool showOptions = false;
   String questionText = '';
-  List<Map<String, String>> correctAnswers = [];
   int correctPairCount = 0;
   int incorrectPairCount = 0;
-  Timer? _timer; // Timer to handle the delay
+  Timer? _timer;
 
   @override
   void initState() {
@@ -92,11 +92,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         }) ?? [],
       );
 
-      // Debug prints
-      debugPrint('Section 1 Options: $section1Options');
-      debugPrint('Section 2 Options: $section2Options');
-      debugPrint('Correct Answers: $correctAnswers');
-
       userPairs = [];
       pairColors = [];
       usedColors = [];
@@ -110,10 +105,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       if (selectedSection1Option == option) {
         selectedSection1Option = null;
-        debugPrint('Deselected section1 option: $option');
       } else {
         selectedSection1Option = option;
-        debugPrint('Selected section1 option: $option');
         if (selectedSection2Option != null) {
           _matchOptions();
         }
@@ -125,10 +118,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       if (selectedSection2Option == option) {
         selectedSection2Option = null;
-        debugPrint('Deselected section2 option: $option');
       } else {
         selectedSection2Option = option;
-        debugPrint('Selected section2 option: $option');
         if (selectedSection1Option != null) {
           _matchOptions();
         }
@@ -146,7 +137,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         Color newColor = _generateUniqueColor();
         pairColors.add(newColor);
         usedColors.add(newColor);
-        debugPrint('Matched Pair: Section 1 - $selectedSection1Option, Section 2 - $selectedSection2Option with color $newColor');
         selectedSection1Option = null;
         selectedSection2Option = null;
 
@@ -166,7 +156,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         usedColors.remove(pairColors[index]);
         userPairs.removeAt(index);
         pairColors.removeAt(index);
-        debugPrint('Canceled Pair: Section 1 - $section1Option, Section 2 - $section2Option');
       }
     });
   }
@@ -179,9 +168,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     // Sort the lists for comparison
     userPairStrings.sort();
     correctAnswerStrings.sort();
-
-    debugPrint('User Pair Strings: $userPairStrings');
-    debugPrint('Correct Answer Strings: $correctAnswerStrings');
 
     setState(() {
       correctPairCount = 0;
@@ -229,6 +215,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
 
     // Show correct pairs in green
     _checkAnswer();
+  }
+
+  bool areAllPairsCorrect() {
+    return correctPairCount == section1Options.length;
   }
 
   Color _generateUniqueColor() {
@@ -379,14 +369,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'Correct Pairs: $correctPairCount, Incorrect Pairs: $incorrectPairCount',
-                  style: GoogleFonts.rubik(fontSize: 24, color: Colors.blue),
-                  textAlign: TextAlign.center,
-                ),
               ),
             ],
           ),

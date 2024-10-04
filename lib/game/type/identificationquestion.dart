@@ -6,15 +6,15 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 class IdentificationQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final TextEditingController controller;
-  final Function(String) onAnswerSubmitted;
-  final VoidCallback onOptionsShown; // Add the callback to start the timer
+  final Function(String, bool) onAnswerSubmitted; // Update the callback to include correctness
+  final VoidCallback onOptionsShown;
 
   const IdentificationQuestion({
     super.key,
     required this.questionData,
     required this.controller,
     required this.onAnswerSubmitted,
-    required this.onOptionsShown, // Add the callback to the constructor
+    required this.onOptionsShown,
   });
 
   @override
@@ -36,7 +36,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     super.initState();
     _initializeOptions();
     _showIntroduction();
-    _debugQuestionData();
     _resetState(); // Add debug statements
   }
   
@@ -85,15 +84,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     });
   }
 
-  void _debugQuestionData() {
-    print('Debugging questionData:');
-    print('Question: ${widget.questionData['question']}');
-    print('Answer Length: ${widget.questionData['answerLength']}');
-    print('Options: ${widget.questionData['options']}');
-    print('Correct Answer: ${widget.questionData['answer']}');
-    print('Spaces: ${widget.questionData['space']}');
-  }
-
   void _handleOptionSelection(int index, String option) {
     setState(() {
       if (index < 0 || index >= optionSelected.length) {
@@ -128,25 +118,22 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     setState(() {
       isCheckingAnswer = true; // Set the flag to true when checking the answer
     });
-
+  
     String userAnswer = '';
     for (int i = 0; i < widget.questionData['answerLength']; i++) {
       userAnswer += selectedOptions[i]?.split('_')[0] ?? '_';
     }
-
+  
     // Trim spaces from userAnswer
     userAnswer = userAnswer.trim();
-
-    // Debug printing the constructed answer
-    print('Constructed Answer: $userAnswer');
-
+  
     setState(() {
       isCorrect = userAnswer == widget.questionData['answer'];
     });
-
-    // Call the callback regardless of whether the answer is correct or not
-    widget.onAnswerSubmitted(userAnswer);
-
+  
+    // Call the callback with the correctness of the answer
+    widget.onAnswerSubmitted(userAnswer, isCorrect);
+  
     // Add a delay before showing the result
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -180,10 +167,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     List<int> spaces = List<int>.from(
         widget.questionData['space'].map((e) => int.parse(e.toString())));
 
-    // Debug printing
-    print('Question Text: $questionText');
-    print('Options: $uniqueOptions');
-    print('Spaces: $spaces');
 
     String answerText = '';
     int selectedIndex = 0;

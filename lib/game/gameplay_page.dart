@@ -28,6 +28,7 @@ class GameplayPage extends StatefulWidget {
 class _GameplayPageState extends State<GameplayPage> {
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
+  int _fullyCorrectAnswersCount = 0; // Add this line to track fully correct answers
   int _totalQuestions = 0;
   bool _isLoading = true;
   bool _hasError = false;
@@ -35,6 +36,8 @@ class _GameplayPageState extends State<GameplayPage> {
   double _progress = 1.0;
   int? _selectedOptionIndex;
   bool? _isCorrect;
+  int _correctAnswersCount = 0; // Define the correct answers count
+  int _wrongAnswersCount = 0; // Define the wrong answers count
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
@@ -139,34 +142,92 @@ class _GameplayPageState extends State<GameplayPage> {
     }
   }
 
-  void _handleAnswerSelection(int index) {
+  void _handleMultipleChoiceAnswerSubmission(int index, bool isCorrect) {
     _timer?.cancel(); // Stop the timer when an option is selected
     setState(() {
       _selectedOptionIndex = index;
-      _isCorrect = _questions[_currentQuestionIndex]['answer'] == index;
+      _isCorrect = isCorrect;
+      if (_isCorrect == true) {
+        _correctAnswersCount++;
+        _fullyCorrectAnswersCount++;
+      } else {
+        _wrongAnswersCount++;
+      }
     });
-
+  
+    print('Correct Answers Count: $_correctAnswersCount');
+    print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+  
     Future.delayed(const Duration(seconds: 3), () {
       _nextQuestion();
     });
   }
 
-  void _handleTextAnswerSubmission(String answer) {
+  void _handleFillInTheBlanksAnswerSubmission(Map<String, dynamic> answerData) {
     _timer?.cancel(); // Stop the timer when an answer is submitted
     setState(() {
-      _isCorrect = _questions[_currentQuestionIndex]['correctAnswer'] == answer;
+      _correctAnswersCount += (answerData['correctCount'] as int);
+      _wrongAnswersCount += (answerData['wrongCount'] as int);
+      if (answerData['isFullyCorrect'] as bool) {
+        _fullyCorrectAnswersCount++;
+      }
     });
 
+    print('Correct Answers Count: $_correctAnswersCount');
+    print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+
+  
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
     });
   }
+  
+void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
+  _timer?.cancel(); // Stop the timer when an answer is submitted
+  setState(() {
+    _isCorrect = isCorrect;
+    if (_isCorrect == true) {
+      _correctAnswersCount++;
+      // Assuming we have a way to determine if the answer is fully correct
+      if (_questions[_currentQuestionIndex]['isFullyCorrect'] == true) {
+        _fullyCorrectAnswersCount++;
+      }
+    } else {
+      _wrongAnswersCount++;
+    }
+  });
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _controller.dispose();
-    super.dispose();
+  print('Correct Answers Count: $_correctAnswersCount');
+  print('Wrong Answers Count: $_wrongAnswersCount');
+  print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+
+  Future.delayed(const Duration(seconds: 3), () {
+    _nextQuestion();
+  });
+}
+  
+  void _handleMatchingTypeAnswerSubmission() {
+    _timer?.cancel(); // Stop the timer when an answer is submitted
+    setState(() {
+      // Assuming correctPairCount and incorrectPairCount are updated in MatchingTypeQuestion
+      _correctAnswersCount += _matchingTypeQuestionKey.currentState?.correctPairCount ?? 0;
+      _wrongAnswersCount += _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0;
+      
+      // Check if all pairs are correct and increment the fully correct answers count
+      if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
+        _fullyCorrectAnswersCount++;
+      }
+    });
+
+    print('Correct Answers Count: $_correctAnswersCount');
+    print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+  
+    Future.delayed(const Duration(seconds: 6), () {
+      _nextQuestion();
+    });
   }
 
   @override
@@ -213,7 +274,7 @@ class _GameplayPageState extends State<GameplayPage> {
           key: _multipleChoiceQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           selectedOptionIndex: _selectedOptionIndex,
-          onOptionSelected: _handleAnswerSelection,
+          onOptionSelected: _handleMultipleChoiceAnswerSubmission,
           onOptionsShown: _startTimer, // Start the timer when options are shown
         );
         break;
@@ -223,8 +284,9 @@ class _GameplayPageState extends State<GameplayPage> {
           questionData: currentQuestion,
           controller: _controller,
           isCorrect: _isCorrect ?? false,
-          onAnswerSubmitted: _handleTextAnswerSubmission,
-          onOptionsShown: _startTimer, nextQuestion: () {  }, // Pass the callback to start the timer
+          onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
+          onOptionsShown: _startTimer, // Pass the callback to start the timer
+          nextQuestion: () {},
         );
         break;
       case 'Matching Type':
@@ -232,7 +294,7 @@ class _GameplayPageState extends State<GameplayPage> {
           key: _matchingTypeQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
-          onAnswerChecked: () => _handleTextAnswerSubmission(''), // Create a VoidCallback
+          onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
         );
         break;
       case 'Identification':
@@ -240,7 +302,7 @@ class _GameplayPageState extends State<GameplayPage> {
           key: _identificationQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           controller: _controller,
-          onAnswerSubmitted: _handleTextAnswerSubmission,
+          onAnswerSubmitted: _handleIdentificationAnswerSubmission,
           onOptionsShown: _startTimer, // Pass the callback to start the timer
         );
         break;

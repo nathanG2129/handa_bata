@@ -83,6 +83,21 @@ class _GameplayPageState extends State<GameplayPage> {
     });
   }
 
+  void _startMatchingTimer() {
+    _timer?.cancel();
+    _progress = 1.0;
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      setState(() {
+        _progress -= 0.01;
+        if (_progress <= 0) {
+          _progress = 0;
+          _timer?.cancel();
+          _forceCheckAnswer(); // Force check the answer when the timer reaches zero
+        }
+      });
+    });
+  }
+  
   void _forceCheckAnswer() {
     Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
     String? questionType = currentQuestion['type'];
@@ -216,7 +231,7 @@ class _GameplayPageState extends State<GameplayPage> {
         questionWidget = MatchingTypeQuestion(
           key: _matchingTypeQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
-          onOptionsShown: _startTimer, // Start the timer when options are shown
+          onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
           onAnswerChecked: () => _handleTextAnswerSubmission(''), // Create a VoidCallback
         );
         break;

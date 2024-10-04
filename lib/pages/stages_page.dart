@@ -28,9 +28,7 @@ class _StagesPageState extends State<StagesPage> {
   }
 
   Future<void> _fetchStages() async {
-    print('Fetching stages for category: ${widget.category}');
     List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', widget.category);
-    print('Fetched stages: $stages');
     setState(() {
       _stages = stages;
       _isLoading = false;

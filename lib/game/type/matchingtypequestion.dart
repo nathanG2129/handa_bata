@@ -37,21 +37,48 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   @override
   void initState() {
     super.initState();
-    _initializeOptions();
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          showOptions = true;
-          widget.onOptionsShown(); // Notify that options are shown
-        });
-      }
-    });
+    resetState();
+  }
+
+  @override
+  void didUpdateWidget(covariant MatchingTypeQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.questionData != widget.questionData) {
+      resetState();
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel(); // Cancel the timer if it exists
     super.dispose();
+  }
+
+  void resetState() {
+    setState(() {
+      selectedSection1Option = null;
+      selectedSection2Option = null;
+      showOptions = false;
+      section1Options = [];
+      section2Options = [];
+      userPairs = [];
+      pairColors = [];
+      usedColors = [];
+      questionText = '';
+      correctAnswers = [];
+      correctPairCount = 0;
+      incorrectPairCount = 0;
+      _initializeOptions();
+      _timer?.cancel();
+      _timer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          setState(() {
+            showOptions = true;
+            widget.onOptionsShown(); // Notify that options are shown
+          });
+        }
+      });
+    });
   }
 
   void _initializeOptions() {
@@ -198,9 +225,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         pairColors.add(Colors.red);
         incorrectPairCount++;
       }
-
     });
-  
+
     // Show correct pairs in green
     _checkAnswer();
   }
@@ -226,126 +252,145 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          children: [
-            if (!showOptions)
+    return Column(
+      children: [
+        if (!showOptions)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const TextWithShadow(
+                  text: 'Matching Type',
+                  fontSize: 40, // Adjusted font size to 40
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(
+                    questionText,
+                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (showOptions)
+          Column(
+            children: [
               Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const TextWithShadow(
-                      text: 'Matching Type',
-                      fontSize: 48, // Increased font size
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      questionText,
-                      style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(
+                    questionText,
+                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            if (showOptions)
-              Column(
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  Center(
-                    child: Text(
-                      questionText,
-                      style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                      textAlign: TextAlign.center,
+                  Expanded(
+                    child: Column(
+                      children: section1Options.map((option) {
+                        bool isSelected = selectedSection1Option == option;
+                        bool isMatched = userPairs.any((pair) => pair['section1'] == option);
+                        Color? pairColor = _getPairColor(option, 'section1');
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: SizedBox(
+                            width: 150, // Set a fixed width
+                            height: 75, // Set a fixed height
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (isMatched) {
+                                  _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
+                                } else {
+                                  _handleSection1OptionTap(option);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
+                                backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
+                                padding: const EdgeInsets.all(16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: const BorderSide(color: Colors.black, width: 2),
+                                ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  option,
+                                  softWrap: true,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.rubik(fontSize: 18, color: isSelected || isMatched ? Colors.white : Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: section1Options.map((option) {
-                            bool isSelected = selectedSection1Option == option;
-                            bool isMatched = userPairs.any((pair) => pair['section1'] == option);
-                            Color? pairColor = _getPairColor(option, 'section1');
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (isMatched) {
-                                    _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
-                                  } else {
-                                    _handleSection1OptionTap(option);
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                  backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
-                                  padding: const EdgeInsets.all(16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: const BorderSide(color: Colors.black, width: 2),
-                                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      children: section2Options.map((option) {
+                        bool isSelected = selectedSection2Option == option;
+                        bool isMatched = userPairs.any((pair) => pair['section2'] == option);
+                        Color? pairColor = _getPairColor(option, 'section2');
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: SizedBox(
+                            width: 150, // Set a fixed width
+                            height: 75, // Set a fixed height
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (isMatched) {
+                                  _cancelSelection(userPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
+                                } else {
+                                  _handleSection2OptionTap(option);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
+                                backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
+                                padding: const EdgeInsets.all(16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: const BorderSide(color: Colors.black, width: 2),
                                 ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
                                 child: Text(
                                   option,
+                                  softWrap: true,
+                                  textAlign: TextAlign.center,
                                   style: GoogleFonts.rubik(fontSize: 18, color: isSelected || isMatched ? Colors.white : Colors.black),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          children: section2Options.map((option) {
-                            bool isSelected = selectedSection2Option == option;
-                            bool isMatched = userPairs.any((pair) => pair['section2'] == option);
-                            Color? pairColor = _getPairColor(option, 'section2');
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (isMatched) {
-                                    _cancelSelection(userPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
-                                  } else {
-                                    _handleSection2OptionTap(option);
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                  backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
-                                  padding: const EdgeInsets.all(16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: const BorderSide(color: Colors.black, width: 2),
-                                  ),
-                                ),
-                                child: Text(
-                                  option,
-                                  style: GoogleFonts.rubik(fontSize: 18, color: isSelected || isMatched ? Colors.white : Colors.black),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      'Correct Pairs: $correctPairCount, Incorrect Pairs: $incorrectPairCount',
-                      style: GoogleFonts.rubik(fontSize: 24, color: Colors.blue),
-                      textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'Correct Pairs: $correctPairCount, Incorrect Pairs: $incorrectPairCount',
+                  style: GoogleFonts.rubik(fontSize: 24, color: Colors.blue),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

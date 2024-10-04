@@ -40,7 +40,7 @@ class _GameplayPageState extends State<GameplayPage> {
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
   final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
-  
+
   @override
   void initState() {
     super.initState();
@@ -106,8 +106,12 @@ class _GameplayPageState extends State<GameplayPage> {
         print('Unknown question type');
     }
   }
+
   void _nextQuestion() {
     if (_currentQuestionIndex < _totalQuestions - 1) {
+      // Reset the state of the current question
+      _resetCurrentQuestionState();
+  
       setState(() {
         _currentQuestionIndex++;
         _selectedOptionIndex = null;
@@ -120,6 +124,25 @@ class _GameplayPageState extends State<GameplayPage> {
       });
     } else {
       // Handle end of questions
+    }
+  }
+  
+  void _resetCurrentQuestionState() {
+    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    String? questionType = currentQuestion['type'];
+  
+    switch (questionType) {
+      case 'Multiple Choice':
+        _multipleChoiceQuestionKey.currentState?.resetState();
+        break;
+      case 'Fill in the Blanks':
+        break;
+      case 'Identification':
+        break;
+      case 'Matching Type':
+        break;
+      default:
+        print('Unknown question type');
     }
   }
 

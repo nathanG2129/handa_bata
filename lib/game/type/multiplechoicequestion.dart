@@ -72,11 +72,35 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
     setState(() {
       showAllRed = true; // Show all options as red
     });
-
+  
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showAllRed = false;
         showAllAnswers = true;
+      });
+  
+      // Reset state after showing answers
+      Future.delayed(const Duration(seconds: 1), () {
+        resetState();
+      });
+    });
+  }
+
+  void resetState() {
+    setState(() {
+      resultMessage = null;
+      showOptions = false;
+      showSelectedAnswer = false;
+      showAllAnswers = false;
+      showAllRed = false;
+      _timer?.cancel();
+      _timer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          setState(() {
+            showOptions = true;
+            widget.onOptionsShown(); // Notify that options are shown
+          });
+        }
       });
     });
   }

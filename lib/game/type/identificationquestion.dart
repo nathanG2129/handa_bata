@@ -27,7 +27,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
   List<String?> selectedOptions = [];
   List<bool> optionSelected = [];
   List<String> uniqueOptions = [];
-  bool isCorrect = false;
+  int isCorrect = 0; // Use int to represent correctness: 0 (neutral), 1 (wrong), 2 (correct)
   bool isCheckingAnswer = false; // Flag to indicate when the answer is being checked
   bool showCorrectAnswer = false; // Flag to indicate when to show the correct answer
 
@@ -117,27 +117,31 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
   void _checkAnswer() {
     setState(() {
       isCheckingAnswer = true; // Set the flag to true when checking the answer
+      isCorrect = 0; // Set to 0 to indicate neutral state
     });
-  
+
     String userAnswer = '';
     for (int i = 0; i < widget.questionData['answerLength']; i++) {
       userAnswer += selectedOptions[i]?.split('_')[0] ?? '_';
     }
-  
+
     // Trim spaces from userAnswer
     userAnswer = userAnswer.trim();
-  
-    setState(() {
-      isCorrect = userAnswer == widget.questionData['answer'];
-    });
-  
-    // Call the callback with the correctness of the answer
-    widget.onAnswerSubmitted(userAnswer, isCorrect);
-  
-    // Add a delay before showing the result
-    Future.delayed(const Duration(seconds: 2), () {
+
+    // Add a delay before showing the correctness of the answer
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
-        showCorrectAnswer = true; // Show the correct answer after the delay
+        isCorrect = userAnswer == widget.questionData['answer'] ? 2 : 1;
+      });
+
+      // Call the callback with the correctness of the answer
+      widget.onAnswerSubmitted(userAnswer, isCorrect == 2);
+
+      // Add a delay before showing the correct answer
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() {
+          showCorrectAnswer = true; // Show the correct answer after the delay
+        });
       });
     });
   }
@@ -153,7 +157,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       selectedOptions = [];
       optionSelected = [];
       uniqueOptions = [];
-      isCorrect = false;
+      isCorrect = 0; // Reset to neutral state
       isCheckingAnswer = false;
       showCorrectAnswer = false;
       _initializeOptions();
@@ -166,7 +170,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     String questionText = widget.questionData['question'];
     List<int> spaces = List<int>.from(
         widget.questionData['space'].map((e) => int.parse(e.toString())));
-
 
     String answerText = '';
     int selectedIndex = 0;
@@ -236,7 +239,15 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                 margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
                 padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: showCorrectAnswer ? Colors.green : (isCheckingAnswer ? (isCorrect ? Colors.green : Colors.red) : Colors.white), // Change color based on correctness
+                  color: showCorrectAnswer
+                      ? Colors.green
+                      : (isCheckingAnswer
+                          ? (isCorrect == 0
+                              ? Colors.white
+                              : (isCorrect == 2
+                                  ? Colors.green
+                                  : Colors.red))
+                          : Colors.white), // Change color based on correctness
                   border: Border.all(
                     color: Colors.black,
                     width: 2,
@@ -249,35 +260,36 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                 ),
               ),
               const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: uniqueOptions.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  String option = entry.value;
-                  String optionValue = option.split('_')[0];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _handleOptionSelection(index, option);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                        backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
-                        padding: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Colors.black, width: 2),
+              if (!showCorrectAnswer) // Hide options when showing the correct answer
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: uniqueOptions.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    String option = entry.value;
+                    String optionValue = option.split('_')[0];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _handleOptionSelection(index, option);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                          backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                          padding: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                        ),
+                        child: Text(
+                          optionValue,
+                          style: GoogleFonts.vt323(fontSize: 24),
                         ),
                       ),
-                      child: Text(
-                        optionValue,
-                        style: GoogleFonts.vt323(fontSize: 24),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
       ],

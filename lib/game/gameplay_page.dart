@@ -193,10 +193,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     _isCorrect = isCorrect;
     if (_isCorrect == true) {
       _correctAnswersCount++;
-      // Assuming we have a way to determine if the answer is fully correct
-      if (_questions[_currentQuestionIndex]['isFullyCorrect'] == true) {
-        _fullyCorrectAnswersCount++;
-      }
+      _fullyCorrectAnswersCount++;
     } else {
       _wrongAnswersCount++;
     }

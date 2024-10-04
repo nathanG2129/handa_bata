@@ -16,10 +16,10 @@ class MatchingTypeQuestion extends StatefulWidget {
   });
 
   @override
-  _MatchingTypeQuestionState createState() => _MatchingTypeQuestionState();
+  MatchingTypeQuestionState createState() => MatchingTypeQuestionState();
 }
 
-class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
+class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   String? selectedSection1Option;
   String? selectedSection2Option;
   bool showOptions = false;
@@ -159,32 +159,21 @@ class _MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       correctPairCount = 0;
       incorrectPairCount = 0;
-    });
 
-    _checkPairsSequentially(0, userPairStrings, correctAnswerStrings);
-  }
-
-  void _checkPairsSequentially(int currentIndex, List<String> userPairStrings, List<String> correctAnswerStrings) {
-    if (currentIndex >= userPairs.length) {
-      // Notify that the answer has been checked
-      widget.onAnswerChecked();
-      return;
-    }
-
-    setState(() {
-      String userPairString = '${userPairs[currentIndex]['section1']}:${userPairs[currentIndex]['section2']}';
-      if (correctAnswerStrings.contains(userPairString)) {
-        pairColors[currentIndex] = Colors.green; // Correct pair
-        correctPairCount++;
-      } else {
-        pairColors[currentIndex] = Colors.red; // Incorrect pair
-        incorrectPairCount++;
+      for (int i = 0; i < userPairs.length; i++) {
+        String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
+        if (correctAnswerStrings.contains(userPairString)) {
+          pairColors[i] = Colors.green; // Correct pair
+          correctPairCount++;
+        } else {
+          pairColors[i] = Colors.red; // Incorrect pair
+          incorrectPairCount++;
+        }
       }
     });
 
-    Future.delayed(const Duration(seconds: 2), () { // Increased delay to 2 seconds
-      _checkPairsSequentially(currentIndex + 1, userPairStrings, correctAnswerStrings);
-    });
+    // Notify that the answer has been checked
+    widget.onAnswerChecked();
   }
 
   Color _generateUniqueColor() {

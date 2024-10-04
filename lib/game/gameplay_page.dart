@@ -136,6 +136,7 @@ class _GameplayPageState extends State<GameplayPage> {
         _multipleChoiceQuestionKey.currentState?.resetState();
         break;
       case 'Fill in the Blanks':
+      _fillInTheBlanksQuestionKey.currentState?.resetState();
         break;
       case 'Identification':
         break;

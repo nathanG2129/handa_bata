@@ -139,29 +139,24 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         showUserAnswers = true;
       });
   
-      // If the answer is incorrect, show the correct answers
-      if (!isAnswerCorrect) {
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            selectedOptions = correctOptions;
-          });
-  
-          // Call nextQuestion after showing the correct answers
-          Future.delayed(const Duration(seconds: 4), () {
-            widget.nextQuestion();
-          });
+      // Show the correct answers regardless of whether the user's answers are correct
+      Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
+        setState(() {
+          selectedOptions = correctOptions;
+          showOptions = false;
         });
-      } else {
-        // Call nextQuestion after a delay even if the answer is correct
-        Future.delayed(const Duration(seconds: 4), () {
+  
+        // Call nextQuestion after showing the correct answers
+        Future.delayed(const Duration(seconds: 6), () {
+          print('Going to next question...');
           widget.nextQuestion();
         });
-      }
+      });
     });
   }
   
   // Add a method to force check the answer
-   void forceCheckAnswer() {
+  void forceCheckAnswer() {
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
@@ -198,24 +193,19 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         showUserAnswers = true;
       });
   
-      // If the answer is incorrect, show the correct answers
-      if (!isAnswerCorrect) {
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            selectedOptions = correctOptions;
-          });
-  
-          // Call nextQuestion after showing the correct answers
-          Future.delayed(const Duration(seconds: 4), () {
-            widget.nextQuestion();
-          });
+      // Show the correct answers regardless of whether the user's answers are correct
+      Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
+        setState(() {
+          selectedOptions = correctOptions;
+          showOptions = false;
         });
-      } else {
-        // Call nextQuestion after a delay even if the answer is correct
-        Future.delayed(const Duration(seconds: 4), () {
+  
+        // Call nextQuestion after showing the correct answers
+        Future.delayed(const Duration(seconds: 6), () {
+          print('Going to next question...');
           widget.nextQuestion();
         });
-      }
+      });
     });
   }
 
@@ -292,69 +282,47 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   
     return Column(
       children: [
-        if (!showOptions)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const TextWithShadow(
-                  text: 'Fill in the Blanks',
-                  fontSize: 40, // Adjusted font size to 40
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: questionWidgets,
-                ),
-              ],
-            ),
+        if (!showOptions && !showUserAnswers)
+          const TextWithShadow(
+            text: 'Fill in the Blanks',
+            fontSize: 40, // Adjusted font size to 40
           ),
+        const SizedBox(height: 16),
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: questionWidgets,
+        ),
         if (showOptions)
-          Column(
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: questionWidgets,
+          const SizedBox(height: 16),
+        if (showOptions)
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: options.asMap().entries.map((entry) {
+              int index = entry.key;
+              String option = entry.value;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _handleOptionSelection(index, option);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                    backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: Colors.black, width: 2),
                     ),
-                  ],
+                  ),
+                  child: Text(
+                    option,
+                    style: GoogleFonts.vt323(fontSize: 24),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: options.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  String option = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _handleOptionSelection(index, option);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                        backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
-                        padding: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Colors.black, width: 2),
-                        ),
-                      ),
-                      child: Text(
-                        option,
-                        style: GoogleFonts.vt323(fontSize: 24),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+              );
+            }).toList(),
           ),
       ],
     );

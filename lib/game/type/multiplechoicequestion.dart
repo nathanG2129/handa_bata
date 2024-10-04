@@ -32,14 +32,15 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          showOptions = true;
-          widget.onOptionsShown(); // Notify that options are shown
-        });
-      }
-    });
+    resetState();
+  }
+  
+  @override
+  void didUpdateWidget(covariant MultipleChoiceQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.questionData != widget.questionData) {
+      resetState();
+    }
   }
 
   @override
@@ -80,7 +81,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       });
   
       // Reset state after showing answers
-      Future.delayed(const Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 3), () {
         resetState();
       });
     });
@@ -141,7 +142,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
-                    widget.questionData['question'] ?? 'No question available',
+                    widget.questionData['question'] ?? '',
                     style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
@@ -156,7 +157,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
-                    widget.questionData['question'] ?? 'No question available',
+                    widget.questionData['question'] ?? '',
                     style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),

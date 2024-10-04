@@ -36,7 +36,16 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     super.initState();
     _initializeOptions();
     _showIntroduction();
-    _debugQuestionData(); // Add debug statements
+    _debugQuestionData();
+    _resetState(); // Add debug statements
+  }
+  
+  @override
+  void didUpdateWidget(covariant IdentificationQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.questionData != widget.questionData) {
+      _resetState();
+    }
   }
 
   @override
@@ -49,8 +58,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     setState(() {
       int answerLength = widget.questionData['answerLength'];
       selectedOptions = List<String?>.filled(answerLength, null);
-      optionSelected =
-          List<bool>.filled(widget.questionData['options'].length, false);
+      optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
       uniqueOptions = _generateUniqueOptions(widget.questionData['options']);
     });
   }
@@ -152,6 +160,20 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     _checkAnswer();
   }
 
+  void _resetState() {
+    setState(() {
+      showInput = false;
+      selectedOptions = [];
+      optionSelected = [];
+      uniqueOptions = [];
+      isCorrect = false;
+      isCheckingAnswer = false;
+      showCorrectAnswer = false;
+      _initializeOptions();
+      _showIntroduction();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
@@ -167,7 +189,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     int selectedIndex = 0;
     int currentWordLength = 0;
     for (int i = 0; i < widget.questionData['answerLength']; i++) {
-      if (currentWordLength == spaces[selectedIndex]) {
+      if (selectedIndex < spaces.length && currentWordLength == spaces[selectedIndex]) {
         answerText += ' ';
         currentWordLength = 0;
         selectedIndex++;
@@ -182,7 +204,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       selectedIndex = 0;
       currentWordLength = 0;
       for (int i = 0; i < widget.questionData['answerLength']; i++) {
-        if (currentWordLength == spaces[selectedIndex]) {
+        if (selectedIndex < spaces.length && currentWordLength == spaces[selectedIndex]) {
           answerText += ' ';
           currentWordLength = 0;
           selectedIndex++;

@@ -9,6 +9,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final bool isCorrect;
   final Function(String) onAnswerSubmitted;
   final VoidCallback onOptionsShown; // Add the callback to start the timer
+  final VoidCallback nextQuestion; // Add the callback for the next question
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -16,7 +17,8 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.controller,
     required this.isCorrect,
     required this.onAnswerSubmitted,
-    required this.onOptionsShown, // Add the callback to the constructor
+    required this.onOptionsShown,
+    required this.nextQuestion, // Add the callback for the next question
   });
 
   @override
@@ -24,13 +26,13 @@ class FillInTheBlanksQuestion extends StatefulWidget {
 }
 
 class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
-  bool showOptions = false;
-  bool showUserAnswers = false;
-  bool showAllRed = false; // New state variable to show all blanks as red
-  Timer? _timer; // Timer to handle the delay
   List<String?> selectedOptions = [];
   List<bool> optionSelected = [];
+  bool showOptions = false;
+  bool showUserAnswers = false;
+  bool showAllRed = false;
   bool isAnswerCorrect = false;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -40,8 +42,16 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   }
 
   @override
+  void didUpdateWidget(covariant FillInTheBlanksQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.questionData != widget.questionData) {
+      resetState();
+    }
+  }
+
+  @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer if it exists
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -98,36 +108,87 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-
+  
     // Debug printing
     print('User Answer: $userAnswer');
     print('Correct Answer: $correctAnswer');
-
-    setState(() {
-      isAnswerCorrect = userAnswer == correctAnswer;
-    });
-
-    widget.onAnswerSubmitted(userAnswer);
-
-    // Show user answers after a delay
-    Future.delayed(const Duration(seconds: 2), () {
+  
       setState(() {
-        showUserAnswers = true;
+        isAnswerCorrect = userAnswer == correctAnswer;
       });
-    });
+  
+      widget.onAnswerSubmitted(userAnswer);
+  
+      // Show user answers after a delay
+      Future.delayed(const Duration(seconds: 1), () {
+        setState(() {
+          showUserAnswers = true;
+        });
+  
+        // If the answer is incorrect, show the correct answers
+        if (!isAnswerCorrect) {
+          Future.delayed(const Duration(seconds: 2), () {
+            setState(() {
+              selectedOptions = correctOptions;
+            });
+  
+            // Call nextQuestion after showing the correct answers
+            Future.delayed(const Duration(seconds: 4), () {
+              widget.nextQuestion();
+            });
+          });
+        } else {
+          // Call nextQuestion after a delay even if the answer is correct
+          Future.delayed(const Duration(seconds: 4), () {
+            widget.nextQuestion();
+          });
+        }
+      });
   }
-
+  
   // Add a method to force check the answer
   void forceCheckAnswer() {
-    setState(() {
-      showAllRed = true; // Show all blanks as red
-    });
-
-    Future.delayed(const Duration(seconds: 1), () {
+    List<String> correctOptions = widget.questionData['answer']
+        .map<String>((index) => widget.questionData['options'][index as int] as String)
+        .toList();
+    String userAnswer = selectedOptions.join(',');
+    String correctAnswer = correctOptions.join(',');
+  
+    // Debug printing
+    print('User Answer: $userAnswer');
+    print('Correct Answer: $correctAnswer');
+  
       setState(() {
-        showAllRed = false;
+        isAnswerCorrect = userAnswer == correctAnswer;
       });
-    });
+  
+      widget.onAnswerSubmitted(userAnswer);
+  
+      // Show user answers after a delay
+      Future.delayed(const Duration(seconds: 1), () {
+        setState(() {
+          showUserAnswers = true;
+        });
+  
+        // If the answer is incorrect, show the correct answers
+        if (!isAnswerCorrect) {
+          Future.delayed(const Duration(seconds: 2), () {
+            setState(() {
+              selectedOptions = correctOptions;
+            });
+  
+            // Call nextQuestion after showing the correct answers
+            Future.delayed(const Duration(seconds: 4), () {
+              widget.nextQuestion();
+            });
+          });
+        } else {
+          // Call nextQuestion after a delay even if the answer is correct
+          Future.delayed(const Duration(seconds: 4), () {
+            widget.nextQuestion();
+          });
+        }
+      });
   }
 
   // Add a method to reset the state
@@ -156,19 +217,19 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     String questionText = widget.questionData['question'];
     List<String> options = List<String>.from(widget.questionData['options']);
     List<int> answer = List<int>.from(widget.questionData['answer']);
-
+  
     // Debug printing
     print('Question Text: $questionText');
     print('Options: $options');
     print('Answer: $answer');
-
+  
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
-
+  
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
         Color boxColor = Colors.white;
-        if (showAllRed) {
+        if (selectedOptions[inputIndex] == '') {
           boxColor = Colors.red;
         } else if (showUserAnswers) {
           boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
@@ -205,7 +266,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         );
       }
     });
-
+  
     return Column(
       children: [
         if (!showOptions)
@@ -270,12 +331,6 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
-              if (!selectedOptions.contains(null))
-                Text(
-                  isAnswerCorrect ? 'Correct!' : 'Incorrect!',
-                  style: GoogleFonts.vt323(fontSize: 24, color: isAnswerCorrect ? Colors.green : Colors.red),
-                ),
             ],
           ),
       ],

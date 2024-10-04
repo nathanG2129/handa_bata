@@ -75,7 +75,7 @@ class _GameplayPageState extends State<GameplayPage> {
           _progress = 0;
           _timer?.cancel();
           _forceCheckAnswer(); // Force check the answer when the timer reaches zero
-          Future.delayed(const Duration(seconds: 3), () {
+          Future.delayed(const Duration(seconds: 6), () {
             _nextQuestion();
           });
         }
@@ -142,7 +142,7 @@ class _GameplayPageState extends State<GameplayPage> {
       _isCorrect = _questions[_currentQuestionIndex]['correctAnswer'] == answer;
     });
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
     });
   }
@@ -209,7 +209,7 @@ class _GameplayPageState extends State<GameplayPage> {
           controller: _controller,
           isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleTextAnswerSubmission,
-          onOptionsShown: _startTimer, // Pass the callback to start the timer
+          onOptionsShown: _startTimer, nextQuestion: () {  }, // Pass the callback to start the timer
         );
         break;
       case 'Matching Type':

@@ -39,7 +39,8 @@ class _GameplayPageState extends State<GameplayPage> {
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
-
+  final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
+  
   @override
   void initState() {
     super.initState();
@@ -99,13 +100,12 @@ class _GameplayPageState extends State<GameplayPage> {
         _identificationQuestionKey.currentState?.forceCheckAnswer();
         break;
       case 'Matching Type':
-        _handleTextAnswerSubmission(''); // Handle matching type as needed
+        _matchingTypeQuestionKey.currentState?.forceCheckAnswer(); // Call the forceCheckAnswer method of MatchingTypeQuestion
         break;
       default:
         print('Unknown question type');
     }
   }
-
   void _nextQuestion() {
     if (_currentQuestionIndex < _totalQuestions - 1) {
       setState(() {
@@ -213,7 +213,7 @@ class _GameplayPageState extends State<GameplayPage> {
         break;
       case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
-          key: ValueKey(_currentQuestionIndex), // Ensure the widget is rebuilt for each question
+          key: _matchingTypeQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
           onOptionsShown: _startTimer, // Start the timer when options are shown
           onAnswerChecked: () => _handleTextAnswerSubmission(''), // Create a VoidCallback

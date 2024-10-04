@@ -170,10 +170,39 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
           incorrectPairCount++;
         }
       }
+
+      // Color unselected section2 buttons as red
+      for (int i = userPairs.length; i < section1Options.length; i++) {
+        userPairs.add({
+          'section1': section1Options[i],
+          'section2': '',
+        });
+        pairColors.add(Colors.red);
+        incorrectPairCount++;
+      }
     });
 
     // Notify that the answer has been checked
     widget.onAnswerChecked();
+  }
+
+  void forceCheckAnswer() {
+    // Mark unselected pairs as wrong
+    setState(() {
+      // Mark unselected section1 options as wrong
+      for (int i = userPairs.length; i < section1Options.length; i++) {
+        userPairs.add({
+          'section1': section1Options[i],
+          'section2': '',
+        });
+        pairColors.add(Colors.red);
+        incorrectPairCount++;
+      }
+
+    });
+  
+    // Show correct pairs in green
+    _checkAnswer();
   }
 
   Color _generateUniqueColor() {

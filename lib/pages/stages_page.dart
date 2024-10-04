@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:handabatamae/widgets/stage_dialog.dart'; // Import the stage_dialog
+import 'package:handabatamae/widgets/stage_dialog.dart';
 
 class StagesPage extends StatefulWidget {
   final String questName;
-  final String category;
+  final Map<String, String> category; // Update to accept a map
 
   const StagesPage({super.key, required this.questName, required this.category});
 
@@ -28,7 +27,7 @@ class _StagesPageState extends State<StagesPage> {
   }
 
   Future<void> _fetchStages() async {
-    List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', widget.category);
+    List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', widget.category['id']!);
     setState(() {
       _stages = stages;
       _isLoading = false;
@@ -38,6 +37,52 @@ class _StagesPageState extends State<StagesPage> {
   Future<int> _fetchNumberOfQuestions(int stageIndex) async {
     // Replace with actual logic to fetch the number of questions for the stage
     return 10; // Example: 10 questions
+  }
+
+  Color _getStageColor(String? category) {
+    if (category == null) return Colors.grey; // Default color for null category
+    if (category.contains('Quake')) {
+      return const Color(0xFFF5672B);
+    } else if (category.contains('Storm') || category.contains('Flood')) {
+      return const Color(0xFF2C62DE);
+    } else if (category.contains('Volcano')) {
+      return const Color(0xFFB3261E);
+    } else if (category.contains('Drought') || category.contains('Tsunami')) {
+      return const Color(0xFF31111D);
+    } else {
+      return Colors.grey; // Default color
+    }
+  }
+
+  Color darken(Color color, [double amount = 0.1]) {
+    assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+
+  String _getModifiedSvg(Color color1) {
+    Color color2 = darken(color1);
+    return '''
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="100%"
+      height="100%"
+      viewBox="0 0 12 11"
+      fill="none"
+    >
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M8 0H4V1H2V2H1V4H0V7H1V9H2V10H4V11H8V10H10V9H11V7H12V4H11V2H10V1H8V0ZM8 1V2H10V4H11V7H10V9H8V10H4V9H2V7H1V4H2V2H4V1H8Z"
+        fill="${color2.toHex()}"
+      />
+      <path
+        d="M4 1H8V2H10V4H11V7H10V9H8V10H4V9H2V7H1V4H2V2H4V1Z"
+        fill="${color1.toHex()}"
+      />
+    </svg>
+    ''';
   }
 
   @override
@@ -131,9 +176,11 @@ class _StagesPageState extends State<StagesPage> {
                               ? index
                               : (rowIndex + 1) * 3 - columnIndex - 1;
                           final stageNumber = stageIndex + 1;
+                          final stageCategory = widget.category['name']; // Use the passed category name
+                          final stageColor = _getStageColor(stageCategory);
 
-                          return ElevatedButton(
-                            onPressed: () async {
+                          return GestureDetector(
+                            onTap: () async {
                               Map<String, dynamic> stageData = _stages[stageIndex];
                               showStageDialog(
                                 context,
@@ -143,22 +190,24 @@ class _StagesPageState extends State<StagesPage> {
                                 stageData,
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white, // Text color
-                              backgroundColor: Colors.grey, // Background color
-                              shape: const CircleBorder(), // Circular button
-                              padding: const EdgeInsets.all(20), // Adjust padding for circular shape
-                              minimumSize: const Size(60, 60),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '$stageNumber',
-                                style: GoogleFonts.rubik(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SvgPicture.string(
+                                  _getModifiedSvg(stageColor),
+                                  width: 100,
+                                  height: 100,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
+                                Text(
+                                  '$stageNumber',
+                                  style: GoogleFonts.vt323(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -170,4 +219,8 @@ class _StagesPageState extends State<StagesPage> {
       ),
     );
   }
+}
+
+extension ColorExtension on Color {
+  String toHex() => '#${value.toRadixString(16).padLeft(8, '0').substring(2)}';
 }

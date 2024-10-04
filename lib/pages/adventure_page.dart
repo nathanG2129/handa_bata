@@ -119,7 +119,10 @@ class _AdventurePageState extends State<AdventurePage> {
                                                 MaterialPageRoute(
                                                   builder: (context) => StagesPage(
                                                     questName: category['name'],
-                                                    category: category['id'], // Pass the category ID
+                                                    category: {
+                                                      'id': category['id'],
+                                                      'name': category['name'],
+                                                    },
                                                   ),
                                                 ),
                                               );

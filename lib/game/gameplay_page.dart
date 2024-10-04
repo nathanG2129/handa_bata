@@ -142,12 +142,15 @@ class _GameplayPageState extends State<GameplayPage> {
     }
   }
 
-  void _handleMultipleChoiceAnswerSubmission(int index, bool isCorrect) {
-    _timer?.cancel(); // Stop the timer when an option is selected
+  void _handleMultipleChoiceAnswerSubmission(int? index, bool isCorrect) {
+    _timer?.cancel(); // Stop the timer when an option is selected or forced check occurs
     setState(() {
       _selectedOptionIndex = index;
       _isCorrect = isCorrect;
-      if (_isCorrect == true) {
+      if (index == null) {
+        // Forced check, increment wrong answers count
+        _wrongAnswersCount++;
+      } else if (_isCorrect == true) {
         _correctAnswersCount++;
         _fullyCorrectAnswersCount++;
       } else {
@@ -159,7 +162,7 @@ class _GameplayPageState extends State<GameplayPage> {
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
   
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
     });
   }
@@ -203,7 +206,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   print('Wrong Answers Count: $_wrongAnswersCount');
   print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
 
-  Future.delayed(const Duration(seconds: 3), () {
+  Future.delayed(const Duration(seconds: 6), () {
     _nextQuestion();
   });
 }

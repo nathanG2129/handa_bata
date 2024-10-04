@@ -56,7 +56,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       resultMessage = isCorrect ? 'Correct' : 'Wrong';
     });
   
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1, milliseconds: 500), () {
       setState(() {
         showSelectedAnswer = true;
       });
@@ -70,23 +70,26 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   }
 
   // Add a method to force check the answer
-  void forceCheckAnswer() {
+void forceCheckAnswer() {
+  setState(() {
+    showAllRed = true; // Show all options as red
+  });
+
+  // Call the onOptionSelected callback with null index and false correctness
+  widget.onOptionSelected(-1, false);
+
+  Future.delayed(const Duration(seconds: 1), () {
     setState(() {
-      showAllRed = true; // Show all options as red
+      showAllRed = false;
+      showAllAnswers = true;
     });
-  
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        showAllRed = false;
-        showAllAnswers = true;
-      });
-  
-      // Reset state after showing answers
-      Future.delayed(const Duration(seconds: 3), () {
-        resetState();
-      });
+
+    // Reset state after showing answers
+    Future.delayed(const Duration(seconds: 3), () {
+      resetState();
     });
-  }
+  });
+}
 
   void resetState() {
     setState(() {

@@ -74,6 +74,7 @@ flutter:
     - assets/backgrounds/background.svg
     - assets/characters/KladisAdventure.svg
     - assets/characters/KloudArcade.svg
+    - assets/icons/stageicon.svg
 
     # Audios / SFX
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3

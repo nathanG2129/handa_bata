@@ -81,9 +81,6 @@ class _GameplayPageState extends State<GameplayPage> {
           _progress = 0;
           _timer?.cancel();
           _forceCheckAnswer(); // Force check the answer when the timer reaches zero
-          Future.delayed(const Duration(seconds: 6), () {
-            _nextQuestion();
-          });
         }
       });
     });
@@ -275,6 +272,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
     print('Current Streak: $_currentStreak');
     print('Highest Streak: $_highestStreak');
+  
+    Future.delayed(const Duration(seconds: 6), () {
+      _nextQuestion();
+    });
   }
   
   void _handleVisualDisplayComplete() {

@@ -80,11 +80,6 @@ void forceCheckAnswer() {
       showAllRed = false;
       showAllAnswers = true;
     });
-
-    // Reset state after showing answers
-    Future.delayed(const Duration(seconds: 3), () {
-      resetState();
-    });
   });
 }
 

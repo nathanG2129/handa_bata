@@ -268,7 +268,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                     String option = entry.value;
                     String optionValue = option.split('_')[0];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
                       child: ElevatedButton(
                         onPressed: () {
                           _handleOptionSelection(index, option);

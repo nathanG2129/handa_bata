@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/results_page.dart';
 import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
@@ -38,6 +39,8 @@ class _GameplayPageState extends State<GameplayPage> {
   bool? _isCorrect;
   int _correctAnswersCount = 0; // Define the correct answers count
   int _wrongAnswersCount = 0; // Define the wrong answers count
+  int _currentStreak = 0;
+  int _highestStreak = 0;
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
@@ -138,8 +141,26 @@ class _GameplayPageState extends State<GameplayPage> {
         _startTimer(); // Restart the timer after the intro delay
       });
     } else {
-      // Handle end of questions
+      // Calculate accuracy
+      int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+      double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
+  
+      // Navigate to ResultsPage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultsPage(
+            score: _fullyCorrectAnswersCount,
+            accuracy: accuracy,
+            streak: _calculateStreak(),
+          ),
+        ),
+      );
     }
+  }
+  
+  int _calculateStreak() {
+    return _highestStreak;
   }
 
   void _handleMultipleChoiceAnswerSubmission(int? index, bool isCorrect) {
@@ -150,17 +171,25 @@ class _GameplayPageState extends State<GameplayPage> {
       if (index == null) {
         // Forced check, increment wrong answers count
         _wrongAnswersCount++;
+        _currentStreak = 0; // Reset the current streak
       } else if (_isCorrect == true) {
         _correctAnswersCount++;
         _fullyCorrectAnswersCount++;
+        _currentStreak++; // Increment the current streak
+        if (_currentStreak > _highestStreak) {
+          _highestStreak = _currentStreak; // Update the highest streak
+        }
       } else {
         _wrongAnswersCount++;
+        _currentStreak = 0; // Reset the current streak
       }
     });
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+    print('Current Streak: $_currentStreak');
+    print('Highest Streak: $_highestStreak');
   
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
@@ -174,13 +203,20 @@ class _GameplayPageState extends State<GameplayPage> {
       _wrongAnswersCount += (answerData['wrongCount'] as int);
       if (answerData['isFullyCorrect'] as bool) {
         _fullyCorrectAnswersCount++;
+        _currentStreak++; // Increment the current streak
+        if (_currentStreak > _highestStreak) {
+          _highestStreak = _currentStreak; // Update the highest streak
+        }
+      } else {
+        _currentStreak = 0; // Reset the current streak
       }
     });
-
+  
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
-
+    print('Current Streak: $_currentStreak');
+    print('Highest Streak: $_highestStreak');
   
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
@@ -194,14 +230,21 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     if (_isCorrect == true) {
       _correctAnswersCount++;
       _fullyCorrectAnswersCount++;
+      _currentStreak++; // Increment the current streak
+      if (_currentStreak > _highestStreak) {
+        _highestStreak = _currentStreak; // Update the highest streak
+      }
     } else {
       _wrongAnswersCount++;
+      _currentStreak = 0; // Reset the current streak
     }
   });
 
   print('Correct Answers Count: $_correctAnswersCount');
   print('Wrong Answers Count: $_wrongAnswersCount');
   print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+  print('Current Streak: $_currentStreak');
+  print('Highest Streak: $_highestStreak');
 
   Future.delayed(const Duration(seconds: 6), () {
     _nextQuestion();
@@ -218,12 +261,20 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       // Check if all pairs are correct and increment the fully correct answers count
       if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
         _fullyCorrectAnswersCount++;
+        _currentStreak++; // Increment the current streak
+        if (_currentStreak > _highestStreak) {
+          _highestStreak = _currentStreak; // Update the highest streak
+        }
+      } else {
+        _currentStreak = 0; // Reset the current streak
       }
     });
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+    print('Current Streak: $_currentStreak');
+    print('Highest Streak: $_highestStreak');
   }
   
   void _handleVisualDisplayComplete() {

@@ -325,8 +325,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                         ),
                         child: Text(
                           option,
-                          style: GoogleFonts.vt323(
-                            fontSize: 24,
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
                             color: optionSelected[index] ? Colors.white : Colors.black,
                           ),
                         ),

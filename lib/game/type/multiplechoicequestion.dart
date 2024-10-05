@@ -52,16 +52,13 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   void _handleOptionSelected(int index) {
     bool isCorrect = index == int.parse(widget.questionData['answer'].toString());
     widget.onOptionSelected(index, isCorrect);
-    setState(() {
-      resultMessage = isCorrect ? 'Correct' : 'Wrong';
-    });
   
-    Future.delayed(const Duration(seconds: 1, milliseconds: 500), () {
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
       });
   
-      Future.delayed(const Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1, milliseconds: 250), () {
         setState(() {
           showAllAnswers = true;
         });

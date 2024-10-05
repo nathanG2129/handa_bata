@@ -214,18 +214,20 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       // Assuming correctPairCount and incorrectPairCount are updated in MatchingTypeQuestion
       _correctAnswersCount += _matchingTypeQuestionKey.currentState?.correctPairCount ?? 0;
       _wrongAnswersCount += _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0;
-      
+  
       // Check if all pairs are correct and increment the fully correct answers count
       if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
         _fullyCorrectAnswersCount++;
       }
     });
-
+  
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Fully Correct Answers Count: $_fullyCorrectAnswersCount');
+  }
   
-    Future.delayed(const Duration(seconds: 6), () {
+  void _handleVisualDisplayComplete() {
+    Future.delayed(const Duration(seconds: 3), () {
       _nextQuestion();
     });
   }
@@ -295,6 +297,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           questionData: currentQuestion,
           onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
           onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
+          onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
         );
         break;
       case 'Identification':
@@ -364,7 +367,7 @@ class ProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 20, // Make the progress bar thicker
+      height: 30, // Make the progress bar thicker
       child: LinearProgressIndicator(
         value: progress,
         backgroundColor: Colors.grey,

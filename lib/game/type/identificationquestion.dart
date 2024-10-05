@@ -129,7 +129,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     userAnswer = userAnswer.trim();
 
     // Add a delay before showing the correctness of the answer
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 0, milliseconds: 500), () {
       setState(() {
         isCorrect = userAnswer == widget.questionData['answer'] ? 2 : 1;
       });
@@ -256,7 +256,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                 ),
                 child: Text(
                   answerText,
-                  style: GoogleFonts.vt323(fontSize: 32, color: Colors.black), // Updated font style
+                  style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black), // Updated font style
                 ),
               ),
               const SizedBox(height: 16),
@@ -284,7 +284,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                         ),
                         child: Text(
                           optionValue,
-                          style: GoogleFonts.vt323(fontSize: 24),
+                          style: GoogleFonts.rubik(fontSize: 24),
                         ),
                       ),
                     );

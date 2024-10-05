@@ -32,6 +32,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   bool showUserAnswers = false;
   bool showAllRed = false;
   bool isAnswerCorrect = false;
+  bool isChecking = false; // Add this flag
   Timer? _timer;
 
   @override
@@ -103,16 +104,20 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   }
 
   void _checkAnswer() {
+    setState(() {
+      isChecking = true; // Set the flag to true when checking starts
+    });
+
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-  
+
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-  
+
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -121,31 +126,31 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-  
+
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-  
+
     widget.onAnswerSubmitted({
       'answer': userAnswer,
       'correctCount': correctCount,
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
-  
+
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-  
+
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-  
+
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');
@@ -154,19 +159,23 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       });
     });
   }
-  
+
   // Add a method to force check the answer
   void forceCheckAnswer() {
+    setState(() {
+      isChecking = true; // Set the flag to true when checking starts
+    });
+
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-  
+
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-  
+
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -175,31 +184,31 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-  
+
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-  
+
     widget.onAnswerSubmitted({
       'answer': userAnswer,
       'correctCount': correctCount,
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
-  
+
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-  
+
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-  
+
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');
@@ -215,6 +224,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       showOptions = false;
       showUserAnswers = false;
       showAllRed = false;
+      isChecking = false; // Reset the flag
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
       isAnswerCorrect = false;
@@ -235,10 +245,10 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     String questionText = widget.questionData['question'];
     List<String> options = List<String>.from(widget.questionData['options']);
     List<int> answer = List<int>.from(widget.questionData['answer']);
-  
+
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
-  
+
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
         Color boxColor = Colors.white;
@@ -258,7 +268,9 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
             ),
             child: Text(
               selectedOptions[inputIndex] ?? '____',
-              style: GoogleFonts.vt323(fontSize: 24, color: Colors.black),
+              style: (selectedOptions[inputIndex] == null || selectedOptions[inputIndex] == '____')
+                  ? GoogleFonts.vt323(fontSize: 24, color: Colors.black)
+                  : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
             ),
           ),
         );
@@ -279,7 +291,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         );
       }
     });
-  
+
     return Column(
       children: [
         if (!showOptions && !showUserAnswers)
@@ -303,24 +315,40 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
               String option = entry.value;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _handleOptionSelection(index, option);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                    backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
-                    padding: const EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.black, width: 2),
-                    ),
-                  ),
-                  child: Text(
-                    option,
-                    style: GoogleFonts.vt323(fontSize: 24),
-                  ),
-                ),
+                child: isChecking
+                    ? Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: optionSelected[index] ? Colors.blue : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.black, width: 2),
+                        ),
+                        child: Text(
+                          option,
+                          style: GoogleFonts.vt323(
+                            fontSize: 24,
+                            color: optionSelected[index] ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: () {
+                          _handleOptionSelection(index, option);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                          backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                          padding: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                        ),
+                        child: Text(
+                          option,
+                          style: GoogleFonts.rubik(fontSize: 18),
+                        ),
+                      ),
               );
             }).toList(),
           ),

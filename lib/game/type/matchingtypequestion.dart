@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -7,12 +8,14 @@ class MatchingTypeQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
   final VoidCallback onAnswerChecked; // Callback to notify when the answer is checked
+  final VoidCallback onVisualDisplayComplete; // Callback to notify when visual display is complete
 
   const MatchingTypeQuestion({
     super.key,
     required this.questionData,
     required this.onOptionsShown,
     required this.onAnswerChecked,
+    required this.onVisualDisplayComplete, // Add this line
   });
 
   @override
@@ -33,7 +36,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   int correctPairCount = 0;
   int incorrectPairCount = 0;
   Timer? _timer;
-
+  bool isChecking = false; // Add this flag
+  bool isSubmitted = false; // Add this flag
   @override
   void initState() {
     super.initState();
@@ -68,6 +72,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       correctAnswers = [];
       correctPairCount = 0;
       incorrectPairCount = 0;
+      isChecking = false; // Reset the flag
+      isSubmitted = false; // Reset the flag
       _initializeOptions();
       _timer?.cancel();
       _timer = Timer(const Duration(seconds: 5), () {
@@ -137,18 +143,25 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         Color newColor = _generateUniqueColor();
         pairColors.add(newColor);
         usedColors.add(newColor);
+  
+        // Remove the matched options from the lists
+        section1Options.remove(selectedSection1Option);
+        section2Options.remove(selectedSection2Option);
+  
         selectedSection1Option = null;
         selectedSection2Option = null;
-
+  
         // Check if all pairs are matched
-        if (userPairs.length == section1Options.length) {
-          _checkAnswer();
+        if (userPairs.length == correctAnswers.length) {
+          _submitPairs();
         }
       });
     }
   }
 
   void _cancelSelection(String section1Option, String section2Option) {
+    if (isChecking) return; // Prevent unpairing during the checking phase
+  
     setState(() {
       int index = userPairs.indexWhere((pair) =>
           pair['section1'] == section1Option && pair['section2'] == section2Option);
@@ -156,69 +169,235 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         usedColors.remove(pairColors[index]);
         userPairs.removeAt(index);
         pairColors.removeAt(index);
+  
+        // Add the options back to their respective sections
+        section1Options.add(section1Option);
+        section2Options.add(section2Option);
       }
     });
   }
 
-  void _checkAnswer() {
-    // Convert pairs to strings for comparison
-    List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
-    List<String> correctAnswerStrings = correctAnswers.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
-
-    // Sort the lists for comparison
-    userPairStrings.sort();
-    correctAnswerStrings.sort();
-
+    void _submitPairs() {
     setState(() {
-      correctPairCount = 0;
-      incorrectPairCount = 0;
-
-      for (int i = 0; i < userPairs.length; i++) {
-        String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
-        if (correctAnswerStrings.contains(userPairString)) {
-          pairColors[i] = Colors.green; // Correct pair
-          correctPairCount++;
-        } else {
-          pairColors[i] = Colors.red; // Incorrect pair
-          incorrectPairCount++;
-        }
-      }
-
-      // Color unselected section2 buttons as red
-      for (int i = userPairs.length; i < section1Options.length; i++) {
-        userPairs.add({
-          'section1': section1Options[i],
-          'section2': '',
-        });
-        pairColors.add(Colors.red);
-        incorrectPairCount++;
-      }
+      isSubmitted = true; // Set the flag to true
     });
-
-    // Notify that the answer has been checked
-    widget.onAnswerChecked();
-  }
-
-  void forceCheckAnswer() {
-    // Mark unselected pairs as wrong
-    setState(() {
-      // Mark unselected section1 options as wrong
-      for (int i = userPairs.length; i < section1Options.length; i++) {
-        userPairs.add({
-          'section1': section1Options[i],
-          'section2': '',
-        });
-        pairColors.add(Colors.red);
-        incorrectPairCount++;
-      }
-    });
-
-    // Show correct pairs in green
     _checkAnswer();
   }
 
+  Widget _buildPairRow(Map<String, String> pair, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 150,
+                height: 75,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      pair['section1']!,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 150,
+                height: 75,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      pair['section2']!,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: isChecking,
+              child: TextButton(
+                onPressed: () {
+                  _cancelSelection(pair['section1']!, pair['section2']!);
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.transparent, backgroundColor: Colors.transparent,
+                ),
+                child: Container(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _checkAnswerImmediately() {
+    setState(() {
+      isChecking = true; // Set the flag to true
+    });
+  
+    // Convert pairs to strings for comparison
+    List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
+    List<String> correctAnswerStrings = correctAnswers.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
+  
+    // Sort the lists for comparison
+    userPairStrings.sort();
+    correctAnswerStrings.sort();
+  
+    setState(() {
+      correctPairCount = 0;
+      incorrectPairCount = 0;
+    });
+  
+    for (int i = 0; i < userPairs.length; i++) {
+      String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
+      if (correctAnswerStrings.contains(userPairString) && pairColors[i] != Colors.red) {
+        correctPairCount++;
+      } else {
+        incorrectPairCount++;
+      }
+    }
+  
+    // Mark unselected section2 buttons as incorrect
+    for (int i = userPairs.length; i < correctAnswers.length; i++) {
+      incorrectPairCount++;
+    }
+  
+    // Notify that the answer has been checked
+    widget.onAnswerChecked();
+  
+    setState(() {
+      isChecking = false; // Set the flag to false
+    });
+  }
+  
+  void _showAnswerVisually() async {
+    setState(() {
+      isChecking = true; // Set the flag to true
+    });
+  
+    for (int i = 0; i < userPairs.length; i++) {
+      await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1 second
+  
+      setState(() {
+        String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
+        if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString) && pairColors[i] != Colors.red) {
+          pairColors[i] = Colors.green; // Correct pair
+        } else {
+          pairColors[i] = Colors.red; // Incorrect pair
+        }
+      });
+    }
+  
+    // Color unselected section2 buttons as red
+    for (int i = userPairs.length; i < correctAnswers.length; i++) {
+      await Future.delayed(const Duration(seconds: 1)); // Introduce a delay of 1 second
+  
+      setState(() {
+        userPairs.add({
+          'section1': section1Options[i],
+          'section2': '',
+        });
+        pairColors.add(Colors.red);
+      });
+    }
+  
+    // Notify that the visual display is complete
+    widget.onVisualDisplayComplete();
+  }
+  
+  void _checkAnswer() {
+    _checkAnswerImmediately(); // Perform the immediate background check
+    _showAnswerVisually(); // Show the correctness of the pairs visually
+  }
+  
+  void forceCheckAnswer() {
+    setState(() {
+      isChecking = true; // Set the flag to true
+  
+      // Randomly pair up the remaining options
+      List<String> remainingSection1Options = List.from(section1Options);
+      List<String> remainingSection2Options = List.from(section2Options);
+      Random random = Random();
+  
+      // Shuffle section2Options to ensure incorrect pairings
+      remainingSection2Options.shuffle(random);
+  
+      while (remainingSection1Options.isNotEmpty && remainingSection2Options.isNotEmpty) {
+        String section1Option = remainingSection1Options.removeAt(0);
+        String section2Option = remainingSection2Options.removeAt(0);
+        userPairs.add({
+          'section1': section1Option,
+          'section2': section2Option,
+        });
+        pairColors.add(Colors.red);
+        incorrectPairCount++;
+  
+        // Remove the paired options from the original lists
+        section1Options.remove(section1Option);
+        section2Options.remove(section2Option);
+      }
+  
+      // If there are any remaining options in section1 or section2, mark them as wrong
+      for (String section1Option in remainingSection1Options) {
+        userPairs.add({
+          'section1': section1Option,
+          'section2': '',
+        });
+        pairColors.add(Colors.red);
+        incorrectPairCount++;
+  
+        // Remove the option from the original list
+        section1Options.remove(section1Option);
+      }
+  
+      for (String section2Option in remainingSection2Options) {
+        userPairs.add({
+          'section1': '',
+          'section2': section2Option,
+        });
+        pairColors.add(Colors.red);
+        incorrectPairCount++;
+  
+        // Remove the option from the original list
+        section2Options.remove(section2Option);
+      }
+    });
+  
+    // Show correct pairs in green
+    _checkAnswer();
+  
+  }
+
   bool areAllPairsCorrect() {
-    return correctPairCount == section1Options.length;
+    print('$correctPairCount and ${correctAnswers.length}');
+    return correctPairCount == correctAnswers.length;
   }
 
   Color _generateUniqueColor() {
@@ -277,6 +456,13 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Column(
+                children: userPairs.map((pair) {
+                  int index = userPairs.indexOf(pair);
+                  return _buildPairRow(pair, pairColors[index]);
+                }).toList(),
               ),
               const SizedBox(height: 16),
               Row(

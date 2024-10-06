@@ -114,7 +114,7 @@ class _AdventurePageState extends State<AdventurePage> {
                                           height: 85, // Fixed height
                                           child: ElevatedButton(
                                             onPressed: () {
-                                              print('Navigating to StagesPage with category: ${category}');
+                                              print('Navigating to StagesPage with category: $category');
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(

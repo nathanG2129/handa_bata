@@ -71,7 +71,9 @@ class SplashPage extends StatelessWidget {
     AuthService authService = AuthService();
     bool isSignedIn = await authService.isSignedIn();
     bool staySignedIn = await authService.getStaySignedInPreference();
-
+  
+    if (!context.mounted) return;
+  
     if (isSignedIn && staySignedIn) {
       // Navigate to PlayPage if the user is already signed in and chose to stay signed in
       Navigator.pushReplacement(
@@ -81,6 +83,9 @@ class SplashPage extends StatelessWidget {
     } else {
       // Check for local guest profile
       UserProfile? localGuestProfile = await authService.getLocalGuestProfile();
+  
+      if (!context.mounted) return;
+  
       if (localGuestProfile != null) {
         // Navigate to PlayPage if a local guest profile exists
         Navigator.pushReplacement(

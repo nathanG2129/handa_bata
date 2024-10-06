@@ -6,10 +6,10 @@ class AdminAddPage extends StatefulWidget {
   const AdminAddPage({super.key});
 
   @override
-  _AdminAddPageState createState() => _AdminAddPageState();
+  AdminAddPageState createState() => AdminAddPageState();
 }
 
-class _AdminAddPageState extends State<AdminAddPage> {
+class AdminAddPageState extends State<AdminAddPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
@@ -33,6 +33,8 @@ class _AdminAddPageState extends State<AdminAddPage> {
         role: 'admin',
       );
 
+      if (!mounted) return;
+
       if (user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Admin registered successfully')),
@@ -44,13 +46,17 @@ class _AdminAddPageState extends State<AdminAddPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

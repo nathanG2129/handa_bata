@@ -26,7 +26,6 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
 
   void _fetchBanners() async {
     List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
-    print('Fetched banners: $banners');
     setState(() {
       _banners = banners;
     });

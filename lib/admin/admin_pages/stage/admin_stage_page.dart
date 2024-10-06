@@ -88,73 +88,75 @@ class _AdminStagePageState extends State<AdminStagePage> {
     });
   }
 
-        void _showEditCategoryDialog() async {
-      try {
-        final selectedCategory = _categories.firstWhere((category) => category['id'] == _selectedCategory, orElse: () => {});
-    
-        // Check if the required fields are present
-        bool needsUpdate = false;
-        if (selectedCategory['name'] == null) {
-          selectedCategory['name'] = 'Unnamed Category';
-          needsUpdate = true;
-        }
-        if (selectedCategory['description'] == null) {
-          selectedCategory['description'] = 'No description available';
-          needsUpdate = true;
-        }
-        if (selectedCategory['color'] == null) {
-          selectedCategory['color'] = 'defaultColor';
-          needsUpdate = true;
-        }
-        if (selectedCategory['position'] == null) {
-          selectedCategory['position'] = 0;
-          needsUpdate = true;
-        }
-    
-        // Update the category if necessary
-        if (needsUpdate) {
-          await _stageService.updateCategory(_selectedLanguage, _selectedCategory, {
-            'name': selectedCategory['name'],
-            'description': selectedCategory['description'],
-            'color': selectedCategory['color'],
-            'position': selectedCategory['position'],
-          });
-          // Refresh categories after update
-          await _fetchCategories();
-        }
-    
-        // Show the edit dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return EditCategoryDialog(
-              language: _selectedLanguage,
-              categoryId: _selectedCategory,
-              initialName: selectedCategory['name'],
-              initialDescription: selectedCategory['description'],
-              initialColor: selectedCategory['color'], // Pass initial color
-              initialPosition: selectedCategory['position'], // Pass initial position
-            );
-          },
-        ).then((_) {
-          _fetchCategories();
-        });
-      } catch (e) {
-        print('Error: $e');
-        // Handle the error, e.g., show a message to the user
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Selected category not found.')),
-          );
-        });
+  void _showEditCategoryDialog() async {
+    try {
+      final selectedCategory = _categories.firstWhere((category) => category['id'] == _selectedCategory, orElse: () => {});
+  
+      // Check if the required fields are present
+      bool needsUpdate = false;
+      if (selectedCategory['name'] == null) {
+        selectedCategory['name'] = 'Unnamed Category';
+        needsUpdate = true;
       }
+      if (selectedCategory['description'] == null) {
+        selectedCategory['description'] = 'No description available';
+        needsUpdate = true;
+      }
+      if (selectedCategory['color'] == null) {
+        selectedCategory['color'] = 'defaultColor';
+        needsUpdate = true;
+      }
+      if (selectedCategory['position'] == null) {
+        selectedCategory['position'] = 0;
+        needsUpdate = true;
+      }
+  
+      // Update the category if necessary
+      if (needsUpdate) {
+        await _stageService.updateCategory(_selectedLanguage, _selectedCategory, {
+          'name': selectedCategory['name'],
+          'description': selectedCategory['description'],
+          'color': selectedCategory['color'],
+          'position': selectedCategory['position'],
+        });
+        // Refresh categories after update
+        await _fetchCategories();
+      }
+  
+      // Show the edit dialog
+      if (!mounted) return;
+  
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return EditCategoryDialog(
+            language: _selectedLanguage,
+            categoryId: _selectedCategory,
+            initialName: selectedCategory['name'],
+            initialDescription: selectedCategory['description'],
+            initialColor: selectedCategory['color'], // Pass initial color
+            initialPosition: selectedCategory['position'], // Pass initial position
+          );
+        },
+      ).then((_) {
+        _fetchCategories();
+      });
+    } catch (e) {
+      print('Error: $e');
+      // Handle the error, e.g., show a message to the user
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected category not found.')),
+        );
+      });
     }
+  }
 
   void _navigateToEditStage(String stageName) async {
     print('Navigating to edit stage: $stageName');
     List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, _selectedCategory, stageName);
+    if (!mounted) return;
     Navigator.push(
-      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, category: _selectedCategory, stageName: stageName, questions: questions)),
     ).then((_) {

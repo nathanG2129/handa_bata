@@ -8,10 +8,10 @@ class EditBannerDialog extends StatefulWidget {
   const EditBannerDialog({super.key, required this.banner});
 
   @override
-  _EditBannerDialogState createState() => _EditBannerDialogState();
+  EditBannerDialogState createState() => EditBannerDialogState();
 }
 
-class _EditBannerDialogState extends State<EditBannerDialog> {
+class EditBannerDialogState extends State<EditBannerDialog> {
   late TextEditingController _imageUrlController;
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -39,6 +39,9 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
         'description': description,
       };
       await _bannerService.updateBanner(id, updatedBanner);
+
+      if (!mounted) return;
+
       Navigator.pop(context);
     }
   }

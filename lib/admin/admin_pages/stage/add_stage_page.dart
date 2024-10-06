@@ -9,10 +9,10 @@ class AddStageDialog extends StatefulWidget {
   const AddStageDialog({super.key, required this.language, required this.category});
 
   @override
-  _AddStageDialogState createState() => _AddStageDialogState();
+  AddStageDialogState createState() => AddStageDialogState();
 }
 
-class _AddStageDialogState extends State<AddStageDialog> {
+class AddStageDialogState extends State<AddStageDialog> {
   final _formKey = GlobalKey<FormState>();
   final StageService _stageService = StageService();
   String _stageName = '';
@@ -20,10 +20,12 @@ class _AddStageDialogState extends State<AddStageDialog> {
   void _saveStage() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      print('Saving stage: $_stageName');
       await _stageService.addStage(widget.language, widget.category, _stageName, {
         'stageName': _stageName,
       });
+
+      if (!mounted) return;
+
       Navigator.pop(context);
     }
   }

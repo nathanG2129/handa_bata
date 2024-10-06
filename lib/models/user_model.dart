@@ -56,6 +56,27 @@ class UserProfile {
     };
   }
 
+  factory UserProfile.fromMap(Map<String, dynamic> map) {
+    return UserProfile(
+      profileId: map['profileId'],
+      username: map['username'],
+      nickname: map['nickname'],
+      avatarId: map['avatarId'],
+      badgeShowcase: List<int>.from(map['badgeShowcase']),
+      bannerId: map['bannerId'],
+      exp: map['exp'],
+      expCap: map['expCap'],
+      hasShownCongrats: map['hasShownCongrats'],
+      level: map['level'],
+      totalBadgeUnlocked: map['totalBadgeUnlocked'],
+      totalStageCleared: map['totalStageCleared'],
+      unlockedBadge: List<int>.from(map['unlockedBadge']),
+      unlockedBanner: List<int>.from(map['unlockedBanner']),
+      email: map['email'],
+      birthday: map['birthday'],
+    );
+  }
+
   // Default guest profile
   static final UserProfile guestProfile = UserProfile(
     profileId: 'guest',

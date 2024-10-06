@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthService {
@@ -13,8 +16,8 @@ class AuthService {
 
       if (user != null) {
         UserProfile userProfile = UserProfile(
-          profileId: user.uid, // Use the user's UID as the profile ID
-          username: username, // Add username
+          profileId: user.uid,
+          username: username,
           nickname: nickname,
           avatarId: 0,
           badgeShowcase: [0, 0, 0],
@@ -26,22 +29,19 @@ class AuthService {
           totalBadgeUnlocked: 0,
           totalStageCleared: 0,
           unlockedBadge: List<int>.filled(40, 0),
-          unlockedBanner: List<int>.filled(10, 0), 
-          email: email, 
-          birthday: birthday, // Store birthday within the ProfileData document
+          unlockedBanner: List<int>.filled(10, 0),
+          email: email,
+          birthday: birthday,
         );
 
-        // Create ProfileData collection within the user's document
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
 
-        // Initialize GameSaveData collection with documents
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
 
         await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
         await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
         await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
 
-        // Store user role in Firestore
         await _firestore.collection('User').doc(user.uid).set({
           'email': email,
           'role': role,
@@ -55,11 +55,102 @@ class AuthService {
     }
   }
 
+  Future<void> createGuestProfile() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      UserProfile guestProfile = UserProfile(
+        profileId: user.uid,
+        username: 'Guest',
+        nickname: 'Guest',
+        avatarId: 0,
+        badgeShowcase: [0, 0, 0],
+        bannerId: 0,
+        exp: 0,
+        expCap: 100,
+        hasShownCongrats: false,
+        level: 1,
+        totalBadgeUnlocked: 0,
+        totalStageCleared: 0,
+        unlockedBadge: List<int>.filled(40, 0),
+        unlockedBanner: List<int>.filled(10, 0),
+        email: 'guest@example.com',
+        birthday: '2000-01-01',
+      );
+
+      await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(guestProfile.toMap());
+
+      CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
+
+      await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
+      await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
+      await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
+
+      await _firestore.collection('User').doc(user.uid).set({
+        'email': 'guest@example.com',
+        'role': 'guest',
+      });
+
+      // Save guest account details locally
+      await saveGuestAccountDetails(user.uid);
+      await saveGuestProfileLocally(guestProfile); // Save guest profile locally
+    }
+  }
+
+  Future<void> saveGuestProfileLocally(UserProfile profile) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String profileJson = jsonEncode(profile.toMap());
+    await prefs.setString('guest_profile', profileJson);
+  }
+
+  Future<UserProfile?> getLocalGuestProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? profileJson = prefs.getString('guest_profile');
+    if (profileJson != null) {
+      Map<String, dynamic> profileMap = jsonDecode(profileJson);
+      return UserProfile.fromMap(profileMap);
+    }
+    return null;
+  }
+
+  Future<void> clearLocalGuestProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('guest_profile');
+  }
+
+  Future<bool> isSignedIn() async {
+    User? user = _auth.currentUser;
+    return user != null;
+  }
+
+  Future<bool> getStaySignedInPreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('stay_signed_in') ?? false;
+  }
+
+  Future<void> setStaySignedInPreference(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('stay_signed_in', value);
+  }
+
+  Future<void> saveGuestAccountDetails(String uid) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('guest_uid', uid);
+  }
+
+  Future<String?> getGuestAccountDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('guest_uid');
+  }
+
+  Future<void> clearGuestAccountDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('guest_uid');
+  }
+
   Future<void> updateUserProfile(String field, String newValue) async {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        // Update the specific field in the user's document in Firestore
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).update({field: newValue});
       }
     } catch (e) {
@@ -70,7 +161,6 @@ class AuthService {
 
   Future<User?> signInWithUsernameAndPassword(String username, String password) async {
     try {
-      // Query Firestore to get the email associated with the username
       String? email = await getEmailByUsername(username);
       if (email == null) {
         print('No user found with username: $username');
@@ -87,13 +177,11 @@ class AuthService {
 
   Future<String?> getEmailByUsername(String username) async {
     try {
-      // Query Firestore to find the user by username
       QuerySnapshot querySnapshot = await _firestore.collectionGroup('ProfileData').where('username', isEqualTo: username).get();
       if (querySnapshot.docs.isEmpty) {
         return null;
       }
 
-      // Get the email associated with the username
       return querySnapshot.docs.first.get('email');
     } catch (e) {
       print(e.toString());
@@ -104,6 +192,7 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      await clearGuestAccountDetails(); // Clear guest account details on sign out
     } catch (e) {
       print(e.toString());
     }
@@ -124,7 +213,7 @@ class AuthService {
       Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
       return UserProfile(
         profileId: data['profileId'],
-        username: data['username'], // Add username
+        username: data['username'],
         nickname: data['nickname'],
         avatarId: data['avatarId'],
         badgeShowcase: List<int>.from(data['badgeShowcase']),
@@ -149,10 +238,9 @@ class AuthService {
   Future<void> logout() async {
     try {
       await _auth.signOut();
-      // Clear any cached user data if necessary
-      print('User logged out successfully');
+      await clearGuestAccountDetails(); // Clear guest account details on logout
     } catch (e) {
-      print('Error logging out: $e');
+      print(e.toString());
     }
   }
 
@@ -172,15 +260,10 @@ class AuthService {
   }
 
   Future<String?> getUserRole(String uid) async {
-    try {
-      DocumentSnapshot docSnapshot = await _firestore.collection('User').doc(uid).get();
-      if (docSnapshot.exists) {
-        return docSnapshot['role'];
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching user role: $e');
-      return null;
+    DocumentSnapshot userDoc = await _firestore.collection('User').doc(uid).get();
+    if (userDoc.exists) {
+      return userDoc.get('role');
     }
+    return null;
   }
 }

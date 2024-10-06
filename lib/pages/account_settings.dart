@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'splash_page.dart'; // Import SplashPage
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -14,9 +15,9 @@ class AccountSettings extends StatefulWidget {
 }
 
 class _AccountSettingsState extends State<AccountSettings> {
-  UserProfile? _userProfile;
   bool _isLoading = true;
-  bool _showEmail = false; // Add a state variable to control email visibility
+  bool _showEmail = false;
+  UserProfile? _userProfile;
 
   @override
   void initState() {
@@ -139,6 +140,27 @@ class _AccountSettingsState extends State<AccountSettings> {
     );
   }
 
+  Future<void> _logout() async {
+    try {
+      AuthService authService = AuthService();
+      await authService.logout();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SplashPage()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -161,7 +183,7 @@ class _AccountSettingsState extends State<AccountSettings> {
             _buildFieldContainer('Birthday', _userProfile!.birthday, false),
             _buildFieldContainer('Email', _showEmail ? _userProfile!.email : _redactEmail(_userProfile!.email), false), // Redact the email
             _buildFieldContainer('Password', '********', true),
-            const SizedBox(height: 0),
+            _buildFieldContainer('Logout', '', false), // Add the Logout button here
             const Divider(
               color: Colors.black,
               thickness: 1,
@@ -235,14 +257,15 @@ class _AccountSettingsState extends State<AccountSettings> {
                   style: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.bold), // Use Rubik font
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  details,
-                  style: GoogleFonts.rubik(fontSize: 16), // Use Rubik font
-                ),
+                if (title != 'Logout') // Hide details for Logout
+                  Text(
+                    details,
+                    style: GoogleFonts.rubik(fontSize: 16), // Use Rubik font
+                  ),
               ],
             ),
           ),
-          if (showChangeButton && title != 'Email') // Conditionally show the button
+          if (showChangeButton && title != 'Email' && title != 'Logout') // Conditionally show the button
             ElevatedButton(
               onPressed: () {
                 _showChangeNicknameDialog();
@@ -282,6 +305,24 @@ class _AccountSettingsState extends State<AccountSettings> {
               child: Text(
                 _showEmail ? 'Hide' : 'Show',
                 style: const TextStyle(color: Colors.black), // Ensure text color is set to black
+              ),
+            ),
+          if (title == 'Logout') // Add the Logout button
+            ElevatedButton(
+              onPressed: _logout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4d278f), // Color of the button
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                textStyle: const TextStyle(fontSize: 16),
+                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero, // Rectangular shape
+                  side: BorderSide(color: Colors.black, width: 3), // Black border
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white), // Ensure text color is set to white
               ),
             ),
         ],

@@ -20,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _staySignedIn = false;
-
   final AuthService _authService = AuthService();
 
   void _login() async {
@@ -32,6 +31,7 @@ class _LoginPageState extends State<LoginPage> {
         final user = await _authService.signInWithUsernameAndPassword(username, password);
 
         if (user != null) {
+          await _authService.setStaySignedInPreference(_staySignedIn);
           _navigateToPlayPage();
         } else {
           _showSnackBar('Login failed. Please try again.');
@@ -143,34 +143,28 @@ class _LoginPageState extends State<LoginPage> {
                                 children: <Widget>[
                                   Checkbox(
                                     value: _staySignedIn,
-                                    onChanged: (bool? value) {
+                                    onChanged: (value) {
                                       setState(() {
                                         _staySignedIn = value!;
                                       });
                                     },
                                   ),
                                   const Text(
-                                    'Stay signed in',
-                                    style: TextStyle(
-                                      color: Colors.white, // Changed text color to white
-                                      fontSize: 16, // Added fontSize variable
-                                    ),
+                                    'Stay Signed In',
+                                    style: TextStyle(color: Colors.white),
                                   ),
                                 ],
                               ),
                               TextButton(
                                 onPressed: _forgotPassword,
                                 child: const Text(
-                                  'Forgot password?',
-                                  style: TextStyle(
-                                    color: Colors.white, // Changed text color to white
-                                    fontSize: 16, // Added fontSize variable
-                                  ),
+                                  'Forgot Password?',
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 20),
                           CustomButton(
                             text: 'Login',
                             color: const Color(0xFF351B61),
@@ -195,16 +189,6 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 50,
-            left: 10,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 36), // Increased size
-              onPressed: () {
-                Navigator.pop(context);
-              },
             ),
           ),
         ],

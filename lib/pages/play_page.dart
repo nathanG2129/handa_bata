@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/pages/user_profile.dart';
-import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
 import 'package:handabatamae/widgets/arcade_button.dart';
 import 'adventure_page.dart'; // Import AdventurePage
@@ -25,27 +24,6 @@ class _PlayPageState extends State<PlayPage> {
     setState(() {
       _isUserProfileVisible = !_isUserProfileVisible;
     });
-  }
-
-  Future<void> _logout() async {
-    try {
-      AuthService authService = AuthService();
-      await authService.logout();
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const SplashPage()),
-          (Route<dynamic> route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
   }
 
   @override
@@ -110,8 +88,13 @@ class _PlayPageState extends State<PlayPage> {
                 maxHeight: 100, // Adjust the height as needed
               ),
               child: IconButton(
-                icon: const Icon(Icons.logout, size: 33, color: Colors.white), // Adjust the icon size and color as needed
-                onPressed: _logout,
+                icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SplashPage()),
+                  );
+                },
               ),
             ),
           ),

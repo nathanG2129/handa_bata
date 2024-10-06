@@ -6,10 +6,10 @@ class AddBadgeDialog extends StatefulWidget {
   const AddBadgeDialog({super.key});
 
   @override
-  _AddBadgeDialogState createState() => _AddBadgeDialogState();
+  AddBadgeDialogState createState() => AddBadgeDialogState();
 }
 
-class _AddBadgeDialogState extends State<AddBadgeDialog> {
+class AddBadgeDialogState extends State<AddBadgeDialog> {
   final TextEditingController _imageUrlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -27,6 +27,9 @@ class _AddBadgeDialogState extends State<AddBadgeDialog> {
         'description': description,
       };
       await _badgeService.addBadge(badge);
+
+      if (!mounted) return;
+
       Navigator.pop(context);
     }
   }

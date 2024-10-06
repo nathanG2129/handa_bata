@@ -6,10 +6,10 @@ class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
 
   @override
-  _AdminLoginPageState createState() => _AdminLoginPageState();
+  AdminLoginPageState createState() => AdminLoginPageState();
 }
 
-class _AdminLoginPageState extends State<AdminLoginPage> {
+class AdminLoginPageState extends State<AdminLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -26,28 +26,34 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         // Sign in with username and password using Firebase Auth
         final user = await _authService.signInWithUsernameAndPassword(username, password);
 
+        if (!mounted) return;
+
         if (user != null) {
           // Check if the user has admin privileges
           final role = await _authService.getUserRole(user.uid);
           if (role == 'admin') {
+            if (!mounted) return;
             // Navigate to AdminHomePage after successful login
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const AdminHomePage()),
             );
           } else {
+            if (!mounted) return;
             // Show error message if the user is not an admin
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('You do not have admin privileges.')),
             );
           }
         } else {
+          if (!mounted) return;
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Login failed. Please try again.')),
           );
         }
       } catch (e) {
+        if (!mounted) return;
         // Show error message if username is not found
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),

@@ -6,15 +6,20 @@ class AddAvatarDialog extends StatefulWidget {
   const AddAvatarDialog({super.key});
 
   @override
-  _AddAvatarDialogState createState() => _AddAvatarDialogState();
+  AddAvatarDialogState createState() => AddAvatarDialogState();
 }
 
-class _AddAvatarDialogState extends State<AddAvatarDialog> {
+class AddAvatarDialogState extends State<AddAvatarDialog> {
   final TextEditingController _imageUrlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final AvatarService _avatarService = AvatarService();
+  bool _isLoading = false;
 
-  void _addAvatar() async {
+  Future<void> _addAvatar() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final String imageUrl = _imageUrlController.text;
     final String title = _titleController.text;
 
@@ -23,8 +28,38 @@ class _AddAvatarDialogState extends State<AddAvatarDialog> {
         'img': imageUrl,
         'title': title,
       };
-      await _avatarService.addAvatar(avatar);
-      Navigator.pop(context);
+
+      try {
+        await _avatarService.addAvatar(avatar);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Avatar added successfully')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all fields')),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -56,10 +91,12 @@ class _AddAvatarDialogState extends State<AddAvatarDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text('Cancel', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
         ),
-        TextButton(
-          onPressed: _addAvatar,
-          child: Text('Add', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
-        ),
+        _isLoading
+            ? const CircularProgressIndicator()
+            : TextButton(
+                onPressed: _addAvatar,
+                child: Text('Add', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+              ),
       ],
     );
   }

@@ -26,7 +26,6 @@ class _AdminAvatarPageState extends State<AdminAvatarPage> {
 
   void _fetchAvatars() async {
     List<Map<String, dynamic>> avatars = await _avatarService.fetchAvatars();
-    print('Fetched avatars: $avatars');
     setState(() {
       _avatars = avatars;
     });

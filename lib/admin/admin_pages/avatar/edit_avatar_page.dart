@@ -8,10 +8,10 @@ class EditAvatarDialog extends StatefulWidget {
   const EditAvatarDialog({super.key, required this.avatar});
 
   @override
-  _EditAvatarDialogState createState() => _EditAvatarDialogState();
+  EditAvatarDialogState createState() => EditAvatarDialogState();
 }
 
-class _EditAvatarDialogState extends State<EditAvatarDialog> {
+class EditAvatarDialogState extends State<EditAvatarDialog> {
   late TextEditingController _imageUrlController;
   late TextEditingController _titleController;
   final AvatarService _avatarService = AvatarService();
@@ -35,6 +35,9 @@ class _EditAvatarDialogState extends State<EditAvatarDialog> {
         'title': title,
       };
       await _avatarService.updateAvatar(id, updatedAvatar);
+
+      if (!mounted) return;
+
       Navigator.pop(context);
     }
   }

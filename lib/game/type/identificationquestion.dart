@@ -269,27 +269,30 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                     String optionValue = option.split('_')[0];
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _handleOptionSelection(index, option);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                          backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
-                          padding: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black, width: 2),
+                      child: IgnorePointer(
+                        ignoring: isCheckingAnswer,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _handleOptionSelection(index, option);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                            backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                            padding: const EdgeInsets.all(16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Colors.black, width: 2),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          optionValue,
-                          style: GoogleFonts.rubik(fontSize: 24),
+                          child: Text(
+                            optionValue,
+                            style: GoogleFonts.rubik(fontSize: 24),
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
-                ),
+                )
             ],
           ),
       ],

@@ -107,17 +107,17 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
-
+  
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-
+  
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-
+  
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -126,31 +126,34 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-
+  
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-
-    widget.onAnswerSubmitted({
-      'answer': userAnswer,
-      'correctCount': correctCount,
-      'wrongCount': wrongCount,
-      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+  
+    // Delay the HP update by 1 second
+    Future.delayed(const Duration(seconds: 1), () {
+      widget.onAnswerSubmitted({
+        'answer': userAnswer,
+        'correctCount': correctCount,
+        'wrongCount': wrongCount,
+        'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+      });
     });
-
+  
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-
+  
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-
+  
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');
@@ -165,17 +168,17 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
-
+  
     List<String> correctOptions = widget.questionData['answer']
         .map<String>((index) => widget.questionData['options'][index as int] as String)
         .toList();
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-
+  
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-
+  
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -184,31 +187,34 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-
+  
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-
-    widget.onAnswerSubmitted({
-      'answer': userAnswer,
-      'correctCount': correctCount,
-      'wrongCount': wrongCount,
-      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+  
+    // Delay the HP update by 1 second
+    Future.delayed(const Duration(seconds: 1), () {
+      widget.onAnswerSubmitted({
+        'answer': userAnswer,
+        'correctCount': correctCount,
+        'wrongCount': wrongCount,
+        'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+      });
     });
-
+  
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-
+  
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-
+  
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');

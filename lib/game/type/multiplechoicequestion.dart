@@ -184,30 +184,47 @@ void forceCheckAnswer() {
                   }
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: widget.selectedOptionIndex == null
-                          ? () {
-                              _handleOptionSelected(index);
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: textColor,
-                        backgroundColor: buttonColor,
-                        padding: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Colors.black, width: 2),
+                    child: Stack(
+                      children: [
+                        ElevatedButton(
+                          onPressed: widget.selectedOptionIndex == null
+                              ? () {
+                                  _handleOptionSelected(index);
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: textColor,
+                            backgroundColor: buttonColor,
+                            padding: const EdgeInsets.all(16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Colors.black, width: 2),
+                            ),
+                            disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 56.0), // Add padding to the left to make space for the letter container
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                options[index],
+                                style: GoogleFonts.rubik(fontSize: 18, color: Colors.black), // Smaller font size for options
+                              ),
+                            ),
+                          ),
                         ),
-                        disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(5),
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 50,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF241242),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                bottomLeft: Radius.circular(10),
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -216,15 +233,8 @@ void forceCheckAnswer() {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              options[index],
-                              style: GoogleFonts.rubik(fontSize: 18, color: Colors.black), // Smaller font size for options
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 },

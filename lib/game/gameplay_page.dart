@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/results_page.dart';
 import 'package:handabatamae/game/type/multiplechoicequestion.dart';
@@ -40,6 +41,8 @@ class _GameplayPageState extends State<GameplayPage> {
   int _wrongAnswersCount = 0; // Define the wrong answers count
   int _currentStreak = 0;
   int _highestStreak = 0;
+  double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
+
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
   final GlobalKey<MultipleChoiceQuestionState> _multipleChoiceQuestionKey = GlobalKey<MultipleChoiceQuestionState>();
@@ -180,6 +183,11 @@ class _GameplayPageState extends State<GameplayPage> {
       }
     });
   
+    // Add a delay of 1 second before updating health
+    Future.delayed(const Duration(seconds: 1), () {
+      _updateHealth(isCorrect, 'Multiple Choice');
+    });
+  
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Current Streak: $_currentStreak');
@@ -204,6 +212,9 @@ class _GameplayPageState extends State<GameplayPage> {
         _currentStreak = 0; // Reset the current streak
       }
     });
+  
+    // Update health
+    _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
@@ -230,6 +241,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       _currentStreak = 0; // Reset the current streak
     }
   });
+
+  // Update health
+  _updateHealth(isCorrect, 'Identification');
 
   print('Correct Answers Count: $_correctAnswersCount');
   print('Wrong Answers Count: $_wrongAnswersCount');
@@ -259,6 +273,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       }
     });
   
+    // Update health
+    _updateHealth(_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true, 'Matching Type', blankPairs: _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0);
+  
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Current Streak: $_currentStreak');
@@ -271,6 +288,52 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     });
   }
 
+  void _updateHealth(bool isCorrect, String questionType, {int blankPairs = 0, String difficulty = 'normal'}) {
+    setState(() {
+      if (isCorrect) {
+        if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
+          _hp += 5;
+        } else {
+          _hp += 20;
+        }
+      } else {
+        if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
+          _hp -= (difficulty == 'hard' ? 20 : 10) * blankPairs;
+        } else {
+          _hp -= (difficulty == 'hard' ? 50 : 25);
+        }
+      }
+  
+      // Clamp the health value between 0 and 100
+      _hp = _hp.clamp(0.0, 100.0);
+  
+      // Handle health reaching 0
+      if (_hp <= 0) {
+        _hp = 0;
+        // Handle game over logic here
+        _handleGameOver();
+      }
+    });
+  }
+
+  void _handleGameOver() {
+    // Calculate accuracy
+    int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+    double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
+  
+    // Navigate to ResultsPage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultsPage(
+          score: _correctAnswersCount, // Use the correct answers count as the score
+          accuracy: accuracy,
+          streak: _calculateStreak(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -280,7 +343,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         ),
       );
     }
-
+  
     if (_hasError) {
       return Scaffold(
         body: Center(
@@ -292,7 +355,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         ),
       );
     }
-
+  
     if (_questions.isEmpty) {
       return Scaffold(
         body: Center(
@@ -304,10 +367,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         ),
       );
     }
-
+  
     Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
     String? questionType = currentQuestion['type'];
-
+  
     Widget questionWidget;
     switch (questionType) {
       case 'Multiple Choice':
@@ -356,7 +419,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           ),
         );
     }
-
+  
     return Scaffold(
       body: Container(
         color: const Color(0xFF5E31AD), // Set the background color to #5e31ad
@@ -390,6 +453,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                   child: questionWidget,
                 ),
               ),
+              HPBar(hp: _hp), // Add the HP bar at the bottom
             ],
           ),
         ),
@@ -412,6 +476,45 @@ class ProgressBar extends StatelessWidget {
         backgroundColor: Colors.grey,
         valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
       ),
+    );
+  }
+}
+
+class HPBar extends StatelessWidget {
+  final double hp;
+
+  const HPBar({super.key, required this.hp});
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = (hp * 3).toInt(); // Calculate the fill based on the HP value (0 to 300)
+
+    final svgString = '''
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 306 30" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M6 6H300V24H6V6Z" fill="black" /> 
+      <path
+        d="M6 6H${fill}V24H6V6Z" 
+        fill="${fill > 75 ? "#32C067" : "#C62323"}"
+      />
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M6 0H300V6H276V24H300V30H6V24H30V6H6V0ZM270 24V6H246V24H270ZM240 24V6H216V24H240ZM210 24V6H186V24H210ZM180 24V6H156V24H180ZM150 6V24H126V6H150ZM120 6V24H96V6H120ZM90 6V24H66V6H90ZM60 6V24H36V6H60Z"
+        fill="#16171A"
+      />
+      <path d="M6 6V24H0V6H6Z" fill="#16171A" />
+      <path d="M300 24V6H306V24H300Z" fill="#16171A" />
+    </svg>
+    ''';
+
+    return SizedBox(
+      height: 120, // Adjust height as needed
+      child: SvgPicture.string(svgString),
     );
   }
 }

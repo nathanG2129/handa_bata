@@ -159,7 +159,15 @@ class SplashPage extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: bottomPadding),
+                  const SizedBox(height: bottomPadding), // Adjust this value to control the space between buttons and the bottom text
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      '© 2023 Handa Bata. All rights reserved.',
+                      style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
+                    ),
+                  ),
+
                 ],
               ),
             ),

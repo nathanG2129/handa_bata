@@ -26,10 +26,11 @@ class ResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int stars = _calculateStars(accuracy, score);
+    int totalQuestions = stageData['totalQuestions'] ?? 0; // Provide a default value of 0 if null
+    int stars = _calculateStars(accuracy, score, totalQuestions);
     print('Stars: $stars');
     print('ResultsPage received category: $category');
-
+  
     return Scaffold(
       body: Container(
         color: const Color(0xFF5E31AD), // Same background color as GameplayPage
@@ -56,10 +57,10 @@ class ResultsPage extends StatelessWidget {
     );
   }
 
-  int _calculateStars(double accuracy, int score) {
-    if (accuracy >= 0.75 && score >= 3) {
+  int _calculateStars(double accuracy, int score, int totalQuestions) {
+    if (accuracy > 0.9 && score == totalQuestions) {
       return 3;
-    } else if (accuracy >= 0.5 && score >= 2) {
+    } else if (score > totalQuestions / 2) {
       return 2;
     } else {
       return 1;

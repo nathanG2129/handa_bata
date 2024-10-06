@@ -341,9 +341,12 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           accuracy: accuracy,
           streak: _calculateStreak(),
           language: widget.language, // Pass the language
-          category: {'category': widget.category}, // Pass the category as a map
+          category: widget.category, // Pass the category
           stageName: widget.stageName, // Pass the stage name
-          stageData: widget.stageData, // Pass the stage data
+          stageData: {
+            ...widget.stageData,
+            'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+          },
         ),
       ),
     );
@@ -435,41 +438,47 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         );
     }
   
-    return Scaffold(
-      body: Container(
-        color: const Color(0xFF5E31AD), // Set the background color to #5e31ad
-        child: SafeArea(
-          child: Column(
-            children: [
-              ProgressBar(progress: _progress),
-              const SizedBox(height: 48),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${_currentQuestionIndex + 1} of $_totalQuestions',
-                      style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.volume_up, color: Colors.white),
-                      onPressed: () {
-                        // Handle mute/unmute
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Padding(
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation
+        return false;
+      },
+      child: Scaffold(
+        body: Container(
+          color: const Color(0xFF5E31AD), // Set the background color to #5e31ad
+          child: SafeArea(
+            child: Column(
+              children: [
+                ProgressBar(progress: _progress),
+                const SizedBox(height: 48),
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                  child: questionWidget,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${_currentQuestionIndex + 1} of $_totalQuestions',
+                        style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.volume_up, color: Colors.white),
+                        onPressed: () {
+                          // Handle mute/unmute
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              HPBar(hp: _hp), // Add the HP bar at the bottom
-            ],
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                    child: questionWidget,
+                  ),
+                ),
+                HPBar(hp: _hp), // Add the HP bar at the bottom
+              ],
+            ),
           ),
         ),
       ),

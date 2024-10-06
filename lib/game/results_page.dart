@@ -8,17 +8,27 @@ class ResultsPage extends StatelessWidget {
   final int score;
   final double accuracy;
   final int streak;
+  final String language;
+  final Map<String, dynamic> category; // Change the type to dynamic
+  final String stageName;
+  final Map<String, dynamic> stageData;
 
   const ResultsPage({
     super.key,
     required this.score,
     required this.accuracy,
     required this.streak,
+    required this.language,
+    required this.category,
+    required this.stageName,
+    required this.stageData,
   });
 
   @override
   Widget build(BuildContext context) {
     int stars = _calculateStars(accuracy, score);
+    print('Stars: $stars');
+    print('ResultsPage received category: $category');
 
     return Scaffold(
       body: Container(
@@ -129,9 +139,12 @@ class ResultsPage extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const StagesPage(
-                  questName: 'Quest Name', // Replace with actual quest name
-                  category: {'id': 'category_id', 'name': 'Category Name'}, // Replace with actual category data
+                builder: (context) => StagesPage(
+                  questName: category['name'], // Use the category name for questName
+                  category: {
+                    'id': category['id'], // Ensure the category id is passed
+                    'name': category['name'],
+                  },
                 ),
               ),
             );
@@ -151,11 +164,14 @@ class ResultsPage extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const GameplayPage(
-                  language: 'en', // Replace with actual language
-                  category: 'Category Name', // Replace with actual category
-                  stageName: 'Stage Name', // Replace with actual stage name
-                  stageData: {}, // Replace with actual stage data
+                builder: (context) => GameplayPage(
+                  language: language,
+                  category: {
+                    'id': category['id'], // Ensure the category id is passed correctly
+                    'name': category['name'], // Ensure the category name is passed correctly
+                  },
+                  stageName: stageName,
+                  stageData: stageData,
                 ),
               ),
             );

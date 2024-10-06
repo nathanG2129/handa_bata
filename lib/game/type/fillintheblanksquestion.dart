@@ -131,14 +131,12 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
   
-    // Delay the HP update by 1 second
-    Future.delayed(const Duration(seconds: 1), () {
-      widget.onAnswerSubmitted({
-        'answer': userAnswer,
-        'correctCount': correctCount,
-        'wrongCount': wrongCount,
-        'isFullyCorrect': isFullyCorrect, // Add this to the answer data
-      });
+    // Stop the timer immediately
+    widget.onAnswerSubmitted({
+      'answer': userAnswer,
+      'correctCount': correctCount,
+      'wrongCount': wrongCount,
+      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
   
     // Show user answers after a delay
@@ -165,6 +163,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
   // Add a method to force check the answer
   void forceCheckAnswer() {
+    if (isChecking) return; // Prevent multiple calls to forceCheckAnswer
+
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
@@ -192,14 +192,12 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
   
-    // Delay the HP update by 1 second
-    Future.delayed(const Duration(seconds: 1), () {
-      widget.onAnswerSubmitted({
-        'answer': userAnswer,
-        'correctCount': correctCount,
-        'wrongCount': wrongCount,
-        'isFullyCorrect': isFullyCorrect, // Add this to the answer data
-      });
+    // Stop the timer immediately
+    widget.onAnswerSubmitted({
+      'answer': userAnswer,
+      'correctCount': correctCount,
+      'wrongCount': wrongCount,
+      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
   
     // Show user answers after a delay

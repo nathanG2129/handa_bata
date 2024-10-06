@@ -11,7 +11,7 @@ import 'package:handabatamae/game/type/identificationquestion.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
-  final String category;
+  final Map<String, dynamic> category; // Accept the entire category map
   final String stageName;
   final Map<String, dynamic> stageData;
 
@@ -53,6 +53,7 @@ class _GameplayPageState extends State<GameplayPage> {
   void initState() {
     super.initState();
     _initializeQuestions();
+    print('GameplayPage received category: ${widget.category}');
   }
 
   void _initializeQuestions() {
@@ -143,8 +144,13 @@ class _GameplayPageState extends State<GameplayPage> {
       // Calculate accuracy
       int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
       double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
-  
-      // Navigate to ResultsPage
+
+      print('language: ${widget.language}');
+      print('category: ${widget.category}');
+      print('stageName: ${widget.stageName}');
+      print('stageData: ${widget.stageData}');
+      
+      // Example navigation from GameplayPage to ResultsPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -152,6 +158,10 @@ class _GameplayPageState extends State<GameplayPage> {
             score: _correctAnswersCount, // Use the correct answers count as the score
             accuracy: accuracy,
             streak: _calculateStreak(),
+            language: widget.language, // Pass the language
+            category: widget.category, // Pass the category directly
+            stageName: widget.stageName,
+            stageData: widget.stageData,
           ),
         ),
       );
@@ -213,13 +223,14 @@ class _GameplayPageState extends State<GameplayPage> {
       }
     });
   
-    // Update health
-    _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
+    // Delay the HP update by 1 second
+    Future.delayed(const Duration(seconds: 1), () {
+      _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
+    });
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
     print('Current Streak: $_currentStreak');
-    print('Highest Streak: $_highestStreak');
   
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
@@ -329,6 +340,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           score: _correctAnswersCount, // Use the correct answers count as the score
           accuracy: accuracy,
           streak: _calculateStreak(),
+          language: widget.language, // Pass the language
+          category: {'category': widget.category}, // Pass the category as a map
+          stageName: widget.stageName, // Pass the stage name
+          stageData: widget.stageData, // Pass the stage data
         ),
       ),
     );

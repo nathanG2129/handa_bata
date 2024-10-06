@@ -23,6 +23,7 @@ class _StagesPageState extends State<StagesPage> {
   @override
   void initState() {
     super.initState();
+    print('StagesPage received category: ${widget.category}');
     _fetchStages();
   }
 
@@ -185,7 +186,10 @@ class _StagesPageState extends State<StagesPage> {
                               showStageDialog(
                                 context,
                                 stageNumber,
-                                widget.questName,
+                                {
+                                  'id': widget.category['id']!, // Ensure the category id is passed correctly
+                                  'name': widget.category['name']!, // Ensure the category name is passed correctly
+                                },
                                 await _fetchNumberOfQuestions(stageIndex),
                                 stageData,
                               );

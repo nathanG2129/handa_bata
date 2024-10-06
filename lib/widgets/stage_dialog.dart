@@ -5,24 +5,24 @@ import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPag
 void showStageDialog(
   BuildContext context,
   int stageNumber,
-  String questName,
+  Map<String, String> category, // Accept the entire category map
   int numberOfQuestions,
   Map<String, dynamic> stageData,
 ) {
-  // Convert questName to plural form
-  String pluralQuestName = questName.endsWith('s') ? questName : '${questName}s';
+  // Convert category name to plural form
+  String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
 
   showDialog(
     context: context,
-    barrierDismissible: true, // Make the dialog disappear when a user touches outside
+    barrierDismissible: true,
     builder: (BuildContext context) {
       return Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Colors.black, width: 2), // Black border
+          side: const BorderSide(color: Colors.black, width: 2),
         ),
         child: Container(
-          width: 350, // Make the dialog rectangular
+          width: 350,
           height: 400,
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -32,7 +32,7 @@ void showStageDialog(
                 child: Text(
                   'Stage $stageNumber',
                   style: GoogleFonts.vt323(
-                    fontSize: 48, // Larger font size
+                    fontSize: 48,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -41,53 +41,56 @@ void showStageDialog(
               Text(
                 'About $pluralQuestName',
                 style: GoogleFonts.vt323(
-                  fontSize: 36, // Larger font size
+                  fontSize: 36,
                 ),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
-                  // Replace with actual logic to determine if the star should be filled
-                  bool isFilled = index < 2; // Example: 2 out of 3 stars filled
+                  bool isFilled = index < 2;
                   return Icon(
                     isFilled ? Icons.star : Icons.star_border,
                     color: Colors.yellow,
-                    size: 36, // Larger icon size
+                    size: 36,
                   );
                 }),
               ),
               const SizedBox(height: 20),
               Text(
-                'Personal Best: 0 / $numberOfQuestions', // Replace with actual personal best data
+                'Personal Best: 0 / $numberOfQuestions',
                 style: GoogleFonts.vt323(
-                  fontSize: 24, // Larger font size
+                  fontSize: 24,
                 ),
               ),
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
+                print('Navigating to GameplayPage with category: $category');
+                  Navigator.of(context).pop();
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => GameplayPage(
-                        language: 'en', // Replace with actual language
-                        category: questName, // Replace with actual category
-                        stageName: 'Stage $stageNumber', // Replace with actual stage name
-                        stageData: stageData, // Pass the stage data
+                        language: 'en',
+                        category: {
+                          'id': category['id'], // Ensure the category id is passed correctly
+                          'name': category['name'], // Ensure the category name is passed correctly
+                        },
+                        stageName: 'Stage $stageNumber',
+                        stageData: stageData,
                       ),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, // Text color
-                  backgroundColor: Colors.blue, // Background color
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Larger button size
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
                 child: Text(
                   'Play Now',
                   style: GoogleFonts.vt323(
-                    fontSize: 24, // Larger font size
+                    fontSize: 24,
                   ),
                 ),
               ),

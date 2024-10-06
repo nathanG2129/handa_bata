@@ -8,10 +8,10 @@ class HoverableText extends StatefulWidget {
   const HoverableText({required this.text, required this.onTap, super.key});
 
   @override
-  _HoverableTextState createState() => _HoverableTextState();
+  HoverableTextState createState() => HoverableTextState();
 }
 
-class _HoverableTextState extends State<HoverableText> {
+class HoverableTextState extends State<HoverableText> {
   bool _isHovering = false;
 
   @override

@@ -10,10 +10,11 @@ class AdventurePage extends StatefulWidget {
   const AdventurePage({super.key});
 
   @override
-  _AdventurePageState createState() => _AdventurePageState();
+  AdventurePageState createState() => AdventurePageState();
 }
 
-class _AdventurePageState extends State<AdventurePage> {
+
+class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;

@@ -7,20 +7,24 @@ class EditCategoryDialog extends StatefulWidget {
   final String categoryId;
   final String initialName;
   final String initialDescription;
+  final String initialColor;
+  final int initialPosition;
 
   const EditCategoryDialog({
     super.key,
     required this.language,
     required this.categoryId,
     required this.initialName,
-    required this.initialDescription, required initialColor, required initialPosition,
+    required this.initialDescription,
+    required this.initialColor,
+    required this.initialPosition,
   });
 
   @override
-  _EditCategoryDialogState createState() => _EditCategoryDialogState();
+  EditCategoryDialogState createState() => EditCategoryDialogState();
 }
 
-class _EditCategoryDialogState extends State<EditCategoryDialog> {
+class EditCategoryDialogState extends State<EditCategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   final StageService _stageService = StageService();
   late String _name;
@@ -36,11 +40,13 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
   void _saveCategory() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      print('Saving category: $_name, $_description');
       await _stageService.updateCategory(widget.language, widget.categoryId, {
         'name': _name,
         'description': _description,
       });
+
+      if (!mounted) return;
+
       Navigator.pop(context);
     }
   }

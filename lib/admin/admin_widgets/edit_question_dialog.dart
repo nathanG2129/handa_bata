@@ -12,10 +12,10 @@ class EditQuestionDialog extends StatefulWidget {
   const EditQuestionDialog({super.key, required this.question, required this.onSave});
 
   @override
-  _EditQuestionDialogState createState() => _EditQuestionDialogState();
+  EditQuestionDialogState createState() => EditQuestionDialogState();
 }
 
-class _EditQuestionDialogState extends State<EditQuestionDialog> {
+class EditQuestionDialogState extends State<EditQuestionDialog> {
   late Map<String, dynamic> _question;
   late List<TextEditingController> _optionControllers;
   late List<TextEditingController> _optionControllersSection1;

@@ -30,10 +30,10 @@ class MatchingTypeSection extends StatefulWidget {
   });
 
   @override
-  _MatchingTypeSectionState createState() => _MatchingTypeSectionState();
+  MatchingTypeSectionState createState() => MatchingTypeSectionState();
 }
 
-class _MatchingTypeSectionState extends State<MatchingTypeSection> {
+class MatchingTypeSectionState extends State<MatchingTypeSection> {
   String? selectedSection1Option;
   String? selectedSection2Option;
 

@@ -24,10 +24,10 @@ class GameplayPage extends StatefulWidget {
   });
 
   @override
-  _GameplayPageState createState() => _GameplayPageState();
+  GameplayPageState createState() => GameplayPageState();
 }
 
-class _GameplayPageState extends State<GameplayPage> {
+class GameplayPageState extends State<GameplayPage> {
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;

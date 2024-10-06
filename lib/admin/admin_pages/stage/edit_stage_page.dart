@@ -15,10 +15,10 @@ class EditStagePage extends StatefulWidget {
   const EditStagePage({super.key, required this.language, required this.category, required this.stageName, required this.questions});
 
   @override
-  _EditStagePageState createState() => _EditStagePageState();
+  EditStagePageState createState() => EditStagePageState();
 }
 
-class _EditStagePageState extends State<EditStagePage> {
+class EditStagePageState extends State<EditStagePage> {
   final _formKey = GlobalKey<FormState>();
   final StageService _stageService = StageService();
   late TextEditingController _stageNameController;

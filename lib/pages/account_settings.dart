@@ -11,10 +11,10 @@ class AccountSettings extends StatefulWidget {
   const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged});
 
   @override
-  _AccountSettingsState createState() => _AccountSettingsState();
+  AccountSettingsState createState() => AccountSettingsState();
 }
 
-class _AccountSettingsState extends State<AccountSettings> {
+class AccountSettingsState extends State<AccountSettings> {
   bool _isLoading = true;
   bool _showEmail = false;
   UserProfile? _userProfile;
@@ -35,6 +35,7 @@ class _AccountSettingsState extends State<AccountSettings> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching user profile: $e')),
@@ -52,6 +53,7 @@ class _AccountSettingsState extends State<AccountSettings> {
       await _fetchUserProfile(); // Refresh the user profile
       widget.onNicknameChanged(); // Call the callback
     } catch (e) {
+      if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating nickname: $e')),
@@ -100,9 +102,11 @@ class _AccountSettingsState extends State<AccountSettings> {
     AuthService authService = AuthService();
     try {
       await authService.deleteUserAccount();
+      if (!mounted) return;
       // Navigate back or show a success message
       Navigator.of(context).pop();
     } catch (e) {
+      if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error deleting account: $e')),

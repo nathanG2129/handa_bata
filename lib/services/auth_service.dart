@@ -4,10 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import '../services/stage_service.dart'; // Add this import
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final StageService _stageService = StageService(); // Initialize StageService
 
   Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
     try {
@@ -36,11 +38,12 @@ class AuthService {
 
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
 
+        // Fetch categories and create gameSaveData documents
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
-
-        await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
-        await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
-        await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
+        for (Map<String, dynamic> category in categories) {
+          await gameSaveDataRef.doc(category['id']).set(<String, dynamic>{});
+        }
 
         await _firestore.collection('User').doc(user.uid).set({
           'email': email,
@@ -79,11 +82,12 @@ class AuthService {
 
       await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(guestProfile.toMap());
 
+      // Fetch categories and create gameSaveData documents
+      List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
       CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
-
-      await gameSaveDataRef.doc('AdventureQuake').set(<String, dynamic>{});
-      await gameSaveDataRef.doc('AdventureStorm').set(<String, dynamic>{});
-      await gameSaveDataRef.doc('ArcadeQuake').set(<String, dynamic>{});
+      for (Map<String, dynamic> category in categories) {
+        await gameSaveDataRef.doc(category['id']).set(<String, dynamic>{});
+      }
 
       await _firestore.collection('User').doc(user.uid).set({
         'email': 'guest@example.com',

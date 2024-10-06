@@ -93,7 +93,7 @@ class UserProfile {
     totalStageCleared: 0,
     unlockedBadge: [],
     unlockedBanner: [],
-    email: 'guest@example.com',
+    email: '',
     birthday: '2000-01-01',
   );
 }

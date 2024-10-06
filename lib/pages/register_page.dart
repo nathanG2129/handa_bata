@@ -16,10 +16,10 @@ class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
 
   @override
-  _RegistrationPageState createState() => _RegistrationPageState();
+  RegistrationPageState createState() => RegistrationPageState();
 }
 
-class _RegistrationPageState extends State<RegistrationPage> {
+class RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -59,9 +59,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         if (user != null && !user.emailVerified) {
           await user.sendEmailVerification();
+          if (!mounted) return;
           showEmailVerificationDialog(context);
         }
       } on FirebaseAuthException catch (e) {
+        if (!mounted) return;
         // Handle error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),

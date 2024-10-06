@@ -12,10 +12,10 @@ class StagesPage extends StatefulWidget {
   const StagesPage({super.key, required this.questName, required this.category});
 
   @override
-  _StagesPageState createState() => _StagesPageState();
+  StagesPageState createState() => StagesPageState();
 }
 
-class _StagesPageState extends State<StagesPage> {
+class StagesPageState extends State<StagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
   bool _isLoading = true;
@@ -29,6 +29,7 @@ class _StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', widget.category['id']!);
+    if (!mounted) return;
     setState(() {
       _stages = stages;
       _isLoading = false;
@@ -183,6 +184,8 @@ class _StagesPageState extends State<StagesPage> {
                           return GestureDetector(
                             onTap: () async {
                               Map<String, dynamic> stageData = _stages[stageIndex];
+                              int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
+                              if (!mounted) return;
                               showStageDialog(
                                 context,
                                 stageNumber,
@@ -190,7 +193,7 @@ class _StagesPageState extends State<StagesPage> {
                                   'id': widget.category['id']!, // Ensure the category id is passed correctly
                                   'name': widget.category['name']!, // Ensure the category name is passed correctly
                                 },
-                                await _fetchNumberOfQuestions(stageIndex),
+                                numberOfQuestions,
                                 stageData,
                               );
                             },

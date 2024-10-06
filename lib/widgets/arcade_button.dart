@@ -8,10 +8,10 @@ class ArcadeButton extends StatefulWidget {
   const ArcadeButton({super.key, required this.onPressed});
 
   @override
-  _ArcadeButtonState createState() => _ArcadeButtonState();
+  ArcadeButtonState createState() => ArcadeButtonState();
 }
 
-class _ArcadeButtonState extends State<ArcadeButton> {
+class ArcadeButtonState extends State<ArcadeButton> {
   double _scale = 1.0;
 
   @override

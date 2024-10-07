@@ -73,7 +73,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               onTap: () {},
               child: Card(
                 margin: const EdgeInsets.all(20),
-                shape: const RoundedRectangleBorder(
+                                shape: const RoundedRectangleBorder(
                   side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
                   borderRadius: BorderRadius.zero, // Purely rectangular
                 ),
@@ -89,8 +89,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ? const Center(child: CircularProgressIndicator())
                               : _userProfile != null
                                   ? UserProfileHeader(
-                                      username: _userProfile!.username, // Pass username
                                       nickname: _userProfile!.nickname, // Pass nickname
+                                      username: _userProfile!.username, // Pass username
                                       avatarId: _userProfile!.avatarId,
                                       level: _userProfile!.level,
                                       currentExp: _userProfile!.exp, 

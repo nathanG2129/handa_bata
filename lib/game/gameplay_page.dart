@@ -43,6 +43,7 @@ class GameplayPageState extends State<GameplayPage> {
   int _wrongAnswersCount = 0; // Define the wrong answers count
   int _currentStreak = 0;
   int _highestStreak = 0;
+  int _fullyCorrectAnswersCount = 0; // Define the fully correct answers count
   double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
 
   final TextEditingController _controller = TextEditingController();
@@ -191,6 +192,7 @@ class GameplayPageState extends State<GameplayPage> {
         _currentStreak = 0; // Reset the current streak
       } else if (_isCorrect == true) {
         _correctAnswersCount++;
+        _fullyCorrectAnswersCount++; // Increment fully correct answers count
         _currentStreak++; // Increment the current streak
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
@@ -208,6 +210,7 @@ class GameplayPageState extends State<GameplayPage> {
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
     print('Current Streak: $_currentStreak');
     print('Highest Streak: $_highestStreak');
   
@@ -222,6 +225,7 @@ class GameplayPageState extends State<GameplayPage> {
       _correctAnswersCount += (answerData['correctCount'] as int);
       _wrongAnswersCount += (answerData['wrongCount'] as int);
       if (answerData['isFullyCorrect'] as bool) {
+        _fullyCorrectAnswersCount++; // Increment fully correct answers count
         _currentStreak++; // Increment the current streak
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
@@ -238,6 +242,7 @@ class GameplayPageState extends State<GameplayPage> {
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
     print('Current Streak: $_currentStreak');
   
     Future.delayed(const Duration(seconds: 6), () {
@@ -251,6 +256,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     _isCorrect = isCorrect;
     if (_isCorrect == true) {
       _correctAnswersCount++;
+      _fullyCorrectAnswersCount++; // Increment fully correct answers count
       _currentStreak++; // Increment the current streak
       if (_currentStreak > _highestStreak) {
         _highestStreak = _currentStreak; // Update the highest streak
@@ -266,6 +272,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   print('Correct Answers Count: $_correctAnswersCount');
   print('Wrong Answers Count: $_wrongAnswersCount');
+  print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
   print('Current Streak: $_currentStreak');
   print('Highest Streak: $_highestStreak');
 
@@ -283,6 +290,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   
       // Check if all pairs are correct and increment the fully correct answers count
       if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
+        _fullyCorrectAnswersCount++; // Increment fully correct answers count
         _currentStreak++; // Increment the current streak
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
@@ -297,6 +305,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   
     print('Correct Answers Count: $_correctAnswersCount');
     print('Wrong Answers Count: $_wrongAnswersCount');
+    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
     print('Current Streak: $_currentStreak');
     print('Highest Streak: $_highestStreak');
   }

@@ -15,7 +15,7 @@ class AuthService {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
-
+  
       if (user != null) {
         UserProfile userProfile = UserProfile(
           profileId: user.uid,
@@ -35,9 +35,9 @@ class AuthService {
           email: email,
           birthday: birthday,
         );
-
+  
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
-
+  
         // Fetch categories and create gameSaveData documents
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
@@ -45,17 +45,29 @@ class AuthService {
           // Fetch stages for the category
           List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
           int stageCount = stages.length;
-        
+  
           // Initialize arrays with default values
           List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
           List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
           List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
           List<int> normalStageStars = List<int>.filled(stageCount, 0);
           List<int> hardStageStars = List<int>.filled(stageCount, 0);
-        
+  
+          // Create stageData map
+          Map<String, Map<String, dynamic>> stageData = {};
+          for (var stage in stages) {
+            String stageName = stage['stageName'];
+            int maxScore = (stage['questions'] as List).length;
+            stageData[stageName] = {
+              'maxScore': maxScore,
+              'scoreHard': 0,
+              'scoreNormal': 0,
+            };
+          }
+  
           // Create gameSaveData document
           await gameSaveDataRef.doc(category['id']).set({
-            'stageData': {},
+            'stageData': stageData,
             'normalStageStars': normalStageStars,
             'hardStageStars': hardStageStars,
             'unlockedNormalStages': unlockedNormalStages,
@@ -63,13 +75,13 @@ class AuthService {
             'hasSeenPrerequisite': hasSeenPrerequisite,
           });
         }
-
+  
         await _firestore.collection('User').doc(user.uid).set({
           'email': email,
           'role': role,
         });
       }
-
+  
       return user;
     } catch (e) {
       print(e.toString());
@@ -98,9 +110,9 @@ class AuthService {
         email: 'guest@example.com',
         birthday: '2000-01-01',
       );
-
+  
       await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(guestProfile.toMap());
-
+  
       // Fetch categories and create gameSaveData documents
       List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
       CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
@@ -108,17 +120,29 @@ class AuthService {
         // Fetch stages for the category
         List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
         int stageCount = stages.length;
-      
+  
         // Initialize arrays with default values
         List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
         List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
         List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
         List<int> normalStageStars = List<int>.filled(stageCount, 0);
         List<int> hardStageStars = List<int>.filled(stageCount, 0);
-      
+  
+        // Create stageData map
+        Map<String, Map<String, dynamic>> stageData = {};
+        for (var stage in stages) {
+          String stageName = stage['stageName'];
+          int maxScore = (stage['questions'] as List).length;
+          stageData[stageName] = {
+            'maxScore': maxScore,
+            'scoreHard': 0,
+            'scoreNormal': 0,
+          };
+        }
+  
         // Create gameSaveData document
         await gameSaveDataRef.doc(category['id']).set({
-          'stageData': {},
+          'stageData': stageData,
           'normalStageStars': normalStageStars,
           'hardStageStars': hardStageStars,
           'unlockedNormalStages': unlockedNormalStages,
@@ -126,12 +150,12 @@ class AuthService {
           'hasSeenPrerequisite': hasSeenPrerequisite,
         });
       }
-
+  
       await _firestore.collection('User').doc(user.uid).set({
         'email': 'guest@example.com',
         'role': 'guest',
       });
-
+  
       // Save guest account details locally
       await saveGuestAccountDetails(user.uid);
       await saveGuestProfileLocally(guestProfile); // Save guest profile locally

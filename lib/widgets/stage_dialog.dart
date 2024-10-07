@@ -8,6 +8,7 @@ void showStageDialog(
   Map<String, String> category, // Accept the entire category map
   int numberOfQuestions,
   Map<String, dynamic> stageData,
+  String mode, // Accept the mode
 ) {
   // Convert category name to plural form
   String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
@@ -66,7 +67,7 @@ void showStageDialog(
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
-                print('Navigating to GameplayPage with category: $category');
+                  print('Navigating to GameplayPage with category: $category and mode: $mode');
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -78,6 +79,7 @@ void showStageDialog(
                         },
                         stageName: 'Stage $stageNumber',
                         stageData: stageData,
+                        mode: mode, // Pass the selected mode
                       ),
                     ),
                   );

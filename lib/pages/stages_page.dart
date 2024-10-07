@@ -19,6 +19,7 @@ class StagesPageState extends State<StagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
   bool _isLoading = true;
+  String _selectedMode = 'Normal'; // Add a state variable for the selected mode
 
   @override
   void initState() {
@@ -130,11 +131,13 @@ class StagesPageState extends State<StagesPage> {
                     const SizedBox(width: 20), // Space between quest name and buttons
                     ElevatedButton(
                       onPressed: () {
-                        // Define the action for the Normal button
+                        setState(() {
+                          _selectedMode = 'Normal'; // Set the selected mode to Normal
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white, // Text color
-                        backgroundColor: Colors.blue, // Background color
+                        backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey, // Background color
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                         ),
@@ -144,11 +147,13 @@ class StagesPageState extends State<StagesPage> {
                     const SizedBox(width: 10), // Space between buttons
                     ElevatedButton(
                       onPressed: () {
-                        // Define the action for the Hard button
+                        setState(() {
+                          _selectedMode = 'Hard'; // Set the selected mode to Hard
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white, // Text color
-                        backgroundColor: Colors.red, // Background color
+                        backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey, // Background color
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                         ),
@@ -195,6 +200,7 @@ class StagesPageState extends State<StagesPage> {
                                 },
                                 numberOfQuestions,
                                 stageData,
+                                _selectedMode, // Pass the selected mode
                               );
                             },
                             child: Stack(

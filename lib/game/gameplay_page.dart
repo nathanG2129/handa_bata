@@ -14,6 +14,7 @@ class GameplayPage extends StatefulWidget {
   final Map<String, dynamic> category; // Accept the entire category map
   final String stageName;
   final Map<String, dynamic> stageData;
+  final String mode; // Accept the mode
 
   const GameplayPage({
     super.key,
@@ -21,6 +22,7 @@ class GameplayPage extends StatefulWidget {
     required this.category,
     required this.stageName,
     required this.stageData,
+    required this.mode, // Add the mode parameter
   });
 
   @override
@@ -77,7 +79,8 @@ class GameplayPageState extends State<GameplayPage> {
   void _startTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    int timerDuration = widget.mode == 'Hard' ? 50 : 100; // Adjust timer duration based on mode
+    _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
         if (_progress <= 0) {
@@ -88,11 +91,12 @@ class GameplayPageState extends State<GameplayPage> {
       });
     });
   }
-
+  
   void _startMatchingTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    int timerDuration = widget.mode == 'Hard' ? 50 : 100; // Adjust timer duration based on mode
+    _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
         if (_progress <= 0) {
@@ -159,9 +163,13 @@ class GameplayPageState extends State<GameplayPage> {
             accuracy: accuracy,
             streak: _calculateStreak(),
             language: widget.language, // Pass the language
-            category: widget.category, // Pass the category directly
-            stageName: widget.stageName,
-            stageData: widget.stageData,
+            category: widget.category, // Pass the category
+            stageName: widget.stageName, // Pass the stage name
+            stageData: {
+              ...widget.stageData,
+              'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+            },
+            mode: widget.mode, // Pass the mode
           ),
         ),
       );
@@ -334,22 +342,23 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   
     // Navigate to ResultsPage
     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ResultsPage(
-          score: _correctAnswersCount, // Use the correct answers count as the score
-          accuracy: accuracy,
-          streak: _calculateStreak(),
-          language: widget.language, // Pass the language
-          category: widget.category, // Pass the category
-          stageName: widget.stageName, // Pass the stage name
-          stageData: {
-            ...widget.stageData,
-            'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
-          },
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultsPage(
+            score: _correctAnswersCount, // Use the correct answers count as the score
+            accuracy: accuracy,
+            streak: _calculateStreak(),
+            language: widget.language, // Pass the language
+            category: widget.category, // Pass the category
+            stageName: widget.stageName, // Pass the stage name
+            stageData: {
+              ...widget.stageData,
+              'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+            },
+            mode: widget.mode, // Pass the mode
+          ),
         ),
-      ),
-    );
+      );
   }
 
   @override

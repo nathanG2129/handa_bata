@@ -12,6 +12,7 @@ class ResultsPage extends StatelessWidget {
   final Map<String, dynamic> category; // Change the type to dynamic
   final String stageName;
   final Map<String, dynamic> stageData;
+  final String mode; // Accept the mode
 
   const ResultsPage({
     super.key,
@@ -22,6 +23,7 @@ class ResultsPage extends StatelessWidget {
     required this.category,
     required this.stageName,
     required this.stageData,
+    required this.mode, // Add the mode parameter
   });
 
   @override
@@ -167,12 +169,10 @@ class ResultsPage extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => GameplayPage(
                   language: language,
-                  category: {
-                    'id': category['id'], // Ensure the category id is passed correctly
-                    'name': category['name'], // Ensure the category name is passed correctly
-                  },
+                  category: category,
                   stageName: stageName,
                   stageData: stageData,
+                  mode: mode, // Pass the mode
                 ),
               ),
             );

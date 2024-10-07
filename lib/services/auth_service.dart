@@ -42,7 +42,26 @@ class AuthService {
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
         for (Map<String, dynamic> category in categories) {
-          await gameSaveDataRef.doc(category['id']).set(<String, dynamic>{});
+          // Fetch stages for the category
+          List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
+          int stageCount = stages.length;
+        
+          // Initialize arrays with default values
+          List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
+          List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
+          List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
+          List<int> normalStageStars = List<int>.filled(stageCount, 0);
+          List<int> hardStageStars = List<int>.filled(stageCount, 0);
+        
+          // Create gameSaveData document
+          await gameSaveDataRef.doc(category['id']).set({
+            'stageData': {},
+            'normalStageStars': normalStageStars,
+            'hardStageStars': hardStageStars,
+            'unlockedNormalStages': unlockedNormalStages,
+            'unlockedHardStages': unlockedHardStages,
+            'hasSeenPrerequisite': hasSeenPrerequisite,
+          });
         }
 
         await _firestore.collection('User').doc(user.uid).set({
@@ -86,7 +105,26 @@ class AuthService {
       List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
       CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
       for (Map<String, dynamic> category in categories) {
-        await gameSaveDataRef.doc(category['id']).set(<String, dynamic>{});
+        // Fetch stages for the category
+        List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
+        int stageCount = stages.length;
+      
+        // Initialize arrays with default values
+        List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
+        List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
+        List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
+        List<int> normalStageStars = List<int>.filled(stageCount, 0);
+        List<int> hardStageStars = List<int>.filled(stageCount, 0);
+      
+        // Create gameSaveData document
+        await gameSaveDataRef.doc(category['id']).set({
+          'stageData': {},
+          'normalStageStars': normalStageStars,
+          'hardStageStars': hardStageStars,
+          'unlockedNormalStages': unlockedNormalStages,
+          'unlockedHardStages': unlockedHardStages,
+          'hasSeenPrerequisite': hasSeenPrerequisite,
+        });
       }
 
       await _firestore.collection('User').doc(user.uid).set({

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/stage_service.dart'; // Add this import
@@ -10,6 +11,15 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final StageService _stageService = StageService(); // Initialize StageService
+
+    AuthService() {
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        syncGuestProfile();
+        syncUserProfile();
+      }
+    });
+  }
 
   Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
     try {
@@ -161,6 +171,42 @@ class AuthService {
       await saveGuestProfileLocally(guestProfile); // Save guest profile locally
     }
   }
+
+    Future<void> syncUserProfile() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult != ConnectivityResult.none) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userProfileString = prefs.getString('userProfile');
+      if (userProfileString != null) {
+        Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
+        UserProfile userProfile = UserProfile.fromMap(userProfileMap);
+        try {
+          await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
+          prefs.remove('userProfile'); // Remove local data after successful sync
+        } catch (e) {
+          print('Error syncing user profile: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> syncGuestProfile() async {
+  var connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult != ConnectivityResult.none) {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? guestProfileString = prefs.getString('guestProfile');
+    if (guestProfileString != null) {
+      Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
+      UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
+      try {
+        await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
+        prefs.remove('guestProfile'); // Remove local data after successful sync
+      } catch (e) {
+        print('Error syncing guest profile: $e');
+      }
+    }
+  }
+}
 
   Future<void> saveGuestProfileLocally(UserProfile profile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

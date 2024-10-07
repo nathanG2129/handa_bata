@@ -102,6 +102,7 @@ class AccountSettingsState extends State<AccountSettings> {
     AuthService authService = AuthService();
     try {
       await authService.deleteUserAccount();
+      await authService.clearLocalGuestProfile(); // Clear local guest profile
       if (!mounted) return;
       // Navigate back or show a success message
       Navigator.of(context).pop();
@@ -148,6 +149,7 @@ class AccountSettingsState extends State<AccountSettings> {
     try {
       AuthService authService = AuthService();
       await authService.logout();
+      await authService.clearLocalGuestProfile(); // Clear local guest profile
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,

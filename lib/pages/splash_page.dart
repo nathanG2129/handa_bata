@@ -70,11 +70,10 @@ class SplashPage extends StatelessWidget {
   Future<void> _checkSignInStatus(BuildContext context) async {
     AuthService authService = AuthService();
     bool isSignedIn = await authService.isSignedIn();
-    bool staySignedIn = await authService.getStaySignedInPreference();
   
     if (!context.mounted) return;
   
-    if (isSignedIn && staySignedIn) {
+    if (isSignedIn) {
       // Navigate to PlayPage if the user is already signed in and chose to stay signed in
       Navigator.pushReplacement(
         context,

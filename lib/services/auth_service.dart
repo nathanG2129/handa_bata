@@ -234,16 +234,6 @@ class AuthService {
     return user != null;
   }
 
-  Future<bool> getStaySignedInPreference() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('stay_signed_in') ?? false;
-  }
-
-  Future<void> setStaySignedInPreference(bool value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('stay_signed_in', value);
-  }
-
   Future<void> saveGuestAccountDetails(String uid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('guest_uid', uid);

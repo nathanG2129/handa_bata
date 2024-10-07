@@ -19,7 +19,6 @@ class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _staySignedIn = false;
   final AuthService _authService = AuthService();
 
   void _login() async {
@@ -31,7 +30,6 @@ class LoginPageState extends State<LoginPage> {
         final user = await _authService.signInWithUsernameAndPassword(username, password);
 
         if (user != null) {
-          await _authService.setStaySignedInPreference(_staySignedIn);
           _navigateToPlayPage();
         } else {
           _showSnackBar('Login failed. Please try again.');
@@ -139,22 +137,7 @@ class LoginPageState extends State<LoginPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  Checkbox(
-                                    value: _staySignedIn,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _staySignedIn = value!;
-                                      });
-                                    },
-                                  ),
-                                  const Text(
-                                    'Stay Signed In',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
+
                               TextButton(
                                 onPressed: _forgotPassword,
                                 child: const Text(

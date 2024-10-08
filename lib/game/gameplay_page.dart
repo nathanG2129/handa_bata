@@ -155,8 +155,10 @@ class GameplayPageState extends State<GameplayPage> {
               stageData: {
                 ...widget.stageData,
                 'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+                
               },
               mode: widget.mode, // Pass the mode
+              fullyCorrectAnswersCount: _fullyCorrectAnswersCount,
             ),
           ),
         );
@@ -192,6 +194,7 @@ class GameplayPageState extends State<GameplayPage> {
               ...widget.stageData,
               'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
             },
+            fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             mode: widget.mode, // Pass the mode
           ),
         ),

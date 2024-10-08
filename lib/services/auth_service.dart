@@ -62,7 +62,13 @@ class AuthService {
           List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
           List<int> normalStageStars = List<int>.filled(stageCount, 0);
           List<int> hardStageStars = List<int>.filled(stageCount, 0);
-
+          
+          // Unlock the first stage by default
+          if (stageCount > 0) {
+            unlockedNormalStages[0] = true;
+            unlockedHardStages[0] = true;
+          }
+          
           // Create stageData map
           Map<String, Map<String, dynamic>> stageData = {};
           for (var stage in stages) {
@@ -74,7 +80,7 @@ class AuthService {
               'scoreNormal': 0,
             };
           }
-
+          
           // Create gameSaveData document
           GameSaveData gameSaveData = GameSaveData(
             stageData: stageData,
@@ -84,7 +90,7 @@ class AuthService {
             unlockedHardStages: unlockedHardStages,
             hasSeenPrerequisite: hasSeenPrerequisite,
           );
-
+          
           await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
         }
 
@@ -139,7 +145,13 @@ class AuthService {
         List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
         List<int> normalStageStars = List<int>.filled(stageCount, 0);
         List<int> hardStageStars = List<int>.filled(stageCount, 0);
-
+        
+        // Unlock the first stage by default
+        if (stageCount > 0) {
+          unlockedNormalStages[0] = true;
+          unlockedHardStages[0] = true;
+        }
+        
         // Create stageData map
         Map<String, Map<String, dynamic>> stageData = {};
         for (var stage in stages) {
@@ -151,7 +163,7 @@ class AuthService {
             'scoreNormal': 0,
           };
         }
-
+        
         // Create gameSaveData document
         GameSaveData gameSaveData = GameSaveData(
           stageData: stageData,
@@ -161,7 +173,7 @@ class AuthService {
           unlockedHardStages: unlockedHardStages,
           hasSeenPrerequisite: hasSeenPrerequisite,
         );
-
+        
         await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
       }
 

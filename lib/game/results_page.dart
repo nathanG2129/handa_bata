@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -9,10 +11,11 @@ class ResultsPage extends StatelessWidget {
   final double accuracy;
   final int streak;
   final String language;
-  final Map<String, dynamic> category; // Change the type to dynamic
+  final Map<String, dynamic> category;
   final String stageName;
   final Map<String, dynamic> stageData;
-  final String mode; // Accept the mode
+  final String mode;
+  final int fullyCorrectAnswersCount; // Add this parameter
 
   const ResultsPage({
     super.key,
@@ -23,7 +26,8 @@ class ResultsPage extends StatelessWidget {
     required this.category,
     required this.stageName,
     required this.stageData,
-    required this.mode, // Add the mode parameter
+    required this.mode,
+    required this.fullyCorrectAnswersCount, // Add this parameter
   });
 
   @override
@@ -32,7 +36,11 @@ class ResultsPage extends StatelessWidget {
     int stars = _calculateStars(accuracy, score, totalQuestions);
     print('Stars: $stars');
     print('ResultsPage received category: $category');
-  
+    print(stageName);
+
+    // Update the score and stars in Firestore
+    _updateScoreAndStarsInFirestore(stars);
+
     return Scaffold(
       body: Container(
         color: const Color(0xFF5E31AD), // Same background color as GameplayPage
@@ -188,5 +196,61 @@ class ResultsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _updateScoreAndStarsInFirestore(int stars) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+  
+    final docRef = FirebaseFirestore.instance
+        .collection('User')
+        .doc(user.uid)
+        .collection('GameSaveData')
+        .doc(category['id']);
+  
+    final docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) return;
+  
+    final data = docSnapshot.data() as Map<String, dynamic>;
+    final stageData = data['stageData'] as Map<String, dynamic>;
+  
+    // Find the correct stage key
+    final stageKey = stageData.keys.firstWhere(
+      (key) => key.startsWith(category['id']) && key.endsWith(stageName.split(' ').last),
+      orElse: () => '',
+    ); // Stage not found
+  
+    if (mode == 'Normal') {
+      final currentScore = stageData[stageKey]['scoreNormal'] as int;
+      if (fullyCorrectAnswersCount > currentScore) {
+        stageData[stageKey]['scoreNormal'] = fullyCorrectAnswersCount;
+      }
+  
+      final normalStageStars = data['normalStageStars'] as List<dynamic>;
+      final stageIndex = int.parse(stageKey.replaceAll(category['id'], '')) - 1;
+      final currentStars = normalStageStars[stageIndex] as int;
+      if (stars > currentStars) {
+        normalStageStars[stageIndex] = stars;
+      }
+    } else if (mode == 'Hard') {
+      final currentScore = stageData[stageKey]['scoreHard'] as int;
+      if (fullyCorrectAnswersCount > currentScore) {
+        stageData[stageKey]['scoreHard'] = fullyCorrectAnswersCount;
+      }
+  
+      final hardStageStars = data['hardStageStars'] as List<dynamic>;
+      final stageIndex = int.parse(stageKey.replaceAll(category['id'], '')) - 1;
+      final currentStars = hardStageStars[stageIndex] as int;
+      if (stars > currentStars) {
+        hardStageStars[stageIndex] = stars;
+      }
+    }
+  
+    // Update Firestore with the new data
+    await docRef.update({
+      'stageData': stageData,
+      'normalStageStars': data['normalStageStars'],
+      'hardStageStars': data['hardStageStars'],
+    });
   }
 }

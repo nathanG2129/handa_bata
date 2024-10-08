@@ -10,6 +10,7 @@ void showStageDialog(
   Map<String, dynamic> stageData,
   String mode, // Accept the mode
 ) {
+  
   // Convert category name to plural form
   String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
 

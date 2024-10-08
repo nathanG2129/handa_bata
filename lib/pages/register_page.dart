@@ -79,19 +79,19 @@ class RegistrationPageState extends State<RegistrationPage> {
       context,
       defaultValue: 75,
       conditionalValues: [
-        Condition.smallerThan(name: MOBILE, value: 65),
-        Condition.largerThan(name: MOBILE, value: 100),
+        const Condition.smallerThan(name: MOBILE, value: 65),
+        const Condition.largerThan(name: MOBILE, value: 100),
       ],
-    ).value!;
+    ).value;
 
     double mobileFontSize = ResponsiveValue<double>(
       context,
       defaultValue: 65,
       conditionalValues: [
-        Condition.smallerThan(name: MOBILE, value: 55),
-        Condition.largerThan(name: MOBILE, value: 90),
+        const Condition.smallerThan(name: MOBILE, value: 55),
+        const Condition.largerThan(name: MOBILE, value: 90),
       ],
-    ).value!;
+    ).value;
 
     return Scaffold(
       body: Stack(

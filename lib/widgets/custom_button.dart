@@ -1,7 +1,6 @@
 // lib/widgets/custom_button.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;

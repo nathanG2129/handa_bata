@@ -22,7 +22,7 @@ class TextWithShadow extends StatelessWidget {
         Condition.smallerThan(name: MOBILE, value: fontSize * 0.8),
         Condition.largerThan(name: MOBILE, value: fontSize * 1.2),
       ],
-    ).value!;
+    ).value;
 
     return Stack(
       children: [

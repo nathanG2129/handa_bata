@@ -5,12 +5,13 @@ import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPag
 void showStageDialog(
   BuildContext context,
   int stageNumber,
-  Map<String, String> category, // Accept the entire category map
+  Map<String, String> category,
   int numberOfQuestions,
   Map<String, dynamic> stageData,
-  String mode, // Accept the mode
+  String mode,
+  int personalBest, // Add personal best score
+  int stars, // Add stars
 ) {
-  
   // Convert category name to plural form
   String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
 
@@ -50,7 +51,7 @@ void showStageDialog(
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
-                  bool isFilled = index < 2;
+                  bool isFilled = index < stars;
                   return Icon(
                     isFilled ? Icons.star : Icons.star_border,
                     color: Colors.yellow,
@@ -60,7 +61,7 @@ void showStageDialog(
               ),
               const SizedBox(height: 20),
               Text(
-                'Personal Best: 0 / $numberOfQuestions',
+                'Personal Best: $personalBest / $numberOfQuestions',
                 style: GoogleFonts.vt323(
                   fontSize: 24,
                 ),
@@ -75,12 +76,12 @@ void showStageDialog(
                       builder: (context) => GameplayPage(
                         language: 'en',
                         category: {
-                          'id': category['id'], // Ensure the category id is passed correctly
-                          'name': category['name'], // Ensure the category name is passed correctly
+                          'id': category['id'],
+                          'name': category['name'],
                         },
                         stageName: 'Stage $stageNumber',
                         stageData: stageData,
-                        mode: mode, // Pass the selected mode
+                        mode: mode,
                       ),
                     ),
                   );

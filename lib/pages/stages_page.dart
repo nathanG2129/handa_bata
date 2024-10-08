@@ -4,10 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/stage_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StagesPage extends StatefulWidget {
   final String questName;
-  final Map<String, String> category; // Update to accept a map
+  final Map<String, String> category;
 
   const StagesPage({super.key, required this.questName, required this.category});
 
@@ -19,7 +21,7 @@ class StagesPageState extends State<StagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
   bool _isLoading = true;
-  String _selectedMode = 'Normal'; // Add a state variable for the selected mode
+  String _selectedMode = 'Normal';
 
   @override
   void initState() {
@@ -38,12 +40,41 @@ class StagesPageState extends State<StagesPage> {
   }
 
   Future<int> _fetchNumberOfQuestions(int stageIndex) async {
-    // Replace with actual logic to fetch the number of questions for the stage
-    return 10; // Example: 10 questions
+    String stageName = '${widget.category['id']}${stageIndex + 1}';
+    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions('en', widget.category['id']!, stageName);
+    return questions.length;
+  }
+
+  Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return {'personalBest': 0, 'stars': 0};
+
+    final docRef = FirebaseFirestore.instance
+        .collection('User')
+        .doc(user.uid)
+        .collection('GameSaveData')
+        .doc(widget.category['id']);
+
+    final docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0};
+
+    final data = docSnapshot.data() as Map<String, dynamic>;
+    final stageData = data['stageData'] as Map<String, dynamic>;
+    final stageKey = '${widget.category['id']}${stageIndex + 1}';
+
+    if (_selectedMode == 'Normal') {
+      final personalBest = stageData[stageKey]['scoreNormal'] as int;
+      final stars = data['normalStageStars'][stageIndex] as int;
+      return {'personalBest': personalBest, 'stars': stars};
+    } else {
+      final personalBest = stageData[stageKey]['scoreHard'] as int;
+      final stars = data['hardStageStars'][stageIndex] as int;
+      return {'personalBest': personalBest, 'stars': stars};
+    }
   }
 
   Color _getStageColor(String? category) {
-    if (category == null) return Colors.grey; // Default color for null category
+    if (category == null) return Colors.grey;
     if (category.contains('Quake')) {
       return const Color(0xFFF5672B);
     } else if (category.contains('Storm') || category.contains('Flood')) {
@@ -53,7 +84,7 @@ class StagesPageState extends State<StagesPage> {
     } else if (category.contains('Drought') || category.contains('Tsunami')) {
       return const Color(0xFF31111D);
     } else {
-      return Colors.grey; // Default color
+      return Colors.grey;
     }
   }
 
@@ -93,30 +124,28 @@ class StagesPageState extends State<StagesPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Add the background image
           SvgPicture.asset(
-            'assets/backgrounds/background.svg', // Use the common background image
+            'assets/backgrounds/background.svg',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
           ),
           Column(
             children: [
-              // Add the "Handa Bata Mobile" text from the splash page
               Padding(
-                padding: const EdgeInsets.only(top: 50), // Adjust the top padding as needed
+                padding: const EdgeInsets.only(top: 50),
                 child: Column(
                   children: [
                     const TextWithShadow(text: 'Handa Bata', fontSize: 90),
                     Transform.translate(
-                      offset: const Offset(0, -40), // Adjust this value to control the vertical offset
+                      offset: const Offset(0, -40),
                       child: const TextWithShadow(text: 'Mobile', fontSize: 85),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 75), // Adjust the top padding as needed
+                padding: const EdgeInsets.only(top: 75),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -125,37 +154,37 @@ class StagesPageState extends State<StagesPage> {
                       style: GoogleFonts.rubik(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black, // Text color
+                        color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 20), // Space between quest name and buttons
+                    const SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          _selectedMode = 'Normal'; // Set the selected mode to Normal
+                          _selectedMode = 'Normal';
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, // Text color
-                        backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey, // Background color
+                        foregroundColor: Colors.white,
+                        backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey,
                         shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                          borderRadius: BorderRadius.all(Radius.circular(0)),
                         ),
                       ),
                       child: const Text('Normal'),
                     ),
-                    const SizedBox(width: 10), // Space between buttons
+                    const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          _selectedMode = 'Hard'; // Set the selected mode to Hard
+                          _selectedMode = 'Hard';
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, // Text color
-                        backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey, // Background color
+                        foregroundColor: Colors.white,
+                        backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey,
                         shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                          borderRadius: BorderRadius.all(Radius.circular(0)),
                         ),
                       ),
                       child: const Text('Hard'),
@@ -163,14 +192,14 @@ class StagesPageState extends State<StagesPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20), // Space below the quest name and buttons
+              const SizedBox(height: 20),
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : GridView.builder(
-                        padding: const EdgeInsets.all(35), // Adjust padding as needed
+                        padding: const EdgeInsets.all(35),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3, // 3 columns
+                          crossAxisCount: 3,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 50,
                         ),
@@ -183,24 +212,27 @@ class StagesPageState extends State<StagesPage> {
                               ? index
                               : (rowIndex + 1) * 3 - columnIndex - 1;
                           final stageNumber = stageIndex + 1;
-                          final stageCategory = widget.category['name']; // Use the passed category name
+                          final stageCategory = widget.category['name'];
                           final stageColor = _getStageColor(stageCategory);
 
                           return GestureDetector(
                             onTap: () async {
                               Map<String, dynamic> stageData = _stages[stageIndex];
                               int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
+                              Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
                               if (!mounted) return;
                               showStageDialog(
                                 context,
                                 stageNumber,
                                 {
-                                  'id': widget.category['id']!, // Ensure the category id is passed correctly
-                                  'name': widget.category['name']!, // Ensure the category name is passed correctly
+                                  'id': widget.category['id']!,
+                                  'name': widget.category['name']!,
                                 },
                                 numberOfQuestions,
                                 stageData,
-                                _selectedMode, // Pass the selected mode
+                                _selectedMode,
+                                stageStats['personalBest'],
+                                stageStats['stars'],
                               );
                             },
                             child: Stack(

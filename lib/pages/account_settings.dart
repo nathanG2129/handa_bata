@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 import 'splash_page.dart'; // Import SplashPage
 
 class AccountSettings extends StatefulWidget {
@@ -197,121 +196,37 @@ class AccountSettingsState extends State<AccountSettings> {
               indent: 10,
               endIndent: 10,
             ),
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveValue<double>(
-                      context,
-                      defaultValue: 10.0,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 8.0),
-                        const Condition.largerThan(name: MOBILE, value: 12.0),
-                      ],
-                    ).value,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Account Removal',
                         style: GoogleFonts.rubik(
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 18,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 16),
-                              const Condition.largerThan(name: MOBILE, value: 20),
-                            ],
-                          ).value,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(
-                        height: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 10,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8),
-                            const Condition.largerThan(name: MOBILE, value: 12),
-                          ],
-                        ).value,
-                      ),
+                      const SizedBox(height: 10),
                       Text(
                         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                         style: GoogleFonts.rubik(
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 16,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14),
-                              const Condition.largerThan(name: MOBILE, value: 18),
-                            ],
-                          ).value,
+                          fontSize: 16,
                         ),
                       ),
-                      SizedBox(
-                        height: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 10,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8),
-                            const Condition.largerThan(name: MOBILE, value: 12),
-                          ],
-                        ).value,
-                      ),
+                      const SizedBox(height: 10),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: ElevatedButton(
                           onPressed: _showDeleteAccountDialog,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 20,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 16),
-                                  const Condition.largerThan(name: MOBILE, value: 24),
-                                ],
-                              ).value,
-                              vertical: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 10,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 8),
-                                  const Condition.largerThan(name: MOBILE, value: 12),
-                                ],
-                              ).value,
-                            ),
-                            textStyle: TextStyle(
-                              fontSize: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 16,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 14),
-                                  const Condition.largerThan(name: MOBILE, value: 18),
-                                ],
-                              ).value,
-                            ),
-                            minimumSize: Size(
-                              ResponsiveValue<double>(
-                                context,
-                                defaultValue: 150,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 120),
-                                  const Condition.largerThan(name: MOBILE, value: 180),
-                                ],
-                              ).value,
-                              ResponsiveValue<double>(
-                                context,
-                                defaultValue: 40,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 30),
-                                  const Condition.largerThan(name: MOBILE, value: 50),
-                                ],
-                              ).value,
-                            ), // Set minimum size to constrain the button
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            textStyle: const TextStyle(fontSize: 16),
+                            minimumSize: const Size(150, 40), // Set minimum size to constrain the button
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.zero, // Rectangular shape
                               side: BorderSide(color: Colors.black, width: 3), // Black border
@@ -343,16 +258,7 @@ class AccountSettingsState extends State<AccountSettings> {
 
   Widget _buildFieldContainer(String title, String details, bool showChangeButton) {
     return Container(
-      padding: EdgeInsets.all(
-        ResponsiveValue<double>(
-          context,
-          defaultValue: 10.0,
-          conditionalValues: [
-            const Condition.smallerThan(name: MOBILE, value: 8.0),
-            const Condition.largerThan(name: MOBILE, value: 12.0),
-          ],
-        ).value,
-      ),
+      padding: const EdgeInsets.all(10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -363,39 +269,16 @@ class AccountSettingsState extends State<AccountSettings> {
                 Text(
                   title,
                   style: GoogleFonts.rubik(
-                    fontSize: ResponsiveValue<double>(
-                      context,
-                      defaultValue: 18,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16),
-                        const Condition.largerThan(name: MOBILE, value: 20),
-                      ],
-                    ).value,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ), // Use Rubik font
                 ),
-                SizedBox(
-                  height: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 5,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 4),
-                      const Condition.largerThan(name: MOBILE, value: 6),
-                    ],
-                  ).value,
-                ),
+                const SizedBox(height: 5),
                 if (title != 'Logout') // Hide details for Logout
                   Text(
                     details,
                     style: GoogleFonts.rubik(
-                      fontSize: ResponsiveValue<double>(
-                        context,
-                        defaultValue: 16,
-                        conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 14),
-                          const Condition.largerThan(name: MOBILE, value: 18),
-                        ],
-                      ).value,
+                      fontSize: 16,
                     ), // Use Rubik font
                   ),
               ],
@@ -408,52 +291,9 @@ class AccountSettingsState extends State<AccountSettings> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4d278f), // Color of the button
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 20,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 16),
-                      const Condition.largerThan(name: MOBILE, value: 24),
-                    ],
-                  ).value,
-                  vertical: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 10,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 8),
-                      const Condition.largerThan(name: MOBILE, value: 12),
-                    ],
-                  ).value,
-                ),
-                textStyle: TextStyle(
-                  fontSize: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 16,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 14),
-                      const Condition.largerThan(name: MOBILE, value: 18),
-                    ],
-                  ).value,
-                ),
-                minimumSize: Size(
-                  ResponsiveValue<double>(
-                    context,
-                    defaultValue: 100,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 80),
-                      const Condition.largerThan(name: MOBILE, value: 120),
-                    ],
-                  ).value,
-                  ResponsiveValue<double>(
-                    context,
-                    defaultValue: 40,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 30),
-                      const Condition.largerThan(name: MOBILE, value: 50),
-                    ],
-                  ).value,
-                ), // Set minimum size to constrain the button
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                textStyle: const TextStyle(fontSize: 16),
+                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.zero, // Rectangular shape
                   side: BorderSide(color: Colors.black, width: 3), // Black border
@@ -473,60 +313,35 @@ class AccountSettingsState extends State<AccountSettings> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // White background
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 20,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 16),
-                      const Condition.largerThan(name: MOBILE, value: 24),
-                    ],
-                  ).value,
-                  vertical: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 10,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 8),
-                      const Condition.largerThan(name: MOBILE, value: 12),
-                    ],
-                  ).value,
-                ),
-                textStyle: TextStyle(
-                  fontSize: ResponsiveValue<double>(
-                    context,
-                    defaultValue: 16,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 14),
-                      const Condition.largerThan(name: MOBILE, value: 18),
-                    ],
-                  ).value,
-                ),
-                minimumSize: Size(
-                  ResponsiveValue<double>(
-                    context,
-                    defaultValue: 100,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 80),
-                      const Condition.largerThan(name: MOBILE, value: 120),
-                    ],
-                  ).value,
-                  ResponsiveValue<double>(
-                    context,
-                    defaultValue: 40,
-                    conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 30),
-                      const Condition.largerThan(name: MOBILE, value: 50),
-                    ],
-                  ).value,
-                ), // Set minimum size to constrain the button
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                textStyle: const TextStyle(fontSize: 16),
+                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.zero, // Rectangular shape
-                  side: BorderSide(color: Colors.black, width: 3), // Black border
+                  side: const BorderSide(color: Colors.black, width: 3), // Black border
                 ),
               ),
               child: Text(
                 _showEmail ? 'Hide' : 'Show',
                 style: const TextStyle(color: Colors.black), // Ensure text color is set to black
+              ),
+            ),
+          if (title == 'Logout') // Conditionally show the Logout button
+            ElevatedButton(
+              onPressed: _logout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Red background for logout
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                textStyle: const TextStyle(fontSize: 16),
+                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero, // Rectangular shape
+                  side: BorderSide(color: Colors.black, width: 3), // Black border
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white), // Ensure text color is set to white
               ),
             ),
         ],

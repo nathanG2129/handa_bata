@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 
 class UserProfileStats extends StatelessWidget {
   final int totalBadges;
@@ -23,7 +24,16 @@ class UserProfileStats extends StatelessWidget {
               borderRadius: BorderRadius.zero, // Purely rectangular
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(
+                ResponsiveValue<double>(
+                  context,
+                  defaultValue: 16.0,
+                  conditionalValues: [
+                    const Condition.smallerThan(name: MOBILE, value: 12.0),
+                    const Condition.largerThan(name: MOBILE, value: 20.0),
+                  ],
+                ).value,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -38,7 +48,24 @@ class UserProfileStats extends StatelessWidget {
                   ),
                   Container(
                     color: Colors.white, // Background color for the number housing
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0), // Larger padding for two-digit numbers
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveValue<double>(
+                        context,
+                        defaultValue: 8.0,
+                        conditionalValues: [
+                          const Condition.smallerThan(name: MOBILE, value: 6.0),
+                          const Condition.largerThan(name: MOBILE, value: 10.0),
+                        ],
+                      ).value,
+                      horizontal: ResponsiveValue<double>(
+                        context,
+                        defaultValue: 10.0,
+                        conditionalValues: [
+                          const Condition.smallerThan(name: MOBILE, value: 12.0),
+                          const Condition.largerThan(name: MOBILE, value: 20.0),
+                        ],
+                      ).value,
+                    ), // Larger padding for two-digit numbers
                     child: Text(
                       '$totalBadges',
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
@@ -58,7 +85,16 @@ class UserProfileStats extends StatelessWidget {
               borderRadius: BorderRadius.zero, // Purely rectangular
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(
+                ResponsiveValue<double>(
+                  context,
+                  defaultValue: 16.0,
+                  conditionalValues: [
+                    const Condition.smallerThan(name: MOBILE, value: 12.0),
+                    const Condition.largerThan(name: MOBILE, value: 20.0),
+                  ],
+                ).value,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -73,7 +109,24 @@ class UserProfileStats extends StatelessWidget {
                   ),
                   Container(
                     color: Colors.white, // Background color for the number housing
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0), // Larger padding for two-digit numbers
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveValue<double>(
+                        context,
+                        defaultValue: 8.0,
+                        conditionalValues: [
+                          const Condition.smallerThan(name: MOBILE, value: 6.0),
+                          const Condition.largerThan(name: MOBILE, value: 10.0),
+                        ],
+                      ).value,
+                      horizontal: ResponsiveValue<double>(
+                        context,
+                        defaultValue: 10.0,
+                        conditionalValues: [
+                          const Condition.smallerThan(name: MOBILE, value: 12.0),
+                          const Condition.largerThan(name: MOBILE, value: 20.0),
+                        ],
+                      ).value,
+                    ), // Larger padding for two-digit numbers
                     child: Text(
                       '$totalStagesCleared',
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold

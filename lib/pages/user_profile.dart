@@ -7,6 +7,7 @@ import 'package:handabatamae/widgets/user_profile_header.dart'; // Import UserPr
 import 'package:handabatamae/widgets/user_profile_stats.dart'; // Import UserProfileStats
 import 'package:handabatamae/widgets/favorite_badges.dart'; // Import FavoriteBadges
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
@@ -73,7 +74,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               onTap: () {},
               child: Card(
                 margin: const EdgeInsets.all(20),
-                                shape: const RoundedRectangleBorder(
+                shape: const RoundedRectangleBorder(
                   side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
                   borderRadius: BorderRadius.zero, // Purely rectangular
                 ),
@@ -84,7 +85,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       children: [
                         Container(
                           color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          padding: const EdgeInsets.all(20.0),
+                          padding: EdgeInsets.all(
+                            ResponsiveValue<double>(
+                              context,
+                              defaultValue: 20.0,
+                              conditionalValues: [
+                                Condition.smallerThan(name: MOBILE, value: 16.0),
+                                Condition.largerThan(name: MOBILE, value: 24.0),
+                              ],
+                            ).value,
+                          ),
                           child: _isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : _userProfile != null
@@ -95,7 +105,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       level: _userProfile!.level,
                                       currentExp: _userProfile!.exp, 
                                       maxExp: _userProfile!.expCap,
-                                      textStyle: GoogleFonts.rubik(color: Colors.white),  // White font color for username and level
+                                      textStyle: GoogleFonts.rubik(
+                                        color: Colors.white,
+                                        fontSize: ResponsiveValue<double>(
+                                          context,
+                                          defaultValue: 16,
+                                          conditionalValues: [
+                                            Condition.smallerThan(name: MOBILE, value: 14),
+                                            Condition.largerThan(name: MOBILE, value: 18),
+                                          ],
+                                        ).value,
+                                      ),  // White font color for username and level
                                     )
                                   : const SizedBox.shrink(),
                         ),
@@ -124,7 +144,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ],
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: EdgeInsets.all(
+                        ResponsiveValue<double>(
+                          context,
+                          defaultValue: 20.0,
+                          conditionalValues: [
+                            Condition.smallerThan(name: MOBILE, value: 16.0),
+                            Condition.largerThan(name: MOBILE, value: 24.0),
+                          ],
+                        ).value,
+                      ),
                       child: showAccountSettings
                           ? AccountSettings(
                               onClose: () {
@@ -163,7 +192,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
           totalBadges: _userProfile!.totalBadgeUnlocked,
           totalStagesCleared: _userProfile!.totalStageCleared,
         ),
-        const SizedBox(height: 20),
+        SizedBox(
+          height: ResponsiveValue<double>(
+            context,
+            defaultValue: 20.0,
+            conditionalValues: [
+              Condition.smallerThan(name: MOBILE, value: 16.0),
+              Condition.largerThan(name: MOBILE, value: 24.0),
+            ],
+          ).value,
+        ),
         const FavoriteBadges(),
       ],
     );

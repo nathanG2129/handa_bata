@@ -1,12 +1,15 @@
 // lib/widgets/custom_button.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
   final Color color;
   final Color textColor;
   final VoidCallback onTap;
+  final double? width;
+  final double? height;
 
   const CustomButton({
     super.key,
@@ -14,6 +17,8 @@ class CustomButton extends StatelessWidget {
     required this.color,
     required this.textColor,
     required this.onTap,
+    this.width,
+    this.height,
   });
 
   @override
@@ -31,10 +36,8 @@ class CustomButton extends StatelessWidget {
           ),
           child: Container(
             alignment: Alignment.center,
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
-              minHeight: 55,
-            ),
+            width: width ?? double.infinity,
+            height: height ?? 50,
             child: Text(
               text,
               style: GoogleFonts.rubik(color: textColor, fontWeight: FontWeight.bold),

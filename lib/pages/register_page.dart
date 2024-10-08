@@ -11,6 +11,7 @@ import '../services/auth_service.dart'; // Import the AuthService
 import '../styles/input_styles.dart'; // Import the InputStyles
 import '../widgets/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
+import 'package:responsive_framework/responsive_framework.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -74,6 +75,24 @@ class RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    double handaBataFontSize = ResponsiveValue<double>(
+      context,
+      defaultValue: 75,
+      conditionalValues: [
+        Condition.smallerThan(name: MOBILE, value: 65),
+        Condition.largerThan(name: MOBILE, value: 100),
+      ],
+    ).value!;
+
+    double mobileFontSize = ResponsiveValue<double>(
+      context,
+      defaultValue: 65,
+      conditionalValues: [
+        Condition.smallerThan(name: MOBILE, value: 55),
+        Condition.largerThan(name: MOBILE, value: 90),
+      ],
+    ).value!;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -95,12 +114,12 @@ class RegistrationPageState extends State<RegistrationPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          const TextWithShadow(text: 'Handa Bata', fontSize: 85),
+                          TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
                           Transform.translate(
                             offset: const Offset(0, -20.0),
                             child: Column(
                               children: [
-                                const TextWithShadow(text: 'Mobile', fontSize: 75),
+                                TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
                                 const SizedBox(height: 0), // Reduced height
                                 Text(
                                   'Register',

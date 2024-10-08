@@ -46,7 +46,7 @@ class SplashPage extends StatelessWidget {
       }
 
       // If no guest account exists, create a new one
-      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+      await FirebaseAuth.instance.signInAnonymously();
       await authService.createGuestProfile(); // Create guest profile in Firestore
 
       // Check if the widget is still mounted before using the context
@@ -101,88 +101,165 @@ class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ResponsiveBreakpoints.builder(
-        child: Stack(
-          children: [
-            SvgPicture.asset(
-              'assets/backgrounds/background.svg',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
-            Center(
-              child: Column(
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: topPadding),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: TextWithShadow(text: 'Handa Bata', fontSize: titleFontSize),
+      body: Stack(
+        children: [
+          SvgPicture.asset(
+            'assets/backgrounds/background.svg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          Center(
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: ResponsiveValue<double>(
+                        context,
+                        defaultValue: topPadding,
+                        conditionalValues: [
+                          const Condition.smallerThan(name: MOBILE, value: topPadding * 0.8),
+                          const Condition.largerThan(name: MOBILE, value: topPadding * 1.2),
+                        ],
+                      ).value,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: TextWithShadow(
+                            text: 'Handa Bata',
+                            fontSize: ResponsiveValue<double>(
+                              context,
+                              defaultValue: titleFontSize,
+                              conditionalValues: [
+                                const Condition.smallerThan(name: MOBILE, value: titleFontSize * 0.8),
+                                const Condition.largerThan(name: MOBILE, value: titleFontSize * 1.2),
+                              ],
+                            ).value,
                           ),
-                          Transform.translate(
-                            offset: const Offset(0, verticalOffset),
-                            child: const FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: TextWithShadow(text: 'Mobile', fontSize: subtitleFontSize),
+                        ),
+                        Transform.translate(
+                          offset: Offset(0, ResponsiveValue<double>(
+                            context,
+                            defaultValue: verticalOffset,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: verticalOffset * 0.8),
+                              const Condition.largerThan(name: MOBILE, value: verticalOffset * 1.2),
+                            ],
+                          ).value),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: TextWithShadow(
+                              text: 'Mobile',
+                              fontSize: ResponsiveValue<double>(
+                                context,
+                                defaultValue: subtitleFontSize,
+                                conditionalValues: [
+                                  const Condition.smallerThan(name: MOBILE, value: subtitleFontSize * 0.8),
+                                  const Condition.largerThan(name: MOBILE, value: subtitleFontSize * 1.2),
+                                ],
+                              ).value,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 0),
-                  SizedBox(
+                ),
+                const SizedBox(height: 0),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * buttonWidthFactor,
+                  height: ResponsiveValue<double>(
+                    context,
+                    defaultValue: buttonHeight,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
+                      const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
+                    ],
+                  ).value,
+                  child: CustomButton(
+                    text: 'Login',
+                    color: const Color(0xFF351B61),
+                    textColor: Colors.white,
                     width: MediaQuery.of(context).size.width * buttonWidthFactor,
-                    height: buttonHeight,
-                    child: CustomButton(
-                      text: 'Login',
-                      color: const Color(0xFF351B61),
-                      textColor: Colors.white,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginPage()),
-                        );
-                      },
-                    ),
+                    height: ResponsiveValue<double>(
+                      context,
+                      defaultValue: buttonHeight,
+                      conditionalValues: [
+                        const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
+                        const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
+                      ],
+                    ).value,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                      );
+                    },
                   ),
-                  const SizedBox(height: buttonSpacing),
-                  SizedBox(
+                ),
+                SizedBox(
+                  height: ResponsiveValue<double>(
+                    context,
+                    defaultValue: buttonSpacing,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: buttonSpacing * 0.8),
+                      const Condition.largerThan(name: MOBILE, value: buttonSpacing * 1.2),
+                    ],
+                  ).value,
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * buttonWidthFactor,
+                  height: ResponsiveValue<double>(
+                    context,
+                    defaultValue: buttonHeight,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
+                      const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
+                    ],
+                  ).value,
+                  child: CustomButton(
+                    text: 'Play Now',
+                    color: const Color(0xFFF1B33A),
+                    textColor: Colors.black,
                     width: MediaQuery.of(context).size.width * buttonWidthFactor,
-                    height: buttonHeight,
-                    child: CustomButton(
-                      text: 'Play Now',
-                      color: const Color(0xFFF1B33A),
-                      textColor: Colors.black,
-                      onTap: () {
-                        _checkSignInStatus(context);
-                      },
-                    ),
+                    height: ResponsiveValue<double>(
+                      context,
+                      defaultValue: buttonHeight,
+                      conditionalValues: [
+                        const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
+                        const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
+                      ],
+                    ).value,
+                    onTap: () {
+                      _checkSignInStatus(context);
+                    },
                   ),
-                  const SizedBox(height: bottomPadding), // Adjust this value to control the space between buttons and the bottom text
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Text(
-                      '© 2023 Handa Bata. All rights reserved.',
-                      style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
-                    ),
+                ),
+                SizedBox(
+                  height: ResponsiveValue<double>(
+                    context,
+                    defaultValue: bottomPadding,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: bottomPadding * 0.8),
+                      const Condition.largerThan(name: MOBILE, value: bottomPadding * 1.2),
+                    ],
+                  ).value,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: Text(
+                    '© 2023 Handa Bata. All rights reserved.',
+                    style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
                   ),
-
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-          breakpoints: [
-            const Breakpoint(start: 0, end: 450, name: MOBILE),
-            const Breakpoint(start: 451, end: 800, name: TABLET),
-            const Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import '../services/auth_service.dart';
 import 'play_page.dart';
 import 'register_page.dart';
@@ -63,6 +64,24 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    double handaBataFontSize = ResponsiveValue<double>(
+      context,
+      defaultValue: 75,
+      conditionalValues: [
+        Condition.smallerThan(name: MOBILE, value: 65),
+        Condition.largerThan(name: MOBILE, value: 100),
+      ],
+    ).value!;
+
+    double mobileFontSize = ResponsiveValue<double>(
+      context,
+      defaultValue: 65,
+      conditionalValues: [
+        Condition.smallerThan(name: MOBILE, value: 55),
+        Condition.largerThan(name: MOBILE, value: 90),
+      ],
+    ).value!;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -76,7 +95,7 @@ class LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.all(40.0),
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 120.0),
+                padding: const EdgeInsets.only(top: 10.0),
                 child: Column(
                   children: [
                     Form(
@@ -84,12 +103,12 @@ class LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          const TextWithShadow(text: 'Handa Bata', fontSize: 85),
+                          TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
                           Transform.translate(
                             offset: const Offset(0, -20.0),
                             child: Column(
                               children: [
-                                const TextWithShadow(text: 'Mobile', fontSize: 75),
+                                TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
                                 const SizedBox(height: 30),
                                 Text(
                                   'Welcome Back',
@@ -153,6 +172,22 @@ class LoginPageState extends State<LoginPage> {
                             color: const Color(0xFF351B61),
                             textColor: Colors.white,
                             onTap: _login,
+                            width: ResponsiveValue<double>(
+                              context,
+                              defaultValue: MediaQuery.of(context).size.width * 0.8,
+                              conditionalValues: [
+                                Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
+                                Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
+                              ],
+                            ).value,
+                            height: ResponsiveValue<double>(
+                              context,
+                              defaultValue: 55,
+                              conditionalValues: [
+                                Condition.smallerThan(name: MOBILE, value: 45),
+                                Condition.largerThan(name: MOBILE, value: 65),
+                              ],
+                            ).value,
                           ),
                           const SizedBox(height: 20),
                           CustomButton(
@@ -165,6 +200,22 @@ class LoginPageState extends State<LoginPage> {
                                 MaterialPageRoute(builder: (context) => const RegistrationPage()),
                               );
                             },
+                            width: ResponsiveValue<double>(
+                              context,
+                              defaultValue: MediaQuery.of(context).size.width * 0.8,
+                              conditionalValues: [
+                                Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
+                                Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
+                              ],
+                            ).value,
+                            height: ResponsiveValue<double>(
+                              context,
+                              defaultValue: 55,
+                              conditionalValues: [
+                                Condition.smallerThan(name: MOBILE, value: 45),
+                                Condition.largerThan(name: MOBILE, value: 65),
+                              ],
+                            ).value,
                           ),
                         ],
                       ),

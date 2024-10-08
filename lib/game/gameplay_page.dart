@@ -44,6 +44,7 @@ class GameplayPageState extends State<GameplayPage> {
   int _currentStreak = 0;
   int _highestStreak = 0;
   int _fullyCorrectAnswersCount = 0; // Define the fully correct answers count
+  bool _isGameOver = false;
   double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
 
   final TextEditingController _controller = TextEditingController();
@@ -134,7 +135,33 @@ class GameplayPageState extends State<GameplayPage> {
   }
 
   void _nextQuestion() {
-    if (_currentQuestionIndex < _totalQuestions - 1) {
+    if (_isGameOver) {
+      // Calculate accuracy
+      int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+      double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
+  
+      // Navigate to ResultsPage after a delay
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultsPage(
+              score: _correctAnswersCount, // Use the correct answers count as the score
+              accuracy: accuracy,
+              streak: _calculateStreak(),
+              language: widget.language, // Pass the language
+              category: widget.category, // Pass the category
+              stageName: widget.stageName, // Pass the stage name
+              stageData: {
+                ...widget.stageData,
+                'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+              },
+              mode: widget.mode, // Pass the mode
+            ),
+          ),
+        );
+      });
+    } else if (_currentQuestionIndex < _totalQuestions - 1) {
       setState(() {
         _currentQuestionIndex++;
         _selectedOptionIndex = null;
@@ -149,13 +176,8 @@ class GameplayPageState extends State<GameplayPage> {
       // Calculate accuracy
       int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
       double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
-
-      print('language: ${widget.language}');
-      print('category: ${widget.category}');
-      print('stageName: ${widget.stageName}');
-      print('stageData: ${widget.stageData}');
-      
-      // Example navigation from GameplayPage to ResultsPage
+  
+      // Navigate to ResultsPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -339,35 +361,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       if (_hp <= 0) {
         _hp = 0;
         // Handle game over logic here
-        _handleGameOver();
+        _isGameOver = true;
       }
     });
-  }
-
-  void _handleGameOver() {
-    // Calculate accuracy
-    int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
-    double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
-  
-    // Navigate to ResultsPage
-    Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ResultsPage(
-            score: _correctAnswersCount, // Use the correct answers count as the score
-            accuracy: accuracy,
-            streak: _calculateStreak(),
-            language: widget.language, // Pass the language
-            category: widget.category, // Pass the category
-            stageName: widget.stageName, // Pass the stage name
-            stageData: {
-              ...widget.stageData,
-              'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
-            },
-            mode: widget.mode, // Pass the mode
-          ),
-        ),
-      );
   }
 
   @override

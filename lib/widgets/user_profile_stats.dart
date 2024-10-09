@@ -16,6 +16,9 @@ class UserProfileStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate the maximum height for the text containers when the language is 'fil'
+    final double maxHeight = selectedLanguage == 'fil' ? .0 : 40.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -43,9 +46,14 @@ class UserProfileStats extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        PlayLocalization.translate('totalBadges', selectedLanguage),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                      Container(
+                        constraints: BoxConstraints(
+                          minHeight: maxHeight,
+                        ),
+                        child: Text(
+                          PlayLocalization.translate('totalBadges', selectedLanguage),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                        ),
                       ),
                     ],
                   ),
@@ -104,9 +112,14 @@ class UserProfileStats extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        PlayLocalization.translate('stagesCleared', selectedLanguage),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                      Container(
+                        constraints: BoxConstraints(
+                          minHeight: maxHeight,
+                        ),
+                        child: Text(
+                          PlayLocalization.translate('stagesCleared', selectedLanguage),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                        ),
                       ),
                     ],
                   ),

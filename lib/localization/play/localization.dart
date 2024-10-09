@@ -15,7 +15,7 @@ class PlayLocalization {
       'arcade': 'Arkada',
       'favoriteBadges': 'Paboritong Mga Badge',
       'totalBadges': 'Kabuuang\nBadge',
-      'stagesCleared': 'Mga\nna-Clear\nna Stage',
+      'stagesCleared': 'Mga Stage \nna na-Clear',
       'level': 'Level',
     },
   };

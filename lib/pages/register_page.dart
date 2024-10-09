@@ -102,203 +102,221 @@ class RegistrationPageState extends State<RegistrationPage> {
     ).value;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          SvgPicture.asset(
-            'assets/backgrounds/background.svg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(40.0),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 20.0),
-                child: Column(
-                  children: [
-                    Form(
-                      key: _formKey,
+      body: ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: 450, name: MOBILE),
+          Breakpoint(start: 451, end: 800, name: TABLET),
+          Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+        ],
+        child: MaxWidthBox(
+          maxWidth: 1200,
+          child: ResponsiveScaledBox(
+            width: ResponsiveValue<double>(context, conditionalValues: [
+              const Condition.equals(name: MOBILE, value: 450),
+              const Condition.between(start: 800, end: 1100, value: 800),
+              const Condition.between(start: 1000, end: 1200, value: 1000),
+            ]).value,
+            child: Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 50.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
-                          Transform.translate(
-                            offset: const Offset(0, -20.0),
+                        children: [
+                          Form(
+                            key: _formKey,
                             child: Column(
-                              children: [
-                                TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
-                                const SizedBox(height: 0), // Reduced height
-                                Text(
-                                  RegisterLocalization.translate('title', _selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    fontSize: 30,
-                                    color: Colors.white,
-                                    shadows: [
-                                      const Shadow(
-                                        offset: Offset(0, 3.0),
-                                        blurRadius: 0.0,
-                                        color: Colors.black,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
+                                Transform.translate(
+                                  offset: const Offset(0, -20.0),
+                                  child: Column(
+                                    children: [
+                                      TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
+                                      const SizedBox(height: 0), // Reduced height
+                                      Text(
+                                        RegisterLocalization.translate('title', _selectedLanguage),
+                                        style: GoogleFonts.vt323(
+                                          fontSize: 30,
+                                          color: Colors.white,
+                                          shadows: [
+                                            const Shadow(
+                                              offset: Offset(0, 3.0),
+                                              blurRadius: 0.0,
+                                              color: Colors.black,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
+                                const SizedBox(height: 10), // Reduced height
+                                TextFormField(
+                                  controller: _usernameController,
+                                  decoration: InputStyles.inputDecoration(RegisterLocalization.translate('username', _selectedLanguage)),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
+                                  validator: validateUsername, // Use the new validateUsername function
+                                ),
+                                const SizedBox(height: 20),
+                                TextFormField(
+                                  controller: _emailController,
+                                  decoration: InputStyles.inputDecoration(RegisterLocalization.translate('email', _selectedLanguage)),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
+                                  validator: validateEmail,
+                                ),
+                                const SizedBox(height: 20),
+                                TextFormField(
+                                  controller: _birthdayController,
+                                  decoration: InputStyles.inputDecoration(RegisterLocalization.translate('birthday', _selectedLanguage)),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
+                                  readOnly: true,
+                                  onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your birthday';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  decoration: InputStyles.inputDecoration(RegisterLocalization.translate('password', _selectedLanguage)),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
+                                  obscureText: true,
+                                  validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _isPasswordFieldTouched = true;
+                                    });
+                                    validatePassword(value, (isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol) {
+                                      setState(() {
+                                        _isPasswordLengthValid = isPasswordLengthValid;
+                                        _hasUppercase = hasUppercase;
+                                        _hasNumber = hasNumber;
+                                        _hasSymbol = hasSymbol;
+                                      });
+                                    });
+                                  },
+                                ),
+                                if (_isPasswordFieldTouched) ...[
+                                  const SizedBox(height: 10),
+                                  buildPasswordRequirement(
+                                    text: RegisterLocalization.translate('password_requirement_1', _selectedLanguage),
+                                    isValid: _isPasswordLengthValid,
+                                  ),
+                                  buildPasswordRequirement(
+                                    text: RegisterLocalization.translate('password_requirement_2', _selectedLanguage),
+                                    isValid: _hasUppercase,
+                                  ),
+                                  buildPasswordRequirement(
+                                    text: RegisterLocalization.translate('password_requirement_3', _selectedLanguage),
+                                    isValid: _hasNumber,
+                                  ),
+                                  buildPasswordRequirement(
+                                    text: RegisterLocalization.translate('password_requirement_4', _selectedLanguage),
+                                    isValid: _hasSymbol,
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
+                                TextFormField(
+                                  controller: _confirmPasswordController,
+                                  decoration: InputStyles.inputDecoration(RegisterLocalization.translate('confirm_password', _selectedLanguage)),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
+                                  obscureText: true,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please confirm your password';
+                                    }
+                                    if (value != _passwordController.text) {
+                                      return 'Passwords do not match';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    Checkbox(
+                                      value: _isPrivacyPolicyAccepted,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _isPrivacyPolicyAccepted = value!;
+                                        });
+                                      },
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        RegisterLocalization.translate('privacy_policy', _selectedLanguage),
+                                        style: const TextStyle(color: Colors.white), // Changed text color to white
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (_showPrivacyPolicyError)
+                                  PrivacyPolicyError(showError: _showPrivacyPolicyError),
+                                const SizedBox(height: 20),
+                                CustomButton(
+                                  text: RegisterLocalization.translate('register_button', _selectedLanguage),
+                                  color: const Color(0xFF351B61),
+                                  textColor: Colors.white,
+                                  onTap: _register,
+                                ),
+                                const SizedBox(height: 20),
+                                CustomButton(
+                                  text: RegisterLocalization.translate('login_instead', _selectedLanguage),
+                                  color: Colors.white,
+                                  textColor: Colors.black,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 10), // Reduced height
-                          TextFormField(
-                            controller: _usernameController,
-                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('username', _selectedLanguage)),
-                            style: const TextStyle(color: Colors.white), // Changed text color to white
-                            validator: validateUsername, // Use the new validateUsername function
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('email', _selectedLanguage)),
-                            style: const TextStyle(color: Colors.white), // Changed text color to white
-                            validator: validateEmail,
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _birthdayController,
-                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('birthday', _selectedLanguage)),
-                            style: const TextStyle(color: Colors.white), // Changed text color to white
-                            readOnly: true,
-                            onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your birthday';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('password', _selectedLanguage)),
-                            style: const TextStyle(color: Colors.white), // Changed text color to white
-                            obscureText: true,
-                            validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
-                            onChanged: (value) {
-                              setState(() {
-                                _isPasswordFieldTouched = true;
-                              });
-                              validatePassword(value, (isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol) {
-                                setState(() {
-                                  _isPasswordLengthValid = isPasswordLengthValid;
-                                  _hasUppercase = hasUppercase;
-                                  _hasNumber = hasNumber;
-                                  _hasSymbol = hasSymbol;
-                                });
-                              });
-                            },
-                          ),
-                          if (_isPasswordFieldTouched) ...[
-                            const SizedBox(height: 10),
-                            buildPasswordRequirement(
-                              text: RegisterLocalization.translate('password_requirement_1', _selectedLanguage),
-                              isValid: _isPasswordLengthValid,
-                            ),
-                            buildPasswordRequirement(
-                              text: RegisterLocalization.translate('password_requirement_2', _selectedLanguage),
-                              isValid: _hasUppercase,
-                            ),
-                            buildPasswordRequirement(
-                              text: RegisterLocalization.translate('password_requirement_3', _selectedLanguage),
-                              isValid: _hasNumber,
-                            ),
-                            buildPasswordRequirement(
-                              text: RegisterLocalization.translate('password_requirement_4', _selectedLanguage),
-                              isValid: _hasSymbol,
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _confirmPasswordController,
-                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('confirm_password', _selectedLanguage)),
-                            style: const TextStyle(color: Colors.white), // Changed text color to white
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please confirm your password';
-                              }
-                              if (value != _passwordController.text) {
-                                return 'Passwords do not match';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _isPrivacyPolicyAccepted,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isPrivacyPolicyAccepted = value!;
-                                  });
-                                },
-                              ),
-                              Flexible(
-                                child: Text(
-                                  RegisterLocalization.translate('privacy_policy', _selectedLanguage),
-                                  style: const TextStyle(color: Colors.white), // Changed text color to white
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_showPrivacyPolicyError)
-                            PrivacyPolicyError(showError: _showPrivacyPolicyError),
-                          const SizedBox(height: 20),
-                          CustomButton(
-                            text: RegisterLocalization.translate('register_button', _selectedLanguage),
-                            color: const Color(0xFF351B61),
-                            textColor: Colors.white,
-                            onTap: _register,
-                          ),
-                          const SizedBox(height: 20),
-                          CustomButton(
-                            text: RegisterLocalization.translate('login_instead', _selectedLanguage),
-                            color: Colors.white,
-                            textColor: Colors.black,
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 60,
-            right: 35,
-            child: DropdownButton<String>(
-              icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
-              underline: Container(), // Remove underline
-              items: const [
-                DropdownMenuItem(
-                  value: 'en',
-                  child: Text('English'),
-                ),
-                DropdownMenuItem(
-                  value: 'fil',
-                  child: Text('Filipino'),
+                Positioned(
+                  top: 60,
+                  right: 35,
+                  child: DropdownButton<String>(
+                    icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+                    underline: Container(), // Remove underline
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'en',
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'fil',
+                        child: Text('Filipino'),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        _changeLanguage(newValue);
+                      }
+                    },
+                  ),
                 ),
               ],
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  _changeLanguage(newValue);
-                }
-              },
             ),
           ),
-        ],
+        ),
       ),
     );
   }

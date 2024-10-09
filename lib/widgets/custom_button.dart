@@ -1,6 +1,6 @@
-// lib/widgets/custom_button.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -35,8 +35,22 @@ class CustomButton extends StatelessWidget {
           ),
           child: Container(
             alignment: Alignment.center,
-            width: width ?? double.infinity,
-            height: height ?? 50,
+            width: ResponsiveValue<double>(
+              context,
+              defaultValue: width ?? double.infinity,
+              conditionalValues: [
+                Condition.smallerThan(name: MOBILE, value: (width ?? double.infinity) * 1.1), // Increased width for smaller screens
+                Condition.largerThan(name: MOBILE, value: (width ?? double.infinity) * 1.2),
+              ],
+            ).value,
+            height: ResponsiveValue<double>(
+              context,
+              defaultValue: height ?? 50,
+              conditionalValues: [
+                Condition.smallerThan(name: MOBILE, value: (height ?? 50) * 0.8),
+                Condition.largerThan(name: MOBILE, value: (height ?? 50) * 1.2),
+              ],
+            ).value,
             child: Text(
               text,
               style: GoogleFonts.rubik(color: textColor, fontWeight: FontWeight.bold),

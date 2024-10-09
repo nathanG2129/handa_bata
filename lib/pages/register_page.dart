@@ -12,6 +12,7 @@ import '../styles/input_styles.dart'; // Import the InputStyles
 import '../widgets/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
+import '../localization/register/localization.dart'; // Import the localization file
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -36,6 +37,7 @@ class RegistrationPageState extends State<RegistrationPage> {
   bool _isPasswordFieldTouched = false;
 
   final AuthService _authService = AuthService();
+  String _selectedLanguage = 'en'; // Add language selection
 
   void _register() async {
     setState(() {
@@ -71,6 +73,12 @@ class RegistrationPageState extends State<RegistrationPage> {
         );
       }
     }
+  }
+
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+    });
   }
 
   @override
@@ -122,7 +130,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                                 TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
                                 const SizedBox(height: 0), // Reduced height
                                 Text(
-                                  'Register',
+                                  RegisterLocalization.translate('title', _selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     fontSize: 30,
                                     color: Colors.white,
@@ -141,21 +149,21 @@ class RegistrationPageState extends State<RegistrationPage> {
                           const SizedBox(height: 10), // Reduced height
                           TextFormField(
                             controller: _usernameController,
-                            decoration: InputStyles.inputDecoration('Username'),
+                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('username', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             validator: validateUsername, // Use the new validateUsername function
                           ),
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _emailController,
-                            decoration: InputStyles.inputDecoration('Email'),
+                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('email', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             validator: validateEmail,
                           ),
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _birthdayController,
-                            decoration: InputStyles.inputDecoration('Birthday'),
+                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('birthday', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             readOnly: true,
                             onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
@@ -169,7 +177,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _passwordController,
-                            decoration: InputStyles.inputDecoration('Password'),
+                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('password', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             obscureText: true,
                             validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
@@ -190,26 +198,26 @@ class RegistrationPageState extends State<RegistrationPage> {
                           if (_isPasswordFieldTouched) ...[
                             const SizedBox(height: 10),
                             buildPasswordRequirement(
-                              text: 'At least 8 characters',
+                              text: RegisterLocalization.translate('password_requirement_1', _selectedLanguage),
                               isValid: _isPasswordLengthValid,
                             ),
                             buildPasswordRequirement(
-                              text: 'Includes an uppercase letter',
+                              text: RegisterLocalization.translate('password_requirement_2', _selectedLanguage),
                               isValid: _hasUppercase,
                             ),
                             buildPasswordRequirement(
-                              text: 'Includes a number',
+                              text: RegisterLocalization.translate('password_requirement_3', _selectedLanguage),
                               isValid: _hasNumber,
                             ),
                             buildPasswordRequirement(
-                              text: 'Includes a symbol',
+                              text: RegisterLocalization.translate('password_requirement_4', _selectedLanguage),
                               isValid: _hasSymbol,
                             ),
                           ],
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _confirmPasswordController,
-                            decoration: InputStyles.inputDecoration('Confirm Password'),
+                            decoration: InputStyles.inputDecoration(RegisterLocalization.translate('confirm_password', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             obscureText: true,
                             validator: (value) {
@@ -233,10 +241,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                                   });
                                 },
                               ),
-                              const Flexible(
+                              Flexible(
                                 child: Text(
-                                  'I have read and understood the Privacy Policy and agree to the Terms of Service',
-                                  style: TextStyle(color: Colors.white), // Changed text color to white
+                                  RegisterLocalization.translate('privacy_policy', _selectedLanguage),
+                                  style: const TextStyle(color: Colors.white), // Changed text color to white
                                 ),
                               ),
                             ],
@@ -245,14 +253,14 @@ class RegistrationPageState extends State<RegistrationPage> {
                             PrivacyPolicyError(showError: _showPrivacyPolicyError),
                           const SizedBox(height: 20),
                           CustomButton(
-                            text: 'Register',
+                            text: RegisterLocalization.translate('register_button', _selectedLanguage),
                             color: const Color(0xFF351B61),
                             textColor: Colors.white,
                             onTap: _register,
                           ),
                           const SizedBox(height: 20),
                           CustomButton(
-                            text: 'Have an Account? Login instead',
+                            text: RegisterLocalization.translate('login_instead', _selectedLanguage),
                             color: Colors.white,
                             textColor: Colors.black,
                             onTap: () {
@@ -265,6 +273,29 @@ class RegistrationPageState extends State<RegistrationPage> {
                   ],
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            top: 60,
+            right: 35,
+            child: DropdownButton<String>(
+              icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+              underline: Container(), // Remove underline
+              items: const [
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: 'fil',
+                  child: Text('Filipino'),
+                ),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _changeLanguage(newValue);
+                }
+              },
             ),
           ),
         ],

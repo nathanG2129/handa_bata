@@ -73,7 +73,7 @@ class PlayPageState extends State<PlayPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AdventurePage()),
+                        MaterialPageRoute(builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage,)),
                       );
                     },
                   ),

@@ -7,7 +7,9 @@ import 'package:handabatamae/services/stage_service.dart'; // Import StageServic
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 
 class AdventurePage extends StatefulWidget {
-  const AdventurePage({super.key});
+  final String selectedLanguage;
+
+  const AdventurePage({super.key, required this.selectedLanguage});
 
   @override
   AdventurePageState createState() => AdventurePageState();
@@ -24,13 +26,15 @@ class AdventurePageState extends State<AdventurePage> {
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected languagesdasds: $_selectedLanguage');
     _fetchCategories();
   }
 
   Future<void> _fetchCategories() async {
-    print('Fetching categories...');
+    //print('Fetching categories...');
     List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage); // Assuming 'en' is the language
-    print('Fetched categories: $categories');
+    //print('Fetched categories: $categories');
     setState(() {
       _categories = categories;
       _sortCategories();

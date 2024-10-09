@@ -7,7 +7,7 @@ import 'package:handabatamae/widgets/arcade_button.dart';
 import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
-
+import '../localization/play/localization.dart'; // Import the localization file
 
 class PlayPage extends StatefulWidget {
   final String title;
@@ -28,12 +28,17 @@ class PlayPageState extends State<PlayPage> {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
     print('Selected language: $_selectedLanguage');
-
   }
 
   void _toggleUserProfile() {
     setState(() {
       _isUserProfileVisible = !_isUserProfileVisible;
+    });
+  }
+
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
     });
   }
 
@@ -66,7 +71,7 @@ class PlayPageState extends State<PlayPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Adjusted padding for smaller size
                       textStyle: GoogleFonts.rubik(fontSize: 20), // Using Rubik font
                     ),
-                    child: const Text('User Profile'),
+                    child: Text(PlayLocalization.translate('userProfile', _selectedLanguage)),
                   ),
                   const SizedBox(height: 50),
                   AdventureButton(
@@ -107,6 +112,29 @@ class PlayPageState extends State<PlayPage> {
                   );
                 },
               ),
+            ),
+          ),
+          Positioned(
+            top: 60,
+            right: 35,
+            child: DropdownButton<String>(
+              icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+              underline: Container(), // Remove underline
+              items: const [
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: 'fil',
+                  child: Text('Filipino'),
+                ),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _changeLanguage(newValue);
+                }
+              },
             ),
           ),
           if (_isUserProfileVisible)

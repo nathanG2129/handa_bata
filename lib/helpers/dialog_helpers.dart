@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../pages/login_page.dart';
 
-void showEmailVerificationDialog(BuildContext context) {
+void showEmailVerificationDialog(BuildContext context, String selectedLanguage) { // Add selectedLanguage parameter
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -16,7 +16,7 @@ void showEmailVerificationDialog(BuildContext context) {
               Navigator.of(context).pop();
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
+                MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: selectedLanguage)), // Pass selectedLanguage
               );
             },
           ),

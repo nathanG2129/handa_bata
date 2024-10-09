@@ -15,7 +15,8 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({super.key});
+  final String selectedLanguage; // Add this line
+  const RegistrationPage({super.key, required this.selectedLanguage});
 
   @override
   RegistrationPageState createState() => RegistrationPageState();
@@ -38,6 +39,13 @@ class RegistrationPageState extends State<RegistrationPage> {
 
   final AuthService _authService = AuthService();
   String _selectedLanguage = 'en'; // Add language selection
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected language: $_selectedLanguage');
+  }
 
   void _register() async {
     setState(() {
@@ -63,7 +71,7 @@ class RegistrationPageState extends State<RegistrationPage> {
         if (user != null && !user.emailVerified) {
           await user.sendEmailVerification();
           if (!mounted) return;
-          showEmailVerificationDialog(context);
+          showEmailVerificationDialog(context, _selectedLanguage);
         }
       } on FirebaseAuthException catch (e) {
         if (!mounted) return;

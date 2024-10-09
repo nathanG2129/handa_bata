@@ -23,6 +23,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool showAccountSettings = false;
   bool _isLoading = true;
   UserProfile? _userProfile;
+  late String _selectedLanguage; // Add this line
+
 
   final UserProfileService _userProfileService = UserProfileService();
 
@@ -162,7 +164,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 });
                                 _fetchUserProfile(); // Refresh user profile after closing account settings
                               },
-                              onNicknameChanged: _onNicknameChanged, // Pass the callback
+                              onNicknameChanged: _onNicknameChanged, selectedLanguage: _selectedLanguage // Pass the callback
                             )
                           : _buildUserProfile(),
                     ),

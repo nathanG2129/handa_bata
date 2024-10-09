@@ -12,7 +12,8 @@ import '../widgets/text_with_shadow.dart';
 import '/localization/splash/localization.dart'; // Import the localization file
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  final String selectedLanguage;
+  const SplashPage({super.key, required this.selectedLanguage});
 
   @override
   SplashPageState createState() => SplashPageState();
@@ -20,6 +21,13 @@ class SplashPage extends StatefulWidget {
 
 class SplashPageState extends State<SplashPage> {
   String _selectedLanguage = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected language: $_selectedLanguage');
+  }
 
   static const double titleFontSize = 90;
   static const double subtitleFontSize = 85;
@@ -45,7 +53,7 @@ class SplashPageState extends State<SplashPage> {
 
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
+        MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
           );
           return;
         }
@@ -60,7 +68,7 @@ class SplashPageState extends State<SplashPage> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
+        MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage,)),
       );
     } catch (e) {
       // Check if the widget is still mounted before using the context
@@ -83,7 +91,7 @@ class SplashPageState extends State<SplashPage> {
       // Navigate to PlayPage if the user is already signed in and chose to stay signed in
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
+        MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage,)),
       );
     } else {
       // Check for local guest profile
@@ -95,7 +103,7 @@ class SplashPageState extends State<SplashPage> {
         // Navigate to PlayPage if a local guest profile exists
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const PlayPage(title: 'Handa Bata')),
+          MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage,)),
         );
       } else {
         // Sign in anonymously if no local guest profile exists
@@ -260,7 +268,7 @@ class SplashPageState extends State<SplashPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                              MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
                             );
                           },
                         ),

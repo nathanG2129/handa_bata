@@ -19,6 +19,7 @@ class AdventurePageState extends State<AdventurePage> {
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
   static const double questListHeight = 415; // Set the height of the quest list
+  late String _selectedLanguage; // Add this line
 
   @override
   void initState() {
@@ -28,7 +29,7 @@ class AdventurePageState extends State<AdventurePage> {
 
   Future<void> _fetchCategories() async {
     print('Fetching categories...');
-    List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' is the language
+    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage); // Assuming 'en' is the language
     print('Fetched categories: $categories');
     setState(() {
       _categories = categories;
@@ -49,7 +50,7 @@ class AdventurePageState extends State<AdventurePage> {
   void _navigateBack(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const PlayPage(title: '',)),
+      MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage)),
     );
   }
 
@@ -183,7 +184,7 @@ class AdventurePageState extends State<AdventurePage> {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const PlayPage(title: '',)),
+                      MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage,)),
                       (Route<dynamic> route) => false,
                     );
                   },

@@ -7,8 +7,10 @@ import 'splash_page.dart'; // Import SplashPage
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onNicknameChanged; // Add this callback
+  final String selectedLanguage; // Add this line
 
-  const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged});
+
+  const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged, required this.selectedLanguage});
 
   @override
   AccountSettingsState createState() => AccountSettingsState();
@@ -18,6 +20,7 @@ class AccountSettingsState extends State<AccountSettings> {
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
+  late String _selectedLanguage; // Add this line
 
   @override
   void initState() {
@@ -153,7 +156,7 @@ class AccountSettingsState extends State<AccountSettings> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const SplashPage()),
+          MaterialPageRoute(builder: (context) => const SplashPage(selectedLanguage: '',)),
           (Route<dynamic> route) => false,
         );
       }

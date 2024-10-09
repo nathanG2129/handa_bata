@@ -3,7 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
 
 class ArcadePage extends StatelessWidget {
-  const ArcadePage({super.key});
+  final String selectedLanguage; // Add this line
+  const ArcadePage({super.key, required this.selectedLanguage});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class ArcadePage extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const PlayPage(title: '',)),
+                        MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: selectedLanguage)), // Pass selectedLanguage
                         (Route<dynamic> route) => false,
                       );
                     },

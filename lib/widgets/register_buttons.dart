@@ -4,8 +4,9 @@ import '../pages/login_page.dart';
 
 class RegisterButtons extends StatelessWidget {
   final VoidCallback onRegister;
+  final String selectedLanguage; // Add this line
 
-  const RegisterButtons({super.key, required this.onRegister});
+  const RegisterButtons({super.key, required this.onRegister, required this.selectedLanguage}); // Update constructor
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class RegisterButtons extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const LoginPage()),
+              MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: selectedLanguage)), // Pass selectedLanguage
             );
           },
           child: const Text('Have an account? Login instead'),

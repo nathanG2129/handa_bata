@@ -8,10 +8,12 @@ import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
 
+
 class PlayPage extends StatefulWidget {
   final String title;
+  final String selectedLanguage;
 
-  const PlayPage({super.key, required this.title});
+  const PlayPage({super.key, required this.title, required this.selectedLanguage});
 
   @override
   PlayPageState createState() => PlayPageState();
@@ -19,6 +21,15 @@ class PlayPage extends StatefulWidget {
 
 class PlayPageState extends State<PlayPage> {
   bool _isUserProfileVisible = false;
+  String _selectedLanguage = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected language: $_selectedLanguage');
+
+  }
 
   void _toggleUserProfile() {
     setState(() {
@@ -71,7 +82,7 @@ class PlayPageState extends State<PlayPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ArcadePage()),
+                        MaterialPageRoute(builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage,)),
                       );
                     },
                   ),
@@ -92,7 +103,7 @@ class PlayPageState extends State<PlayPage> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const SplashPage()),
+                    MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: _selectedLanguage,)),
                   );
                 },
               ),

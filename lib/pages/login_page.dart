@@ -11,7 +11,9 @@ import '../styles/input_styles.dart';
 import '../localization/login/localization.dart'; // Import the localization file
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String selectedLanguage;
+
+  const LoginPage({super.key, required this.selectedLanguage});
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -23,6 +25,14 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   String _selectedLanguage = 'en'; // Add language selection
+
+    @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected language: $_selectedLanguage');
+
+  }
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
@@ -47,7 +57,7 @@ class LoginPageState extends State<LoginPage> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PlayPage(title: 'Home Page')),
+        MaterialPageRoute(builder: (context) => PlayPage(title: 'Home Page', selectedLanguage: _selectedLanguage)),
       );
     }
   }
@@ -220,7 +230,7 @@ class LoginPageState extends State<LoginPage> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const RegistrationPage()),
+                                      MaterialPageRoute(builder: (context) => RegistrationPage(selectedLanguage: _selectedLanguage)),
                                     );
                                   },
                                   width: ResponsiveValue<double>(

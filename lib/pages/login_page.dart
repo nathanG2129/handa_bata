@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '../styles/input_styles.dart';
+import '../localization/login/localization.dart'; // Import the localization file
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +22,7 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  String _selectedLanguage = 'en'; // Add language selection
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
@@ -60,6 +62,12 @@ class LoginPageState extends State<LoginPage> {
 
   void _forgotPassword() {
     // Handle forgot password
+  }
+
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+    });
   }
 
   @override
@@ -103,6 +111,7 @@ class LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
+                          const SizedBox(height: 120),
                           TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
                           Transform.translate(
                             offset: const Offset(0, -20.0),
@@ -111,7 +120,7 @@ class LoginPageState extends State<LoginPage> {
                                 TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
                                 const SizedBox(height: 30),
                                 Text(
-                                  'Welcome Back',
+                                  LoginLocalization.translate('welcome', _selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     fontSize: 30,
                                     color: Colors.white,
@@ -130,7 +139,7 @@ class LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 40),
                           TextFormField(
                             controller: _usernameController,
-                            decoration: InputStyles.inputDecoration('Username'),
+                            decoration: InputStyles.inputDecoration(LoginLocalization.translate('email', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -142,7 +151,7 @@ class LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _passwordController,
-                            decoration: InputStyles.inputDecoration('Password'),
+                            decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
                             style: const TextStyle(color: Colors.white), // Changed text color to white
                             obscureText: true,
                             validator: (value) {
@@ -156,19 +165,18 @@ class LoginPageState extends State<LoginPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-
                               TextButton(
                                 onPressed: _forgotPassword,
-                                child: const Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(color: Colors.white),
+                                child: Text(
+                                  LoginLocalization.translate('forgot_password', _selectedLanguage),
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
                           CustomButton(
-                            text: 'Login',
+                            text: LoginLocalization.translate('login_button', _selectedLanguage),
                             color: const Color(0xFF351B61),
                             textColor: Colors.white,
                             onTap: _login,
@@ -191,7 +199,7 @@ class LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 20),
                           CustomButton(
-                            text: 'Register',
+                            text: LoginLocalization.translate('sign_up', _selectedLanguage),
                             color: const Color(0xFFF1B33A),
                             textColor: Colors.black,
                             onTap: () {
@@ -223,6 +231,29 @@ class LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            top: 60,
+            right: 35,
+            child: DropdownButton<String>(
+              icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+              underline: Container(), // Remove underline
+              items: const [
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: 'fil',
+                  child: Text('Filipino'),
+                ),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _changeLanguage(newValue);
+                }
+              },
             ),
           ),
         ],

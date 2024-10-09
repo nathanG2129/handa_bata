@@ -45,6 +45,8 @@ dependencies:
 
   flutter_email_sender: ^6.0.3
   google_fonts: ^6.2.1
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

@@ -9,21 +9,27 @@ import 'play_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
+import '/localization/splash/localization.dart'; // Import the localization file
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
-  
+
+  @override
+  SplashPageState createState() => SplashPageState();
+}
+
+class SplashPageState extends State<SplashPage> {
+  String _selectedLanguage = 'en';
+
   static const double titleFontSize = 90;
   static const double subtitleFontSize = 85;
   static const double buttonWidthFactor = 0.8;
   static const double buttonHeight = 55;
-  static const double shadowOffsetY = 5.0;
-  static const double borderStrokeWidth = 5.0;
   static const double verticalOffset = -40.0;
   static const double topPadding = 210.0;
   static const double bottomPadding = 140.0;
   static const double buttonSpacing = 20.0;
-  
+
   Future<void> _signInAnonymously(BuildContext context) async {
     try {
       AuthService authService = AuthService();
@@ -70,9 +76,9 @@ class SplashPage extends StatelessWidget {
   Future<void> _checkSignInStatus(BuildContext context) async {
     AuthService authService = AuthService();
     bool isSignedIn = await authService.isSignedIn();
-  
+
     if (!context.mounted) return;
-  
+
     if (isSignedIn) {
       // Navigate to PlayPage if the user is already signed in and chose to stay signed in
       Navigator.pushReplacement(
@@ -82,9 +88,9 @@ class SplashPage extends StatelessWidget {
     } else {
       // Check for local guest profile
       UserProfile? localGuestProfile = await authService.getLocalGuestProfile();
-  
+
       if (!context.mounted) return;
-  
+
       if (localGuestProfile != null) {
         // Navigate to PlayPage if a local guest profile exists
         Navigator.pushReplacement(
@@ -98,6 +104,12 @@ class SplashPage extends StatelessWidget {
     }
   }
 
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +120,29 @@ class SplashPage extends StatelessWidget {
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
+          ),
+          Positioned(
+            top: 60,
+            right: 35,
+            child: DropdownButton<String>(
+              icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+              underline: Container(), // Remove underline
+              items: const [
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: 'fil',
+                  child: Text('Filipino'),
+                ),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _changeLanguage(newValue);
+                }
+              },
+            ),
           ),
           Center(
             child: Column(
@@ -130,7 +165,7 @@ class SplashPage extends StatelessWidget {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: TextWithShadow(
-                            text: 'Handa Bata',
+                            text: SplashLocalization.translate('title', _selectedLanguage),
                             fontSize: ResponsiveValue<double>(
                               context,
                               defaultValue: titleFontSize,
@@ -153,7 +188,7 @@ class SplashPage extends StatelessWidget {
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: TextWithShadow(
-                              text: 'Mobile',
+                              text: SplashLocalization.translate('subtitle', _selectedLanguage),
                               fontSize: ResponsiveValue<double>(
                                 context,
                                 defaultValue: subtitleFontSize,
@@ -181,7 +216,7 @@ class SplashPage extends StatelessWidget {
                     ],
                   ).value,
                   child: CustomButton(
-                    text: 'Login',
+                    text: SplashLocalization.translate('login', _selectedLanguage),
                     color: const Color(0xFF351B61),
                     textColor: Colors.white,
                     width: MediaQuery.of(context).size.width * buttonWidthFactor,
@@ -222,7 +257,7 @@ class SplashPage extends StatelessWidget {
                     ],
                   ).value,
                   child: CustomButton(
-                    text: 'Play Now',
+                    text: SplashLocalization.translate('play_now', _selectedLanguage),
                     color: const Color(0xFFF1B33A),
                     textColor: Colors.black,
                     width: MediaQuery.of(context).size.width * buttonWidthFactor,
@@ -252,7 +287,7 @@ class SplashPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0),
                   child: Text(
-                    '© 2023 Handa Bata. All rights reserved.',
+                    SplashLocalization.translate('copyright', _selectedLanguage),
                     style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
                   ),
                 ),

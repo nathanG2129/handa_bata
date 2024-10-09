@@ -14,10 +14,10 @@ class PlayPage extends StatefulWidget {
   const PlayPage({super.key, required this.title});
 
   @override
-  _PlayPageState createState() => _PlayPageState();
+  PlayPageState createState() => PlayPageState();
 }
 
-class _PlayPageState extends State<PlayPage> {
+class PlayPageState extends State<PlayPage> {
   bool _isUserProfileVisible = false;
 
   void _toggleUserProfile() {

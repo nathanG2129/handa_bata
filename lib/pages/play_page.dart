@@ -138,7 +138,7 @@ class PlayPageState extends State<PlayPage> {
             ),
           ),
           if (_isUserProfileVisible)
-            UserProfilePage(onClose: _toggleUserProfile),
+            UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage,),
         ],
       ),
     );

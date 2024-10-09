@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import '../localization/play/localization.dart'; // Import the localization file
 
 class UserProfileHeader extends StatelessWidget {
   final String username;
@@ -9,6 +10,7 @@ class UserProfileHeader extends StatelessWidget {
   final int currentExp; // Current experience points
   final int maxExp; // Maximum experience points for the current level
   final TextStyle textStyle;
+  final String selectedLanguage; // Add selectedLanguage
 
   const UserProfileHeader({
     super.key,
@@ -19,6 +21,7 @@ class UserProfileHeader extends StatelessWidget {
     required this.currentExp,
     required this.maxExp,
     required this.textStyle,
+    required this.selectedLanguage, // Add selectedLanguage
   });
 
   @override
@@ -101,7 +104,7 @@ class UserProfileHeader extends StatelessWidget {
               ).value,
             ),
             Text(
-              'Level: $level',
+              '${PlayLocalization.translate('level', selectedLanguage)}: $level',
               style: textStyle.copyWith(
                 fontSize: ResponsiveValue<double>(
                   context,

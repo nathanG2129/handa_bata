@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import '../localization/play/localization.dart'; // Import the localization file
 
 class FavoriteBadges extends StatelessWidget {
-  const FavoriteBadges({super.key});
+  final String selectedLanguage;
+
+  const FavoriteBadges({super.key, required this.selectedLanguage});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Text(
-          'Favorite Badges',
+          PlayLocalization.translate('favoriteBadges', selectedLanguage),
           style: GoogleFonts.rubik(
             fontSize: ResponsiveValue<double>(
               context,

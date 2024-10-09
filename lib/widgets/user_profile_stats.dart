@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import '../localization/play/localization.dart'; // Import the localization file
 
 class UserProfileStats extends StatelessWidget {
   final int totalBadges;
   final int totalStagesCleared;
+  final String selectedLanguage;
 
   const UserProfileStats({
     super.key,
     required this.totalBadges,
     required this.totalStagesCleared,
+    required this.selectedLanguage,
   });
 
   @override
@@ -37,12 +40,12 @@ class UserProfileStats extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total\nBadges',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                        PlayLocalization.translate('totalBadges', selectedLanguage),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                       ),
                     ],
                   ),
@@ -98,12 +101,12 @@ class UserProfileStats extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Stages\nCleared',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                        PlayLocalization.translate('stagesCleared', selectedLanguage),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                       ),
                     ],
                   ),

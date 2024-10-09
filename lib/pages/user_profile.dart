@@ -11,8 +11,9 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import Respo
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
+  final String selectedLanguage; // Add selectedLanguage
 
-  const UserProfilePage({super.key, required this.onClose});
+  const UserProfilePage({super.key, required this.onClose, required this.selectedLanguage});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -31,6 +32,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize _selectedLanguage
     _fetchUserProfile();
   }
 
@@ -117,7 +119,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             Condition.largerThan(name: MOBILE, value: 18),
                                           ],
                                         ).value,
-                                      ),  // White font color for username and level
+                                      ), selectedLanguage: _selectedLanguage,  // White font color for username and level
                                     )
                                   : const SizedBox.shrink(),
                         ),
@@ -192,7 +194,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       children: [
         UserProfileStats(
           totalBadges: _userProfile!.totalBadgeUnlocked,
-          totalStagesCleared: _userProfile!.totalStageCleared,
+          totalStagesCleared: _userProfile!.totalStageCleared, 
+          selectedLanguage: _selectedLanguage, // Pass the selected language
         ),
         SizedBox(
           height: ResponsiveValue<double>(
@@ -204,7 +207,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ],
           ).value,
         ),
-        const FavoriteBadges(),
+        FavoriteBadges(selectedLanguage: _selectedLanguage,),
       ],
     );
   }

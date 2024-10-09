@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
 import 'package:handabatamae/widgets/arcade_button.dart';
-import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
@@ -15,10 +14,10 @@ class PlayPage extends StatefulWidget {
   const PlayPage({super.key, required this.title});
 
   @override
-  PlayPageState createState() => PlayPageState();
+  _PlayPageState createState() => _PlayPageState();
 }
 
-class PlayPageState extends State<PlayPage> {
+class _PlayPageState extends State<PlayPage> {
   bool _isUserProfileVisible = false;
 
   void _toggleUserProfile() {
@@ -41,80 +40,42 @@ class PlayPageState extends State<PlayPage> {
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 50), // Adjust the top padding as needed
-              child: SingleChildScrollView( // Wrap Column in SingleChildScrollView
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: _toggleUserProfile,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: const Color(0xFF241242), // Text color
-                        backgroundColor: Colors.white, // Background color
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero, // Purely rectangular with sharp edges
-                          side: BorderSide(color: Color(0xFF241242), width: 1.0), // Border color and width
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Adjusted padding for smaller size
-                        textStyle: GoogleFonts.rubik(fontSize: 20), // Using Rubik font
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: _toggleUserProfile,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: const Color(0xFF241242), // Text color
+                      backgroundColor: Colors.white, // Background color
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // Purely rectangular with sharp edges
+                        side: BorderSide(color: Color(0xFF241242), width: 1.0), // Border color and width
                       ),
-                      child: const Text('User Profile'),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Adjusted padding for smaller size
+                      textStyle: GoogleFonts.rubik(fontSize: 20), // Using Rubik font
                     ),
-                    const SizedBox(height: 50),
-                    SizedBox(
-                      width: ResponsiveValue<double>(
+                    child: const Text('User Profile'),
+                  ),
+                  const SizedBox(height: 50),
+                  AdventureButton(
+                    onPressed: () {
+                      Navigator.push(
                         context,
-                        defaultValue: 250.0,
-                        conditionalValues: [
-                          Condition.smallerThan(name: MOBILE, value: 180.0),
-                          Condition.largerThan(name: TABLET, value: 300.0),
-                        ],
-                      ).value,
-                      height: ResponsiveValue<double>(
+                        MaterialPageRoute(builder: (context) => const AdventurePage()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  ArcadeButton(
+                    onPressed: () {
+                      Navigator.push(
                         context,
-                        defaultValue: 200.0,
-                        conditionalValues: [
-                          Condition.smallerThan(name: MOBILE, value: 130.0),
-                          Condition.largerThan(name: TABLET, value: 250.0),
-                        ],
-                      ).value,
-                      child: AdventureButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AdventurePage()),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: ResponsiveValue<double>(
-                        context,
-                        defaultValue: 250.0,
-                        conditionalValues: [
-                          Condition.smallerThan(name: MOBILE, value: 180.0),
-                          Condition.largerThan(name: TABLET, value: 300.0),
-                        ],
-                      ).value,
-                      height: ResponsiveValue<double>(
-                        context,
-                        defaultValue: 200.0,
-                        conditionalValues: [
-                          Condition.smallerThan(name: MOBILE, value: 130.0),
-                          Condition.largerThan(name: TABLET, value: 250.0),
-                        ],
-                      ).value,
-                      child: ArcadeButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ArcadePage()),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                        MaterialPageRoute(builder: (context) => const ArcadePage()),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),

@@ -20,7 +20,7 @@ class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-  static const double questListHeight = 415; // Set the height of the quest list
+  static const double questListHeight = 475; // Set the height of the quest list
   late String _selectedLanguage; // Add this line
 
   @override
@@ -31,9 +31,7 @@ class AdventurePageState extends State<AdventurePage> {
   }
 
   Future<void> _fetchCategories() async {
-    //print('Fetching categories...');
-    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage); // Assuming 'en' is the language
-    //print('Fetched categories: $categories');
+    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage);
     setState(() {
       _categories = categories;
       _sortCategories();
@@ -55,6 +53,13 @@ class AdventurePageState extends State<AdventurePage> {
       context,
       MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage)),
     );
+  }
+
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+      _fetchCategories(); // Fetch categories again with the new language
+    });
   }
 
   Color _getButtonColor(String categoryName) {
@@ -97,10 +102,49 @@ class AdventurePageState extends State<AdventurePage> {
                   width: double.infinity,
                   height: double.infinity,
                 ),
+                Positioned(
+                  top: 60,
+                  left: 20,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      maxWidth: 100, // Adjust the width as needed
+                      maxHeight: 100, // Adjust the height as needed
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
+                      onPressed: () {
+                        _navigateBack(context);
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 60,
+                  right: 35,
+                  child: DropdownButton<String>(
+                    icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+                    underline: Container(), // Remove underline
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'en',
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'fil',
+                        child: Text('Filipino'),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        _changeLanguage(newValue);
+                      }
+                    },
+                  ),
+                ),
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 75), // Adjust the top padding as needed
+                      padding: const EdgeInsets.only(top: 90), // Adjust the top padding as needed
                       child: AdventureButton(
                         onPressed: () {
                           // Define the action for the Adventure button if needed
@@ -143,6 +187,7 @@ class AdventurePageState extends State<AdventurePage> {
                                                             'id': category['id'],
                                                             'name': category['name'],
                                                           },
+                                                          selectedLanguage: _selectedLanguage, // Pass the selected language
                                                         ),
                                                       ),
                                                     );
@@ -195,156 +240,10 @@ class AdventurePageState extends State<AdventurePage> {
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20), // Adjust the bottom padding as needed
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage,)),
-                            (Route<dynamic> route) => false,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: const Color(0xFF241242), // Text color
-                          backgroundColor: Colors.white, // Background color
-                          minimumSize: const Size(100, 40), // Smaller button size
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                          ),
-                        ),
-                        child: const Text('Back to Play Page'),
-                      ),
-                    ),
                   ],
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class AnimatedButton extends StatefulWidget {
-  final Map<String, dynamic> category;
-  final Color buttonColor;
-
-  const AnimatedButton({super.key, required this.category, required this.buttonColor});
-
-  @override
-  _AnimatedButtonState createState() => _AnimatedButtonState();
-}
-
-class _AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 0, end: 10).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) {
-    _controller.forward();
-  }
-
-  void _onTapUp(TapUpDetails details) {
-    _controller.reverse();
-  }
-
-  void _onTapCancel() {
-    _controller.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StagesPage(
-              questName: widget.category['name'],
-              category: {
-                'id': widget.category['id'],
-                'name': widget.category['name'],
-              },
-            ),
-          ),
-        );
-      },
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, _animation.value),
-            child: child,
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: widget.buttonColor,
-            border: Border.all(color: Colors.black, width: 2.0),
-            borderRadius: BorderRadius.circular(0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                offset: const Offset(4, 4),
-                blurRadius: 4,
-              ),
-              BoxShadow(
-                color: Colors.white.withOpacity(0.7),
-                offset: const Offset(-4, -4),
-                blurRadius: 4,
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 12,
-                left: 10,
-                right: 10,
-                child: Text(
-                  widget.category['name'],
-                  style: GoogleFonts.rubik(
-                    fontSize: 20, // Larger font size
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white, // Text color
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Positioned(
-                top: 39,
-                left: 10,
-                right: 10,
-                child: Text(
-                  widget.category['description'],
-                  style: GoogleFonts.rubik(
-                    fontSize: 12,
-                    color: Colors.white, // Text color
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
           ),
         ),
       ),

@@ -8,11 +8,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 
+// ignore: must_be_immutable
 class StagesPage extends StatefulWidget {
   final String questName;
   final Map<String, String> category;
+  String selectedLanguage;
 
-  const StagesPage({super.key, required this.questName, required this.category});
+  StagesPage({super.key, required this.questName, required this.category, required this.selectedLanguage});
 
   @override
   StagesPageState createState() => StagesPageState();
@@ -31,7 +33,7 @@ class StagesPageState extends State<StagesPage> {
   }
 
   Future<void> _fetchStages() async {
-    List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', widget.category['id']!);
+    List<Map<String, dynamic>> stages = await _stageService.fetchStages(widget.selectedLanguage, widget.category['id']!); // Use the selected language
     if (!mounted) return;
     setState(() {
       _stages = stages;
@@ -133,7 +135,7 @@ class StagesPageState extends State<StagesPage> {
               const Condition.between(start: 800, end: 1100, value: 800),
               const Condition.between(start: 1000, end: 1200, value: 1000),
             ]).value,
-            child: Stack(
+            child: Stack(      
               children: [
                 SvgPicture.asset(
                   'assets/backgrounds/background.svg',
@@ -141,10 +143,52 @@ class StagesPageState extends State<StagesPage> {
                   width: double.infinity,
                   height: double.infinity,
                 ),
+                Positioned(
+                  top: 60,
+                  left: 20,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      maxWidth: 100, // Adjust the width as needed
+                      maxHeight: 100, // Adjust the height as needed
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 60,
+                  right: 35,
+                  child: DropdownButton<String>(
+                    icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+                    underline: Container(), // Remove underline
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'en',
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'fil',
+                        child: Text('Filipino'),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          widget.selectedLanguage = newValue;
+                          _fetchStages(); // Fetch stages again with the new language
+                        });
+                      }
+                    },
+                  ),
+                ),
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 50),
+                      padding: const EdgeInsets.only(top: 90),
                       child: Column(
                         children: [
                           const TextWithShadow(text: 'Handa Bata', fontSize: 90),
@@ -156,49 +200,64 @@ class StagesPageState extends State<StagesPage> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(top: 75),
+                      padding: const EdgeInsets.only(top: 0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            widget.questName,
+                            widget.questName.replaceAll(' ', '\n'), // Replace spaces with new lines
                             style: GoogleFonts.rubik(
-                              fontSize: 24,
+                              fontSize: 40,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
+                            textAlign: TextAlign.center, // Center align the text
                           ),
-                          const SizedBox(width: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedMode = 'Normal';
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(0)),
+                          const SizedBox(width: 40), // Add spacing between text and buttons
+                          Column(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedMode = 'Normal';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.black, // Text color
+                                  backgroundColor: _selectedMode == 'Normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9), // Background color
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFF1A0D30), // Much darker border color
+                                    width: 4, // Thicker border width for bottom
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                                ),
+                                child: const Text('Normal'),
                               ),
-                            ),
-                            child: const Text('Normal'),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedMode = 'Hard';
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(0)),
+                              const SizedBox(height: 10), // Add spacing between buttons
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedMode = 'Hard';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.black, // Text color
+                                  backgroundColor: _selectedMode == 'Hard' ? Colors.red : const Color(0xFFD9D9D9), // Background color
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFF1A0D30), // Much darker border color
+                                    width: 4, // Thicker border width for bottom
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 39, vertical: 15),
+                                ),
+                                child: const Text('Hard'),
                               ),
-                            ),
-                            child: const Text('Hard'),
+                            ],
                           ),
                         ],
                       ),
@@ -208,11 +267,11 @@ class StagesPageState extends State<StagesPage> {
                       child: _isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : GridView.builder(
-                              padding: const EdgeInsets.all(35),
+                              padding: const EdgeInsets.all(20),
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
                                 crossAxisSpacing: 10,
-                                mainAxisSpacing: 50,
+                                mainAxisSpacing: 10,
                               ),
                               itemCount: _stages.length,
                               itemBuilder: (context, index) {
@@ -231,9 +290,6 @@ class StagesPageState extends State<StagesPage> {
                                     Map<String, dynamic> stageData = _stages[stageIndex];
                                     Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
                                     if (!mounted) return;
-                                    print('Showing Stage Dialog for Stage $stageNumber');
-                                    print('Stage Data: $stageData');
-                                    print('Stage Stats: $stageStats');
                                     showStageDialog(
                                       context,
                                       stageNumber,

@@ -89,7 +89,7 @@ class ResultsPage extends StatelessWidget {
                                   category: {
                                     'id': category['id'], // Ensure the category id is passed
                                     'name': category['name'],
-                                  },
+                                  }, selectedLanguage: '',
                                 ),
                               ),
                             );
@@ -253,7 +253,7 @@ class ResultsPage extends StatelessWidget {
                   category: {
                     'id': category['id'], // Ensure the category id is passed
                     'name': category['name'],
-                  },
+                  }, selectedLanguage: '',
                 ),
               ),
             );

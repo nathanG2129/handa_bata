@@ -231,7 +231,7 @@ class AnimatedButton extends StatefulWidget {
   final Map<String, dynamic> category;
   final Color buttonColor;
 
-  const AnimatedButton({required this.category, required this.buttonColor});
+  const AnimatedButton({super.key, required this.category, required this.buttonColor});
 
   @override
   _AnimatedButtonState createState() => _AnimatedButtonState();

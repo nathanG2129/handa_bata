@@ -94,8 +94,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               context,
                               defaultValue: 20.0,
                               conditionalValues: [
-                                Condition.smallerThan(name: MOBILE, value: 16.0),
-                                Condition.largerThan(name: MOBILE, value: 24.0),
+                                const Condition.smallerThan(name: MOBILE, value: 16.0),
+                                const Condition.largerThan(name: MOBILE, value: 24.0),
                               ],
                             ).value,
                           ),
@@ -115,8 +115,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           context,
                                           defaultValue: 16,
                                           conditionalValues: [
-                                            Condition.smallerThan(name: MOBILE, value: 14),
-                                            Condition.largerThan(name: MOBILE, value: 18),
+                                            const Condition.smallerThan(name: MOBILE, value: 14),
+                                            const Condition.largerThan(name: MOBILE, value: 18),
                                           ],
                                         ).value,
                                       ), selectedLanguage: _selectedLanguage,  // White font color for username and level
@@ -153,8 +153,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           context,
                           defaultValue: 20.0,
                           conditionalValues: [
-                            Condition.smallerThan(name: MOBILE, value: 16.0),
-                            Condition.largerThan(name: MOBILE, value: 24.0),
+                            const Condition.smallerThan(name: MOBILE, value: 16.0),
+                            const Condition.largerThan(name: MOBILE, value: 24.0),
                           ],
                         ).value,
                       ),
@@ -202,8 +202,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
             context,
             defaultValue: 20.0,
             conditionalValues: [
-              Condition.smallerThan(name: MOBILE, value: 16.0),
-              Condition.largerThan(name: MOBILE, value: 24.0),
+              const Condition.smallerThan(name: MOBILE, value: 16.0),
+              const Condition.largerThan(name: MOBILE, value: 24.0),
             ],
           ).value,
         ),

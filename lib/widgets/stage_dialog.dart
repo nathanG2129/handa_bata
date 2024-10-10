@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPage
 
@@ -51,11 +52,25 @@ void showStageDialog(
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
-                  bool isFilled = index < stars;
-                  return Icon(
-                    isFilled ? Icons.star : Icons.star_border,
-                    color: Colors.yellow,
-                    size: 36,
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0), // Add horizontal spacing
+                    child: SvgPicture.string(
+                      '''
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="36"
+                        height="36"
+                        viewBox="0 0 12 11"
+                      >
+                        <path
+                          d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                          fill="${stars > index ? '#F1B33A' : '#453958'}"
+                        />
+                      </svg>
+                      ''',
+                      width: 36,
+                      height: 36,
+                    ),
                   );
                 }),
               ),

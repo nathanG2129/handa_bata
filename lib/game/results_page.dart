@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/pages/stages_page.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 class ResultsPage extends StatelessWidget {
   final int score;
@@ -37,30 +39,111 @@ class ResultsPage extends StatelessWidget {
     print('Stars: $stars');
     print('ResultsPage received category: $category');
     print(stageName);
-
+  
     // Update the score and stars in Firestore
     _updateScoreAndStarsInFirestore(stars);
-
+  
     return Scaffold(
-      body: Container(
-        color: const Color(0xFF5E31AD), // Same background color as GameplayPage
-        child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildReactionWidget(stars),
-              const SizedBox(height: 20),
-              _buildStarsWidget(stars),
-              const SizedBox(height: 20),
-              Text(
-                'My Performance',
-                style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+      body: ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: 450, name: MOBILE),
+          Breakpoint(start: 451, end: 800, name: TABLET),
+          Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+        ],
+        child: MaxWidthBox(
+          maxWidth: 1200,
+          child: ResponsiveScaledBox(
+            width: ResponsiveValue<double>(context, conditionalValues: [
+              const Condition.equals(name: MOBILE, value: 450),
+              const Condition.between(start: 800, end: 1100, value: 800),
+              const Condition.between(start: 1000, end: 1200, value: 1000),
+            ]).value,
+            child: Container(
+              color: const Color(0xFF5E31AD), // Same background color as GameplayPage
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildReactionWidget(stars),
+                    const SizedBox(height: 20),
+                    _buildStarsWidget(stars),
+                    const SizedBox(height: 20),
+                    Text(
+                      'My Performance',
+                      style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildStatisticsWidget(),
+                    const SizedBox(height: 50),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StagesPage(
+                                  questName: category['name'], // Use the category name for questName
+                                  category: {
+                                    'id': category['id'], // Ensure the category id is passed
+                                    'name': category['name'],
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white, // Text color
+                            backgroundColor: const Color(0xFF351b61), // Background color
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFF1A0D30), // Much darker border color
+                              width: 4, // Thicker border width for bottom
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          ),
+                          child: const Text('Back'),
+                        ),
+                        const SizedBox(width: 25),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GameplayPage(
+                                  language: language,
+                                  category: category,
+                                  stageName: stageName,
+                                  stageData: stageData,
+                                  mode: mode, // Pass the mode
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.black, // Text color
+                            backgroundColor: const Color(0xFFF1B33A), // Background color
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFF8B5A00), // Much darker border color
+                              width: 4, // Thicker border width for bottom
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          ),
+                          child: const Text('Play Again'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              _buildStatisticsWidget(),
-              const SizedBox(height: 20),
-              _buildButtons(context), // Add the buttons below the statistics
-            ],
+            ),
           ),
         ),
       ),
@@ -99,10 +182,25 @@ class ResultsPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
-        return Icon(
-          index < stars ? Icons.star : Icons.star_border,
-          color: Colors.yellow,
-          size: 48,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add horizontal spacing
+          child: SvgPicture.string(
+            '''
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 12 11"
+            >
+              <path
+                d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                fill="${stars > index ? '#F1B33A' : '#453958'}"
+              />
+            </svg>
+            ''',
+            width: 48,
+            height: 48,
+          ),
         );
       }),
     );

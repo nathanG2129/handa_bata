@@ -132,7 +132,7 @@ class AdventurePageState extends State<AdventurePage> {
                                               alignment: Alignment.center,
                                               child: SizedBox(
                                                 width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-                                                height: 85, // Fixed height
+                                                height: 100, // Increased height
                                                 child: ElevatedButton(
                                                   onPressed: () {
                                                     print('Navigating to StagesPage with category: $category');
@@ -160,13 +160,12 @@ class AdventurePageState extends State<AdventurePage> {
                                                   child: Stack(
                                                     children: [
                                                       Positioned(
-                                                        top: 12,
+                                                        top: 6,
                                                         left: 0,
                                                         child: Text(
                                                           '${category['name']}',
-                                                          style: GoogleFonts.rubik(
-                                                            fontSize: 20, // Larger font size
-                                                            fontWeight: FontWeight.bold,
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 30, // Larger font size
                                                             color: Colors.white, // Text color
                                                           ),
                                                         ),
@@ -177,10 +176,11 @@ class AdventurePageState extends State<AdventurePage> {
                                                         right: 8,
                                                         child: Text(
                                                           category['description'],
-                                                          style: GoogleFonts.rubik(
-                                                            fontSize: 12,
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 20,
                                                             color: Colors.white, // Text color
                                                           ),
+                                                          overflow: TextOverflow.ellipsis,
                                                         ),
                                                       ),
                                                     ],
@@ -222,6 +222,132 @@ class AdventurePageState extends State<AdventurePage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatedButton extends StatefulWidget {
+  final Map<String, dynamic> category;
+  final Color buttonColor;
+
+  const AnimatedButton({required this.category, required this.buttonColor});
+
+  @override
+  _AnimatedButtonState createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 10).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      onTap: () {
+        print('Navigating to StagesPage with category: ${widget.category}');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StagesPage(
+              questName: widget.category['name'],
+              category: {
+                'id': widget.category['id'],
+                'name': widget.category['name'],
+              },
+            ),
+          ),
+        );
+      },
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, _animation.value),
+            child: child,
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.buttonColor,
+            border: Border.all(color: Colors.black, width: 2.0),
+            borderRadius: BorderRadius.circular(0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                offset: const Offset(4, 4),
+                blurRadius: 4,
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.7),
+                offset: const Offset(-4, -4),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: 12,
+                left: 10,
+                right: 10,
+                child: Text(
+                  widget.category['name'],
+                  style: GoogleFonts.rubik(
+                    fontSize: 20, // Larger font size
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, // Text color
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Positioned(
+                top: 39,
+                left: 10,
+                right: 10,
+                child: Text(
+                  widget.category['description'],
+                  style: GoogleFonts.rubik(
+                    fontSize: 12,
+                    color: Colors.white, // Text color
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ),

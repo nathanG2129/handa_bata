@@ -8,6 +8,7 @@ import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
 import 'package:handabatamae/game/type/identificationquestion.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -455,52 +456,70 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         );
     }
   
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent back navigation
-        return false;
-      },
-      child: Scaffold(
-        body: Container(
-          color: const Color(0xFF5E31AD), // Set the background color to #5e31ad
-          child: SafeArea(
-            child: Column(
-              children: [
-                ProgressBar(progress: _progress),
-                const SizedBox(height: 48),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_currentQuestionIndex + 1} of $_totalQuestions',
-                        style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
+    return Scaffold(
+    body: ResponsiveBreakpoints(
+      breakpoints: const [
+        Breakpoint(start: 0, end: 450, name: MOBILE),
+        Breakpoint(start: 451, end: 800, name: TABLET),
+        Breakpoint(start: 801, end: 1920, name: DESKTOP),
+        Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+      ],
+      child: MaxWidthBox(
+        maxWidth: 1200,
+        child: ResponsiveScaledBox(
+          width: ResponsiveValue<double>(context, conditionalValues: [
+            const Condition.equals(name: MOBILE, value: 450),
+            const Condition.between(start: 800, end: 1100, value: 800),
+            const Condition.between(start: 1000, end: 1200, value: 1000),
+          ]).value,
+          child: WillPopScope(
+            onWillPop: () async {
+              // Prevent back navigation
+              return false;
+            },
+            child: Scaffold(
+              backgroundColor: const Color(0xFF5E31AD),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    ProgressBar(progress: _progress),
+                    const SizedBox(height: 48),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_currentQuestionIndex + 1} of $_totalQuestions',
+                            style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.volume_up, color: Colors.white),
+                            onPressed: () {
+                              // Handle mute/unmute
+                            },
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.volume_up, color: Colors.white),
-                        onPressed: () {
-                          // Handle mute/unmute
-                        },
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                        child: questionWidget,
                       ),
-                    ],
-                  ),
+                    ),
+                    HPBar(hp: _hp), // Add the HP bar at the bottom
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                    child: questionWidget,
-                  ),
-                ),
-                HPBar(hp: _hp), // Add the HP bar at the bottom
-              ],
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class ProgressBar extends StatelessWidget {

@@ -3,12 +3,12 @@ import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'splash_page.dart'; // Import SplashPage
+import '../localization/play/localization.dart'; // Import the localization file
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onNicknameChanged; // Add this callback
   final String selectedLanguage; // Add this line
-
 
   const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged, required this.selectedLanguage});
 
@@ -20,7 +20,6 @@ class AccountSettingsState extends State<AccountSettings> {
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
-  late String _selectedLanguage; // Add this line
 
   @override
   void initState() {
@@ -41,7 +40,7 @@ class AccountSettingsState extends State<AccountSettings> {
       if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching user profile: $e')),
+        SnackBar(content: Text('${PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)} $e')),
       );
       setState(() {
         _isLoading = false;
@@ -59,7 +58,7 @@ class AccountSettingsState extends State<AccountSettings> {
       if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating nickname: $e')),
+        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', widget.selectedLanguage)} $e')),
       );
     }
   }
@@ -71,11 +70,11 @@ class AccountSettingsState extends State<AccountSettings> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Change Nickname'),
+          title: Text(PlayLocalization.translate('changeNickname', widget.selectedLanguage)),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(
-              labelText: 'New Nickname',
+              labelText: PlayLocalization.translate('newNickname', widget.selectedLanguage),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30.0),
               ),
@@ -86,14 +85,14 @@ class AccountSettingsState extends State<AccountSettings> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(PlayLocalization.translate('cancel', widget.selectedLanguage)),
             ),
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _updateNickname(controller.text);
               },
-              child: const Text('Save'),
+              child: Text(PlayLocalization.translate('save', widget.selectedLanguage)),
             ),
           ],
         );
@@ -113,7 +112,7 @@ class AccountSettingsState extends State<AccountSettings> {
       if (!mounted) return;
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting account: $e')),
+        SnackBar(content: Text('${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e')),
       );
     }
   }
@@ -123,14 +122,14 @@ class AccountSettingsState extends State<AccountSettings> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Account Deletion'),
-          content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          title: Text(PlayLocalization.translate('confirmAccountDeletion', widget.selectedLanguage)),
+          content: Text(PlayLocalization.translate('accountDeletionWarning', widget.selectedLanguage)),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(PlayLocalization.translate('cancel', widget.selectedLanguage)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -140,7 +139,7 @@ class AccountSettingsState extends State<AccountSettings> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(PlayLocalization.translate('delete', widget.selectedLanguage)),
             ),
           ],
         );
@@ -156,7 +155,7 @@ class AccountSettingsState extends State<AccountSettings> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const SplashPage(selectedLanguage: '',)),
+          MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)),
           (Route<dynamic> route) => false,
         );
       }
@@ -164,10 +163,19 @@ class AccountSettingsState extends State<AccountSettings> {
       if (mounted) {
         // Handle error
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${PlayLocalization.translate('error', widget.selectedLanguage)} $e')),
         );
       }
     }
+  }
+
+  String _redactEmail(String email) {
+    List<String> parts = email.split('@');
+    if (parts.length != 2) return email;
+    String username = parts[0];
+    String domain = parts[1];
+    String redactedUsername = username.length > 2 ? username[0] + '*' * (username.length - 2) + username[username.length - 1] : username;
+    return '$redactedUsername@$domain';
   }
 
   @override
@@ -177,7 +185,7 @@ class AccountSettingsState extends State<AccountSettings> {
     }
 
     if (_userProfile == null) {
-      return const Center(child: Text('Failed to load user data'));
+      return Center(child: Text(PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)));
     }
 
     return Container(
@@ -188,11 +196,218 @@ class AccountSettingsState extends State<AccountSettings> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildFieldContainer('Nickname', _userProfile!.nickname, true),
-            _buildFieldContainer('Birthday', _userProfile!.birthday, false),
-            _buildFieldContainer('Email', _showEmail ? _userProfile!.email : _redactEmail(_userProfile!.email), false), // Redact the email
-            _buildFieldContainer('Password', '********', true),
-            _buildFieldContainer('Logout', '', false), // Add the Logout button here
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          PlayLocalization.translate('nickname', widget.selectedLanguage),
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ), // Use Rubik font
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _userProfile!.nickname,
+                          style: GoogleFonts.rubik(
+                            fontSize: 16,
+                          ), // Use Rubik font
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _showChangeNicknameDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4d278f), // Color of the button
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      textStyle: const TextStyle(fontSize: 16),
+                      minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // Rectangular shape
+                        side: BorderSide(color: Colors.black, width: 3), // Black border
+                      ),
+                    ),
+                    child: Text(
+                      PlayLocalization.translate('changeNickname', widget.selectedLanguage),
+                      style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          PlayLocalization.translate('birthday', widget.selectedLanguage),
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ), // Use Rubik font
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _userProfile!.birthday,
+                          style: GoogleFonts.rubik(
+                            fontSize: 16,
+                          ), // Use Rubik font
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          PlayLocalization.translate('email', widget.selectedLanguage),
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ), // Use Rubik font
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _showEmail ? _userProfile!.email : _redactEmail(_userProfile!.email),
+                          style: GoogleFonts.rubik(
+                            fontSize: 16,
+                          ), // Use Rubik font
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _showEmail = !_showEmail;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white, // White background
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      textStyle: const TextStyle(fontSize: 16),
+                      minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // Rectangular shape
+                        side: BorderSide(color: Colors.black, width: 3), // Black border
+                      ),
+                    ),
+                    child: Text(
+                      _showEmail ? PlayLocalization.translate('hide', widget.selectedLanguage) : PlayLocalization.translate('show', widget.selectedLanguage),
+                      style: const TextStyle(color: Colors.black), // Ensure text color is set to black
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          PlayLocalization.translate('password', widget.selectedLanguage),
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ), // Use Rubik font
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '********',
+                          style: GoogleFonts.rubik(
+                            fontSize: 16,
+                          ), // Use Rubik font
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle password change
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4d278f), // Color of the button
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      textStyle: const TextStyle(fontSize: 16),
+                      minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // Rectangular shape
+                        side: BorderSide(color: Colors.black, width: 3), // Black border
+                      ),
+                    ),
+                    child: Text(
+                      PlayLocalization.translate('changePassword', widget.selectedLanguage),
+                      style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          PlayLocalization.translate('logout', widget.selectedLanguage),
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ), // Use Rubik font
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _logout,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red, // Red background for logout
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      textStyle: const TextStyle(fontSize: 16),
+                      minimumSize: const Size(100, 40), // Set minimum size to constrain the button
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // Rectangular shape
+                        side: BorderSide(color: Colors.black, width: 3), // Black border
+                      ),
+                    ),
+                    child: Text(
+                      PlayLocalization.translate('logoutButton', widget.selectedLanguage),
+                      style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const Divider(
               color: Colors.black,
               thickness: 1,
@@ -207,7 +422,7 @@ class AccountSettingsState extends State<AccountSettings> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Account Removal',
+                        PlayLocalization.translate('accountRemoval', widget.selectedLanguage),
                         style: GoogleFonts.rubik(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -215,7 +430,7 @@ class AccountSettingsState extends State<AccountSettings> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                        PlayLocalization.translate('accountRemovalDescription', widget.selectedLanguage),
                         style: GoogleFonts.rubik(
                           fontSize: 16,
                         ),
@@ -229,15 +444,15 @@ class AccountSettingsState extends State<AccountSettings> {
                             backgroundColor: Colors.red,
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             textStyle: const TextStyle(fontSize: 16),
-                            minimumSize: const Size(150, 40), // Set minimum size to constrain the button
+                            minimumSize: const Size(100, 40), // Set minimum size to constrain the button
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.zero, // Rectangular shape
                               side: BorderSide(color: Colors.black, width: 3), // Black border
                             ),
                           ),
-                          child: const Text(
-                            'Delete Account',
-                            style: TextStyle(color: Colors.white), // Ensure text color is set to white
+                          child: Text(
+                            PlayLocalization.translate('delete', widget.selectedLanguage),
+                            style: const TextStyle(color: Colors.white), // Ensure text color is set to white
                           ),
                         ),
                       ),
@@ -248,106 +463,6 @@ class AccountSettingsState extends State<AccountSettings> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  String _redactEmail(String email) {
-    final parts = email.split('@');
-    if (parts.length != 2) return email; // Return the original email if it's not valid
-    final redacted = '*' * (parts[0].length > 9 ? 9 : parts[0].length);
-    return '$redacted@${parts[1]}';
-  }
-
-  Widget _buildFieldContainer(String title, String details, bool showChangeButton) {
-    return Container(
-      padding: const EdgeInsets.all(10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.rubik(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ), // Use Rubik font
-                ),
-                const SizedBox(height: 5),
-                if (title != 'Logout') // Hide details for Logout
-                  Text(
-                    details,
-                    style: GoogleFonts.rubik(
-                      fontSize: 16,
-                    ), // Use Rubik font
-                  ),
-              ],
-            ),
-          ),
-          if (showChangeButton && title != 'Email' && title != 'Logout') // Conditionally show the button
-            ElevatedButton(
-              onPressed: () {
-                _showChangeNicknameDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4d278f), // Color of the button
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                textStyle: const TextStyle(fontSize: 16),
-                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero, // Rectangular shape
-                  side: BorderSide(color: Colors.black, width: 3), // Black border
-                ),
-              ),
-              child: const Text(
-                'Change',
-                style: TextStyle(color: Colors.white), // Ensure text color is set to white
-              ),
-            ),
-          if (title == 'Email') // Conditionally show the Show button for Email
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _showEmail = !_showEmail;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // White background
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                textStyle: const TextStyle(fontSize: 16),
-                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero, // Rectangular shape
-                  side: const BorderSide(color: Colors.black, width: 3), // Black border
-                ),
-              ),
-              child: Text(
-                _showEmail ? 'Hide' : 'Show',
-                style: const TextStyle(color: Colors.black), // Ensure text color is set to black
-              ),
-            ),
-          if (title == 'Logout') // Conditionally show the Logout button
-            ElevatedButton(
-              onPressed: _logout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, // Red background for logout
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                textStyle: const TextStyle(fontSize: 16),
-                minimumSize: const Size(100, 40), // Set minimum size to constrain the button
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero, // Rectangular shape
-                  side: BorderSide(color: Colors.black, width: 3), // Black border
-                ),
-              ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white), // Ensure text color is set to white
-              ),
-            ),
-        ],
       ),
     );
   }

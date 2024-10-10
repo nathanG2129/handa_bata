@@ -5,6 +5,7 @@ import 'stages_page.dart'; // Import StagesPage
 import 'package:handabatamae/widgets/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 
 class AdventurePage extends StatefulWidget {
   final String selectedLanguage;
@@ -14,7 +15,6 @@ class AdventurePage extends StatefulWidget {
   @override
   AdventurePageState createState() => AdventurePageState();
 }
-
 
 class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
@@ -75,137 +75,155 @@ class AdventurePageState extends State<AdventurePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          SvgPicture.asset(
-            'assets/backgrounds/background.svg', // Use the common background image
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 75), // Adjust the top padding as needed
-                child: AdventureButton(
-                  onPressed: () {
-                    // Define the action for the Adventure button if needed
-                  },
+      body: ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: 450, name: MOBILE),
+          Breakpoint(start: 451, end: 800, name: TABLET),
+          Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+        ],
+        child: MaxWidthBox(
+          maxWidth: 1200,
+          child: ResponsiveScaledBox(
+            width: ResponsiveValue<double>(context, conditionalValues: [
+              const Condition.equals(name: MOBILE, value: 450),
+              const Condition.between(start: 800, end: 1100, value: 800),
+              const Condition.between(start: 1000, end: 1200, value: 1000),
+            ]).value,
+            child: Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg', // Use the common background image
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start, // Align to the start
-                      children: [
-                        const SizedBox(height: 30), // Adjust the height to position the first button closer
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : SizedBox(
-                                height: questListHeight, // Set the height of the quest list
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.only(top: 0), // Remove extra space at the top
-                                  itemCount: _categories.length,
-                                  itemBuilder: (context, index) {
-                                    final category = _categories[index];
-                                    final buttonColor = _getButtonColor(category['name']);
-                                    return Padding(
-                                      padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20), // Apply margin only to the bottom except for the last item
-                                      child: Align(
-                                        alignment: Alignment.center,
-                                        child: SizedBox(
-                                          width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-                                          height: 85, // Fixed height
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              print('Navigating to StagesPage with category: $category');
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => StagesPage(
-                                                    questName: category['name'],
-                                                    category: {
-                                                      'id': category['id'],
-                                                      'name': category['name'],
-                                                    },
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 75), // Adjust the top padding as needed
+                      child: AdventureButton(
+                        onPressed: () {
+                          // Define the action for the Adventure button if needed
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(0.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start, // Align to the start
+                            children: [
+                              const SizedBox(height: 30), // Adjust the height to position the first button closer
+                              _isLoading
+                                  ? const CircularProgressIndicator()
+                                  : SizedBox(
+                                      height: questListHeight, // Set the height of the quest list
+                                      child: ListView.builder(
+                                        padding: const EdgeInsets.only(top: 0), // Remove extra space at the top
+                                        itemCount: _categories.length,
+                                        itemBuilder: (context, index) {
+                                          final category = _categories[index];
+                                          final buttonColor = _getButtonColor(category['name']);
+                                          return Padding(
+                                            padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20), // Apply margin only to the bottom except for the last item
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: SizedBox(
+                                                width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
+                                                height: 85, // Fixed height
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    print('Navigating to StagesPage with category: $category');
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => StagesPage(
+                                                          questName: category['name'],
+                                                          category: {
+                                                            'id': category['id'],
+                                                            'name': category['name'],
+                                                          },
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    foregroundColor: Colors.white, // Text color
+                                                    backgroundColor: buttonColor, // Set background color based on category
+                                                    shape: const RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                                                      side: BorderSide(color: Colors.black, width: 2.0), // Black border
+                                                    ),
+                                                  ),
+                                                  child: Stack(
+                                                    children: [
+                                                      Positioned(
+                                                        top: 12,
+                                                        left: 0,
+                                                        child: Text(
+                                                          '${category['name']}',
+                                                          style: GoogleFonts.rubik(
+                                                            fontSize: 20, // Larger font size
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Positioned(
+                                                        top: 39,
+                                                        left: 0,
+                                                        right: 8,
+                                                        child: Text(
+                                                          category['description'],
+                                                          style: GoogleFonts.rubik(
+                                                            fontSize: 12,
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
-                                              );
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              foregroundColor: Colors.white, // Text color
-                                              backgroundColor: buttonColor, // Set background color based on category
-                                              shape: const RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                side: BorderSide(color: Colors.black, width: 2.0), // Black border
                                               ),
                                             ),
-                                            child: Stack(
-                                              children: [
-                                                Positioned(
-                                                  top: 12,
-                                                  left: 0,
-                                                  child: Text(
-                                                    '${category['name']}',
-                                                    style: GoogleFonts.rubik(
-                                                      fontSize: 20, // Larger font size
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.white, // Text color
-                                                    ),
-                                                  ),
-                                                ),
-                                                Positioned(
-                                                  top: 39,
-                                                  left: 0,
-                                                  right: 8,
-                                                  child: Text(
-                                                    category['description'],
-                                                    style: GoogleFonts.rubik(
-                                                      fontSize: 12,
-                                                      color: Colors.white, // Text color
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-                      ],
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20), // Adjust the bottom padding as needed
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage,)),
-                      (Route<dynamic> route) => false,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF241242), // Text color
-                    backgroundColor: Colors.white, // Background color
-                    minimumSize: const Size(100, 40), // Smaller button size
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20), // Adjust the bottom padding as needed
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage,)),
+                            (Route<dynamic> route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: const Color(0xFF241242), // Text color
+                          backgroundColor: Colors.white, // Background color
+                          minimumSize: const Size(100, 40), // Smaller button size
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                          ),
+                        ),
+                        child: const Text('Back to Play Page'),
+                      ),
                     ),
-                  ),
-                  child: const Text('Back to Play Page'),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

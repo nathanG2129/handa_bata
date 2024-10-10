@@ -6,6 +6,7 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/stage_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 
 class StagesPage extends StatefulWidget {
   final String questName;
@@ -122,145 +123,163 @@ class StagesPageState extends State<StagesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          SvgPicture.asset(
-            'assets/backgrounds/background.svg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 50),
-                child: Column(
-                  children: [
-                    const TextWithShadow(text: 'Handa Bata', fontSize: 90),
-                    Transform.translate(
-                      offset: const Offset(0, -40),
-                      child: const TextWithShadow(text: 'Mobile', fontSize: 85),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 75),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.questName,
-                      style: GoogleFonts.rubik(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedMode = 'Normal';
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0)),
-                        ),
-                      ),
-                      child: const Text('Normal'),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedMode = 'Hard';
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0)),
-                        ),
-                      ),
-                      child: const Text('Hard'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(35),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 50,
-                        ),
-                        itemCount: _stages.length,
-                        itemBuilder: (context, index) {
-                          final rowIndex = index ~/ 3;
-                          final columnIndex = index % 3;
-                          final isEvenRow = rowIndex % 2 == 0;
-                          final stageIndex = isEvenRow
-                              ? index
-                              : (rowIndex + 1) * 3 - columnIndex - 1;
-                          final stageNumber = stageIndex + 1;
-                          final stageCategory = widget.category['name'];
-                          final stageColor = _getStageColor(stageCategory);
-
-                          return GestureDetector(
-                            onTap: () async {
-                              Map<String, dynamic> stageData = _stages[stageIndex];
-                              int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
-                              Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
-                              if (!mounted) return;
-                              showStageDialog(
-                                context,
-                                stageNumber,
-                                {
-                                  'id': widget.category['id']!,
-                                  'name': widget.category['name']!,
-                                },
-                                numberOfQuestions,
-                                stageData,
-                                _selectedMode,
-                                stageStats['personalBest'],
-                                stageStats['stars'],
-                              );
-                            },
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SvgPicture.string(
-                                  _getModifiedSvg(stageColor),
-                                  width: 100,
-                                  height: 100,
-                                ),
-                                Text(
-                                  '$stageNumber',
-                                  style: GoogleFonts.vt323(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+      body: ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: 450, name: MOBILE),
+          Breakpoint(start: 451, end: 800, name: TABLET),
+          Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
         ],
+        child: MaxWidthBox(
+          maxWidth: 1200,
+          child: ResponsiveScaledBox(
+            width: ResponsiveValue<double>(context, conditionalValues: [
+              const Condition.equals(name: MOBILE, value: 450),
+              const Condition.between(start: 800, end: 1100, value: 800),
+              const Condition.between(start: 1000, end: 1200, value: 1000),
+            ]).value,
+            child: Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 50),
+                      child: Column(
+                        children: [
+                          const TextWithShadow(text: 'Handa Bata', fontSize: 90),
+                          Transform.translate(
+                            offset: const Offset(0, -40),
+                            child: const TextWithShadow(text: 'Mobile', fontSize: 85),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 75),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.questName,
+                            style: GoogleFonts.rubik(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedMode = 'Normal';
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: _selectedMode == 'Normal' ? Colors.blue : Colors.grey,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(0)),
+                              ),
+                            ),
+                            child: const Text('Normal'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedMode = 'Hard';
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: _selectedMode == 'Hard' ? Colors.red : Colors.grey,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(0)),
+                              ),
+                            ),
+                            child: const Text('Hard'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : GridView.builder(
+                              padding: const EdgeInsets.all(35),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 50,
+                              ),
+                              itemCount: _stages.length,
+                              itemBuilder: (context, index) {
+                                final rowIndex = index ~/ 3;
+                                final columnIndex = index % 3;
+                                final isEvenRow = rowIndex % 2 == 0;
+                                final stageIndex = isEvenRow
+                                    ? index
+                                    : (rowIndex + 1) * 3 - columnIndex - 1;
+                                final stageNumber = stageIndex + 1;
+                                final stageCategory = widget.category['name'];
+                                final stageColor = _getStageColor(stageCategory);
+
+                                return GestureDetector(
+                                  onTap: () async {
+                                    Map<String, dynamic> stageData = _stages[stageIndex];
+                                    int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
+                                    Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
+                                    if (!mounted) return;
+                                    showStageDialog(
+                                      context,
+                                      stageNumber,
+                                      {
+                                        'id': widget.category['id']!,
+                                        'name': widget.category['name']!,
+                                      },
+                                      numberOfQuestions,
+                                      stageData,
+                                      _selectedMode,
+                                      stageStats['personalBest'],
+                                      stageStats['stars'],
+                                    );
+                                  },
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      SvgPicture.string(
+                                        _getModifiedSvg(stageColor),
+                                        width: 100,
+                                        height: 100,
+                                      ),
+                                      Text(
+                                        '$stageNumber',
+                                        style: GoogleFonts.vt323(
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -27,6 +27,7 @@ class SplashPageState extends State<SplashPage> {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
     print('Selected language: $_selectedLanguage');
+    print(User);
   }
 
   static const double titleFontSize = 90;

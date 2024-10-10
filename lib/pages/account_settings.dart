@@ -100,22 +100,25 @@ class AccountSettingsState extends State<AccountSettings> {
     );
   }
 
-  Future<void> _deleteAccount() async {
-    AuthService authService = AuthService();
-    try {
-      await authService.deleteUserAccount();
-      await authService.clearLocalGuestProfile(); // Clear local guest profile
-      if (!mounted) return;
-      // Navigate back or show a success message
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (!mounted) return;
-      // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e')),
-      );
-    }
+Future<void> _deleteAccount() async {
+  AuthService authService = AuthService();
+  try {
+    await authService.deleteUserAccount();
+    await authService.clearLocalGuestProfile(); // Clear local guest profile
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)),
+      (Route<dynamic> route) => false,
+    );
+  } catch (e) {
+    if (!mounted) return;
+    // Handle error
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e')),
+    );
   }
+}
 
   void _showDeleteAccountDialog() {
     showDialog(

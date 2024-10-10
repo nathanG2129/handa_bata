@@ -2,7 +2,7 @@ class LoginLocalization {
   static const Map<String, Map<String, String>> _localizedValues = {
     'en': {
       'title': 'Login',
-      'email': 'Email',
+      'email': 'Username',
       'password': 'Password',
       'login_button': 'Login',
       'forgot_password': 'Forgot Password?',
@@ -11,7 +11,7 @@ class LoginLocalization {
     },
     'fil': {
       'title': 'Mag-login',
-      'email': 'Email',
+      'email': 'Username',
       'password': 'Password',
       'login_button': 'Mag-login',
       'forgot_password': 'Nakalimutan ang Password?',

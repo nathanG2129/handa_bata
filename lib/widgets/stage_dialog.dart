@@ -12,6 +12,7 @@ void showStageDialog(
   String mode,
   int personalBest, // Add personal best score
   int stars, // Add stars
+  String selectedLanguage, // Add selectedLanguage
 ) {
   // Convert category name to plural form
   String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
@@ -89,7 +90,7 @@ void showStageDialog(
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => GameplayPage(
-                        language: 'en',
+                        language: selectedLanguage, // Pass selectedLanguage
                         category: {
                           'id': category['id'],
                           'name': category['name'],

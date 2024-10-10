@@ -302,6 +302,7 @@ class StagesPageState extends State<StagesPage> {
                                       _selectedMode,
                                       stageStats['personalBest'],
                                       stageStats['stars'],
+                                      widget.selectedLanguage, // Pass selectedLanguage
                                     );
                                   },
                                   child: Stack(

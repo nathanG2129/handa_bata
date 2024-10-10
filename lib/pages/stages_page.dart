@@ -27,7 +27,6 @@ class StagesPageState extends State<StagesPage> {
   @override
   void initState() {
     super.initState();
-    print('StagesPage received category: ${widget.category}');
     _fetchStages();
   }
 
@@ -40,10 +39,9 @@ class StagesPageState extends State<StagesPage> {
     });
   }
 
-  Future<int> _fetchNumberOfQuestions(int stageIndex) async {
+  Future<int> _fetchMaxScore(int stageIndex) async {
     String stageName = '${widget.category['id']}${stageIndex + 1}';
-    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions('en', widget.category['id']!, stageName);
-    return questions.length;
+    return await _stageService.fetchMaxScore('en', widget.category['id']!, stageName);
   }
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
@@ -234,7 +232,7 @@ class StagesPageState extends State<StagesPage> {
                                 return GestureDetector(
                                   onTap: () async {
                                     Map<String, dynamic> stageData = _stages[stageIndex];
-                                    int numberOfQuestions = await _fetchNumberOfQuestions(stageIndex);
+                                    int maxScore = await _fetchMaxScore(stageIndex);
                                     Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
                                     if (!mounted) return;
                                     showStageDialog(
@@ -244,7 +242,7 @@ class StagesPageState extends State<StagesPage> {
                                         'id': widget.category['id']!,
                                         'name': widget.category['name']!,
                                       },
-                                      numberOfQuestions,
+                                      maxScore, // Pass maxScore instead of numberOfQuestions
                                       stageData,
                                       _selectedMode,
                                       stageStats['personalBest'],

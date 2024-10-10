@@ -151,9 +151,9 @@ class ResultsPage extends StatelessWidget {
   }
 
   int _calculateStars(double accuracy, int score, int totalQuestions) {
-    if (accuracy > 0.9 && score == totalQuestions) {
+    if (accuracy > 0.9 && score == totalQuestions) { // Adjust the condition to reflect the correct answers count
       return 3;
-    } else if (score > totalQuestions / 2) {
+    } else if (score > totalQuestions / 2) { // Adjust the condition to reflect the correct answers count
       return 2;
     } else {
       return 1;
@@ -320,8 +320,8 @@ class ResultsPage extends StatelessWidget {
   
     if (mode == 'Normal') {
       final currentScore = stageData[stageKey]['scoreNormal'] as int;
-      if (fullyCorrectAnswersCount > currentScore) {
-        stageData[stageKey]['scoreNormal'] = fullyCorrectAnswersCount;
+      if (score > currentScore) { // Use the correct answers count as the score
+        stageData[stageKey]['scoreNormal'] = score; // Update with the correct answers count
       }
   
       final normalStageStars = data['normalStageStars'] as List<dynamic>;
@@ -332,8 +332,8 @@ class ResultsPage extends StatelessWidget {
       }
     } else if (mode == 'Hard') {
       final currentScore = stageData[stageKey]['scoreHard'] as int;
-      if (fullyCorrectAnswersCount > currentScore) {
-        stageData[stageKey]['scoreHard'] = fullyCorrectAnswersCount;
+      if (score > currentScore) { // Use the correct answers count as the score
+        stageData[stageKey]['scoreHard'] = score; // Update with the correct answers count
       }
   
       final hardStageStars = data['hardStageStars'] as List<dynamic>;
@@ -343,7 +343,7 @@ class ResultsPage extends StatelessWidget {
         hardStageStars[stageIndex] = stars;
       }
     }
-  
+    
     // Update Firestore with the new data
     await docRef.update({
       'stageData': stageData,

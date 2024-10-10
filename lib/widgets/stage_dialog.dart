@@ -7,7 +7,7 @@ void showStageDialog(
   BuildContext context,
   int stageNumber,
   Map<String, String> category,
-  int numberOfQuestions,
+  int maxScore, // Change parameter name to maxScore
   Map<String, dynamic> stageData,
   String mode,
   int personalBest, // Add personal best score
@@ -76,7 +76,7 @@ void showStageDialog(
               ),
               const SizedBox(height: 20),
               Text(
-                'Personal Best: $personalBest / $numberOfQuestions',
+                'Personal Best: $personalBest / $maxScore', // Use maxScore instead of numberOfQuestions
                 style: GoogleFonts.vt323(
                   fontSize: 24,
                 ),
@@ -84,7 +84,6 @@ void showStageDialog(
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
-                  print('Navigating to GameplayPage with category: $category and mode: $mode');
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
                     MaterialPageRoute(

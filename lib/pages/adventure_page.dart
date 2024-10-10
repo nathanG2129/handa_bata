@@ -27,7 +27,6 @@ class AdventurePageState extends State<AdventurePage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected languagesdasds: $_selectedLanguage');
     _fetchCategories();
   }
 
@@ -135,7 +134,6 @@ class AdventurePageState extends State<AdventurePage> {
                                                 height: 100, // Increased height
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    print('Navigating to StagesPage with category: $category');
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
@@ -278,7 +276,6 @@ class _AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvid
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
       onTap: () {
-        print('Navigating to StagesPage with category: ${widget.category}');
         Navigator.push(
           context,
           MaterialPageRoute(

@@ -58,7 +58,6 @@ class GameplayPageState extends State<GameplayPage> {
   void initState() {
     super.initState();
     _initializeQuestions();
-    print('GameplayPage received category: ${widget.category}');
   }
 
   void _initializeQuestions() {
@@ -75,7 +74,6 @@ class GameplayPageState extends State<GameplayPage> {
         _hasError = true;
         _isLoading = false;
       });
-      print('Error initializing questions: $e');
     }
   }
 
@@ -131,7 +129,6 @@ class GameplayPageState extends State<GameplayPage> {
         _matchingTypeQuestionKey.currentState?.forceCheckAnswer(); // Call the forceCheckAnswer method of MatchingTypeQuestion
         break;
       default:
-        print('Unknown question type');
     }
   }
 
@@ -156,10 +153,9 @@ class GameplayPageState extends State<GameplayPage> {
               stageData: {
                 ...widget.stageData,
                 'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
-                
               },
               mode: widget.mode, // Pass the mode
-              fullyCorrectAnswersCount: _fullyCorrectAnswersCount,
+              fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             ),
           ),
         );
@@ -234,11 +230,7 @@ class GameplayPageState extends State<GameplayPage> {
       _updateHealth(isCorrect, 'Multiple Choice');
     });
   
-    print('Correct Answers Count: $_correctAnswersCount');
-    print('Wrong Answers Count: $_wrongAnswersCount');
-    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
-    print('Current Streak: $_currentStreak');
-    print('Highest Streak: $_highestStreak');
+    // Print fully correct answers count
   
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
@@ -266,10 +258,7 @@ class GameplayPageState extends State<GameplayPage> {
       _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
     });
   
-    print('Correct Answers Count: $_correctAnswersCount');
-    print('Wrong Answers Count: $_wrongAnswersCount');
-    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
-    print('Current Streak: $_currentStreak');
+    // Print fully correct answers count
   
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
@@ -296,11 +285,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   // Update health
   _updateHealth(isCorrect, 'Identification');
 
-  print('Correct Answers Count: $_correctAnswersCount');
-  print('Wrong Answers Count: $_wrongAnswersCount');
-  print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
-  print('Current Streak: $_currentStreak');
-  print('Highest Streak: $_highestStreak');
+  // Print fully correct answers count
 
   Future.delayed(const Duration(seconds: 6), () {
     _nextQuestion();
@@ -329,11 +314,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     // Update health
     _updateHealth(_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true, 'Matching Type', blankPairs: _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0);
   
-    print('Correct Answers Count: $_correctAnswersCount');
-    print('Wrong Answers Count: $_wrongAnswersCount');
-    print('Fully Correct Answers Count: $_fullyCorrectAnswersCount'); // Print fully correct answers count
-    print('Current Streak: $_currentStreak');
-    print('Highest Streak: $_highestStreak');
+    // Print fully correct answers count
   }
   
   void _handleVisualDisplayComplete() {

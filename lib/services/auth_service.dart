@@ -69,11 +69,25 @@ class AuthService {
             unlockedHardStages[0] = true;
           }
           
+          // Inside registerWithEmailAndPassword and createGuestProfile methods
+          
           // Create stageData map
           Map<String, Map<String, dynamic>> stageData = {};
           for (var stage in stages) {
             String stageName = stage['stageName'];
-            int maxScore = (stage['questions'] as List).length;
+            int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+              if (question['type'] == 'Multiple Choice') {
+                return sum + 1;
+              } else if (question['type'] == 'Fill in the Blanks') {
+                return sum + (question['answer'] as List).length;
+              } else if (question['type'] == 'Identification') {
+                return sum + 1;
+              } else if (question['type'] == 'Matching Type') {
+                return sum + (question['answerPairs'] as List).length;
+              } else {
+                return sum;
+              }
+            });
             stageData[stageName] = {
               'maxScore': maxScore,
               'scoreHard': 0,
@@ -152,11 +166,25 @@ class AuthService {
           unlockedHardStages[0] = true;
         }
         
+        // Inside registerWithEmailAndPassword and createGuestProfile methods
+        
         // Create stageData map
         Map<String, Map<String, dynamic>> stageData = {};
         for (var stage in stages) {
           String stageName = stage['stageName'];
-          int maxScore = (stage['questions'] as List).length;
+          int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+            if (question['type'] == 'Multiple Choice') {
+              return sum + 1;
+            } else if (question['type'] == 'Fill in the Blanks') {
+              return sum + (question['answer'] as List).length;
+            } else if (question['type'] == 'Identification') {
+              return sum + 1;
+            } else if (question['type'] == 'Matching Type') {
+              return sum + (question['answerPairs'] as List).length;
+            } else {
+              return sum;
+            }
+          });
           stageData[stageName] = {
             'maxScore': maxScore,
             'scoreHard': 0,

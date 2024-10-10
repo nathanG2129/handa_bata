@@ -28,7 +28,6 @@ class PlayPageState extends State<PlayPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected language: $_selectedLanguage');
   }
 
   void _toggleUserProfile() {
@@ -113,7 +112,7 @@ class PlayPageState extends State<PlayPage> {
                 ),
                 Positioned(
                   top: 60,
-                  left: 20,
+                  left: 35,
                   child: Container(
                     constraints: const BoxConstraints(
                       maxWidth: 100, // Adjust the width as needed

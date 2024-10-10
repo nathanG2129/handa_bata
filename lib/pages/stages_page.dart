@@ -145,7 +145,7 @@ class StagesPageState extends State<StagesPage> {
                 ),
                 Positioned(
                   top: 60,
-                  left: 20,
+                  left: 35,
                   child: Container(
                     constraints: const BoxConstraints(
                       maxWidth: 100, // Adjust the width as needed

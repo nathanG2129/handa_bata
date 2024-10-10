@@ -104,7 +104,7 @@ class AdventurePageState extends State<AdventurePage> {
                 ),
                 Positioned(
                   top: 60,
-                  left: 20,
+                  left: 35,
                   child: Container(
                     constraints: const BoxConstraints(
                       maxWidth: 100, // Adjust the width as needed
@@ -214,13 +214,13 @@ class AdventurePageState extends State<AdventurePage> {
                                                         ),
                                                       ),
                                                       Positioned(
-                                                        top: 39,
+                                                        top: 43,
                                                         left: 0,
                                                         right: 8,
                                                         child: Text(
                                                           category['description'],
                                                           style: GoogleFonts.vt323(
-                                                            fontSize: 20,
+                                                            fontSize: 22,
                                                             color: Colors.white, // Text color
                                                           ),
                                                           overflow: TextOverflow.ellipsis,

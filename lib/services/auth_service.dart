@@ -116,7 +116,6 @@ class AuthService {
 
       return user;
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
@@ -228,7 +227,6 @@ class AuthService {
           await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
           prefs.remove('userProfile'); // Remove local data after successful sync
         } catch (e) {
-          print('Error syncing user profile: $e');
         }
       }
     }
@@ -246,7 +244,6 @@ class AuthService {
         await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
         prefs.remove('guestProfile'); // Remove local data after successful sync
       } catch (e) {
-        print('Error syncing guest profile: $e');
       }
     }
   }
@@ -300,7 +297,6 @@ class AuthService {
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).update({field: newValue});
       }
     } catch (e) {
-      print('Error updating user profile: $e');
       rethrow;
     }
   }
@@ -309,14 +305,12 @@ class AuthService {
     try {
       String? email = await getEmailByUsername(username);
       if (email == null) {
-        print('No user found with username: $username');
         return null;
       }
 
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return result.user;
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
@@ -330,7 +324,6 @@ class AuthService {
 
       return querySnapshot.docs.first.get('email');
     } catch (e) {
-      print(e.toString());
       return null;
     }
   }
@@ -340,7 +333,6 @@ class AuthService {
       await _auth.signOut();
       await clearGuestAccountDetails(); // Clear guest account details on sign out
     } catch (e) {
-      print(e.toString());
     }
   }
 
@@ -376,7 +368,6 @@ class AuthService {
         birthday: data['birthday'],
       );
     } catch (e) {
-      print(e.toString());
       return UserProfile.guestProfile;
     }
   }
@@ -386,7 +377,6 @@ class AuthService {
       await _auth.signOut();
       await clearGuestAccountDetails(); // Clear guest account details on logout
     } catch (e) {
-      print(e.toString());
     }
   }
 
@@ -400,7 +390,6 @@ class AuthService {
         await user.delete();
       }
     } catch (e) {
-      print('Error deleting user account: $e');
       rethrow;
     }
   }

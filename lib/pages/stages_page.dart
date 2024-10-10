@@ -39,14 +39,9 @@ class StagesPageState extends State<StagesPage> {
     });
   }
 
-  Future<int> _fetchMaxScore(int stageIndex) async {
-    String stageName = '${widget.category['id']}${stageIndex + 1}';
-    return await _stageService.fetchMaxScore('en', widget.category['id']!, stageName);
-  }
-
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'stars': 0};
+    if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};
 
     final docRef = FirebaseFirestore.instance
         .collection('User')
@@ -55,7 +50,7 @@ class StagesPageState extends State<StagesPage> {
         .doc(widget.category['id']);
 
     final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0};
+    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};
 
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
@@ -63,12 +58,14 @@ class StagesPageState extends State<StagesPage> {
 
     if (_selectedMode == 'Normal') {
       final personalBest = stageData[stageKey]['scoreNormal'] as int;
+      final maxScore = stageData[stageKey]['maxScore'] as int;
       final stars = data['normalStageStars'][stageIndex] as int;
-      return {'personalBest': personalBest, 'stars': stars};
+      return {'personalBest': personalBest, 'stars': stars, 'maxScore': maxScore};
     } else {
       final personalBest = stageData[stageKey]['scoreHard'] as int;
+      final maxScore = stageData[stageKey]['maxScore'] as int;
       final stars = data['hardStageStars'][stageIndex] as int;
-      return {'personalBest': personalBest, 'stars': stars};
+      return {'personalBest': personalBest, 'stars': stars, 'maxScore': maxScore};
     }
   }
 
@@ -232,9 +229,11 @@ class StagesPageState extends State<StagesPage> {
                                 return GestureDetector(
                                   onTap: () async {
                                     Map<String, dynamic> stageData = _stages[stageIndex];
-                                    int maxScore = await _fetchMaxScore(stageIndex);
                                     Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
                                     if (!mounted) return;
+                                    print('Showing Stage Dialog for Stage $stageNumber');
+                                    print('Stage Data: $stageData');
+                                    print('Stage Stats: $stageStats');
                                     showStageDialog(
                                       context,
                                       stageNumber,
@@ -242,7 +241,7 @@ class StagesPageState extends State<StagesPage> {
                                         'id': widget.category['id']!,
                                         'name': widget.category['name']!,
                                       },
-                                      maxScore, // Pass maxScore instead of numberOfQuestions
+                                      stageStats['maxScore'], // Pass maxScore
                                       stageData,
                                       _selectedMode,
                                       stageStats['personalBest'],

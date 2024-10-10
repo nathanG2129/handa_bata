@@ -116,16 +116,4 @@ class StageService {
         .doc(categoryId)
         .update(categoryData);
   }
-
-  Future<int> fetchMaxScore(String language, String category, String stageName) async {
-    try {
-      Map<String, dynamic> stageDocument = await fetchStageDocument(language, category, stageName);
-      if (stageDocument.isEmpty) {
-        throw Exception('Stage document is empty');
-      }
-      return stageDocument['maxScore'] as int;
-    } catch (e) {
-      return 0;
-    }
-  }
 }

@@ -15,7 +15,8 @@ void showStageDialog(
 ) {
   // Convert category name to plural form
   String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
-
+  print(personalBest);
+  
   showDialog(
     context: context,
     barrierDismissible: true,

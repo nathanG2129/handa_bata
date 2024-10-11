@@ -384,8 +384,20 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
+        // Specify the subcollections you want to delete
+        List<String> subcollections = ['ProfileData', 'GameSaveData'];
+  
+        // Delete all documents in each subcollection
+        for (String subcollection in subcollections) {
+          var subcollectionDocs = await _firestore.collection('User').doc(user.uid).collection(subcollection).get();
+          for (var doc in subcollectionDocs.docs) {
+            await doc.reference.delete();
+          }
+        }
+  
         // Delete user document from Firestore
         await _firestore.collection('User').doc(user.uid).delete();
+        
         // Delete user from Firebase Authentication
         await user.delete();
       }

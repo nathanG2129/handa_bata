@@ -105,6 +105,7 @@ Future<void> _deleteAccount() async {
   try {
     await authService.deleteUserAccount();
     await authService.clearLocalGuestProfile(); // Clear local guest profile
+    await authService.logout();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,

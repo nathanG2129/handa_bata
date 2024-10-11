@@ -65,112 +65,118 @@ class _UserProfilePageState extends State<UserProfilePage> {
     _fetchUserProfile();
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onClose,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-        child: Container(
-          color: Colors.black.withOpacity(0.5),
-          child: Center(
-            child: GestureDetector(
-              onTap: () {},
-              child: Card(
-                margin: const EdgeInsets.all(20),
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
-                  borderRadius: BorderRadius.zero, // Purely rectangular
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
+    return WillPopScope(
+      onWillPop: () async {
+        widget.onClose();
+        return false;
+      },
+      child: GestureDetector(
+        onTap: widget.onClose,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          child: Container(
+            color: Colors.black.withOpacity(0.5),
+            child: Center(
+              child: GestureDetector(
+                onTap: () {},
+                child: Card(
+                  margin: const EdgeInsets.all(20),
+                  shape: const RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
+                    borderRadius: BorderRadius.zero, // Purely rectangular
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
+                            padding: EdgeInsets.all(
+                              ResponsiveValue<double>(
+                                context,
+                                defaultValue: 20.0,
+                                conditionalValues: [
+                                  const Condition.smallerThan(name: MOBILE, value: 16.0),
+                                  const Condition.largerThan(name: MOBILE, value: 24.0),
+                                ],
+                              ).value,
+                            ),
+                            child: _isLoading
+                                ? const Center(child: CircularProgressIndicator())
+                                : _userProfile != null
+                                    ? UserProfileHeader(
+                                        nickname: _userProfile!.nickname, // Pass nickname
+                                        username: _userProfile!.username, // Pass username
+                                        avatarId: _userProfile!.avatarId,
+                                        level: _userProfile!.level,
+                                        currentExp: _userProfile!.exp, 
+                                        maxExp: _userProfile!.expCap,
+                                        textStyle: GoogleFonts.rubik(
+                                          color: Colors.white,
+                                          fontSize: ResponsiveValue<double>(
+                                            context,
+                                            defaultValue: 16,
+                                            conditionalValues: [
+                                              const Condition.smallerThan(name: MOBILE, value: 14),
+                                              const Condition.largerThan(name: MOBILE, value: 18),
+                                            ],
+                                          ).value,
+                                        ), selectedLanguage: _selectedLanguage,  // White font color for username and level
+                                      )
+                                    : const SizedBox.shrink(),
                           ),
-                          child: _isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : _userProfile != null
-                                  ? UserProfileHeader(
-                                      nickname: _userProfile!.nickname, // Pass nickname
-                                      username: _userProfile!.username, // Pass username
-                                      avatarId: _userProfile!.avatarId,
-                                      level: _userProfile!.level,
-                                      currentExp: _userProfile!.exp, 
-                                      maxExp: _userProfile!.expCap,
-                                      textStyle: GoogleFonts.rubik(
-                                        color: Colors.white,
-                                        fontSize: ResponsiveValue<double>(
-                                          context,
-                                          defaultValue: 16,
-                                          conditionalValues: [
-                                            const Condition.smallerThan(name: MOBILE, value: 14),
-                                            const Condition.largerThan(name: MOBILE, value: 18),
-                                          ],
-                                        ).value,
-                                      ), selectedLanguage: _selectedLanguage,  // White font color for username and level
-                                    )
-                                  : const SizedBox.shrink(),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_horiz, size: 30, color: Colors.white), // White ellipses
-                            onSelected: (String result) {
-                              setState(() {
-                                showAccountSettings = result == 'Account Settings';
-                              });
-                            },
-                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'User Profile',
-                                child: Text('User Profile'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Account Settings',
-                                child: Text('Account Settings'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(
-                        ResponsiveValue<double>(
-                          context,
-                          defaultValue: 20.0,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 16.0),
-                            const Condition.largerThan(name: MOBILE, value: 24.0),
-                          ],
-                        ).value,
-                      ),
-                      child: showAccountSettings
-                          ? AccountSettings(
-                              onClose: () {
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_horiz, size: 30, color: Colors.white), // White ellipses
+                              onSelected: (String result) {
                                 setState(() {
-                                  showAccountSettings = false;
+                                  showAccountSettings = result == 'Account Settings';
                                 });
-                                _fetchUserProfile(); // Refresh user profile after closing account settings
                               },
-                              onNicknameChanged: _onNicknameChanged, selectedLanguage: _selectedLanguage // Pass the callback
-                            )
-                          : _buildUserProfile(),
-                    ),
-                  ],
+                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                const PopupMenuItem<String>(
+                                  value: 'User Profile',
+                                  child: Text('User Profile'),
+                                ),
+                                const PopupMenuItem<String>(
+                                  value: 'Account Settings',
+                                  child: Text('Account Settings'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(
+                          ResponsiveValue<double>(
+                            context,
+                            defaultValue: 20.0,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 16.0),
+                              const Condition.largerThan(name: MOBILE, value: 24.0),
+                            ],
+                          ).value,
+                        ),
+                        child: showAccountSettings
+                            ? AccountSettings(
+                                onClose: () {
+                                  setState(() {
+                                    showAccountSettings = false;
+                                  });
+                                  _fetchUserProfile(); // Refresh user profile after closing account settings
+                                },
+                                onNicknameChanged: _onNicknameChanged, selectedLanguage: _selectedLanguage // Pass the callback
+                              )
+                            : _buildUserProfile(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

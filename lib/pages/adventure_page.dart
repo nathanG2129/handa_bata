@@ -78,7 +78,12 @@ class AdventurePageState extends State<AdventurePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+  return WillPopScope(
+    onWillPop: () async {
+      _navigateBack(context);
+      return false;
+    },
+    child: Scaffold(
       body: ResponsiveBreakpoints(
         breakpoints: const [
           Breakpoint(start: 0, end: 450, name: MOBILE),
@@ -113,7 +118,12 @@ class AdventurePageState extends State<AdventurePage> {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
                       onPressed: () {
-                        _navigateBack(context);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: '',),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -247,6 +257,7 @@ class AdventurePageState extends State<AdventurePage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

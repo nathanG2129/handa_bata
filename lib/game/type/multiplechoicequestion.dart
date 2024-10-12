@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/text_with_shadow.dart';
@@ -28,11 +29,15 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   bool showAllAnswers = false;
   bool showAllRed = false; // New state variable to show all options as red
   Timer? _timer; // Timer to handle the delay
+  List<String> options = []; // Store shuffled options
+  String? correctAnswer; // Store the correct answer text
 
   @override
   void initState() {
     super.initState();
     resetState();
+    print('MultipleChoiceQuestion initialized');
+    print(correctAnswer);
   }
   
   @override
@@ -50,7 +55,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   }
 
   void _handleOptionSelected(int index) {
-    bool isCorrect = index == int.parse(widget.questionData['answer'].toString());
+    bool isCorrect = options[index] == correctAnswer;
     widget.onOptionSelected(index, isCorrect);
   
     Future.delayed(const Duration(seconds: 1), () {
@@ -67,21 +72,21 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   }
 
   // Add a method to force check the answer
-void forceCheckAnswer() {
-  setState(() {
-    showAllRed = true; // Show all options as red
-  });
-
-  // Call the onOptionSelected callback with null index and false correctness
-  widget.onOptionSelected(-1, false);
-
-  Future.delayed(const Duration(seconds: 1), () {
+  void forceCheckAnswer() {
     setState(() {
-      showAllRed = false;
-      showAllAnswers = true;
+      showAllRed = true; // Show all options as red
     });
-  });
-}
+
+    // Call the onOptionSelected callback with null index and false correctness
+    widget.onOptionSelected(-1, false);
+
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        showAllRed = false;
+        showAllAnswers = true;
+      });
+    });
+  }
 
   void resetState() {
     setState(() {
@@ -90,6 +95,10 @@ void forceCheckAnswer() {
       showSelectedAnswer = false;
       showAllAnswers = false;
       showAllRed = false;
+      options = List<String>.from(widget.questionData['options'] ?? []);
+      int correctAnswerIndex = int.parse(widget.questionData['answer'].toString()); // Fetch the correct answer index
+      correctAnswer = options[correctAnswerIndex]; // Get the text corresponding to the correct answer index
+      options.shuffle(Random()); // Shuffle the options
       _timer?.cancel();
       _timer = Timer(const Duration(seconds: 5), () {
         if (mounted) {
@@ -104,19 +113,10 @@ void forceCheckAnswer() {
 
   @override
   Widget build(BuildContext context) {
-    List<String> options = List<String>.from(widget.questionData['options'] ?? []);
-    int? correctOptionIndex;
-  
-    try {
-      correctOptionIndex = int.parse(widget.questionData['answer'].toString());
-    } catch (e) {
-      correctOptionIndex = null;
-    }
-  
-    if (correctOptionIndex == null || correctOptionIndex < 0 || correctOptionIndex >= options.length) {
+    if (correctAnswer == null || !options.contains(correctAnswer)) {
       return Center(
         child: Text(
-          'Error: Correct option index is null or out of range',
+          'Error: Correct answer is null or not in options',
           style: GoogleFonts.rubik(fontSize: 24, color: Colors.white),
           textAlign: TextAlign.center,
         ),
@@ -171,14 +171,14 @@ void forceCheckAnswer() {
                     buttonColor = Colors.red;
                     textColor = Colors.white;
                   } else if (showSelectedAnswer && index == widget.selectedOptionIndex) {
-                    buttonColor = widget.selectedOptionIndex == correctOptionIndex ? Colors.green : Colors.red;
+                    buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                     textColor = Colors.white;
                   } else if (showAllAnswers) {
                     if (index == widget.selectedOptionIndex) {
-                      buttonColor = widget.selectedOptionIndex == correctOptionIndex ? Colors.green : Colors.red;
+                      buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                       textColor = Colors.white;
                     } else {
-                      buttonColor = index == correctOptionIndex ? Colors.green : Colors.red;
+                      buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                       textColor = Colors.white;
                     }
                   }

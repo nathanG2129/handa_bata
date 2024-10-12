@@ -217,64 +217,38 @@ class AuthService {
   }
 
     Future<void> syncUserProfile() async {
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? userProfileString = prefs.getString('user_profile'); // Ensure the key is 'user_profile'
-        if (userProfileString != null) {
-          Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
-          UserProfile userProfile = UserProfile.fromMap(userProfileMap);
-          try {
-            await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
-            prefs.remove('user_profile'); // Remove local data after successful sync
-          } catch (e) {
-          }
-        }
-      }
-    }
-
-  Future<void> syncGuestProfile() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult != ConnectivityResult.none) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? guestProfileString = prefs.getString('guest_profile'); // Ensure the key is 'guest_profile'
-      if (guestProfileString != null) {
-        Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
-        UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
+      String? userProfileString = prefs.getString('userProfile');
+      if (userProfileString != null) {
+        Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
+        UserProfile userProfile = UserProfile.fromMap(userProfileMap);
         try {
-          await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
-          prefs.remove('guest_profile'); // Remove local data after successful sync
+          await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
+          prefs.remove('userProfile'); // Remove local data after successful sync
         } catch (e) {
         }
       }
     }
   }
 
-  Future<void> createLocalGuestProfile() async {
+  Future<void> syncGuestProfile() async {
+  var connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult != ConnectivityResult.none) {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String guestUid = 'local_guest_${DateTime.now().millisecondsSinceEpoch}';
-    UserProfile guestProfile = UserProfile(
-      profileId: guestUid,
-      username: 'Guest',
-      nickname: 'Guest',
-      avatarId: 0,
-      badgeShowcase: [0, 0, 0],
-      bannerId: 0,
-      exp: 0,
-      expCap: 100,
-      hasShownCongrats: false,
-      level: 1,
-      totalBadgeUnlocked: 0,
-      totalStageCleared: 0,
-      unlockedBadge: List<int>.filled(40, 0),
-      unlockedBanner: List<int>.filled(10, 0),
-      email: '',
-      birthday: '',
-    );
-  
-    String guestProfileJson = jsonEncode(guestProfile.toMap());
-    await prefs.setString('guest_profile', guestProfileJson);
+    String? guestProfileString = prefs.getString('guestProfile');
+    if (guestProfileString != null) {
+      Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
+      UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
+      try {
+        await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
+        prefs.remove('guestProfile'); // Remove local data after successful sync
+      } catch (e) {
+      }
+    }
   }
+}
 
   Future<void> saveGuestProfileLocally(UserProfile profile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

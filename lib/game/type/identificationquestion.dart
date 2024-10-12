@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -59,6 +60,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       selectedOptions = List<String?>.filled(answerLength, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
       uniqueOptions = _generateUniqueOptions(widget.questionData['options']);
+      uniqueOptions.shuffle(Random()); // Shuffle the options
     });
   }
 

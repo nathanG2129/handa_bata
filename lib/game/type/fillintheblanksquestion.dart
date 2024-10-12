@@ -255,7 +255,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
-        Color boxColor = selectedOptions[inputIndex] == null ? Color(0xFF241242) : Colors.white;
+        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
         Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
         if (showUserAnswers) {
           boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
@@ -327,7 +327,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                     ? Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: optionSelected[index] ? Color(0xFF241242) : Colors.white,
+                          color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                           borderRadius: BorderRadius.circular(0),
                           border: Border.all(color: Colors.black, width: 2),
                         ),
@@ -347,7 +347,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: optionSelected[index] ? Colors.transparent : Colors.black, // Make text invisible when selected
-                          backgroundColor: optionSelected[index] ? Color(0xFF241242) : Colors.white,
+                          backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                           padding: const EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(0),

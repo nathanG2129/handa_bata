@@ -397,7 +397,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   }
 
   bool areAllPairsCorrect() {
-    print('$correctPairCount and ${correctAnswers.length}');
     return correctPairCount == correctAnswers.length;
   }
 

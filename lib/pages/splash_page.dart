@@ -26,8 +26,6 @@ class SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected language: $_selectedLanguage');
-    print(User);
   }
 
   static const double titleFontSize = 90;
@@ -136,7 +134,7 @@ class SplashPageState extends State<SplashPage> {
               const Condition.equals(name: MOBILE, value: 450),
               const Condition.between(start: 800, end: 1100, value: 800),
               const Condition.between(start: 1000, end: 1200, value: 1000),
-            ]).value ?? 1200), // Provide a default value
+            ]).value), // Provide a default value
             child: Stack(
               children: [
                 SvgPicture.asset(
@@ -181,7 +179,7 @@ class SplashPageState extends State<SplashPage> {
                                 const Condition.smallerThan(name: MOBILE, value: topPadding * 0.8),
                                 const Condition.largerThan(name: MOBILE, value: topPadding * 1.2),
                               ],
-                            ).value ?? topPadding), // Provide a default value
+                            ).value), // Provide a default value
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -197,7 +195,7 @@ class SplashPageState extends State<SplashPage> {
                                       const Condition.smallerThan(name: MOBILE, value: titleFontSize * 0.8),
                                       const Condition.largerThan(name: MOBILE, value: titleFontSize * 1.2),
                                     ],
-                                  ).value ?? titleFontSize), // Provide a default value
+                                  ).value), // Provide a default value
                                 ),
                               ),
                               Transform.translate(
@@ -208,7 +206,7 @@ class SplashPageState extends State<SplashPage> {
                                     const Condition.smallerThan(name: MOBILE, value: verticalOffset * 0.8),
                                     const Condition.largerThan(name: MOBILE, value: verticalOffset * 1.2),
                                   ],
-                                ).value ?? verticalOffset)), // Provide a default value
+                                ).value)), // Provide a default value
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: TextWithShadow(
@@ -220,7 +218,7 @@ class SplashPageState extends State<SplashPage> {
                                         const Condition.smallerThan(name: MOBILE, value: subtitleFontSize * 0.8),
                                         const Condition.largerThan(name: MOBILE, value: subtitleFontSize * 1.2),
                                       ],
-                                    ).value ?? subtitleFontSize), // Provide a default value
+                                    ).value), // Provide a default value
                                   ),
                                 ),
                               ),
@@ -237,7 +235,7 @@ class SplashPageState extends State<SplashPage> {
                             Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
                             Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
                           ],
-                        ).value ?? MediaQuery.of(context).size.width * buttonWidthFactor), // Provide a default value
+                        ).value), // Provide a default value
                         height: (ResponsiveValue<double>(
                           context,
                           defaultValue: buttonHeight,
@@ -245,7 +243,7 @@ class SplashPageState extends State<SplashPage> {
                             const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
                             const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
                           ],
-                        ).value ?? buttonHeight), // Provide a default value
+                        ).value), // Provide a default value
                         child: CustomButton(
                           text: SplashLocalization.translate('login', _selectedLanguage),
                           color: const Color(0xFF351B61),
@@ -257,7 +255,7 @@ class SplashPageState extends State<SplashPage> {
                               Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
                               Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
                             ],
-                          ).value ?? MediaQuery.of(context).size.width * buttonWidthFactor), // Provide a default value
+                          ).value), // Provide a default value
                           height: (ResponsiveValue<double>(
                             context,
                             defaultValue: buttonHeight,
@@ -265,7 +263,7 @@ class SplashPageState extends State<SplashPage> {
                               const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
                               const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
                             ],
-                          ).value ?? buttonHeight), // Provide a default value
+                          ).value), // Provide a default value
                           onTap: () {
                             Navigator.push(
                               context,
@@ -282,7 +280,7 @@ class SplashPageState extends State<SplashPage> {
                             const Condition.smallerThan(name: MOBILE, value: buttonSpacing * 0.8),
                             const Condition.largerThan(name: MOBILE, value: buttonSpacing * 1.2),
                           ],
-                        ).value ?? buttonSpacing), // Provide a default value
+                        ).value), // Provide a default value
                       ),
                       SizedBox(
                         width: (ResponsiveValue<double>(
@@ -292,7 +290,7 @@ class SplashPageState extends State<SplashPage> {
                             Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
                             Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
                           ],
-                        ).value ?? MediaQuery.of(context).size.width * buttonWidthFactor), // Provide a default value
+                        ).value), // Provide a default value
                         height: (ResponsiveValue<double>(
                           context,
                           defaultValue: buttonHeight,
@@ -300,7 +298,7 @@ class SplashPageState extends State<SplashPage> {
                             const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
                             const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
                           ],
-                        ).value ?? buttonHeight), // Provide a default value
+                        ).value), // Provide a default value
                         child: CustomButton(
                           text: SplashLocalization.translate('play_now', _selectedLanguage),
                           color: const Color(0xFFF1B33A),
@@ -312,7 +310,7 @@ class SplashPageState extends State<SplashPage> {
                               Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
                               Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
                             ],
-                          ).value ?? MediaQuery.of(context).size.width * buttonWidthFactor), // Provide a default value
+                          ).value), // Provide a default value
                           height: (ResponsiveValue<double>(
                             context,
                             defaultValue: buttonHeight,
@@ -320,7 +318,7 @@ class SplashPageState extends State<SplashPage> {
                               const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
                               const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
                             ],
-                          ).value ?? buttonHeight), // Provide a default value
+                          ).value), // Provide a default value
                           onTap: () {
                             _checkSignInStatus(context);
                           },
@@ -334,7 +332,7 @@ class SplashPageState extends State<SplashPage> {
                             const Condition.smallerThan(name: MOBILE, value: bottomPadding * 0.8),
                             const Condition.largerThan(name: MOBILE, value: bottomPadding * 1.2),
                           ],
-                        ).value ?? bottomPadding), // Provide a default value
+                        ).value), // Provide a default value
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10.0),

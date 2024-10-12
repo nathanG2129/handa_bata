@@ -99,6 +99,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         }) ?? [],
       );
 
+      // Shuffle the options
+      section1Options.shuffle(Random());
+      section2Options.shuffle(Random());
+
       userPairs = [];
       pairColors = [];
       usedColors = [];
@@ -107,7 +111,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       incorrectPairCount = 0;
     });
   }
-
+  
   void _handleSection1OptionTap(String option) {
     setState(() {
       if (selectedSection1Option == option) {

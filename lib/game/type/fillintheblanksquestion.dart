@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -9,16 +10,16 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final bool isCorrect;
   final Function(Map<String, dynamic>) onAnswerSubmitted; // Change the type here
   final VoidCallback onOptionsShown; // Add the callback to start the timer
-  final VoidCallback nextQuestion; // Add the callback for the next question
+  final VoidCallback nextQuestion; // Add the nextQuestion callback
 
   const FillInTheBlanksQuestion({
     super.key,
     required this.questionData,
     required this.controller,
     required this.isCorrect,
-    required this.onAnswerSubmitted, // Change the type here
+    required this.onAnswerSubmitted,
     required this.onOptionsShown,
-    required this.nextQuestion, // Add the callback for the next question
+    required this.nextQuestion,
   });
 
   @override
@@ -34,6 +35,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   bool isAnswerCorrect = false;
   bool isChecking = false; // Add this flag
   Timer? _timer;
+  List<String> options = []; // Store shuffled options
+  List<String> correctOptions = []; // Store correct options based on the string value
 
   @override
   void initState() {
@@ -60,6 +63,13 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
+      options = List<String>.from(widget.questionData['options']);
+      options.shuffle(Random()); // Shuffle the options
+
+      // Get the correct options based on the string value
+      correctOptions = widget.questionData['answer']
+          .map<String>((index) => widget.questionData['options'][index as int] as String)
+          .toList();
     });
   }
 
@@ -83,7 +93,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         print('Index out of range: $index');
         return;
       }
-  
+
       int optionIndex = selectedOptions.indexOf(option);
       if (optionIndex != -1) {
         selectedOptions[optionIndex] = null;
@@ -95,7 +105,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
           optionSelected[index] = true;
         }
       }
-  
+
       // Check if all input boxes are filled
       if (!selectedOptions.contains(null)) {
         _checkAnswer();
@@ -107,17 +117,14 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
-  
-    List<String> correctOptions = widget.questionData['answer']
-        .map<String>((index) => widget.questionData['options'][index as int] as String)
-        .toList();
+
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-  
+
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-  
+
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -126,11 +133,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-  
+
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-  
+
     // Stop the timer immediately
     widget.onAnswerSubmitted({
       'answer': userAnswer,
@@ -138,24 +145,24 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
-  
+
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-  
+
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-  
+
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');
-          widget.nextQuestion();
+          widget.nextQuestion(); // Use widget.nextQuestion for the next question
         });
       });
     });
@@ -168,17 +175,14 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
-  
-    List<String> correctOptions = widget.questionData['answer']
-        .map<String>((index) => widget.questionData['options'][index as int] as String)
-        .toList();
+
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-  
+
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-  
+
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -187,11 +191,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-  
+
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-  
+
     // Stop the timer immediately
     widget.onAnswerSubmitted({
       'answer': userAnswer,
@@ -199,24 +203,24 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
     });
-  
+
     // Show user answers after a delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showUserAnswers = true;
       });
-  
+
       // Show the correct answers regardless of whether the user's answers are correct
       Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
         setState(() {
           selectedOptions = correctOptions;
           showOptions = false;
         });
-  
+
         // Call nextQuestion after showing the correct answers
         Future.delayed(const Duration(seconds: 6), () {
           print('Going to next question...');
-          widget.nextQuestion();
+          widget.nextQuestion(); // Use widget.nextQuestion for the next question
         });
       });
     });
@@ -232,6 +236,14 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
       isAnswerCorrect = false;
+      options = List<String>.from(widget.questionData['options']);
+      options.shuffle(Random()); // Shuffle the options
+
+      // Get the correct options based on the string value
+      correctOptions = widget.questionData['answer']
+          .map<String>((index) => widget.questionData['options'][index as int] as String)
+          .toList();
+
       _timer?.cancel();
       _timer = Timer(const Duration(seconds: 5), () {
         if (mounted) {
@@ -244,21 +256,20 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
-    List<String> options = List<String>.from(widget.questionData['options']);
     List<int> answer = List<int>.from(widget.questionData['answer']);
-  
+
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
-  
+
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
         Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
         Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
         if (showUserAnswers) {
-          boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
+          boxColor = selectedOptions[inputIndex] == correctOptions[inputIndex] ? Colors.green : Colors.red;
         }
         questionWidgets.add(
           Container(
@@ -294,7 +305,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         );
       }
     });
-  
+
     return Column(
       children: [
         if (!showOptions && !showUserAnswers)
@@ -328,8 +339,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
-                          borderRadius: BorderRadius.circular(0),
                           border: Border.all(color: Colors.black, width: 2),
+                          borderRadius: BorderRadius.circular(0),
                         ),
                         child: Center(
                           child: Text(
@@ -346,7 +357,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                           _handleOptionSelection(index, option);
                         },
                         style: ElevatedButton.styleFrom(
-                          foregroundColor: optionSelected[index] ? Colors.transparent : Colors.black, // Make text invisible when selected
+                          foregroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.black, // Make text invisible when selected
                           backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                           padding: const EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(

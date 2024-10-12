@@ -250,6 +250,32 @@ class AuthService {
     }
   }
 
+  Future<void> createLocalGuestProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String guestUid = 'local_guest_${DateTime.now().millisecondsSinceEpoch}';
+    UserProfile guestProfile = UserProfile(
+      profileId: guestUid,
+      username: 'Guest',
+      nickname: 'Guest',
+      avatarId: 0,
+      badgeShowcase: [0, 0, 0],
+      bannerId: 0,
+      exp: 0,
+      expCap: 100,
+      hasShownCongrats: false,
+      level: 1,
+      totalBadgeUnlocked: 0,
+      totalStageCleared: 0,
+      unlockedBadge: List<int>.filled(40, 0),
+      unlockedBanner: List<int>.filled(10, 0),
+      email: '',
+      birthday: '',
+    );
+  
+    String guestProfileJson = jsonEncode(guestProfile.toMap());
+    await prefs.setString('guest_profile', guestProfileJson);
+  }
+
   Future<void> saveGuestProfileLocally(UserProfile profile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String profileJson = jsonEncode(profile.toMap());

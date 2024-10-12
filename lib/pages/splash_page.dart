@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,14 +23,6 @@ class SplashPage extends StatefulWidget {
 class SplashPageState extends State<SplashPage> {
   String _selectedLanguage = 'en';
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected language: $_selectedLanguage');
-    print(User);
-  }
-
   static const double titleFontSize = 90;
   static const double subtitleFontSize = 85;
   static const double buttonWidthFactor = 0.8;
@@ -38,6 +31,36 @@ class SplashPageState extends State<SplashPage> {
   static const double topPadding = 210.0;
   static const double bottomPadding = 140.0;
   static const double buttonSpacing = 20.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    print('Selected language: $_selectedLanguage');
+    print(User);
+    _checkConnectivityAndProceed();
+  }
+
+  Future<void> _checkConnectivityAndProceed() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      // No internet connection
+      await _handleOfflineMode();
+    } else {
+      // Internet connection available
+      await _checkSignInStatus(context);
+    }
+  }
+
+  Future<void> _handleOfflineMode() async {
+    AuthService authService = AuthService();
+    UserProfile? localGuestProfile = await authService.getLocalGuestProfile();
+
+    if (localGuestProfile == null) {
+      // Create a local guest profile if none exists
+      await authService.createLocalGuestProfile();
+    }
+  }
 
   Future<void> _signInAnonymously(BuildContext context) async {
     try {
@@ -83,6 +106,7 @@ class SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _checkSignInStatus(BuildContext context) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
     AuthService authService = AuthService();
     bool isSignedIn = await authService.isSignedIn();
 
@@ -107,8 +131,17 @@ class SplashPageState extends State<SplashPage> {
           MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
         );
       } else {
-        // Sign in anonymously if no local guest profile exists
-        _signInAnonymously(context);
+        if (connectivityResult == ConnectivityResult.none) {
+          // No internet connection, create a local guest profile
+          await authService.createLocalGuestProfile();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
+          );
+        } else {
+          // Sign in anonymously if no local guest profile exists
+          _signInAnonymously(context);
+        }
       }
     }
   }

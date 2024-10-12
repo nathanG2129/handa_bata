@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPage
+import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
 
 void showStageDialog(
   BuildContext context,
@@ -108,7 +109,7 @@ void showStageDialog(
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
                 child: Text(
-                  'Play Now',
+                  StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization
                   style: GoogleFonts.vt323(
                     fontSize: 24,
                   ),

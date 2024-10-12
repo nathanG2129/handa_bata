@@ -26,7 +26,7 @@ class AdventurePageState extends State<AdventurePage> {
   @override
   void initState() {
     super.initState();
-    _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    _selectedLanguage = widget.selectedLanguage;
     _fetchCategories();
   }
 

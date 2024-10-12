@@ -19,6 +19,7 @@ class AuthService {
         syncUserProfile();
       }
     });
+    _listenToFirestoreChanges(); // Add this line
   }
 
   Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
@@ -216,38 +217,38 @@ class AuthService {
   }
 
     Future<void> syncUserProfile() async {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? userProfileString = prefs.getString('user_profile'); // Ensure the key is 'user_profile'
+        if (userProfileString != null) {
+          Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
+          UserProfile userProfile = UserProfile.fromMap(userProfileMap);
+          try {
+            await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
+            prefs.remove('user_profile'); // Remove local data after successful sync
+          } catch (e) {
+          }
+        }
+      }
+    }
+
+  Future<void> syncGuestProfile() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult != ConnectivityResult.none) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userProfileString = prefs.getString('userProfile');
-      if (userProfileString != null) {
-        Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
-        UserProfile userProfile = UserProfile.fromMap(userProfileMap);
+      String? guestProfileString = prefs.getString('guest_profile'); // Ensure the key is 'guest_profile'
+      if (guestProfileString != null) {
+        Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
+        UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
         try {
-          await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
-          prefs.remove('userProfile'); // Remove local data after successful sync
+          await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
+          prefs.remove('guest_profile'); // Remove local data after successful sync
         } catch (e) {
         }
       }
     }
   }
-
-  Future<void> syncGuestProfile() async {
-  var connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult != ConnectivityResult.none) {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? guestProfileString = prefs.getString('guestProfile');
-    if (guestProfileString != null) {
-      Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
-      UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
-      try {
-        await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
-        prefs.remove('guestProfile'); // Remove local data after successful sync
-      } catch (e) {
-      }
-    }
-  }
-}
 
   Future<void> saveGuestProfileLocally(UserProfile profile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -412,5 +413,32 @@ class AuthService {
       return userDoc.get('role');
     }
     return null;
+  }
+
+    void _listenToFirestoreChanges() {
+    _firestore.collectionGroup('ProfileData').snapshots().listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added ||
+            change.type == DocumentChangeType.modified ||
+            change.type == DocumentChangeType.removed) {
+          _syncFirestoreToLocal(change.doc);
+        }
+      }
+    });
+  }
+
+    Future<void> _syncFirestoreToLocal(DocumentSnapshot doc) async {
+    String userId = doc.id;
+    DocumentSnapshot userProfileDoc = await _firestore.collection('User').doc(userId).collection('ProfileData').doc(userId).get();
+    if (userProfileDoc.exists) {
+      UserProfile userProfile = UserProfile.fromMap(userProfileDoc.data() as Map<String, dynamic>);
+      await saveUserProfileLocally(userProfile);
+    }
+  }
+
+    Future<void> saveUserProfileLocally(UserProfile profile) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String profileJson = jsonEncode(profile.toMap());
+    await prefs.setString('user_profile', profileJson); // Ensure the key is 'user_profile'
   }
 }

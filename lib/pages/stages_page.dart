@@ -34,14 +34,13 @@ class StagesPageState extends State<StagesPage> {
   }
 
   Future<void> _fetchStages() async {
-    List<Map<String, dynamic>> stages = await _stageService.fetchStages(widget.selectedLanguage, widget.category['id']!); // Use the selected language
-    if (!mounted) return;
+    List<Map<String, dynamic>> stages = await _stageService.fetchStages(widget.selectedLanguage, widget.category['id']!);
     setState(() {
       _stages = stages;
       _isLoading = false;
     });
   }
-
+  
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};

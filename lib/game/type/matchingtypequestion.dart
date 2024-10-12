@@ -38,6 +38,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   Timer? _timer;
   bool isChecking = false; // Add this flag
   bool isSubmitted = false; // Add this flag
+  
   @override
   void initState() {
     super.initState();
@@ -198,7 +199,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 height: 75,
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(0),
                   border: Border.all(color: Colors.black, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
@@ -220,7 +221,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 height: 75,
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(0),
                   border: Border.all(color: Colors.black, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
@@ -401,7 +402,13 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   }
 
   Color _generateUniqueColor() {
-    final colors = [Colors.blue, Colors.yellow, Colors.pink, Colors.orange, Colors.purple];
+    final colors = [
+      const Color(0xFFC32929), // #c32929
+      const Color(0xFFE18128), // #e18128
+      const Color(0xFF2C28E1), // #2c28e1
+      const Color(0xFFF1B33A), // #f1b33a
+      const Color(0xFF1B198F), // #1b198f
+    ];
     for (Color color in colors) {
       if (!usedColors.contains(color)) {
         return color;
@@ -410,7 +417,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     // If all colors are used, start reusing colors
     return colors[usedColors.length % colors.length];
   }
-
   Color? _getPairColor(String option, String section) {
     int index = userPairs.indexWhere((pair) => pair[section] == option);
     if (index != -1 && index < pairColors.length) {
@@ -491,7 +497,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                 backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
                                 padding: const EdgeInsets.all(16),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(0),
                                   side: const BorderSide(color: Colors.black, width: 2),
                                 ),
                               ),
@@ -535,7 +541,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                 backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
                                 padding: const EdgeInsets.all(16),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(0),
                                   side: const BorderSide(color: Colors.black, width: 2),
                                 ),
                               ),

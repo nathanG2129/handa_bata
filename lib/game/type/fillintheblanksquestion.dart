@@ -83,7 +83,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         print('Index out of range: $index');
         return;
       }
-
+  
       int optionIndex = selectedOptions.indexOf(option);
       if (optionIndex != -1) {
         selectedOptions[optionIndex] = null;
@@ -95,7 +95,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
           optionSelected[index] = true;
         }
       }
-
+  
       // Check if all input boxes are filled
       if (!selectedOptions.contains(null)) {
         _checkAnswer();
@@ -244,21 +244,20 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
     List<String> options = List<String>.from(widget.questionData['options']);
     List<int> answer = List<int>.from(widget.questionData['answer']);
-
+  
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
-
+  
     questionText.split(' ').forEach((word) {
       if (word == '<input>') {
-        Color boxColor = Colors.white;
-        if (selectedOptions[inputIndex] == '') {
-          boxColor = Colors.red;
-        } else if (showUserAnswers) {
+        Color boxColor = selectedOptions[inputIndex] == null ? Color(0xFF241242) : Colors.white;
+        Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
+        if (showUserAnswers) {
           boxColor = selectedOptions[inputIndex] == options[answer[inputIndex]] ? Colors.green : Colors.red;
         }
         questionWidgets.add(
@@ -267,13 +266,13 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: boxColor,
-              border: Border.all(color: Colors.black),
-              borderRadius: BorderRadius.circular(4.0),
+              border: Border.all(color: borderColor), // Conditionally set border color
+              borderRadius: BorderRadius.circular(0),
             ),
             child: Text(
               selectedOptions[inputIndex] ?? '____',
-              style: (selectedOptions[inputIndex] == null || selectedOptions[inputIndex] == '____')
-                  ? GoogleFonts.vt323(fontSize: 24, color: Colors.black)
+              style: (selectedOptions[inputIndex] == null)
+                  ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
                   : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
             ),
           ),
@@ -295,7 +294,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         );
       }
     });
-
+  
     return Column(
       children: [
         if (!showOptions && !showUserAnswers)
@@ -310,28 +309,35 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
           children: questionWidgets,
         ),
         if (showOptions)
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
         if (showOptions)
-          Wrap(
-            alignment: WrapAlignment.center,
-            children: options.asMap().entries.map((entry) {
-              int index = entry.key;
-              String option = entry.value;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                child: isChecking
+          SizedBox(
+            height: 200, // Adjust the height as needed
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3, // Adjust the aspect ratio as needed
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+              ),
+              itemCount: options.length,
+              itemBuilder: (context, index) {
+                String option = options[index];
+                return isChecking
                     ? Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: optionSelected[index] ? Colors.blue : Colors.white,
-                          borderRadius: BorderRadius.circular(10),
+                          color: optionSelected[index] ? Color(0xFF241242) : Colors.white,
+                          borderRadius: BorderRadius.circular(0),
                           border: Border.all(color: Colors.black, width: 2),
                         ),
-                        child: Text(
-                          option,
-                          style: GoogleFonts.rubik(
-                            fontSize: 18,
-                            color: optionSelected[index] ? Colors.white : Colors.black,
+                        child: Center(
+                          child: Text(
+                            option,
+                            style: GoogleFonts.rubik(
+                              fontSize: 18,
+                              color: optionSelected[index] ? Colors.transparent : Colors.black, // Make text invisible when selected
+                            ),
                           ),
                         ),
                       )
@@ -340,21 +346,23 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
                           _handleOptionSelection(index, option);
                         },
                         style: ElevatedButton.styleFrom(
-                          foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                          backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                          foregroundColor: optionSelected[index] ? Colors.transparent : Colors.black, // Make text invisible when selected
+                          backgroundColor: optionSelected[index] ? Color(0xFF241242) : Colors.white,
                           padding: const EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(0),
                             side: const BorderSide(color: Colors.black, width: 2),
                           ),
                         ),
-                        child: Text(
-                          option,
-                          style: GoogleFonts.rubik(fontSize: 18),
+                        child: Center(
+                          child: Text(
+                            option,
+                            style: GoogleFonts.rubik(fontSize: 18),
+                          ),
                         ),
-                      ),
-              );
-            }).toList(),
+                      );
+              },
+            ),
           ),
       ],
     );

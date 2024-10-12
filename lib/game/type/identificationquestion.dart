@@ -252,7 +252,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                     color: Colors.black,
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(4.0),
+                  borderRadius: BorderRadius.circular(0),
                 ),
                 child: Text(
                   answerText,
@@ -280,7 +280,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                             backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
                             padding: const EdgeInsets.all(16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(0),
                               side: const BorderSide(color: Colors.black, width: 2),
                             ),
                           ),

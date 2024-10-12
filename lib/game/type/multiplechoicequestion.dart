@@ -106,13 +106,13 @@ void forceCheckAnswer() {
   Widget build(BuildContext context) {
     List<String> options = List<String>.from(widget.questionData['options'] ?? []);
     int? correctOptionIndex;
-
+  
     try {
       correctOptionIndex = int.parse(widget.questionData['answer'].toString());
     } catch (e) {
       correctOptionIndex = null;
     }
-
+  
     if (correctOptionIndex == null || correctOptionIndex < 0 || correctOptionIndex >= options.length) {
       return Center(
         child: Text(
@@ -122,7 +122,7 @@ void forceCheckAnswer() {
         ),
       );
     }
-
+  
     return Column(
       children: [
         if (!showOptions)
@@ -197,7 +197,7 @@ void forceCheckAnswer() {
                             backgroundColor: buttonColor,
                             padding: const EdgeInsets.all(16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(0),
                               side: const BorderSide(color: Colors.black, width: 2),
                             ),
                             disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
@@ -221,10 +221,7 @@ void forceCheckAnswer() {
                             width: 50,
                             decoration: const BoxDecoration(
                               color: Color(0xFF241242),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                bottomLeft: Radius.circular(10),
-                              ),
+                              borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
                             ),
                             child: Center(
                               child: Text(

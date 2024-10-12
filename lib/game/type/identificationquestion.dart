@@ -165,12 +165,12 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
     List<int> spaces = List<int>.from(
         widget.questionData['space'].map((e) => int.parse(e.toString())));
-
+  
     String answerText = '';
     int selectedIndex = 0;
     int currentWordLength = 0;
@@ -183,7 +183,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       answerText += selectedOptions[i]?.split('_')[0] ?? '_';
       currentWordLength++;
     }
-
+  
     // Show the correct answer if the flag is set
     if (showCorrectAnswer) {
       answerText = '';
@@ -199,7 +199,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
         currentWordLength++;
       }
     }
-
+  
     return Column(
       children: [
         if (!showInput)
@@ -277,7 +277,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                           },
                           style: ElevatedButton.styleFrom(
                             foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                            backgroundColor: optionSelected[index] ? Colors.blue : Colors.white,
+                            backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                             padding: const EdgeInsets.all(16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(0),

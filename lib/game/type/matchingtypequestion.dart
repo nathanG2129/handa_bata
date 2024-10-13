@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 class MatchingTypeQuestion extends StatefulWidget {
@@ -262,6 +263,15 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     );
   }
 
+  void _recordAnsweredQuestion(bool isCorrect) {
+  (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
+    'type': 'Matching Type',
+    'question': widget.questionData['question'],
+    'correctPairs': correctAnswers,
+    'isCorrect': isCorrect,
+  });
+}
+
   void _checkAnswerImmediately() {
     setState(() {
       isChecking = true; // Set the flag to true
@@ -296,7 +306,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   
     // Notify that the answer has been checked
     widget.onAnswerChecked();
-  
+
+    _recordAnsweredQuestion(correctPairCount == correctAnswers.length);
+
+
     setState(() {
       isChecking = false; // Set the flag to false
     });
@@ -397,7 +410,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   
     // Show correct pairs in green
     _checkAnswer();
-  
+
+      _recordAnsweredQuestion(false);
   }
 
   bool areAllPairsCorrect() {

@@ -38,7 +38,6 @@ class ResultsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     int totalQuestions = stageData['totalQuestions'] ?? 0; // Provide a default value of 0 if null
     int stars = _calculateStars(accuracy, score, totalQuestions);
-    print('Answered Questions: $answeredQuestions'); // Print the answered questions
   
     // Update the score and stars in Firestore
     _updateScoreAndStarsInFirestore(stars);
@@ -142,9 +141,14 @@ class ResultsPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 50), // Add some space before the questions
-                      _buildAnsweredQuestionsWidget(context), // Move this line here
-                      const SizedBox(height: 50), // Add some space before the questions
+                    const SizedBox(height: 50),
+                    Text(
+                      'Stage Questions',
+                      style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                    ),
+                    const SizedBox(height: 10), // Add some space before the questions
+                    _buildAnsweredQuestionsWidget(context), // Move this line here
+                    const SizedBox(height: 50), // Add some space before the questions
                     ],
                   ),
                 ),
@@ -171,7 +175,7 @@ class ResultsPage extends StatelessWidget {
           } else if (question['type'] == 'Fill in the Blanks') {
             return _buildFillInTheBlanksQuestionWidget(context, index, question);
           } else {
-            return Container(); // Handle other question types if needed
+             return _buildMatchingTypeQuestionWidget(context, index, question);
           }
         }).toList(),
       ),
@@ -410,6 +414,74 @@ class ResultsPage extends StatelessWidget {
         ),
       );
     }
+
+  Widget _buildMatchingTypeQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
+    List<Map<String, String>> correctPairs = List<Map<String, String>>.from(question['correctPairs'] ?? []);
+  
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Stack(
+        children: [
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0), // Sharp corners
+            ),
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 56), // Space for the correctness container
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          question['question'],
+                          style: GoogleFonts.rubik(fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Correct Pairs:',
+                          style: GoogleFonts.rubik(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        ...correctPairs.map((pair) {
+                          return Text(
+                            '${pair['section1']} - ${pair['section2']}',
+                            style: GoogleFonts.rubik(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 3,
+            bottom: 3,
+            left: 2,
+            child: Container(
+              width: 40,
+              decoration: BoxDecoration(
+                color: question['isCorrect'] ? Colors.green : Colors.red,
+                borderRadius: BorderRadius.circular(0),
+              ),
+              child: Center(
+                child: Text(
+                  '${index + 1}', // Placeholder for question number
+                  style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   int _calculateStars(double accuracy, int score, int totalQuestions) {
     if (accuracy > 0.9 && score == totalQuestions) { // Adjust the condition to reflect the correct answers count

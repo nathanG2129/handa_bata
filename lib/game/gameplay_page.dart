@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/game/results_page.dart';
+import 'package:handabatamae/game/results/results_page.dart';
 import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';

@@ -411,7 +411,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     // Show correct pairs in green
     _checkAnswer();
 
-      _recordAnsweredQuestion(false);
   }
 
   bool areAllPairsCorrect() {

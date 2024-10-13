@@ -140,10 +140,13 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
     // Stop the timer immediately
     widget.onAnswerSubmitted({
+      'question': widget.questionData['question'],
+      'correctAnswer': correctAnswer,
       'answer': userAnswer,
       'correctCount': correctCount,
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+      'isCorrect': isFullyCorrect,
     });
 
     // Show user answers after a delay
@@ -198,10 +201,13 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
     // Stop the timer immediately
     widget.onAnswerSubmitted({
+      'question': widget.questionData['question'],
+      'correctAnswer': correctAnswer,
       'answer': userAnswer,
       'correctCount': correctCount,
       'wrongCount': wrongCount,
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+      'isCorrect': isFullyCorrect,
     });
 
     // Show user answers after a delay

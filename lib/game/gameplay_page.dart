@@ -121,12 +121,6 @@ class GameplayPageState extends State<GameplayPage> {
         if (_selectedOptionIndex == null) {
           _multipleChoiceQuestionKey.currentState?.forceCheckAnswer();
         }
-        _answeredQuestions.add({
-          'question': currentQuestion['question'],
-          'options': currentQuestion['options'],
-          'correctAnswer': currentQuestion['options'][int.parse(currentQuestion['answer'].toString())],
-          'isCorrect': false, // Add this line
-        });
         break;
       case 'Fill in the Blanks':
         _fillInTheBlanksQuestionKey.currentState?.forceCheckAnswer(); // Call the forceCheckAnswer method of FillInTheBlanksQuestion
@@ -251,6 +245,12 @@ class GameplayPageState extends State<GameplayPage> {
   void _handleFillInTheBlanksAnswerSubmission(Map<String, dynamic> answerData) {
     _timer?.cancel(); // Stop the timer when an answer is submitted
     setState(() {
+    _answeredQuestions.add({
+      'question': _questions[_currentQuestionIndex]['question'],
+      'correctAnswer': answerData['correctAnswer'],
+      'isCorrect': answerData['isCorrect'],
+      'type': 'Fill in the Blanks',
+    });
       _correctAnswersCount += (answerData['correctCount'] as int);
       _wrongAnswersCount += (answerData['wrongCount'] as int);
       if (answerData['isFullyCorrect'] as bool) {
@@ -285,6 +285,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     'options': [], // Identification questions don't have options
     'correctAnswer': currentQuestion['answer'],
     'isCorrect': isCorrect,
+    'type': 'Identification',
   });
 
   setState(() {

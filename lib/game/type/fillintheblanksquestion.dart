@@ -259,7 +259,6 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
-    List<int> answer = List<int>.from(widget.questionData['answer']);
 
     List<Widget> questionWidgets = [];
     int inputIndex = 0;

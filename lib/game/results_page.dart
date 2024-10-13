@@ -18,6 +18,7 @@ class ResultsPage extends StatelessWidget {
   final Map<String, dynamic> stageData;
   final String mode;
   final int fullyCorrectAnswersCount; // Add this parameter
+  final List<Map<String, dynamic>> answeredQuestions; // Add this parameter
 
   const ResultsPage({
     super.key,
@@ -30,9 +31,10 @@ class ResultsPage extends StatelessWidget {
     required this.stageData,
     required this.mode,
     required this.fullyCorrectAnswersCount, // Add this parameter
+    required this.answeredQuestions, // Add this parameter
   });
 
-  @override
+   @override
   Widget build(BuildContext context) {
     int totalQuestions = stageData['totalQuestions'] ?? 0; // Provide a default value of 0 if null
     int stars = _calculateStars(accuracy, score, totalQuestions);
@@ -140,12 +142,100 @@ class ResultsPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 50), // Add some space before the questions
+                    _buildAnsweredQuestionsWidget(context), // Move this line here
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  
+  // Replace the existing _buildAnsweredQuestionsWidget method with the following:
+  
+  Widget _buildAnsweredQuestionsWidget(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.75, // Set width to 75% of the screen width
+      child: Column(
+        children: answeredQuestions.asMap().entries.map((entry) {
+          int index = entry.key;
+          Map<String, dynamic> question = entry.value;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Stack(
+              children: [
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0), // Sharp corners
+                  ),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(width: 42), // Adjust space for the correctness container
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                question['question'],
+                                style: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              ...question['options'].map<Widget>((option) {
+                                bool isCorrect = option == question['correctAnswer'];
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('• ', style: TextStyle(fontSize: 18)), // Bullet point
+                                    Expanded(
+                                      child: Text(
+                                        option,
+                                        style: GoogleFonts.rubik(
+                                          fontSize: 16,
+                                          color: isCorrect ? Colors.green : Colors.black,
+                                          fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 3,
+                  bottom: 3,
+                  left: 2,
+                  child: Container(
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: question['isCorrect'] ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(0),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${index + 1}', // Placeholder for question number
+                        style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

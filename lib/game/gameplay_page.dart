@@ -47,6 +47,9 @@ class GameplayPageState extends State<GameplayPage> {
   int _fullyCorrectAnswersCount = 0; // Define the fully correct answers count
   bool _isGameOver = false;
   double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
+  List<Map<String, dynamic>> _answeredQuestions = []; // Add this line
+
+  List<Map<String, dynamic>> get answeredQuestions => _answeredQuestions;
 
   final TextEditingController _controller = TextEditingController();
   final GlobalKey<IdentificationQuestionState> _identificationQuestionKey = GlobalKey<IdentificationQuestionState>();
@@ -118,6 +121,12 @@ class GameplayPageState extends State<GameplayPage> {
         if (_selectedOptionIndex == null) {
           _multipleChoiceQuestionKey.currentState?.forceCheckAnswer();
         }
+        _answeredQuestions.add({
+          'question': currentQuestion['question'],
+          'options': currentQuestion['options'],
+          'correctAnswer': currentQuestion['options'][int.parse(currentQuestion['answer'].toString())],
+          'isCorrect': false, // Add this line
+        });
         break;
       case 'Fill in the Blanks':
         _fillInTheBlanksQuestionKey.currentState?.forceCheckAnswer(); // Call the forceCheckAnswer method of FillInTheBlanksQuestion
@@ -156,6 +165,7 @@ class GameplayPageState extends State<GameplayPage> {
               },
               mode: widget.mode, // Pass the mode
               fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
+              answeredQuestions: _answeredQuestions, // Pass the answered questions
             ),
           ),
         );
@@ -193,6 +203,7 @@ class GameplayPageState extends State<GameplayPage> {
             },
             fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             mode: widget.mode, // Pass the mode
+            answeredQuestions: _answeredQuestions, // Pass the answered questions
           ),
         ),
       );

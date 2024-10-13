@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 import '../../widgets/text_with_shadow.dart';
 
 class MultipleChoiceQuestion extends StatefulWidget {
@@ -57,12 +58,20 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   void _handleOptionSelected(int index) {
     bool isCorrect = options[index] == correctAnswer;
     widget.onOptionSelected(index, isCorrect);
+
+    // Use the public getter method to access answeredQuestions
+    (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
+      'question': widget.questionData['question'],
+      'options': options,
+      'correctAnswer': correctAnswer,
+      'isCorrect': isCorrect, // Add this line
+    });
   
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
       });
-  
+
       Future.delayed(const Duration(seconds: 1, milliseconds: 250), () {
         setState(() {
           showAllAnswers = true;
@@ -75,6 +84,14 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   void forceCheckAnswer() {
     setState(() {
       showAllRed = true; // Show all options as red
+    });
+
+    // Use the public getter method to access answeredQuestions
+    (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
+      'question': widget.questionData['question'],
+      'options': options,
+      'correctAnswer': correctAnswer,
+      'isCorrect': false, // Add this line
     });
 
     // Call the onOptionSelected callback with null index and false correctness

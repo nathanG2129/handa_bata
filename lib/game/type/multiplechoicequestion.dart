@@ -61,6 +61,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
     // Use the public getter method to access answeredQuestions
     (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
+      'type': 'Multiple Choice', // Add the type field
       'question': widget.questionData['question'],
       'options': options,
       'correctAnswer': correctAnswer,
@@ -88,6 +89,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
     // Use the public getter method to access answeredQuestions
     (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
+      'type': 'Multiple Choice', // Add the type field
       'question': widget.questionData['question'],
       'options': options,
       'correctAnswer': correctAnswer,

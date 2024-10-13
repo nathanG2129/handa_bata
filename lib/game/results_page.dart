@@ -34,7 +34,7 @@ class ResultsPage extends StatelessWidget {
     required this.answeredQuestions, // Add this parameter
   });
 
-   @override
+  @override
   Widget build(BuildContext context) {
     int totalQuestions = stageData['totalQuestions'] ?? 0; // Provide a default value of 0 if null
     int stars = _calculateStars(accuracy, score, totalQuestions);
@@ -64,87 +64,91 @@ class ResultsPage extends StatelessWidget {
             child: Container(
               color: const Color(0xFF5E31AD), // Same background color as GameplayPage
               child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildReactionWidget(stars),
-                    const SizedBox(height: 20),
-                    _buildStarsWidget(stars),
-                    const SizedBox(height: 20),
-                    Text(
-                      'My Performance',
-                      style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildStatisticsWidget(),
-                    const SizedBox(height: 50),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => StagesPage(
-                                  questName: category['name'], // Use the category name for questName
-                                  category: {
-                                    'id': category['id'], // Ensure the category id is passed
-                                    'name': category['name'],
-                                  }, selectedLanguage: language,
+                child: SingleChildScrollView( // Make the entire content scrollable
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 175),
+                      _buildReactionWidget(stars),
+                      const SizedBox(height: 20),
+                      _buildStarsWidget(stars),
+                      const SizedBox(height: 20),
+                      Text(
+                        'My Performance',
+                        style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildStatisticsWidget(),
+                      const SizedBox(height: 50),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => StagesPage(
+                                    questName: category['name'], // Use the category name for questName
+                                    category: {
+                                      'id': category['id'], // Ensure the category id is passed
+                                      'name': category['name'],
+                                    }, selectedLanguage: language,
+                                  ),
                                 ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white, // Text color
+                              backgroundColor: const Color(0xFF351b61), // Background color
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white, // Text color
-                            backgroundColor: const Color(0xFF351b61), // Background color
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                              side: const BorderSide(
+                                color: Color(0xFF1A0D30), // Much darker border color
+                                width: 4, // Thicker border width for bottom
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                             ),
-                            side: const BorderSide(
-                              color: Color(0xFF1A0D30), // Much darker border color
-                              width: 4, // Thicker border width for bottom
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            child: const Text('Back'),
                           ),
-                          child: const Text('Back'),
-                        ),
-                        const SizedBox(width: 25),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => GameplayPage(
-                                  language: language,
-                                  category: category,
-                                  stageName: stageName,
-                                  stageData: stageData,
-                                  mode: mode, // Pass the mode
+                          const SizedBox(width: 25),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GameplayPage(
+                                    language: language,
+                                    category: category,
+                                    stageName: stageName,
+                                    stageData: stageData,
+                                    mode: mode, // Pass the mode
+                                  ),
                                 ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.black, // Text color
+                              backgroundColor: const Color(0xFFF1B33A), // Background color
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.black, // Text color
-                            backgroundColor: const Color(0xFFF1B33A), // Background color
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                              side: const BorderSide(
+                                color: Color(0xFF8B5A00), // Much darker border color
+                                width: 4, // Thicker border width for bottom
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                             ),
-                            side: const BorderSide(
-                              color: Color(0xFF8B5A00), // Much darker border color
-                              width: 4, // Thicker border width for bottom
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            child: const Text('Play Again'),
                           ),
-                          child: const Text('Play Again'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 50), // Add some space before the questions
-                    _buildAnsweredQuestionsWidget(context), // Move this line here
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 50), // Add some space before the questions
+                      _buildAnsweredQuestionsWidget(context), // Move this line here
+                      const SizedBox(height: 50), // Add some space before the questions
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -155,8 +159,6 @@ class ResultsPage extends StatelessWidget {
   }
 
   
-  // Replace the existing _buildAnsweredQuestionsWidget method with the following:
-  
   Widget _buildAnsweredQuestionsWidget(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.75, // Set width to 75% of the screen width
@@ -164,81 +166,153 @@ class ResultsPage extends StatelessWidget {
         children: answeredQuestions.asMap().entries.map((entry) {
           int index = entry.key;
           Map<String, dynamic> question = entry.value;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Stack(
-              children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0), // Sharp corners
-                  ),
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(width: 42), // Adjust space for the correctness container
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                question['question'],
-                                style: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              ...question['options'].map<Widget>((option) {
-                                bool isCorrect = option == question['correctAnswer'];
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('• ', style: TextStyle(fontSize: 18)), // Bullet point
-                                    Expanded(
-                                      child: Text(
-                                        option,
-                                        style: GoogleFonts.rubik(
-                                          fontSize: 16,
-                                          color: isCorrect ? Colors.green : Colors.black,
-                                          fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 3,
-                  bottom: 3,
-                  left: 2,
-                  child: Container(
-                    width: 40,
-                    decoration: BoxDecoration(
-                      color: question['isCorrect'] ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}', // Placeholder for question number
-                        style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          if (question['options'].isNotEmpty) {
+            return _buildMultipleChoiceQuestionWidget(context, index, question);
+          } else {
+            return _buildIdentificationQuestionWidget(context, index, question);
+          }
         }).toList(),
       ),
     );
   }
+  
+  Widget _buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Stack(
+        children: [
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0), // Sharp corners
+            ),
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 56), // Space for the correctness container
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          question['question'],
+                          style: GoogleFonts.rubik(fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        ...question['options'].map<Widget>((option) {
+                          bool isCorrect = option == question['correctAnswer'];
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• ', style: TextStyle(fontSize: 18)), // Bullet point
+                              Expanded(
+                                child: Text(
+                                  option,
+                                  style: GoogleFonts.rubik(
+                                    fontSize: 16,
+                                    color: isCorrect ? Colors.green : Colors.black,
+                                    fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 3,
+            bottom: 3,
+            left: 2,
+            child: Container(
+              width: 40,
+              decoration: BoxDecoration(
+                color: question['isCorrect'] ? Colors.green : Colors.red,
+                borderRadius: BorderRadius.circular(0),
+              ),
+              child: Center(
+                child: Text(
+                  '${index + 1}', // Placeholder for question number
+                  style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+    Widget _buildIdentificationQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Stack(
+          children: [
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(0), // Sharp corners
+              ),
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(width: 56), // Space for the correctness container
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            question['question'],
+                            style: GoogleFonts.rubik(fontSize: 18),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Correct Answer:',
+                            style: GoogleFonts.rubik(fontSize: 16, color: Colors.black,  fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            question['correctAnswer'],
+                            style: GoogleFonts.rubik(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 3,
+              bottom: 3,
+              left: 2,
+              child: Container(
+                width: 40,
+                decoration: BoxDecoration(
+                  color: question['isCorrect'] ? Colors.green : Colors.red,
+                  borderRadius: BorderRadius.circular(0),
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}', // Placeholder for question number
+                    style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
   int _calculateStars(double accuracy, int score, int totalQuestions) {
     if (accuracy > 0.9 && score == totalQuestions) { // Adjust the condition to reflect the correct answers count

@@ -277,7 +277,16 @@ class GameplayPageState extends State<GameplayPage> {
   }
   
 void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
-  _timer?.cancel(); // Stop the timer when an answer is submitted
+    _timer?.cancel(); // Stop the timer when an answer is submitted
+    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    
+    _answeredQuestions.add({
+    'question': currentQuestion['question'],
+    'options': [], // Identification questions don't have options
+    'correctAnswer': currentQuestion['answer'],
+    'isCorrect': isCorrect,
+  });
+
   setState(() {
     _isCorrect = isCorrect;
     if (_isCorrect == true) {

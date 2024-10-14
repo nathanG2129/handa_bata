@@ -75,7 +75,7 @@ class SettingsDialogState extends State<SettingsDialog> {
             ),
             const SizedBox(height: 8),
             Text('Voice', style: GoogleFonts.vt323(fontSize: 28, color: Colors.white)),
-            Container(
+            SizedBox(
               width: double.infinity, // Make the dropdown button take full width
               child: DropdownButton<String>(
                 value: _selectedVoice,
@@ -93,6 +93,10 @@ class SettingsDialogState extends State<SettingsDialog> {
                     displayName = 'John';
                   } else if (voice['name'] == 'en-us-x-log-local') {
                     displayName = 'Jane';
+                  } else if (voice['name'] == 'fil-ph-x-fie-local') {
+                    displayName = 'Juan';
+                  } else if (voice['name'] == 'fil-PH-language') {
+                    displayName = 'Maria';
                   } else {
                     displayName = voice['name'];
                   }

@@ -125,6 +125,10 @@ class GameplayPageState extends State<GameplayPage> {
     await flutterTts.setVolume(_ttsVolume); // Use the state variable
     await flutterTts.speak(text);
   }
+
+  Future<void> stopTts() async {
+    await flutterTts.stop();
+  }
   
 void readCurrentQuestion() {
   if (_isTextToSpeechEnabled) {

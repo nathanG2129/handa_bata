@@ -59,6 +59,8 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
     bool isCorrect = options[index] == correctAnswer;
     widget.onOptionSelected(index, isCorrect);
 
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+
     // Use the public getter method to access answeredQuestions
     (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({
       'type': 'Multiple Choice', // Add the type field
@@ -86,6 +88,8 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
     setState(() {
       showAllRed = true; // Show all options as red
     });
+
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
     // Use the public getter method to access answeredQuestions
     (context.findAncestorStateOfType<GameplayPageState>())?.answeredQuestions.add({

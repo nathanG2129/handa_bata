@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 class FillInTheBlanksQuestion extends StatefulWidget {
@@ -118,6 +119,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       isChecking = true; // Set the flag to true when checking starts
     });
 
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
 
@@ -178,6 +181,8 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
+
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');

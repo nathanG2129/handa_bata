@@ -62,7 +62,7 @@ class GameplayPageState extends State<GameplayPage> {
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
   final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
 
-  bool _isTextToSpeechEnabled = false; // Add this line
+  bool _isTextToSpeechEnabled = true; // Add this line
   String _selectedVoice = 'en-us-x-tpd-local'; // Default to male voice
   final String _maleVoice = 'en-us-x-tpd-local'; // Male voice
   final String _femaleVoice = 'en-us-x-log-local'; // Female voice
@@ -144,6 +144,14 @@ void readCurrentQuestion() {
           textToRead = questionText + ' ';
           for (int i = 0; i < options.length; i++) {
             textToRead += '${String.fromCharCode(65 + i)}. ${options[i]}. ';
+          }
+          break;
+        case 'Fill in the Blanks':
+          String questionText = currentQuestion['question'] ?? '';
+          List<String> options = _fillInTheBlanksQuestionKey.currentState?.options ?? [];
+          textToRead = questionText.replaceAll('<input>', 'blank') + ' ';
+          for (int i = 0; i < options.length; i++) {
+            textToRead += '${options[i]}. ';
           }
           break;
         // Add cases for other question types here

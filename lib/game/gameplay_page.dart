@@ -78,6 +78,24 @@ class GameplayPageState extends State<GameplayPage> {
     flutterTts.setErrorHandler((msg) {
       print("TTS: Error - $msg"); // Debugging statement
     });
+  
+    // Read the first question when the widget is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      readCurrentQuestion();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant GameplayPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.stageData != widget.stageData) {
+      _initializeQuestions();
+    }
+  
+    // Read the current question whenever the widget is updated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      readCurrentQuestion();
+    });
   }
 
   void _initializeQuestions() {
@@ -89,7 +107,7 @@ class GameplayPageState extends State<GameplayPage> {
         _totalQuestions = questions.length;
         _isLoading = false;
       });
-      _readCurrentQuestion(); // Read the first question
+      readCurrentQuestion(); // Read the first question
     } catch (e) {
       setState(() {
         _hasError = true;
@@ -108,18 +126,36 @@ class GameplayPageState extends State<GameplayPage> {
     await flutterTts.speak(text);
   }
   
-  void _readCurrentQuestion() {
-    if (_isTextToSpeechEnabled) {
+void readCurrentQuestion() {
+  if (_isTextToSpeechEnabled) {
+    if (_currentQuestionIndex < _questions.length) {
       Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
-      String questionText = currentQuestion['question'] ?? '';
-      List<String> options = List<String>.from(currentQuestion['options'] ?? []);
-      String textToRead = questionText + ' ' + options.join(', ');
+      String questionType = currentQuestion['type'] ?? '';
+
+      String textToRead = '';
+      switch (questionType) {
+        case 'Multiple Choice':
+          String questionText = currentQuestion['question'] ?? '';
+          List<String> options = _multipleChoiceQuestionKey.currentState?.options ?? [];
+          textToRead = questionText + ' ';
+          for (int i = 0; i < options.length; i++) {
+            textToRead += '${String.fromCharCode(65 + i)}. ${options[i]}. ';
+          }
+          break;
+        // Add cases for other question types here
+        default:
+          textToRead = 'Unknown question type';
+      }
+
       print("TTS: Reading question: $textToRead"); // Debugging statement
       _speak(textToRead);
     } else {
-      print("TTS: Text-to-Speech is disabled."); // Debugging statement
+      print("TTS: No answered question data available."); // Debugging statement
     }
+  } else {
+    print("TTS: Text-to-Speech is disabled."); // Debugging statement
   }
+}
 
   void _startTimer() {
     _timer?.cancel();
@@ -215,7 +251,7 @@ class GameplayPageState extends State<GameplayPage> {
       });
       Future.delayed(const Duration(seconds: 5), () {
         _startTimer(); // Restart the timer after the intro delay
-        _readCurrentQuestion(); // Read the next question
+        readCurrentQuestion(); // Read the next question
       });
     } else {
       // Calculate accuracy
@@ -560,7 +596,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   flutterTts.setVoice({"name": _selectedVoice, "locale": "en-US"});
                                   flutterTts.setSpeechRate(_speechRate);
                                   flutterTts.setVolume(_ttsVolume);
-                                  _readCurrentQuestion(); // Apply settings immediately
+                                  readCurrentQuestion(); // Apply settings immediately
                                   }
                                 },
                                 selectedVoice: _selectedVoice,
@@ -569,7 +605,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   _selectedVoice = newValue!;
                                   });
                                   flutterTts.setVoice({"name": newValue!, "locale": "en-US"});
-                                  _readCurrentQuestion(); // Apply settings immediately
+                                  readCurrentQuestion(); // Apply settings immediately
                                 },
                                 speed: _speechRate, // Use the state variable
                                 onSpeedChanged: (double value) {
@@ -577,7 +613,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   _speechRate = value;
                                   });
                                   flutterTts.setSpeechRate(value);
-                                  _readCurrentQuestion(); // Apply settings immediately
+                                  readCurrentQuestion(); // Apply settings immediately
                                 },
                                 ttsVolume: _ttsVolume, // Use the state variable
                                 onTtsVolumeChanged: (double value) {
@@ -585,7 +621,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   _ttsVolume = value;
                                   });
                                   flutterTts.setVolume(value);
-                                  _readCurrentQuestion(); // Apply settings immediately
+                                  readCurrentQuestion(); // Apply settings immediately
                                 },
                                 availableVoices: [
                                   {"name": _maleVoice, "locale": "en-US"},

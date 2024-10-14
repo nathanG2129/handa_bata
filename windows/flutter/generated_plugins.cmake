@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus_windows
   firebase_auth
   firebase_core
+  flutter_tts
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

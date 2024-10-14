@@ -9,6 +9,8 @@ import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
 import 'package:handabatamae/game/type/identificationquestion.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'settings_dialog.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -31,6 +33,9 @@ class GameplayPage extends StatefulWidget {
 }
 
 class GameplayPageState extends State<GameplayPage> {
+  FlutterTts flutterTts = FlutterTts();
+  double _speechRate = 0.5;
+  double _ttsVolume = 0.5;
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;
@@ -57,10 +62,22 @@ class GameplayPageState extends State<GameplayPage> {
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
   final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
 
+  bool _isTextToSpeechEnabled = false; // Add this line
+  String _selectedVoice = 'en-us-x-tpd-local'; // Default to male voice
+  final String _maleVoice = 'en-us-x-tpd-local'; // Male voice
+  final String _femaleVoice = 'en-us-x-log-local'; // Female voice
+
   @override
   void initState() {
     super.initState();
     _initializeQuestions();
+    flutterTts = FlutterTts(); // Ensure TTS is initialized
+    flutterTts.setCompletionHandler(() {
+      print("TTS: Completed speaking."); // Debugging statement
+    });
+    flutterTts.setErrorHandler((msg) {
+      print("TTS: Error - $msg"); // Debugging statement
+    });
   }
 
   void _initializeQuestions() {
@@ -72,6 +89,7 @@ class GameplayPageState extends State<GameplayPage> {
         _totalQuestions = questions.length;
         _isLoading = false;
       });
+      _readCurrentQuestion(); // Read the first question
     } catch (e) {
       setState(() {
         _hasError = true;
@@ -80,10 +98,33 @@ class GameplayPageState extends State<GameplayPage> {
     }
   }
 
+  Future<void> _speak(String text) async {
+    print("TTS: Speaking text: $text"); // Debugging statement
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setVoice({"name": _selectedVoice, "locale": "en-US"});
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(_speechRate); // Use the state variable
+    await flutterTts.setVolume(_ttsVolume); // Use the state variable
+    await flutterTts.speak(text);
+  }
+  
+  void _readCurrentQuestion() {
+    if (_isTextToSpeechEnabled) {
+      Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+      String questionText = currentQuestion['question'] ?? '';
+      List<String> options = List<String>.from(currentQuestion['options'] ?? []);
+      String textToRead = questionText + ' ' + options.join(', ');
+      print("TTS: Reading question: $textToRead"); // Debugging statement
+      _speak(textToRead);
+    } else {
+      print("TTS: Text-to-Speech is disabled."); // Debugging statement
+    }
+  }
+
   void _startTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 50 : 100; // Adjust timer duration based on mode
+    int timerDuration = widget.mode == 'Hard' ? 150 : 300; // Adjust timer duration based on mode
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
@@ -174,6 +215,7 @@ class GameplayPageState extends State<GameplayPage> {
       });
       Future.delayed(const Duration(seconds: 5), () {
         _startTimer(); // Restart the timer after the intro delay
+        _readCurrentQuestion(); // Read the next question
       });
     } else {
       // Calculate accuracy
@@ -501,6 +543,55 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                               // Handle mute/unmute
                             },
                           ),
+IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return SettingsDialog(
+                    isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                    onTextToSpeechChanged: (bool value) {
+                      setState(() {
+                        _isTextToSpeechEnabled = value;
+                      });
+                      if (value) {
+                        flutterTts.setLanguage("en-US");
+                        flutterTts.setVoice({"name": _selectedVoice, "locale": "en-US"});
+                        flutterTts.setSpeechRate(_speechRate);
+                        flutterTts.setVolume(_ttsVolume);
+                      }
+                    },
+                    selectedVoice: _selectedVoice,
+                    onVoiceChanged: (String? newValue) {
+                      setState(() {
+                        _selectedVoice = newValue!;
+                      });
+                      flutterTts.setVoice({"name": newValue!, "locale": "en-US"});
+                    },
+                    speed: _speechRate, // Use the state variable
+                    onSpeedChanged: (double value) {
+                      setState(() {
+                        _speechRate = value;
+                      });
+                      flutterTts.setSpeechRate(value);
+                    },
+                    ttsVolume: _ttsVolume, // Use the state variable
+                    onTtsVolumeChanged: (double value) {
+                      setState(() {
+                        _ttsVolume = value;
+                      });
+                      flutterTts.setVolume(value);
+                    },
+                    availableVoices: [
+                      {"name": _maleVoice, "locale": "en-US"},
+                      {"name": _femaleVoice, "locale": "en-US"}
+                    ], // Pass the specified voices
+                  );
+                },
+              );
+            },
+          ),
                         ],
                       ),
                     ),

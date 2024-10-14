@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 class IdentificationQuestion extends StatefulWidget {
@@ -121,6 +122,8 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       isCheckingAnswer = true; // Set the flag to true when checking the answer
       isCorrect = 0; // Set to 0 to indicate neutral state
     });
+
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
     String userAnswer = '';
     for (int i = 0; i < widget.questionData['answerLength']; i++) {

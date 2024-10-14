@@ -107,7 +107,6 @@ class GameplayPageState extends State<GameplayPage> {
         _totalQuestions = questions.length;
         _isLoading = false;
       });
-      readCurrentQuestion(); // Read the first question
     } catch (e) {
       setState(() {
         _hasError = true;
@@ -154,6 +153,23 @@ void readCurrentQuestion() {
             textToRead += '${options[i]}. ';
           }
           break;
+        case 'Matching Type':
+          String questionText = currentQuestion['question'] ?? '';
+          List<String> section1Options = _matchingTypeQuestionKey.currentState?.section1Options ?? [];
+          List<String> section2Options = _matchingTypeQuestionKey.currentState?.section2Options ?? [];
+          textToRead = questionText + ' ';
+          textToRead += 'Column A options: ';
+          for (int i = 0; i < section1Options.length; i++) {
+            textToRead += '${section1Options[i]}. ';
+          }
+          textToRead += 'Column B options: ';
+          for (int i = 0; i < section2Options.length; i++) {
+            textToRead += '${section2Options[i]}. ';
+          }
+          break;
+        case 'Identification':
+          textToRead = currentQuestion['question'] ?? '';
+          break;
         // Add cases for other question types here
         default:
           textToRead = 'Unknown question type';
@@ -172,7 +188,7 @@ void readCurrentQuestion() {
   void _startTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 150 : 300; // Adjust timer duration based on mode
+    int timerDuration = widget.mode == 'Hard' ? 150 : 900; // Adjust timer duration based on mode
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
@@ -188,7 +204,7 @@ void readCurrentQuestion() {
   void _startMatchingTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 50 : 100; // Adjust timer duration based on mode
+    int timerDuration = widget.mode == 'Hard' ? 150 : 900; // Adjust timer duration based on mode
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;

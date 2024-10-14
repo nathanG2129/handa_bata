@@ -276,6 +276,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true
     });
+
+    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
   
     // Convert pairs to strings for comparison
     List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
@@ -358,6 +360,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   void forceCheckAnswer() {
     setState(() {
       isChecking = true; // Set the flag to true
+      (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
   
       // Randomly pair up the remaining options
       List<String> remainingSection1Options = List.from(section1Options);

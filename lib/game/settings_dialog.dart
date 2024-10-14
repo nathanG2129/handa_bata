@@ -40,7 +40,7 @@ class SettingsDialogState extends State<SettingsDialog> {
     super.initState();
     _isTextToSpeechEnabled = widget.isTextToSpeechEnabled;
     _selectedVoice = widget.selectedVoice;
-    _visualSpeed = widget.speed + 0.5; // Convert actual speed to visual speed
+    _visualSpeed = (widget.speed * 2); // Convert actual speed to visual speed
     _visualVolume = widget.ttsVolume * 100; // Convert actual volume to visual volume
   }
 
@@ -121,7 +121,7 @@ class SettingsDialogState extends State<SettingsDialog> {
                   setState(() {
                     _visualSpeed = value;
                   });
-                  widget.onSpeedChanged(value - 0.5); // Convert visual speed to actual speed
+                  widget.onSpeedChanged(value / 2); // Convert visual speed to actual speed
                 },
                 min: 0.0,
                 max: 2.0,

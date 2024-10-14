@@ -543,55 +543,59 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                               // Handle mute/unmute
                             },
                           ),
-IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () async {
-              await showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return SettingsDialog(
-                    isTextToSpeechEnabled: _isTextToSpeechEnabled,
-                    onTextToSpeechChanged: (bool value) {
-                      setState(() {
-                        _isTextToSpeechEnabled = value;
-                      });
-                      if (value) {
-                        flutterTts.setLanguage("en-US");
-                        flutterTts.setVoice({"name": _selectedVoice, "locale": "en-US"});
-                        flutterTts.setSpeechRate(_speechRate);
-                        flutterTts.setVolume(_ttsVolume);
-                      }
-                    },
-                    selectedVoice: _selectedVoice,
-                    onVoiceChanged: (String? newValue) {
-                      setState(() {
-                        _selectedVoice = newValue!;
-                      });
-                      flutterTts.setVoice({"name": newValue!, "locale": "en-US"});
-                    },
-                    speed: _speechRate, // Use the state variable
-                    onSpeedChanged: (double value) {
-                      setState(() {
-                        _speechRate = value;
-                      });
-                      flutterTts.setSpeechRate(value);
-                    },
-                    ttsVolume: _ttsVolume, // Use the state variable
-                    onTtsVolumeChanged: (double value) {
-                      setState(() {
-                        _ttsVolume = value;
-                      });
-                      flutterTts.setVolume(value);
-                    },
-                    availableVoices: [
-                      {"name": _maleVoice, "locale": "en-US"},
-                      {"name": _femaleVoice, "locale": "en-US"}
-                    ], // Pass the specified voices
-                  );
-                },
-              );
-            },
-          ),
+                          IconButton(
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                            onPressed: () async {
+                              await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return SettingsDialog(
+                                isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                                onTextToSpeechChanged: (bool value) {
+                                  setState(() {
+                                  _isTextToSpeechEnabled = value;
+                                  });
+                                  if (value) {
+                                  flutterTts.setLanguage("en-US");
+                                  flutterTts.setVoice({"name": _selectedVoice, "locale": "en-US"});
+                                  flutterTts.setSpeechRate(_speechRate);
+                                  flutterTts.setVolume(_ttsVolume);
+                                  _readCurrentQuestion(); // Apply settings immediately
+                                  }
+                                },
+                                selectedVoice: _selectedVoice,
+                                onVoiceChanged: (String? newValue) {
+                                  setState(() {
+                                  _selectedVoice = newValue!;
+                                  });
+                                  flutterTts.setVoice({"name": newValue!, "locale": "en-US"});
+                                  _readCurrentQuestion(); // Apply settings immediately
+                                },
+                                speed: _speechRate, // Use the state variable
+                                onSpeedChanged: (double value) {
+                                  setState(() {
+                                  _speechRate = value;
+                                  });
+                                  flutterTts.setSpeechRate(value);
+                                  _readCurrentQuestion(); // Apply settings immediately
+                                },
+                                ttsVolume: _ttsVolume, // Use the state variable
+                                onTtsVolumeChanged: (double value) {
+                                  setState(() {
+                                  _ttsVolume = value;
+                                  });
+                                  flutterTts.setVolume(value);
+                                  _readCurrentQuestion(); // Apply settings immediately
+                                },
+                                availableVoices: [
+                                  {"name": _maleVoice, "locale": "en-US"},
+                                  {"name": _femaleVoice, "locale": "en-US"}
+                                ], // Pass the specified voices
+                                );
+                              },
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),

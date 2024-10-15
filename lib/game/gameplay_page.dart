@@ -633,7 +633,8 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                               await showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
-                                  return SettingsDialog(
+                                    return SettingsDialog(
+                                    flutterTts: flutterTts, // Pass the flutterTts instance
                                     isTextToSpeechEnabled: _isTextToSpeechEnabled,
                                     onTextToSpeechChanged: (bool value) {
                                       setState(() {

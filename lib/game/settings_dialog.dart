@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts package
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // Import Flutter TTS package
 
 class SettingsDialog extends StatefulWidget {
   final bool isTextToSpeechEnabled;
@@ -10,7 +11,8 @@ class SettingsDialog extends StatefulWidget {
   final ValueChanged<double> onSpeedChanged;
   final double ttsVolume;
   final ValueChanged<double> onTtsVolumeChanged;
-  final List<dynamic> availableVoices; // Add this line
+  final List<dynamic> availableVoices;
+  final FlutterTts flutterTts; // Add this line
 
   const SettingsDialog({
     super.key,
@@ -22,7 +24,8 @@ class SettingsDialog extends StatefulWidget {
     required this.onSpeedChanged,
     required this.ttsVolume,
     required this.onTtsVolumeChanged,
-    required this.availableVoices, // Add this line
+    required this.availableVoices,
+    required this.flutterTts, // Add this line
   });
 
   @override
@@ -69,6 +72,9 @@ class SettingsDialogState extends State<SettingsDialog> {
                       _isTextToSpeechEnabled = value;
                     });
                     widget.onTextToSpeechChanged(value);
+                    if (!value) {
+                      widget.flutterTts.stop(); // Stop TTS immediately when toggled off
+                    }
                   },
                 ),
               ],

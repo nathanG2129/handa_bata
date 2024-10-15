@@ -89,6 +89,10 @@ flutter:
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3
+    - assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3
+    - assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3
+    - assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3
+    - assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

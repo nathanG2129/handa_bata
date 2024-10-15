@@ -39,6 +39,7 @@ class GameplayPageState extends State<GameplayPage> {
   double _speechRate = 0.5;
   double _ttsVolume = 0.5;
   double _musicVolume = 1.0; // Default music volume
+  double _sfxVolume = 1.0; // Default SFX volume
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;
@@ -115,6 +116,7 @@ class GameplayPageState extends State<GameplayPage> {
       _speechRate = prefs.getDouble('speed')!;
       _ttsVolume = prefs.getDouble('ttsVolume')!;
       _musicVolume = prefs.getDouble('musicVolume') ?? 1.0;
+      _sfxVolume = (prefs.getDouble('sfxVolume') ?? 100.0) / 100.0; // Convert to 0.0-1.0 range
     });
   }
 
@@ -288,6 +290,7 @@ void readCurrentQuestion() {
   
       // Navigate to ResultsPage after a delay
       Future.delayed(const Duration(seconds: 1), () {
+        _audioPlayer.stop(); // Stop the background music
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -324,7 +327,8 @@ void readCurrentQuestion() {
       // Calculate accuracy
       int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
       double accuracy = totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
-  
+      
+      _audioPlayer.stop(); // Stop the background music
       // Navigate to ResultsPage
       Navigator.pushReplacement(
         context,
@@ -563,6 +567,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           selectedOptionIndex: _selectedOptionIndex,
           onOptionSelected: _handleMultipleChoiceAnswerSubmission,
           onOptionsShown: _startTimer, // Start the timer when options are shown
+          sfxVolume: _sfxVolume, // Pass the SFX volume
         );
         break;
       case 'Fill in the Blanks':
@@ -706,12 +711,18 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                       flutterTts.setVolume(value);
                                     },
                                     availableVoices: availableVoices,
-                                    musicVolume: _musicVolume, // Pass the music volume
+                                    musicVolume: _musicVolume, // Use the state variable
                                     onMusicVolumeChanged: (double value) {
                                       setState(() {
                                         _musicVolume = value;
                                       });
-                                      _audioPlayer.setVolume(value); // Update the audio player's volume
+                                      _audioPlayer.setVolume(value);
+                                    },
+                                    sfxVolume: _sfxVolume, // Use the state variable
+                                    onSfxVolumeChanged: (double value) {
+                                      setState(() {
+                                        _sfxVolume = value;
+                                      });
                                     },
                                   );
                                 },

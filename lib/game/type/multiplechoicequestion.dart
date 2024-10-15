@@ -12,13 +12,16 @@ class MultipleChoiceQuestion extends StatefulWidget {
   final int? selectedOptionIndex; // Allow null values
   final Function(int, bool) onOptionSelected; // Update the callback to include correctness
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
+  final double sfxVolume; // Add this line
+
 
   const MultipleChoiceQuestion({
     super.key,
     required this.questionData,
     required this.selectedOptionIndex,
     required this.onOptionSelected,
-    required this.onOptionsShown,
+    required this.onOptionsShown, 
+    required this.sfxVolume,
   });
 
   @override
@@ -37,6 +40,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   late Soundpool _soundpool;
   late int _soundId1, _soundId2, _soundId3;
   bool _soundsLoaded = false;
+  double _sfxVolume = 0.5; // Default SFX volume (50%)
 
   @override
   void initState() {
@@ -57,6 +61,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
   void _playSound(int soundId) async {
     if (_soundsLoaded && soundId != -1) {
+      await _soundpool.setVolume(soundId: soundId, volume: widget.sfxVolume); // Set the desired volume
       await _soundpool.play(soundId);
     }
   }

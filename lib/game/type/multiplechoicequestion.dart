@@ -40,7 +40,6 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   late Soundpool _soundpool;
   late int _soundId1, _soundId2, _soundId3;
   bool _soundsLoaded = false;
-  double _sfxVolume = 0.5; // Default SFX volume (50%)
 
   @override
   void initState() {

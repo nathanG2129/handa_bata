@@ -579,6 +579,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
           onOptionsShown: _startTimer, // Pass the callback to start the timer
           nextQuestion: () {},
+          sfxVolume: _sfxVolume, // Pass the SFX volume
         );
         break;
       case 'Matching Type':
@@ -588,6 +589,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
           onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
           onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
+          sfxVolume: _sfxVolume, // Pass the SFX volume
         );
         break;
       case 'Identification':
@@ -597,6 +599,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           controller: _controller,
           onAnswerSubmitted: _handleIdentificationAnswerSubmission,
           onOptionsShown: _startTimer, // Pass the callback to start the timer
+          sfxVolume: _sfxVolume, // Pass the SFX volume
         );
         break;
       default:

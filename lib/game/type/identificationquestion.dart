@@ -12,13 +12,15 @@ class IdentificationQuestion extends StatefulWidget {
   final TextEditingController controller;
   final Function(String, bool) onAnswerSubmitted; // Update the callback to include correctness
   final VoidCallback onOptionsShown;
+  final double sfxVolume; // Add this line
 
   const IdentificationQuestion({
     super.key,
     required this.questionData,
     required this.controller,
     required this.onAnswerSubmitted,
-    required this.onOptionsShown,
+    required this.onOptionsShown, 
+    required this.sfxVolume,
   });
 
   @override
@@ -59,6 +61,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
 
   void _playSound(int soundId) async {
     if (_soundsLoaded && soundId != -1) {
+      await _soundpool.setVolume(soundId: soundId, volume: widget.sfxVolume); // Use the passed SFX volume
       await _soundpool.play(soundId);
     }
   }

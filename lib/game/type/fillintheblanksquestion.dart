@@ -14,6 +14,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final Function(Map<String, dynamic>) onAnswerSubmitted; // Change the type here
   final VoidCallback onOptionsShown; // Add the callback to start the timer
   final VoidCallback nextQuestion; // Add the nextQuestion callback
+  final double sfxVolume; // Add this line
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -23,6 +24,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.onAnswerSubmitted,
     required this.onOptionsShown,
     required this.nextQuestion,
+    required this.sfxVolume, 
   });
 
   @override
@@ -64,6 +66,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
   void _playSound(int soundId) async {
     if (_soundsLoaded && soundId != -1) {
+      await _soundpool.setVolume(soundId: soundId, volume: widget.sfxVolume); // Use the passed SFX volume
       await _soundpool.play(soundId);
     }
   }

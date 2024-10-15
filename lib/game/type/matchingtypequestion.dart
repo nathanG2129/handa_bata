@@ -12,13 +12,15 @@ class MatchingTypeQuestion extends StatefulWidget {
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
   final VoidCallback onAnswerChecked; // Callback to notify when the answer is checked
   final VoidCallback onVisualDisplayComplete; // Callback to notify when visual display is complete
+  final double sfxVolume; // Add this line
 
   const MatchingTypeQuestion({
     super.key,
     required this.questionData,
     required this.onOptionsShown,
     required this.onAnswerChecked,
-    required this.onVisualDisplayComplete, // Add this line
+    required this.onVisualDisplayComplete, 
+    required this.sfxVolume, // Add this line
   });
 
   @override
@@ -62,11 +64,12 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   });
 }
 
-void _playSound(int soundId) async {
-  if (_soundsLoaded && soundId != -1) {
-    await _soundpool.play(soundId);
+  void _playSound(int soundId) async {
+    if (_soundsLoaded && soundId != -1) {
+      await _soundpool.setVolume(soundId: soundId, volume: widget.sfxVolume); // Use the passed SFX volume
+      await _soundpool.play(soundId);
+    }
   }
-}
 
   @override
   void didUpdateWidget(covariant MatchingTypeQuestion oldWidget) {

@@ -32,13 +32,14 @@ dependencies:
     sdk: flutter
   connectivity_plus: ^2.0.2
   responsive_framework: ^1.5.1
-  soundpool: 2.4.1 
+  soundpool: 2.4.0 
   flutter_svg: ^1.0.0
   firebase_core: ^3.3.0
   firebase_auth: ^5.1.4
   cloud_firestore: ^5.2.1
   shared_preferences: ^2.0.9
   flutter_tts: ^3.2.2  # Add this line
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -48,7 +49,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_localizations:
     sdk: flutter
-  marquee: ^2.2.3
+  just_audio: ^0.9.41
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +85,7 @@ flutter:
     - assets/icons/stageicon.svg
 
     # Audios / SFX
+    - assets/sound/bgm/AdvBGM.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3

@@ -12,6 +12,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'settings_dialog.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:just_audio/just_audio.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -37,6 +38,7 @@ class GameplayPageState extends State<GameplayPage> {
   FlutterTts flutterTts = FlutterTts();
   double _speechRate = 0.5;
   double _ttsVolume = 0.5;
+  double _musicVolume = 1.0; // Default music volume
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;
@@ -63,6 +65,8 @@ class GameplayPageState extends State<GameplayPage> {
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
   final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   bool _isTextToSpeechEnabled = false; // Add this line
   String _selectedVoice = ''; // Default to male voice
   final String _maleVoiceEn = 'en-us-x-tpd-local'; // Male voice for English
@@ -73,6 +77,7 @@ class GameplayPageState extends State<GameplayPage> {
   @override
   void initState() {
     super.initState();
+    _playBackgroundMusic();
     _initializeQuestions();
     _loadSettings(); 
     flutterTts = FlutterTts(); // Ensure TTS is initialized
@@ -109,6 +114,7 @@ class GameplayPageState extends State<GameplayPage> {
       _selectedVoice = prefs.getString('selectedVoice') ?? 'en-us-x-tpd-local';
       _speechRate = prefs.getDouble('speed')!;
       _ttsVolume = prefs.getDouble('ttsVolume')!;
+      _musicVolume = prefs.getDouble('musicVolume') ?? 1.0;
     });
   }
 
@@ -129,6 +135,17 @@ class GameplayPageState extends State<GameplayPage> {
     }
   }
 
+  Future<void> _playBackgroundMusic() async {
+    try {
+      await _audioPlayer.setLoopMode(LoopMode.one); // Loop the background music
+      await _audioPlayer.setAsset('assets/sound/bgm/AdvBGM.mp3'); // Set the audio source
+      await _audioPlayer.setVolume(_musicVolume); // Set the volume
+      await _audioPlayer.play(); // Play the background music
+    } catch (e) {
+      print("Error playing background music: $e");
+    }
+  }
+
   Future<void> _speak(String text) async {
     print("TTS: Speaking text: $text"); // Debugging statement
     String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
@@ -144,6 +161,12 @@ class GameplayPageState extends State<GameplayPage> {
     await flutterTts.stop();
   }
   
+  @override
+  void dispose() {
+    _audioPlayer.dispose(); // Dispose the audio player when the widget is disposed
+    super.dispose();
+  }
+
 void readCurrentQuestion() {
   if (_isTextToSpeechEnabled) {
     if (_currentQuestionIndex < _questions.length) {
@@ -642,11 +665,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   _selectedVoice = availableVoices.first['name']!;
                                 });
                               }
-                          
-                              await showDialog(
+                                                            await showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
-                                    return SettingsDialog(
+                                  return SettingsDialog(
                                     flutterTts: flutterTts, // Pass the flutterTts instance
                                     isTextToSpeechEnabled: _isTextToSpeechEnabled,
                                     onTextToSpeechChanged: (bool value) {
@@ -683,7 +705,14 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                       });
                                       flutterTts.setVolume(value);
                                     },
-                                    availableVoices: availableVoices, // Pass the filtered voices
+                                    availableVoices: availableVoices,
+                                    musicVolume: _musicVolume, // Pass the music volume
+                                    onMusicVolumeChanged: (double value) {
+                                      setState(() {
+                                        _musicVolume = value;
+                                      });
+                                      _audioPlayer.setVolume(value); // Update the audio player's volume
+                                    },
                                   );
                                 },
                               );

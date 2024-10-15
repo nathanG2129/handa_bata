@@ -14,6 +14,8 @@ class SettingsDialog extends StatefulWidget {
   final ValueChanged<double> onTtsVolumeChanged;
   final List<dynamic> availableVoices;
   final FlutterTts flutterTts; // Add this line
+  final double musicVolume; // Add this line
+  final ValueChanged<double> onMusicVolumeChanged; // Add this line
 
   const SettingsDialog({
     super.key,
@@ -27,6 +29,8 @@ class SettingsDialog extends StatefulWidget {
     required this.onTtsVolumeChanged,
     required this.availableVoices,
     required this.flutterTts, // Add this line
+    required this.musicVolume, // Add this line
+    required this.onMusicVolumeChanged, // Add this line
   });
 
   @override
@@ -38,6 +42,7 @@ class SettingsDialogState extends State<SettingsDialog> {
   late String _selectedVoice;
   late double _visualSpeed;
   late double _visualVolume;
+  late double _visualMusicVolume; // Add this line
 
   @override
   void initState() {
@@ -46,6 +51,7 @@ class SettingsDialogState extends State<SettingsDialog> {
     _selectedVoice = widget.selectedVoice;
     _visualSpeed = (widget.speed * 2); // Convert actual speed to visual speed
     _visualVolume = widget.ttsVolume * 100; // Convert actual volume to visual volume
+    _visualMusicVolume = widget.musicVolume * 100; // Convert actual volume to visual volume
   }
 
   Future<void> _saveSettings() async {
@@ -54,6 +60,7 @@ class SettingsDialogState extends State<SettingsDialog> {
     await prefs.setString('selectedVoice', _selectedVoice);
     await prefs.setDouble('speed', _visualSpeed / 2); // Save actual speed
     await prefs.setDouble('ttsVolume', _visualVolume / 100); // Save actual volume
+    await prefs.setDouble('musicVolume', _visualMusicVolume / 100); // Save actual volume
   }
 
   @override
@@ -70,6 +77,34 @@ class SettingsDialogState extends State<SettingsDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Music Volume', style: GoogleFonts.vt323(fontSize: 28, color: Colors.white)),
+                Text('${_visualMusicVolume.round()}', style: GoogleFonts.vt323(fontSize: 24, color: Colors.white)),
+              ],
+            ),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 8.0, // Make the slider bar thicker
+              ),
+              child: Slider(
+                value: _visualMusicVolume,
+                onChanged: (double value) {
+                  setState(() {
+                    _visualMusicVolume = value;
+                  });
+                  widget.onMusicVolumeChanged(value / 100); // Convert visual volume to actual volume
+                  _saveSettings(); // Save settings
+                },
+                min: 0,
+                max: 100,
+                divisions: 100,
+                activeColor: const Color(0xFFF1B33A),
+                inactiveColor: const Color(0xFF241242),
+              ),
+            ),
+            const SizedBox(height: 16), // Add larger top margin
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

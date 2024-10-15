@@ -273,8 +273,11 @@ class ResultsPageState extends State<ResultsPage> {
                   ),
                 ),
               )
-          ) :const Center(
-              child: CircularProgressIndicator(),
+          ) : Container(
+              color: const Color(0xFF5E31AD), // Same background color as GameplayPage
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
             ),
     );
   }

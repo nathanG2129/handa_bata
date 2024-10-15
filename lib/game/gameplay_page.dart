@@ -45,6 +45,7 @@ class GameplayPageState extends State<GameplayPage> {
   int _totalQuestions = 0;
   bool _isLoading = true;
   bool _hasError = false;
+  bool _bgMusicLoaded = false;
   Timer? _timer;
   double _progress = 1.0;
   int? _selectedOptionIndex;
@@ -141,6 +142,9 @@ class GameplayPageState extends State<GameplayPage> {
     try {
       await _audioPlayer.setLoopMode(LoopMode.one); // Loop the background music
       await _audioPlayer.setAsset('assets/sound/bgm/AdvBGM.mp3'); // Set the audio source
+      setState(() {
+        _bgMusicLoaded = true;
+      });
       await _audioPlayer.setVolume(_musicVolume); // Set the volume
       await _audioPlayer.play(); // Play the background music
     } catch (e) {
@@ -523,14 +527,15 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading || !_bgMusicLoaded) {
       return const Scaffold(
+        backgroundColor: Color(0xFF5E31AD), // Same background color as GameplayPage
         body: Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
-  
+    
     if (_hasError) {
       return Scaffold(
         body: Center(

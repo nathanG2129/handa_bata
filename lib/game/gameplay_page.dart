@@ -11,6 +11,7 @@ import 'package:handabatamae/game/type/identificationquestion.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'settings_dialog.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -73,6 +74,7 @@ class GameplayPageState extends State<GameplayPage> {
   void initState() {
     super.initState();
     _initializeQuestions();
+    _loadSettings(); 
     flutterTts = FlutterTts(); // Ensure TTS is initialized
     flutterTts.setCompletionHandler(() {
       print("TTS: Completed speaking."); // Debugging statement
@@ -97,6 +99,16 @@ class GameplayPageState extends State<GameplayPage> {
     // Read the current question whenever the widget is updated
     WidgetsBinding.instance.addPostFrameCallback((_) {
       readCurrentQuestion();
+    });
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isTextToSpeechEnabled = prefs.getBool('isTextToSpeechEnabled') ?? false;
+      _selectedVoice = prefs.getString('selectedVoice') ?? 'en-us-x-tpd-local';
+      _speechRate = prefs.getDouble('speed')!;
+      _ttsVolume = prefs.getDouble('ttsVolume')!;
     });
   }
 
@@ -192,6 +204,7 @@ void readCurrentQuestion() {
     _timer?.cancel();
     _progress = 1.0;
     int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
+    readCurrentQuestion(); // Read the next question
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
@@ -208,6 +221,7 @@ void readCurrentQuestion() {
     _timer?.cancel();
     _progress = 1.0;
     int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
+    readCurrentQuestion(); // Read the next question
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
@@ -282,7 +296,6 @@ void readCurrentQuestion() {
       });
       Future.delayed(const Duration(seconds: 5), () {
         _startTimer(); // Restart the timer after the intro delay
-        readCurrentQuestion(); // Read the next question
       });
     } else {
       // Calculate accuracy
@@ -646,7 +659,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
                                         flutterTts.setSpeechRate(_speechRate);
                                         flutterTts.setVolume(_ttsVolume);
-                                        readCurrentQuestion(); // Apply settings immediately
                                       }
                                     },
                                     selectedVoice: _selectedVoice,
@@ -656,7 +668,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                       });
                                       String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
                                       flutterTts.setVoice({"name": newValue!, "locale": locale});
-                                      readCurrentQuestion(); // Apply settings immediately
                                     },
                                     speed: _speechRate, // Use the state variable
                                     onSpeedChanged: (double value) {
@@ -664,7 +675,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         _speechRate = value;
                                       });
                                       flutterTts.setSpeechRate(value);
-                                      readCurrentQuestion(); // Apply settings immediately
                                     },
                                     ttsVolume: _ttsVolume, // Use the state variable
                                     onTtsVolumeChanged: (double value) {
@@ -672,7 +682,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         _ttsVolume = value;
                                       });
                                       flutterTts.setVolume(value);
-                                      readCurrentQuestion(); // Apply settings immediately
                                     },
                                     availableVoices: availableVoices, // Pass the filtered voices
                                   );

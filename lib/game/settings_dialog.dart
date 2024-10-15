@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_tts/flutter_tts.dart'; // Import Flutter TTS package
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsDialog extends StatefulWidget {
   final bool isTextToSpeechEnabled;
@@ -47,6 +48,14 @@ class SettingsDialogState extends State<SettingsDialog> {
     _visualVolume = widget.ttsVolume * 100; // Convert actual volume to visual volume
   }
 
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isTextToSpeechEnabled', _isTextToSpeechEnabled);
+    await prefs.setString('selectedVoice', _selectedVoice);
+    await prefs.setDouble('speed', _visualSpeed / 2); // Save actual speed
+    await prefs.setDouble('ttsVolume', _visualVolume / 100); // Save actual volume
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -75,6 +84,7 @@ class SettingsDialogState extends State<SettingsDialog> {
                     if (!value) {
                       widget.flutterTts.stop(); // Stop TTS immediately when toggled off
                     }
+                    _saveSettings(); // Save settings
                   },
                 ),
               ],
@@ -91,6 +101,7 @@ class SettingsDialogState extends State<SettingsDialog> {
                     _selectedVoice = newValue!;
                   });
                   widget.onVoiceChanged(newValue);
+                  _saveSettings(); // Save settings
                 },
                 items: widget.availableVoices
                     .map<DropdownMenuItem<String>>((dynamic voice) {
@@ -132,6 +143,7 @@ class SettingsDialogState extends State<SettingsDialog> {
                     _visualSpeed = value;
                   });
                   widget.onSpeedChanged(value / 2); // Convert visual speed to actual speed
+                  _saveSettings(); // Save settings
                 },
                 min: 0.0,
                 max: 2.0,
@@ -158,6 +170,7 @@ class SettingsDialogState extends State<SettingsDialog> {
                     _visualVolume = value;
                   });
                   widget.onTtsVolumeChanged(value / 100); // Convert visual volume to actual volume
+                  _saveSettings(); // Save settings
                 },
                 min: 0,
                 max: 100,

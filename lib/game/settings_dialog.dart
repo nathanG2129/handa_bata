@@ -52,6 +52,7 @@ class SettingsDialogState extends State<SettingsDialog> {
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     _isTextToSpeechEnabled = widget.isTextToSpeechEnabled;
     _selectedVoice = widget.selectedVoice;
     _visualSpeed = (widget.speed * 2); // Convert actual speed to visual speed
@@ -68,6 +69,13 @@ class SettingsDialogState extends State<SettingsDialog> {
     await prefs.setDouble('ttsVolume', _visualVolume / 100); // Save actual volume
     await prefs.setDouble('musicVolume', _visualMusicVolume / 100); // Save actual volume
     await prefs.setDouble('sfxVolume', _visualSfxVolume / 100); // Save actual volume
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _visualSfxVolume = (prefs.getDouble('sfxVolume') ?? 1.0) * 100;
+    });
   }
 
   @override

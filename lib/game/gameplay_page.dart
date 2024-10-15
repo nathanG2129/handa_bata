@@ -117,7 +117,7 @@ class GameplayPageState extends State<GameplayPage> {
       _speechRate = prefs.getDouble('speed')!;
       _ttsVolume = prefs.getDouble('ttsVolume')!;
       _musicVolume = prefs.getDouble('musicVolume') ?? 1.0;
-      _sfxVolume = (prefs.getDouble('sfxVolume') ?? 100.0) / 100.0; // Convert to 0.0-1.0 range
+      _sfxVolume = prefs.getDouble('sfxVolume') ?? 1.0;
     });
   }
 
@@ -168,7 +168,8 @@ class GameplayPageState extends State<GameplayPage> {
   }
   
   @override
-  void dispose() {
+  void dispose() {  
+    flutterTts.stop(); // Stop the TTS
     _audioPlayer.dispose(); // Dispose the audio player when the widget is disposed
     super.dispose();
   }

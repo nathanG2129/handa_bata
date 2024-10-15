@@ -62,7 +62,7 @@ class GameplayPageState extends State<GameplayPage> {
   final GlobalKey<FillInTheBlanksQuestionState> _fillInTheBlanksQuestionKey = GlobalKey<FillInTheBlanksQuestionState>(); // Add a global key for FillInTheBlanksQuestion
   final GlobalKey<MatchingTypeQuestionState> _matchingTypeQuestionKey = GlobalKey<MatchingTypeQuestionState>();
 
-  bool _isTextToSpeechEnabled = true; // Add this line
+  bool _isTextToSpeechEnabled = false; // Add this line
   String _selectedVoice = ''; // Default to male voice
   final String _maleVoiceEn = 'en-us-x-tpd-local'; // Male voice for English
   final String _femaleVoiceEn = 'en-us-x-log-local'; // Female voice for English
@@ -191,7 +191,7 @@ void readCurrentQuestion() {
   void _startTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 150 : 900; // Adjust timer duration based on mode
+    int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;
@@ -207,7 +207,7 @@ void readCurrentQuestion() {
   void _startMatchingTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 150 : 900; // Adjust timer duration based on mode
+    int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
       setState(() {
         _progress -= 0.01;

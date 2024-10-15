@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:soundpool/soundpool.dart';
 
 class IdentificationQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
@@ -32,13 +34,33 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
   int isCorrect = 0; // Use int to represent correctness: 0 (neutral), 1 (wrong), 2 (correct)
   bool isCheckingAnswer = false; // Flag to indicate when the answer is being checked
   bool showCorrectAnswer = false; // Flag to indicate when to show the correct answer
+  late Soundpool _soundpool;
+  late int _soundId1, _soundId2, _soundId3;
+  bool _soundsLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _initializeOptions();
+    _initializeSounds();
     _showIntroduction();
     _resetState(); // Add debug statements
+  }
+
+  void _initializeSounds() async {
+    _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
+    _soundId1 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3'));
+    _soundId2 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3'));
+    _soundId3 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3'));
+    setState(() {
+      _soundsLoaded = true;
+    });
+  }
+
+  void _playSound(int soundId) async {
+    if (_soundsLoaded && soundId != -1) {
+      await _soundpool.play(soundId);
+    }
   }
   
   @override
@@ -88,6 +110,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
   }
 
   void _handleOptionSelection(int index, String option) {
+    _playSound(_soundId3); // Play select answer sound
     setState(() {
       if (index < 0 || index >= optionSelected.length) {
         print('Index out of range: $index');
@@ -137,6 +160,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     Future.delayed(const Duration(seconds: 0, milliseconds: 500), () {
       setState(() {
         isCorrect = userAnswer == widget.questionData['answer'] ? 2 : 1;
+        _playSound(isCorrect == 2 ? _soundId2 : _soundId1); // Play correct or wrong answer sound
       });
 
       // Call the callback with the correctness of the answer

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math'; // Import the dart:math library for shuffling
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
+import 'package:soundpool/soundpool.dart';
 import '../../widgets/text_with_shadow.dart';
 
 class MultipleChoiceQuestion extends StatefulWidget {
@@ -32,13 +34,31 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   Timer? _timer; // Timer to handle the delay
   List<String> options = []; // Store shuffled options
   String? correctAnswer; // Store the correct answer text
+  late Soundpool _soundpool;
+  late int _soundId1, _soundId2, _soundId3;
+  bool _soundsLoaded = false;
 
   @override
   void initState() {
     super.initState();
     resetState();
-    print('MultipleChoiceQuestion initialized');
-    print(correctAnswer);
+    _initializeSounds();
+  }
+
+  void _initializeSounds() async {
+    _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
+    _soundId1 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3'));
+    _soundId2 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3'));
+    _soundId3 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3'));
+    setState(() {
+      _soundsLoaded = true;
+    });
+  }
+
+  void _playSound(int soundId) async {
+    if (_soundsLoaded && soundId != -1) {
+      await _soundpool.play(soundId);
+    }
   }
   
   @override
@@ -56,6 +76,8 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   }
 
   void _handleOptionSelected(int index) {
+    _playSound(_soundId3); // Play sound when an option is selected
+
     bool isCorrect = options[index] == correctAnswer;
     widget.onOptionSelected(index, isCorrect);
 
@@ -73,6 +95,11 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
+        if (isCorrect) {
+          _playSound(_soundId2); // Play correct answer sound
+        } else {
+          _playSound(_soundId1); // Play wrong answer sound
+      }
       });
 
       Future.delayed(const Duration(seconds: 1, milliseconds: 250), () {
@@ -85,6 +112,8 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
   // Add a method to force check the answer
   void forceCheckAnswer() {
+    _playSound(_soundId1); // Play wrong answer sound
+
     setState(() {
       showAllRed = true; // Show all options as red
     });

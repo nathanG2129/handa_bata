@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:soundpool/soundpool.dart';
 
 class MatchingTypeQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
@@ -39,12 +41,32 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   Timer? _timer;
   bool isChecking = false; // Add this flag
   bool isSubmitted = false; // Add this flag
+  late Soundpool _soundpool;
+  late int _soundId1, _soundId2, _soundId3;
+  bool _soundsLoaded = false;
   
   @override
   void initState() {
     super.initState();
+    _initializeSounds();
     resetState();
   }
+
+  void _initializeSounds() async {
+  _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
+  _soundId1 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3'));
+  _soundId2 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3'));
+  _soundId3 = await _soundpool.load(await rootBundle.load('assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3'));
+  setState(() {
+    _soundsLoaded = true;
+  });
+}
+
+void _playSound(int soundId) async {
+  if (_soundsLoaded && soundId != -1) {
+    await _soundpool.play(soundId);
+  }
+}
 
   @override
   void didUpdateWidget(covariant MatchingTypeQuestion oldWidget) {
@@ -114,6 +136,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   }
   
   void _handleSection1OptionTap(String option) {
+    _playSound(_soundId3); // Play select answer sound
     setState(() {
       if (selectedSection1Option == option) {
         selectedSection1Option = null;
@@ -127,6 +150,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   }
 
   void _handleSection2OptionTap(String option) {
+    _playSound(_soundId3); // Play select answer sound
     setState(() {
       if (selectedSection2Option == option) {
         selectedSection2Option = null;
@@ -167,6 +191,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
 
   void _cancelSelection(String section1Option, String section2Option) {
     if (isChecking) return; // Prevent unpairing during the checking phase
+    _playSound(_soundId3); // Play select answer sound
   
     setState(() {
       int index = userPairs.indexWhere((pair) =>
@@ -329,8 +354,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
         if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString) && pairColors[i] != Colors.red) {
           pairColors[i] = Colors.green; // Correct pair
+          _playSound(_soundId2); // Play correct answer sound
         } else {
           pairColors[i] = Colors.red; // Incorrect pair
+          _playSound(_soundId1); // Play wrong answer sound
         }
       });
     }
@@ -365,19 +392,20 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       // Randomly pair up the remaining options
       List<String> remainingSection1Options = List.from(section1Options);
       List<String> remainingSection2Options = List.from(section2Options);
-      Random random = Random();
-  
-      // Shuffle section2Options to ensure incorrect pairings
-      remainingSection2Options.shuffle(random);
   
       while (remainingSection1Options.isNotEmpty && remainingSection2Options.isNotEmpty) {
         String section1Option = remainingSection1Options.removeAt(0);
-        String section2Option = remainingSection2Options.removeAt(0);
+        String section2Option = remainingSection2Options.firstWhere(
+          (option) => option != correctAnswers.firstWhere((pair) => pair['section1'] == section1Option)['section2'],
+          orElse: () => remainingSection2Options.removeAt(0),
+        );
+        remainingSection2Options.remove(section2Option);
+  
         userPairs.add({
           'section1': section1Option,
           'section2': section2Option,
         });
-        pairColors.add(Colors.red);
+        pairColors.add(const Color.fromARGB(255, 114, 109, 109));
         incorrectPairCount++;
   
         // Remove the paired options from the original lists
@@ -413,7 +441,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   
     // Show correct pairs in green
     _checkAnswer();
-
   }
 
   bool areAllPairsCorrect() {

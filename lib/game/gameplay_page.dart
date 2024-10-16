@@ -612,147 +612,149 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     }
   
     return Scaffold(
-    body: ResponsiveBreakpoints(
-      breakpoints: const [
-        Breakpoint(start: 0, end: 450, name: MOBILE),
-        Breakpoint(start: 451, end: 800, name: TABLET),
-        Breakpoint(start: 801, end: 1920, name: DESKTOP),
-        Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-      ],
-      child: MaxWidthBox(
-        maxWidth: 1200,
-        child: ResponsiveScaledBox(
-          width: ResponsiveValue<double>(context, conditionalValues: [
-            const Condition.equals(name: MOBILE, value: 450),
-            const Condition.between(start: 800, end: 1100, value: 800),
-            const Condition.between(start: 1000, end: 1200, value: 1000),
-          ]).value,
-          child: WillPopScope(
-            onWillPop: () async {
-              // Prevent back navigation
-              return false;
-            },
-            child: Scaffold(
-              backgroundColor: const Color(0xFF5E31AD),
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    ProgressBar(progress: _progress),
-                    const SizedBox(height: 48),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_currentQuestionIndex + 1} of $_totalQuestions',
-                            style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.volume_up, color: Colors.white),
-                            onPressed: () {
-                              // Handle mute/unmute
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.settings, color: Colors.white),
-                            onPressed: () async {
-                              List<Map<String, String>> availableVoices = widget.language == 'fil'
-                                  ? [
-                                      {"name": _maleVoiceFil, "locale": "fil-PH"},
-                                      {"name": _femaleVoiceFil, "locale": "fil-PH"}
-                                    ]
-                                  : [
-                                      {"name": _maleVoiceEn, "locale": "en-US"},
-                                      {"name": _femaleVoiceEn, "locale": "en-US"}
-                                    ];
-                          
-                              // Ensure the selectedVoice is valid for the current language
-                              if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
-                                setState(() {
-                                  _selectedVoice = availableVoices.first['name']!;
-                                });
-                              }
-                                                            await showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return SettingsDialog(
-                                    flutterTts: flutterTts, // Pass the flutterTts instance
-                                    isTextToSpeechEnabled: _isTextToSpeechEnabled,
-                                    onTextToSpeechChanged: (bool value) {
-                                      setState(() {
-                                        _isTextToSpeechEnabled = value;
-                                      });
-                                      if (value) {
-                                        String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                        flutterTts.setLanguage(locale);
-                                        flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
-                                        flutterTts.setSpeechRate(_speechRate);
-                                        flutterTts.setVolume(_ttsVolume);
-                                      }
-                                    },
-                                    selectedVoice: _selectedVoice,
-                                    onVoiceChanged: (String? newValue) {
-                                      setState(() {
-                                        _selectedVoice = newValue!;
-                                      });
-                                      String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                      flutterTts.setVoice({"name": newValue!, "locale": locale});
-                                    },
-                                    speed: _speechRate, // Use the state variable
-                                    onSpeedChanged: (double value) {
-                                      setState(() {
-                                        _speechRate = value;
-                                      });
-                                      flutterTts.setSpeechRate(value);
-                                    },
-                                    ttsVolume: _ttsVolume, // Use the state variable
-                                    onTtsVolumeChanged: (double value) {
-                                      setState(() {
-                                        _ttsVolume = value;
-                                      });
-                                      flutterTts.setVolume(value);
-                                    },
-                                    availableVoices: availableVoices,
-                                    musicVolume: _musicVolume, // Use the state variable
-                                    onMusicVolumeChanged: (double value) {
-                                      setState(() {
-                                        _musicVolume = value;
-                                      });
-                                      _audioPlayer.setVolume(value);
-                                    },
-                                    sfxVolume: _sfxVolume, // Use the state variable
-                                    onSfxVolumeChanged: (double value) {
-                                      setState(() {
-                                        _sfxVolume = value;
-                                      });
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Padding(
+      body: ResponsiveBreakpoints(
+        breakpoints: const [
+          Breakpoint(start: 0, end: 450, name: MOBILE),
+          Breakpoint(start: 451, end: 800, name: TABLET),
+          Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+        ],
+        child: MaxWidthBox(
+          maxWidth: 1200,
+          child: ResponsiveScaledBox(
+            width: ResponsiveValue<double>(context, conditionalValues: [
+              const Condition.equals(name: MOBILE, value: 450),
+              const Condition.between(start: 800, end: 1100, value: 800),
+              const Condition.between(start: 1000, end: 1200, value: 1000),
+            ]).value,
+            child: WillPopScope(
+              onWillPop: () async {
+                // Prevent back navigation
+                return false;
+              },
+              child: Scaffold(
+                backgroundColor: const Color(0xFF5E31AD),
+                body: SafeArea(
+                  child: Column(
+                    children: [
+                      ProgressBar(progress: _progress),
+                      const SizedBox(height: 48),
+                      Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                        child: questionWidget,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_currentQuestionIndex + 1} of $_totalQuestions',
+                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.volume_up, color: Colors.white),
+                              onPressed: () {
+                                // Handle mute/unmute
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.settings, color: Colors.white),
+                              onPressed: () async {
+                                List<Map<String, String>> availableVoices = widget.language == 'fil'
+                                    ? [
+                                        {"name": _maleVoiceFil, "locale": "fil-PH"},
+                                        {"name": _femaleVoiceFil, "locale": "fil-PH"}
+                                      ]
+                                    : [
+                                        {"name": _maleVoiceEn, "locale": "en-US"},
+                                        {"name": _femaleVoiceEn, "locale": "en-US"}
+                                      ];
+                            
+                                // Ensure the selectedVoice is valid for the current language
+                                if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
+                                  setState(() {
+                                    _selectedVoice = availableVoices.first['name']!;
+                                  });
+                                }
+                                                              await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return SettingsDialog(
+                                      flutterTts: flutterTts, // Pass the flutterTts instance
+                                      isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                                      onTextToSpeechChanged: (bool value) {
+                                        setState(() {
+                                          _isTextToSpeechEnabled = value;
+                                        });
+                                        if (value) {
+                                          String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                          flutterTts.setLanguage(locale);
+                                          flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
+                                          flutterTts.setSpeechRate(_speechRate);
+                                          flutterTts.setVolume(_ttsVolume);
+                                        }
+                                      },
+                                      selectedVoice: _selectedVoice,
+                                      onVoiceChanged: (String? newValue) {
+                                        setState(() {
+                                          _selectedVoice = newValue!;
+                                        });
+                                        String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                        flutterTts.setVoice({"name": newValue!, "locale": locale});
+                                      },
+                                      speed: _speechRate, // Use the state variable
+                                      onSpeedChanged: (double value) {
+                                        setState(() {
+                                          _speechRate = value;
+                                        });
+                                        flutterTts.setSpeechRate(value);
+                                      },
+                                      ttsVolume: _ttsVolume, // Use the state variable
+                                      onTtsVolumeChanged: (double value) {
+                                        setState(() {
+                                          _ttsVolume = value;
+                                        });
+                                        flutterTts.setVolume(value);
+                                      },
+                                      availableVoices: availableVoices,
+                                      musicVolume: _musicVolume, // Use the state variable
+                                      onMusicVolumeChanged: (double value) {
+                                        setState(() {
+                                          _musicVolume = value;
+                                        });
+                                        _audioPlayer.setVolume(value);
+                                      },
+                                      sfxVolume: _sfxVolume, // Use the state variable
+                                      onSfxVolumeChanged: (double value) {
+                                        setState(() {
+                                          _sfxVolume = value;
+                                        });
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    HPBar(hp: _hp), // Add the HP bar at the bottom
-                  ],
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                            child: questionWidget,
+                          ),
+                        ),
+                      ),
+                      HPBar(hp: _hp), // Add the HP bar at the bottom
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class ProgressBar extends StatelessWidget {

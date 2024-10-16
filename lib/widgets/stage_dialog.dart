@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 // Import the GameplayPage
-import 'package:handabatamae/game/prerequisite_page.dart';
+import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
 
 void showStageDialog(

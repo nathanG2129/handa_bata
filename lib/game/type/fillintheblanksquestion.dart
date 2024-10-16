@@ -303,44 +303,55 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     int inputIndex = 0;
 
     questionText.split(' ').forEach((word) {
-      if (word == '<input>') {
-        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
-        Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
-        if (showUserAnswers) {
-          boxColor = selectedOptions[inputIndex] == correctOptions[inputIndex] ? Colors.green : Colors.red;
-        }
+      if (word.startsWith('<input>')) {
+      String suffix = word.substring(7); // Get the suffix after <input>
+      Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
+      Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
+      if (showUserAnswers) {
+        boxColor = selectedOptions[inputIndex] == correctOptions[inputIndex] ? Colors.green : Colors.red;
+      }
+      questionWidgets.add(
+        Container(
+        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          color: boxColor,
+          border: Border.all(color: borderColor), // Conditionally set border color
+          borderRadius: BorderRadius.circular(0),
+        ),
+        child: Text(
+          selectedOptions[inputIndex] ?? '____',
+          style: (selectedOptions[inputIndex] == null)
+            ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
+            : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        ),
+      );
+      if (suffix.isNotEmpty) {
         questionWidgets.add(
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            decoration: BoxDecoration(
-              color: boxColor,
-              border: Border.all(color: borderColor), // Conditionally set border color
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: Text(
-              selectedOptions[inputIndex] ?? '____',
-              style: (selectedOptions[inputIndex] == null)
-                  ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
-                  : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Text(
+          suffix,
+          style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Make suffix white
           ),
+        ),
         );
-        inputIndex++;
+      }
+      inputIndex++;
       } else {
-        questionWidgets.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text(
-              word,
-              style: GoogleFonts.rubik(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+      questionWidgets.add(
+        Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Text(
+          word,
+          style: GoogleFonts.rubik(
+          fontSize: 25,
+          color: Colors.white,
           ),
-        );
+        ),
+        ),
+      );
       }
     });
 

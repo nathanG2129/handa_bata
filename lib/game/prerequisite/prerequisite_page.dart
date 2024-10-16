@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:handabatamae/game/quake_prerequisite_content.dart';
-import 'package:handabatamae/game/storm_prerequisite_content.dart';
-import 'package:handabatamae/game/flood_prerequisite_content.dart';
-import 'package:handabatamae/game/tsunami_prerequisite_content.dart';
-import 'package:handabatamae/game/volcanic_prerequisite_content.dart';
-import 'package:handabatamae/game/drought_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/quake_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/storm_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/flood_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/tsunami_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/volcanic_prerequisite_content.dart';
+import 'package:handabatamae/game/prerequisite/drought_prerequisite_content.dart';
 
 class PrerequisitePage extends StatefulWidget {
   final String language;

@@ -195,7 +195,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
                     widget.questionData['question'] ?? '',
-                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Reduced font size and removed bold
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -210,7 +210,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
                     widget.questionData['question'] ?? '',
-                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Reduced font size and removed bold
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -264,7 +264,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 options[index],
-                                style: GoogleFonts.rubik(fontSize: 18, color: Colors.black), // Smaller font size for options
+                                style: GoogleFonts.rubik(fontSize: 20, color: Colors.black), // Same font size as question text
                               ),
                             ),
                           ),

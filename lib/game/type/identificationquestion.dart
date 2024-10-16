@@ -246,7 +246,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                 const SizedBox(height: 16),
                 Text(
                   questionText,
-                  style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white), // Updated font style
+                  style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Updated font style
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -260,7 +260,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                   questionText,
                   style: GoogleFonts.rubik(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                   textAlign: TextAlign.center,

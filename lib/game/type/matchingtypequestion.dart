@@ -492,7 +492,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
                     questionText,
-                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.rubik(fontSize: 25, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -507,7 +507,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
                     questionText,
-                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.rubik(fontSize: 25, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ),

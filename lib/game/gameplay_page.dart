@@ -479,7 +479,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         _currentStreak = 0; // Reset the current streak
       }
     });
-
+  
+    // Update health
+    _updateHealth(_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true, 'Matching Type', blankPairs: _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0);
+  
     // Print fully correct answers count
   }
   
@@ -492,13 +495,13 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   void _updateHealth(bool isCorrect, String questionType, {int blankPairs = 0, String difficulty = 'normal'}) {
     setState(() {
       if (isCorrect) {
-        if (questionType == 'Fill in the Blanks') {
+        if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
           _hp += 5;
         } else {
           _hp += 20;
         }
       } else {
-        if (questionType == 'Fill in the Blanks') {
+        if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
           _hp -= (difficulty == 'hard' ? 20 : 10) * blankPairs;
         } else {
           _hp -= (difficulty == 'hard' ? 50 : 25);
@@ -587,24 +590,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
           onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
           sfxVolume: _sfxVolume, // Pass the SFX volume
-          onUpdateHP: (bool isCorrect, {int blankPairs = 0}) {
-            setState(() {
-              String difficulty = widget.mode == 'hard' ? 'hard' : 'normal';
-              if (isCorrect) {
-                _hp += 5;
-              } else {
-                _hp -= (difficulty == 'hard' ? 20 : 10) * blankPairs;
-              }
-              _hp = _hp.clamp(0.0, 100.0); // Clamp HP between 0 and 100
-      
-              // Handle health reaching 0
-              if (_hp <= 0) {
-                _hp = 0;
-                // Handle game over logic here
-                _isGameOver = true;
-              }
-            });
-          },
         );
         break;
       case 'Identification':

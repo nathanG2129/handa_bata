@@ -530,7 +530,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         ),
       );
     }
-    
+  
     if (_hasError) {
       return Scaffold(
         body: Center(
@@ -666,14 +666,14 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         {"name": _maleVoiceEn, "locale": "en-US"},
                                         {"name": _femaleVoiceEn, "locale": "en-US"}
                                       ];
-                            
+  
                                 // Ensure the selectedVoice is valid for the current language
                                 if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
                                   setState(() {
                                     _selectedVoice = availableVoices.first['name']!;
                                   });
                                 }
-                                                              await showDialog(
+                                await showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
                                     return SettingsDialog(
@@ -737,10 +737,13 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                       ),
                       const SizedBox(height: 16),
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                            child: questionWidget,
+                        child: Scrollbar(
+                          thumbVisibility: true, // Always show the scrollbar thumb
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                              child: questionWidget,
+                            ),
                           ),
                         ),
                       ),

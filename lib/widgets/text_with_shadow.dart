@@ -10,7 +10,8 @@ class TextWithShadow extends StatelessWidget {
   const TextWithShadow({
     super.key,
     required this.text,
-    required this.fontSize,
+    required this.fontSize, 
+    required ,
   });
 
   @override

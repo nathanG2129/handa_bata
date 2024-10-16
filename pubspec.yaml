@@ -50,6 +50,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   just_audio: ^0.9.41
+  carousel_slider: ^5.0.0
+  photo_view: ^0.15.0
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +85,23 @@ flutter:
     - assets/characters/KladisAdventure.svg
     - assets/characters/KloudArcade.svg
     - assets/icons/stageicon.svg
+    - assets/instructions/FillinTheBlanks01.jpg
+    - assets/instructions/FillinTheBlanks02.jpg
+    - assets/instructions/FillinTheBlanks03.jpg
+    - assets/instructions/FillinTheBlanks04.jpg
+    - assets/instructions/FillinTheBlanks05.jpg
+    - assets/instructions/FillinTheBlanks06.jpg
+    - assets/instructions/Identification01.jpg
+    - assets/instructions/Identification02.jpg
+    - assets/instructions/Identification03.jpg
+    - assets/instructions/Identification04.jpg
+    - assets/instructions/MatchingType01.jpg
+    - assets/instructions/MatchingType02.jpg
+    - assets/instructions/MatchingType03.jpg
+    - assets/instructions/MatchingType04.jpg
+    - assets/instructions/MatchingType05.jpg
+    - assets/instructions/MultipleChoice01.jpg
+    - assets/instructions/MultipleChoice02.jpg
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

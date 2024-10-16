@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/game/gameplay_page.dart'; // Import the GameplayPage
+// Import the GameplayPage
+import 'package:handabatamae/game/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
 
 void showStageDialog(
@@ -100,23 +101,26 @@ void showStageDialog(
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => GameplayPage(
+                        builder: (context) => PrerequisitePage(
                           language: selectedLanguage, // Pass selectedLanguage
-                          category: {
-                            'id': category['id'],
-                            'name': category['name'],
-                          },
+                          category: category,
                           stageName: 'Stage $stageNumber',
                           stageData: stageData,
                           mode: mode,
+                          personalBest: personalBest,
+                          maxScore: maxScore,
+                          stars: stars,
                         ),
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
+                    backgroundColor: const Color(0xFF351B61), // Set the background color to #351b61
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero, // Set sharp corners
+                    ),
                   ),
                   child: Text(
                     StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization

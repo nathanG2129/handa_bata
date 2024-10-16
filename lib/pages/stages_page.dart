@@ -233,44 +233,54 @@ class StagesPageState extends State<StagesPage> {
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
-                                    setState(() {
-                                      _selectedMode = 'Normal';
-                                    });
+                                  setState(() {
+                                    _selectedMode = 'Normal';
+                                  });
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.black, // Text color
-                                    backgroundColor: _selectedMode == 'Normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9), // Background color
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                    ),
-                                    side: const BorderSide(
-                                      color: Color(0xFF1A0D30), // Much darker border color
-                                      width: 4, // Thicker border width for bottom
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                                  foregroundColor: _selectedMode == 'Normal' ? Colors.white : Colors.black, // Text color
+                                  backgroundColor: _selectedMode == 'Normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9), // Background color
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                                   ),
-                                  child: const Text('Normal'),
+                                  side: BorderSide(
+                                    color: _selectedMode == 'Normal' ? darken(const Color(0xFF32c067), 0.2) : const Color(0xFF1A0D30), // Darker border color
+                                    width: 4, // Thicker border width for bottom
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                                  ),
+                                  child: Text(
+                                  'Normal',
+                                  style: GoogleFonts.rubik(
+                                    color: _selectedMode == 'Normal' ? Colors.white : Colors.black,
+                                  ),
+                                  ),
                                 ),
                                 const SizedBox(height: 10), // Add spacing between buttons
                                 ElevatedButton(
                                   onPressed: () {
-                                    setState(() {
-                                      _selectedMode = 'Hard';
-                                    });
+                                  setState(() {
+                                    _selectedMode = 'Hard';
+                                  });
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.black, // Text color
-                                    backgroundColor: _selectedMode == 'Hard' ? Colors.red : const Color(0xFFD9D9D9), // Background color
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                    ),
-                                    side: const BorderSide(
-                                      color: Color(0xFF1A0D30), // Much darker border color
-                                      width: 4, // Thicker border width for bottom
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 39, vertical: 15),
+                                  foregroundColor: _selectedMode == 'Hard' ? Colors.white : Colors.black, // Text color
+                                  backgroundColor: _selectedMode == 'Hard' ? Colors.red : const Color(0xFFD9D9D9), // Background color
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
                                   ),
-                                  child: const Text('Hard'),
+                                  side: BorderSide(
+                                    color: _selectedMode == 'Hard' ? darken(Colors.red, 0.2) : const Color(0xFF1A0D30), // Darker border color
+                                    width: 4, // Thicker border width for bottom
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 39, vertical: 15),
+                                  ),
+                                  child: Text(
+                                  'Hard',
+                                  style: GoogleFonts.rubik(
+                                    color: _selectedMode == 'Hard' ? Colors.white : Colors.black,
+                                  ),
+                                  ),
                                 ),
                               ],
                             ),

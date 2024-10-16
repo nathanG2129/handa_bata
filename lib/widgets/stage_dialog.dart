@@ -15,107 +15,118 @@ void showStageDialog(
   int stars, // Add stars
   String selectedLanguage, // Add selectedLanguage
 ) {
-  // Convert category name to plural form
-  String pluralQuestName = category['name']!.endsWith('s') ? category['name']! : '${category['name']}s';
-  print(personalBest);
   
-  showDialog(
+   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Colors.black, width: 2),
+    barrierLabel: '',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (context, anim1, anim2) {
+      return const SizedBox.shrink();
+    },
+    transitionBuilder: (context, anim1, anim2, child) {
+      return ScaleTransition(
+        scale: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
         ),
-        child: Container(
-          width: 350,
-          height: 400,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Text(
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(0),
+            side: const BorderSide(color: Colors.black, width: 2),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Text(
                   'Stage $stageNumber',
                   style: GoogleFonts.vt323(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'About $pluralQuestName',
-                style: GoogleFonts.vt323(
-                  fontSize: 36,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0), // Add horizontal spacing
-                    child: SvgPicture.string(
-                      '''
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="36"
-                        height="36"
-                        viewBox="0 0 12 11"
-                      >
-                        <path
-                          d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-                          fill="${stars > index ? '#F1B33A' : '#453958'}"
-                        />
-                      </svg>
-                      ''',
-                      width: 36,
-                      height: 36,
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Personal Best: $personalBest / $maxScore', // Use maxScore instead of numberOfQuestions
-                style: GoogleFonts.vt323(
-                  fontSize: 24,
-                ),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => GameplayPage(
-                        language: selectedLanguage, // Pass selectedLanguage
-                        category: {
-                          'id': category['id'],
-                          'name': category['name'],
-                        },
-                        stageName: 'Stage $stageNumber',
-                        stageData: stageData,
-                        mode: mode,
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-                child: Text(
-                  StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization
-                  style: GoogleFonts.vt323(
-                    fontSize: 24,
+                  textAlign: TextAlign.center,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Text(
+                  stageData['stageDescription'] ?? '',
+                  style: GoogleFonts.vt323(
+                  fontSize: 36,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0), // Add horizontal spacing
+                      child: SvgPicture.string(
+                        '''
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="36"
+                          height="36"
+                          viewBox="0 0 12 11"
+                        >
+                          <path
+                            d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                            fill="${stars > index ? '#F1B33A' : '#453958'}"
+                          />
+                        </svg>
+                        ''',
+                        width: 36,
+                        height: 36,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 20),
+                Flexible(
+                  child: Text(
+                    'Personal Best: $personalBest / $maxScore', // Use maxScore instead of numberOfQuestions
+                    style: GoogleFonts.vt323(
+                      fontSize: 24,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GameplayPage(
+                          language: selectedLanguage, // Pass selectedLanguage
+                          category: {
+                            'id': category['id'],
+                            'name': category['name'],
+                          },
+                          stageName: 'Stage $stageNumber',
+                          stageData: stageData,
+                          mode: mode,
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  ),
+                  child: Text(
+                    StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization
+                    style: GoogleFonts.vt323(
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );

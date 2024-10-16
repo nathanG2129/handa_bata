@@ -13,6 +13,7 @@ class MatchingTypeQuestion extends StatefulWidget {
   final VoidCallback onAnswerChecked; // Callback to notify when the answer is checked
   final VoidCallback onVisualDisplayComplete; // Callback to notify when visual display is complete
   final double sfxVolume; // Add this line
+  final Function(bool isCorrect) onUpdateHP; // Add this line
 
   const MatchingTypeQuestion({
     super.key,
@@ -20,7 +21,9 @@ class MatchingTypeQuestion extends StatefulWidget {
     required this.onOptionsShown,
     required this.onAnswerChecked,
     required this.onVisualDisplayComplete, 
-    required this.sfxVolume, // Add this line
+    required this.onUpdateHP, // Add this line
+    required this.sfxVolume, 
+    
   });
 
   @override
@@ -358,9 +361,11 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString) && pairColors[i] != Colors.red) {
           pairColors[i] = Colors.green; // Correct pair
           _playSound(_soundId2); // Play correct answer sound
+          widget.onUpdateHP(true); // Update HP for correct answer
         } else {
           pairColors[i] = Colors.red; // Incorrect pair
           _playSound(_soundId1); // Play wrong answer sound
+          widget.onUpdateHP(false); // Update HP for incorrect answer
         }
       });
     }
@@ -375,6 +380,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
           'section2': '',
         });
         pairColors.add(Colors.red);
+        widget.onUpdateHP(false); // Update HP for missing pair
       });
     }
   

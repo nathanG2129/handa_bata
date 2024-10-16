@@ -83,12 +83,6 @@ class GameplayPageState extends State<GameplayPage> {
     _initializeQuestions();
     _loadSettings(); 
     flutterTts = FlutterTts(); // Ensure TTS is initialized
-    flutterTts.setCompletionHandler(() {
-      print("TTS: Completed speaking."); // Debugging statement
-    });
-    flutterTts.setErrorHandler((msg) {
-      print("TTS: Error - $msg"); // Debugging statement
-    });
     if (widget.language == 'fil') {
       _selectedVoice = _maleVoiceFil;
     } else {

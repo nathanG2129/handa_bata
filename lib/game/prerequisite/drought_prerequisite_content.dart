@@ -6,7 +6,7 @@ import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
-Widget buildDroughtPrerequisiteContent(BuildContext context, String stageName, String language, Map<String, String> category, Map<String, dynamic> stageData, String mode) {
+Widget buildDroughtPrerequisiteContent(BuildContext context, String stageName, String language, Map<String, String> category, Map<String, dynamic> stageData, String mode, String gamemode) {
   int _current = 0;
   List<String> imagePaths;
 
@@ -185,7 +185,8 @@ Widget buildDroughtPrerequisiteContent(BuildContext context, String stageName, S
                     category: category,
                     stageName: stageName,
                     stageData: stageData,
-                    mode: mode,
+                    mode: mode, 
+                    gamemode: gamemode,
                   ),
                 ),
               );

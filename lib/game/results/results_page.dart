@@ -19,6 +19,7 @@ class ResultsPage extends StatefulWidget {
   final String stageName;
   final Map<String, dynamic> stageData;
   final String mode;
+  final String gamemode;
   final int fullyCorrectAnswersCount; // Add this parameter
   final List<Map<String, dynamic>> answeredQuestions; // Add this parameter
 
@@ -32,8 +33,9 @@ class ResultsPage extends StatefulWidget {
     required this.stageName,
     required this.stageData,
     required this.mode,
+    required this.gamemode, // Add this parameter
     required this.fullyCorrectAnswersCount, // Add this parameter
-    required this.answeredQuestions, // Add this parameter
+    required this.answeredQuestions, 
   });
 
   @override
@@ -238,6 +240,7 @@ class ResultsPageState extends State<ResultsPage> {
                                           stageName: widget.stageName,
                                           stageData: widget.stageData,
                                           mode: widget.mode, // Pass the mode
+                                          gamemode: widget.gamemode,
                                         ),
                                       ),
                                     );

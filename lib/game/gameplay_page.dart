@@ -20,6 +20,7 @@ class GameplayPage extends StatefulWidget {
   final String stageName;
   final Map<String, dynamic> stageData;
   final String mode; // Accept the mode
+  final String gamemode;
 
   const GameplayPage({
     super.key,
@@ -28,6 +29,7 @@ class GameplayPage extends StatefulWidget {
     required this.stageName,
     required this.stageData,
     required this.mode, // Add the mode parameter
+    required this.gamemode,
   });
 
   @override
@@ -38,8 +40,8 @@ class GameplayPageState extends State<GameplayPage> {
   FlutterTts flutterTts = FlutterTts();
   double _speechRate = 0.5;
   double _ttsVolume = 0.5;
-  double _musicVolume = 1.0; // Default music volume
-  double _sfxVolume = 1.0; // Default SFX volume
+  double _musicVolume = 0.5; // Default music volume
+  double _sfxVolume = 0.5; // Default SFX volume
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int _totalQuestions = 0;
@@ -305,6 +307,7 @@ void readCurrentQuestion() {
                 'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
               },
               mode: widget.mode, // Pass the mode
+              gamemode: widget.gamemode,
               fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
               answeredQuestions: _answeredQuestions, // Pass the answered questions
             ),
@@ -345,6 +348,7 @@ void readCurrentQuestion() {
             },
             fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             mode: widget.mode, // Pass the mode
+            gamemode: widget.mode,
             answeredQuestions: _answeredQuestions, // Pass the answered questions
           ),
         ),

@@ -6,7 +6,7 @@ import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
-Widget buildQuakePrerequisiteContent(BuildContext context, String stageName, String language, Map<String, String> category, Map<String, dynamic> stageData, String mode) {
+Widget buildQuakePrerequisiteContent(BuildContext context, String stageName, String language, Map<String, String> category, Map<String, dynamic> stageData, String mode, String gamemode) {
   int _current = 0;
   List<String> imagePaths;
 
@@ -186,6 +186,7 @@ Widget buildQuakePrerequisiteContent(BuildContext context, String stageName, Str
                     stageName: stageName,
                     stageData: stageData,
                     mode: mode,
+                    gamemode: gamemode,
                   ),
                 ),
               );

@@ -15,6 +15,7 @@ class PrerequisitePage extends StatefulWidget {
   final String stageName;
   final Map<String, dynamic> stageData;
   final String mode;
+  final String gamemode;
   final int personalBest;
   final int maxScore;
   final int stars;
@@ -26,6 +27,7 @@ class PrerequisitePage extends StatefulWidget {
     required this.stageName,
     required this.stageData,
     required this.mode,
+    required this.gamemode,
     required this.personalBest,
     required this.maxScore,
     required this.stars,
@@ -70,6 +72,7 @@ class PrerequisitePageState extends State<PrerequisitePage> {
                 stageName: widget.stageName,
                 stageData: widget.stageData,
                 mode: widget.mode,
+                gamemode: widget.gamemode,
               ),
             ),
           );
@@ -110,17 +113,17 @@ class PrerequisitePageState extends State<PrerequisitePage> {
   Widget _buildPrerequisiteContent(BuildContext context) {
     switch (widget.category['id']) {
       case 'Quake':
-        return buildQuakePrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildQuakePrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Storm':
-        return buildStormPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildStormPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Flood':
-        return buildFloodPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildFloodPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Tsunami':
-        return buildTsunamiPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildTsunamiPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Volcanic':
-        return buildVolcanicPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildVolcanicPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Drought':
-        return buildDroughtPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode);
+        return buildDroughtPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       default:
         throw Exception('Unknown category');
     }

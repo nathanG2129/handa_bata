@@ -107,6 +107,7 @@ void showStageDialog(
                           stageName: 'Stage $stageNumber',
                           stageData: stageData,
                           mode: mode,
+                          gamemode: 'adventure',
                           personalBest: personalBest,
                           maxScore: maxScore,
                           stars: stars,

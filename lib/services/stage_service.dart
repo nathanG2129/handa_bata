@@ -17,7 +17,9 @@ class StageService {
           .collection('stages')
           .get();
       List<Map<String, dynamic>> stages = snapshot.docs.map((doc) {
-        return doc.data() as Map<String, dynamic>;
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['stageDescription'] = data['stageDescription'] ?? ''; // Ensure stageDescription is included
+        return data;
       }).toList();
       await _storeStagesLocally(language, category, stages);
       return stages;
@@ -74,6 +76,7 @@ class StageService {
   }
 
   Future<void> addStage(String language, String category, String stageName, Map<String, dynamic> stageData) async {
+    stageData['stageDescription'] = stageData['stageDescription'] ?? ''; // Ensure stageDescription is included
     await _firestore
         .collection('Game')
         .doc('Stage')
@@ -85,6 +88,7 @@ class StageService {
   }
 
   Future<void> updateStage(String language, String category, String stageName, Map<String, dynamic> stageData) async {
+    stageData['stageDescription'] = stageData['stageDescription'] ?? ''; // Ensure stageDescription is included
     await _firestore
         .collection('Game')
         .doc('Stage')

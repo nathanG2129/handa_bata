@@ -58,6 +58,7 @@ class _AdminStagePageState extends State<AdminStagePage> {
         return {
           ...stage,
           'stageName': stageName,
+          'stageDescription': stage['stageDescription'] ?? '', // Ensure stageDescription is included
         };
       }).toList();
     });
@@ -155,10 +156,11 @@ class _AdminStagePageState extends State<AdminStagePage> {
   void _navigateToEditStage(String stageName) async {
     print('Navigating to edit stage: $stageName');
     List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, _selectedCategory, stageName);
+    Map<String, dynamic> stageData = await _stageService.fetchStageDocument(_selectedLanguage, _selectedCategory, stageName);
     if (!mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, category: _selectedCategory, stageName: stageName, questions: questions)),
+      MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, category: _selectedCategory, stageName: stageName, questions: questions, stageData: stageData)),
     ).then((_) {
       _fetchStages();
     });

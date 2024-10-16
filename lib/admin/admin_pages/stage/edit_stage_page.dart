@@ -11,8 +11,9 @@ class EditStagePage extends StatefulWidget {
   final String category;
   final String stageName;
   final List<Map<String, dynamic>> questions;
+  final Map<String, dynamic> stageData;
 
-  const EditStagePage({super.key, required this.language, required this.category, required this.stageName, required this.questions});
+  const EditStagePage({super.key, required this.language, required this.category, required this.stageName, required this.questions, required this.stageData});
 
   @override
   EditStagePageState createState() => EditStagePageState();
@@ -23,11 +24,13 @@ class EditStagePageState extends State<EditStagePage> {
   final StageService _stageService = StageService();
   late TextEditingController _stageNameController;
   late List<Map<String, dynamic>> _questions;
+  late TextEditingController _stageDescriptionController;
 
     @override
   void initState() {
     super.initState();
     _stageNameController = TextEditingController(text: widget.stageName);
+    _stageDescriptionController = TextEditingController(text: widget.stageData['stageDescription'] ?? '');
     _questions = widget.questions.map((question) {
       Map<String, dynamic> formattedQuestion = {
         'type': question['type'] ?? 'Identification',
@@ -87,9 +90,11 @@ class EditStagePageState extends State<EditStagePage> {
 
   void _saveStage() async {
     final stageName = _stageNameController.text;
+    final stageDescription = _stageDescriptionController.text;
     if (stageName.isNotEmpty && _questions.isNotEmpty) {
       await _stageService.updateStage(widget.language, widget.category, stageName, {
         'stageName': stageName,
+        'stageDescription': stageDescription,
         'questions': _questions,
       });
       if (mounted) {
@@ -204,38 +209,73 @@ class EditStagePageState extends State<EditStagePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Center(
-                      child: SizedBox(
-                        width: 300,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Center the row
+                      children: [
+                      SizedBox(
+                        width: 200, // Set a fixed width for the stage name field
                         child: TextFormField(
-                          controller: _stageNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Stage Name',
-                            labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
-                            filled: true,
-                            fillColor: Colors.transparent,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(0.0),
-                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(0.0),
-                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(0.0),
-                              borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                            ),
+                        controller: _stageNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Stage Name',
+                          labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
                           ),
-                          style: const TextStyle(color: Colors.white),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a stage name';
-                            }
-                            return null;
-                          },
+                          enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                          return 'Please enter a stage name';
+                          }
+                          return null;
+                        },
                         ),
                       ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 400, // Set a fixed width for the stage name field
+                        child: TextFormField(
+                        controller: _stageDescriptionController,
+                        decoration: InputDecoration(
+                          labelText: 'Description',
+                          labelStyle: GoogleFonts.vt323(color: Colors.white, fontSize: 20),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                          borderSide: const BorderSide(color: Colors.black, width: 2.0),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                          return 'Please enter a description';
+                          }
+                          return null;
+                        },
+                        ),
+                      ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     buildQuestionButtons(_addQuestion),

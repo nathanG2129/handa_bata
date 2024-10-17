@@ -5,7 +5,7 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
-class TutorialPage extends StatelessWidget {
+class TutorialPage extends StatefulWidget {
   final String title;
   final List<String> imagePaths;
   final String description;
@@ -22,9 +22,14 @@ class TutorialPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    int _current = 0;
+  _TutorialPageState createState() => _TutorialPageState();
+}
 
+class _TutorialPageState extends State<TutorialPage> {
+  int _current = 0;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF5E31AD),
       body: Padding(
@@ -37,20 +42,22 @@ class TutorialPage extends StatelessWidget {
               fontSize: 36,
             ),
             TextWithShadow(
-              text: title,
+              text: widget.title,
               fontSize: 36,
             ),
             const SizedBox(height: 20),
-            if (imagePaths.isNotEmpty) ...[
+            if (widget.imagePaths.isNotEmpty) ...[
               CarouselSlider(
                 options: CarouselOptions(
                   height: 200.0,
                   enableInfiniteScroll: false,
                   onPageChanged: (index, reason) {
-                    _current = index;
+                    setState(() {
+                      _current = index;
+                    });
                   },
                 ),
-                items: imagePaths.map((imagePath) {
+                items: widget.imagePaths.map((imagePath) {
                   return Builder(
                     builder: (BuildContext context) {
                       return GestureDetector(
@@ -59,7 +66,7 @@ class TutorialPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ImageZoomPage(
-                                imagePaths: imagePaths,
+                                imagePaths: widget.imagePaths,
                                 initialIndex: _current,
                               ),
                             ),
@@ -82,8 +89,8 @@ class TutorialPage extends StatelessWidget {
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: imagePaths.map((url) {
-                  int index = imagePaths.indexOf(url);
+                children: widget.imagePaths.map((url) {
+                  int index = widget.imagePaths.indexOf(url);
                   return Container(
                     width: 8.0,
                     height: 8.0,
@@ -98,13 +105,13 @@ class TutorialPage extends StatelessWidget {
               const SizedBox(height: 20),
             ],
             Text(
-              description,
+              widget.description,
               style: GoogleFonts.rubik(fontSize: 24, color: Colors.white),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: onNext,
+              onPressed: widget.onNext,
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(0xFF351B61),
@@ -114,7 +121,7 @@ class TutorialPage extends StatelessWidget {
                 ),
               ),
               child: Text(
-                isLastPage ? 'Start Game' : 'Next',
+                widget.isLastPage ? 'Start Game' : 'Next',
                 style: GoogleFonts.vt323(fontSize: 24),
               ),
             ),

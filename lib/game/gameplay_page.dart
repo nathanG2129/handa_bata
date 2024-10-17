@@ -340,6 +340,7 @@ void readCurrentQuestion() {
               gamemode: widget.gamemode,
               fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
               answeredQuestions: _answeredQuestions, // Pass the answered questions
+              record: _stopwatchTime, // Pass the final stopwatch time as bestRecord
             ),
           ),
         );
@@ -384,6 +385,7 @@ void readCurrentQuestion() {
             mode: widget.mode, // Pass the mode
             gamemode: widget.gamemode,
             answeredQuestions: _answeredQuestions, // Pass the answered questions
+            record: _stopwatchTime, // Pass the final stopwatch time as bestRecord
           ),
         ),
       );

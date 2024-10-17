@@ -49,13 +49,18 @@ Widget buildStarsWidget(int stars) {
   );
 }
 
-Widget buildStatisticsWidget(int score, double accuracy, int streak) {
+Widget buildRecordWidget(String record) {
+  return buildStatisticItem('Record', record);
+}
+
+Widget buildStatisticsWidget(int score, double accuracy, int streak, {String? record}) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       buildStatisticItem('Score', score.toString()),
       buildStatisticItem('Accuracy', '${(accuracy * 100).toStringAsFixed(1)}%'),
       buildStatisticItem('Streak', streak.toString()),
+      if (record != null) buildRecordWidget(record), // Add the record widget if record is provided
     ],
   );
 }

@@ -46,14 +46,6 @@ class PrerequisitePageState extends State<PrerequisitePage> {
   void initState() {
     super.initState();
     _checkPrerequisiteFuture = _checkAndSetPrerequisite();
-    print(widget.category['id']);
-    print(widget.stageName);
-    print(widget.mode);
-    print(widget.gamemode);
-    print(widget.personalBest);
-    print(widget.crntRecord);
-    print(widget.maxScore);
-    print(widget.stars);
   }
 
   Future<void> _checkAndSetPrerequisite() async {
@@ -122,7 +114,14 @@ class PrerequisitePageState extends State<PrerequisitePage> {
   Widget _buildPrerequisiteContent(BuildContext context) {
     switch (widget.category['id']) {
       case 'Quake':
-        return buildQuakePrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return QuakePrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       case 'Storm':
         return buildStormPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
       case 'Flood':

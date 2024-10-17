@@ -63,7 +63,13 @@ class PrerequisitePageState extends State<PrerequisitePage> {
       if (gameSaveDataSnapshot.exists) {
         List<dynamic> hasSeenPrerequisite = gameSaveDataSnapshot.get('hasSeenPrerequisite') ?? [];
 
-        int stageIndex = int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        int stageIndex;
+        if (widget.stageName.contains('Arcade')) {
+          stageIndex = hasSeenPrerequisite.length - 1; // Last stage for Arcade
+        } else {
+          stageIndex = int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        }
+
         if (hasSeenPrerequisite.length > stageIndex && hasSeenPrerequisite[stageIndex] == true) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(

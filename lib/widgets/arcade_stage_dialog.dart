@@ -8,7 +8,6 @@ void showArcadeStageDialog(
   BuildContext context,
   int stageNumber,
   Map<String, String> category,
-  int maxScore, // Change parameter name to maxScore
   Map<String, dynamic> stageData,
   String mode,
   int bestRecord, // Change parameter name to bestRecord
@@ -96,19 +95,27 @@ void showArcadeStageDialog(
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
+                    print('Selected Language: $selectedLanguage');
+                    print('Category: $category');
+                    print('Stage Name: ${stageData['stageName']}');
+                    print('Stage Data: $stageData');
+                    print('Mode: $mode');
+                    print('Best Record: $bestRecord');
+                    print('Stars: $stars');
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => PrerequisitePage(
                           language: selectedLanguage, // Pass selectedLanguage
                           category: category,
-                          stageName: 'Stage $stageNumber',
+                          stageName: stageData['stageName'],
                           stageData: stageData,
                           mode: mode,
                           gamemode: 'arcade', // Set gamemode to arcade
                           personalBest: bestRecord, // Pass bestRecord as personalBest
-                          maxScore: maxScore,
+                          crntRecord: currentRecord, // Pass bestRecord as personalBest
                           stars: stars,
+                          maxScore: 0,
                         ),
                       ),
                     );

@@ -19,6 +19,7 @@ class PrerequisitePage extends StatefulWidget {
   final int personalBest;
   final int maxScore;
   final int stars;
+  final int crntRecord;
 
   const PrerequisitePage({
     super.key,
@@ -30,7 +31,8 @@ class PrerequisitePage extends StatefulWidget {
     required this.gamemode,
     required this.personalBest,
     required this.maxScore,
-    required this.stars,
+    required this.stars, 
+    required this.crntRecord,
   });
 
   @override
@@ -45,6 +47,13 @@ class PrerequisitePageState extends State<PrerequisitePage> {
     super.initState();
     _checkPrerequisiteFuture = _checkAndSetPrerequisite();
     print(widget.category['id']);
+    print(widget.stageName);
+    print(widget.mode);
+    print(widget.gamemode);
+    print(widget.personalBest);
+    print(widget.crntRecord);
+    print(widget.maxScore);
+    print(widget.stars);
   }
 
   Future<void> _checkAndSetPrerequisite() async {

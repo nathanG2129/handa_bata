@@ -30,7 +30,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
   bool _isLoading = true;
-  String _selectedMode = 'Normal';
+  String _selectedMode = 'normal';
 
   @override
   void initState() {
@@ -50,7 +50,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'crntRecord': 0, 'maxScore': 0};
+    if (user == null) return {'personalBest': 0, 'crntRecord': 0};
   
     final docRef = FirebaseFirestore.instance
         .collection('User')
@@ -59,7 +59,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         .doc(widget.category['id']);
   
     final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'crntRecord': 0, 'maxScore': 0};
+    if (!docSnapshot.exists) return {'personalBest': 0, 'crntRecord': 0};
   
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
@@ -73,7 +73,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     });
   
     if (arcadeStageKey == null) {
-      return {'personalBest': 0, 'crntRecord': 0, 'maxScore': 0};
+      return {'personalBest': 0, 'crntRecord': 0};
     }
   
     final personalBest = stageData[arcadeStageKey]['bestRecord'] as int? ?? 0;
@@ -82,7 +82,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     return {
       'personalBest': personalBest,
       'crntRecord': crntRecord,
-      'maxScore': 0, // Assuming maxScore is not fetched from Firestore
     };
   }
 
@@ -249,17 +248,17 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                 ElevatedButton(
                                   onPressed: () {
                                     setState(() {
-                                      _selectedMode = 'Normal';
+                                      _selectedMode = 'normal';
                                     });
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: _selectedMode == 'Normal' ? Colors.white : Colors.black,
-                                    backgroundColor: _selectedMode == 'Normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9),
+                                    foregroundColor: _selectedMode == 'normal' ? Colors.white : Colors.black,
+                                    backgroundColor: _selectedMode == 'normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9),
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(Radius.circular(0)),
                                     ),
                                     side: BorderSide(
-                                      color: _selectedMode == 'Normal' ? darken(const Color(0xFF32c067), 0.2) : const Color(0xFF1A0D30),
+                                      color: _selectedMode == 'normal' ? darken(const Color(0xFF32c067), 0.2) : const Color(0xFF1A0D30),
                                       width: 4,
                                     ),
                                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
@@ -267,7 +266,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                   child: Text(
                                     'Normal',
                                     style: GoogleFonts.rubik(
-                                      color: _selectedMode == 'Normal' ? Colors.white : Colors.black,
+                                      color: _selectedMode == 'normal' ? Colors.white : Colors.black,
                                     ),
                                   ),
                                 ),
@@ -303,8 +302,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                     onTap: () async {
                                       Map<String, dynamic> stageData = _stages[stageIndex];
                                       Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
-                                      print(stageStats);
-                                      
                                       if (!mounted) return;
                                       showArcadeStageDialog(
                                         context,
@@ -313,7 +310,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                           'id': widget.category['id']!,
                                           'name': widget.category['name']!,
                                         },
-                                        stageStats['maxScore'], // Corrected to pass maxScore
                                         stageData,
                                         _selectedMode,
                                         stageStats['personalBest'],

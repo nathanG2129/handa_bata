@@ -21,7 +21,7 @@ class PrerequisitePage extends StatefulWidget {
   final int stars;
 
   const PrerequisitePage({
-    Key? key,
+    super.key,
     required this.language,
     required this.category,
     required this.stageName,
@@ -31,7 +31,7 @@ class PrerequisitePage extends StatefulWidget {
     required this.personalBest,
     required this.maxScore,
     required this.stars,
-  }) : super(key: key);
+  });
 
   @override
   PrerequisitePageState createState() => PrerequisitePageState();

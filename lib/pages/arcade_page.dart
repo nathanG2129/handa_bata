@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
-import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
+import 'arcade_stages_page.dart'; // Import ArcadeStagesPage
 import 'package:handabatamae/widgets/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -16,10 +17,10 @@ class ArcadePage extends StatefulWidget {
 }
 
 class ArcadePageState extends State<ArcadePage> {
-  final StageService _stageService = StageService(); // Initialize StageService
+  final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-  static const double questListHeight = 475; // Set the height of the quest list
+  static const double questListHeight = 475;
   late String _selectedLanguage;
 
   @override
@@ -57,7 +58,7 @@ class ArcadePageState extends State<ArcadePage> {
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
-      _fetchCategories(); // Fetch categories again with the new language
+      _fetchCategories();
     });
   }
 
@@ -71,7 +72,7 @@ class ArcadePageState extends State<ArcadePage> {
     } else if (categoryName.contains('Drought') || categoryName.contains('Tsunami')) {
       return const Color(0xFF31111D);
     } else {
-      return Colors.grey; // Default color
+      return Colors.grey;
     }
   }
 
@@ -101,7 +102,7 @@ class ArcadePageState extends State<ArcadePage> {
               child: Stack(
                 children: [
                   SvgPicture.asset(
-                    'assets/backgrounds/background.svg', // Use the common background image
+                    'assets/backgrounds/background.svg',
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
@@ -111,11 +112,11 @@ class ArcadePageState extends State<ArcadePage> {
                     left: 35,
                     child: Container(
                       constraints: const BoxConstraints(
-                        maxWidth: 100, // Adjust the width as needed
-                        maxHeight: 100, // Adjust the height as needed
+                        maxWidth: 100,
+                        maxHeight: 100,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
+                        icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white),
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
@@ -131,8 +132,8 @@ class ArcadePageState extends State<ArcadePage> {
                     top: 60,
                     right: 35,
                     child: DropdownButton<String>(
-                      icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
-                      underline: Container(), // Remove underline
+                      icon: const Icon(Icons.language, color: Colors.white, size: 40),
+                      underline: Container(),
                       items: const [
                         DropdownMenuItem(
                           value: 'en',
@@ -153,7 +154,7 @@ class ArcadePageState extends State<ArcadePage> {
                   Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 90), // Adjust the top padding as needed
+                        padding: const EdgeInsets.only(top: 90),
                         child: ArcadeButton(
                           onPressed: () {
                             // Define the action for the Arcade button if needed
@@ -165,36 +166,48 @@ class ArcadePageState extends State<ArcadePage> {
                           child: Padding(
                             padding: const EdgeInsets.all(0.0),
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start, // Align to the start
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                const SizedBox(height: 30), // Adjust the height to position the first button closer
+                                const SizedBox(height: 30),
                                 _isLoading
                                     ? const CircularProgressIndicator()
                                     : SizedBox(
-                                        height: questListHeight, // Set the height of the quest list
+                                        height: questListHeight,
                                         child: ListView.builder(
-                                          padding: const EdgeInsets.only(top: 0), // Remove extra space at the top
+                                          padding: const EdgeInsets.only(top: 0),
                                           itemCount: _categories.length,
                                           itemBuilder: (context, index) {
                                             final category = _categories[index];
                                             final buttonColor = _getButtonColor(category['name']);
                                             return Padding(
-                                              padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20), // Apply margin only to the bottom except for the last item
+                                              padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20),
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: SizedBox(
-                                                  width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-                                                  height: 100, // Increased height
+                                                  width: MediaQuery.of(context).size.width * 0.8,
+                                                  height: 100,
                                                   child: ElevatedButton(
                                                     onPressed: () {
-                                                      // Do nothing for now
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => ArcadeStagesPage(
+                                                            questName: category['name'],
+                                                            category: {
+                                                              'id': category['id'],
+                                                              'name': category['name'],
+                                                            },
+                                                            selectedLanguage: _selectedLanguage,
+                                                          ),
+                                                        ),
+                                                      );
                                                     },
                                                     style: ElevatedButton.styleFrom(
-                                                      foregroundColor: Colors.white, // Text color
-                                                      backgroundColor: buttonColor, // Set background color based on category
+                                                      foregroundColor: Colors.white,
+                                                      backgroundColor: buttonColor,
                                                       shape: const RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                        side: BorderSide(color: Colors.black, width: 2.0), // Black border
+                                                        borderRadius: BorderRadius.all(Radius.circular(0)),
+                                                        side: BorderSide(color: Colors.black, width: 2.0),
                                                       ),
                                                     ),
                                                     child: Stack(
@@ -205,8 +218,8 @@ class ArcadePageState extends State<ArcadePage> {
                                                           child: Text(
                                                             '${category['name']}',
                                                             style: GoogleFonts.vt323(
-                                                              fontSize: 30, // Larger font size
-                                                              color: Colors.white, // Text color
+                                                              fontSize: 30,
+                                                              color: Colors.white,
                                                             ),
                                                           ),
                                                         ),
@@ -218,7 +231,7 @@ class ArcadePageState extends State<ArcadePage> {
                                                             category['description'] ?? '',
                                                             style: GoogleFonts.vt323(
                                                               fontSize: 22,
-                                                              color: Colors.white, // Text color
+                                                              color: Colors.white,
                                                             ),
                                                             overflow: TextOverflow.ellipsis,
                                                           ),

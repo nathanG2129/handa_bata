@@ -56,13 +56,13 @@ class AuthService {
           // Fetch stages for the category
           List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
           int stageCount = stages.length;
-
+          
           // Initialize arrays with default values
-          List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
-          List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
-          List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
-          List<int> normalStageStars = List<int>.filled(stageCount, 0);
-          List<int> hardStageStars = List<int>.filled(stageCount, 0);
+          List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
+          List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
+          List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
+          List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
+          List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
           
           // Unlock the first stage by default
           if (stageCount > 0) {
@@ -70,30 +70,35 @@ class AuthService {
             unlockedHardStages[0] = true;
           }
           
-          // Inside registerWithEmailAndPassword and createGuestProfile methods
-          
           // Create stageData map
           Map<String, Map<String, dynamic>> stageData = {};
           for (var stage in stages) {
             String stageName = stage['stageName'];
-            int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-              if (question['type'] == 'Multiple Choice') {
-                return sum + 1;
-              } else if (question['type'] == 'Fill in the Blanks') {
-                return sum + (question['answer'] as List).length;
-              } else if (question['type'] == 'Identification') {
-                return sum + 1;
-              } else if (question['type'] == 'Matching Type') {
-                return sum + (question['answerPairs'] as List).length;
-              } else {
-                return sum;
-              }
-            });
-            stageData[stageName] = {
-              'maxScore': maxScore,
-              'scoreHard': 0,
-              'scoreNormal': 0,
-            };
+            if (stageName.contains('Arcade')) {
+              stageData[stageName] = {
+                'bestRecord': -1,
+                'crntRecord': -1,
+              };
+            } else {
+              int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+                if (question['type'] == 'Multiple Choice') {
+                  return sum + 1;
+                } else if (question['type'] == 'Fill in the Blanks') {
+                  return sum + (question['answer'] as List).length;
+                } else if (question['type'] == 'Identification') {
+                  return sum + 1;
+                } else if (question['type'] == 'Matching Type') {
+                  return sum + (question['answerPairs'] as List).length;
+                } else {
+                  return sum;
+                }
+              });
+              stageData[stageName] = {
+                'maxScore': maxScore,
+                'scoreHard': 0,
+                'scoreNormal': 0,
+              };
+            }
           }
           
           // Create gameSaveData document
@@ -105,6 +110,17 @@ class AuthService {
             unlockedHardStages: unlockedHardStages,
             hasSeenPrerequisite: hasSeenPrerequisite,
           );
+          
+          // Remove arcade stages from stars related fields
+          for (var stage in stages) {
+            String stageName = stage['stageName'];
+            if (stageName.contains('Arcade')) {
+              int index = stages.indexOf(stage);
+              normalStageStars.removeAt(index);
+              hardStageStars.removeAt(index);
+              unlockedHardStages.removeAt(index);
+            }
+          }
           
           await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
         }
@@ -152,13 +168,13 @@ class AuthService {
         // Fetch stages for the category
         List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
         int stageCount = stages.length;
-
+        
         // Initialize arrays with default values
-        List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false);
-        List<bool> unlockedHardStages = List<bool>.filled(stageCount, false);
-        List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false);
-        List<int> normalStageStars = List<int>.filled(stageCount, 0);
-        List<int> hardStageStars = List<int>.filled(stageCount, 0);
+        List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
+        List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
+        List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
+        List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
+        List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
         
         // Unlock the first stage by default
         if (stageCount > 0) {
@@ -166,30 +182,35 @@ class AuthService {
           unlockedHardStages[0] = true;
         }
         
-        // Inside registerWithEmailAndPassword and createGuestProfile methods
-        
         // Create stageData map
         Map<String, Map<String, dynamic>> stageData = {};
         for (var stage in stages) {
           String stageName = stage['stageName'];
-          int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-            if (question['type'] == 'Multiple Choice') {
-              return sum + 1;
-            } else if (question['type'] == 'Fill in the Blanks') {
-              return sum + (question['answer'] as List).length;
-            } else if (question['type'] == 'Identification') {
-              return sum + 1;
-            } else if (question['type'] == 'Matching Type') {
-              return sum + (question['answerPairs'] as List).length;
-            } else {
-              return sum;
-            }
-          });
-          stageData[stageName] = {
-            'maxScore': maxScore,
-            'scoreHard': 0,
-            'scoreNormal': 0,
-          };
+          if (stageName.contains('Arcade')) {
+            stageData[stageName] = {
+              'bestRecord': -1,
+              'crntRecord': -1,
+            };
+          } else {
+            int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+              if (question['type'] == 'Multiple Choice') {
+                return sum + 1;
+              } else if (question['type'] == 'Fill in the Blanks') {
+                return sum + (question['answer'] as List).length;
+              } else if (question['type'] == 'Identification') {
+                return sum + 1;
+              } else if (question['type'] == 'Matching Type') {
+                return sum + (question['answerPairs'] as List).length;
+              } else {
+                return sum;
+              }
+            });
+            stageData[stageName] = {
+              'maxScore': maxScore,
+              'scoreHard': 0,
+              'scoreNormal': 0,
+            };
+          }
         }
         
         // Create gameSaveData document
@@ -201,6 +222,17 @@ class AuthService {
           unlockedHardStages: unlockedHardStages,
           hasSeenPrerequisite: hasSeenPrerequisite,
         );
+        
+        // Remove arcade stages from stars related fields
+        for (var stage in stages) {
+          String stageName = stage['stageName'];
+          if (stageName.contains('Arcade')) {
+            int index = stages.indexOf(stage);
+            normalStageStars.removeAt(index);
+            hardStageStars.removeAt(index);
+            unlockedHardStages.removeAt(index);
+          }
+        }
         
         await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
       }

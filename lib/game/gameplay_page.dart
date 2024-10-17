@@ -78,6 +78,10 @@ class GameplayPageState extends State<GameplayPage> {
   final String _maleVoiceFil = 'fil-ph-x-fie-local'; // Male voice for Filipino
   final String _femaleVoiceFil = 'fil-PH-language'; // Female voice for Filipino
 
+  Timer? _stopwatchTimer;
+  int _stopwatchSeconds = 0;
+  String _stopwatchTime = '00:00';
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +93,9 @@ class GameplayPageState extends State<GameplayPage> {
       _selectedVoice = _maleVoiceFil;
     } else {
       _selectedVoice = _maleVoiceEn;
+    }
+    if (widget.gamemode == 'arcade') {
+    _startStopwatch();
     }
   }
 
@@ -227,8 +234,6 @@ void readCurrentQuestion() {
 }
 
   void _startTimer() {
-    if (widget.gamemode == 'arcade') return; // Skip timer for arcade mode
-  
     _timer?.cancel();
     _progress = 1.0;
     int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
@@ -260,6 +265,21 @@ void readCurrentQuestion() {
         }
       });
     });
+  }
+
+  void _startStopwatch() {
+    _stopwatchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _stopwatchSeconds++;
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
+      });
+    });
+  }
+
+  String _formatStopwatchTime(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
   }
   
   void _forceCheckAnswer() {
@@ -383,6 +403,9 @@ void readCurrentQuestion() {
       } else {
         _wrongAnswersCount++;
         _currentStreak = 0; // Reset the current streak
+        if (widget.gamemode == 'arcade') {
+          _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
+        }
       }
     });
   
@@ -417,6 +440,9 @@ void readCurrentQuestion() {
         }
       } else {
         _currentStreak = 0; // Reset the current streak
+        if (widget.gamemode == 'arcade') {
+          _stopwatchSeconds += 5 * (answerData['wrongCount'] as int); // Add 5 seconds for each wrong blank
+        }
       }
     });
   
@@ -456,6 +482,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     } else {
       _wrongAnswersCount++;
       _currentStreak = 0; // Reset the current streak
+      if (widget.gamemode == 'arcade') {
+        _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
+      }
     }
   });
 
@@ -485,6 +514,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         }
       } else {
         _currentStreak = 0; // Reset the current streak
+        if (widget.gamemode == 'arcade') {
+          _stopwatchSeconds += 5 * (_matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0); // Add 5 seconds for each wrong pair
+        }
       }
     });
   
@@ -530,7 +562,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     if (_isLoading || !_bgMusicLoaded) {
       return const Scaffold(
@@ -576,7 +608,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           questionData: currentQuestion,
           selectedOptionIndex: _selectedOptionIndex,
           onOptionSelected: _handleMultipleChoiceAnswerSubmission,
-          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Start the timer when options are shown
+          onOptionsShown: _startTimer, // Start the timer when options are shown
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
         );
@@ -588,7 +620,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           controller: _controller,
           isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
-          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Pass the callback to start the timer
+          onOptionsShown: _startTimer, // Pass the callback to start the timer
           nextQuestion: () {},
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
@@ -598,7 +630,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         questionWidget = MatchingTypeQuestion(
           key: _matchingTypeQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
-          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startMatchingTimer, // Start the timer when options are shown
+          onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
           onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
           onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
           sfxVolume: _sfxVolume, // Pass the SFX volume
@@ -611,7 +643,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           questionData: currentQuestion,
           controller: _controller,
           onAnswerSubmitted: _handleIdentificationAnswerSubmission,
-          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Pass the callback to start the timer
+          onOptionsShown: _startTimer, // Pass the callback to start the timer
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
         );
@@ -651,7 +683,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                 body: SafeArea(
                   child: Column(
                     children: [
-                      if (widget.gamemode != 'arcade') ProgressBar(progress: _progress),
+                      ProgressBar(progress: _progress),
                       const SizedBox(height: 48),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 50.0),
@@ -761,6 +793,11 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                           ),
                         ),
                       ),
+                      if (widget.gamemode == 'arcade')
+                        Text(
+                          _stopwatchTime,
+                          style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                        ),
                       if (widget.gamemode != 'arcade') HPBar(hp: _hp), // Add the HP bar at the bottom only if not in arcade mode
                     ],
                   ),
@@ -769,7 +806,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
             ),
           ),
         ),
-    ),
+      ),
     );
   }
 }

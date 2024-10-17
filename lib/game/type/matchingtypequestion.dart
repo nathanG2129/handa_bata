@@ -13,6 +13,7 @@ class MatchingTypeQuestion extends StatefulWidget {
   final VoidCallback onAnswerChecked; // Callback to notify when the answer is checked
   final VoidCallback onVisualDisplayComplete; // Callback to notify when visual display is complete
   final double sfxVolume; // Add this line
+  final String gamemode; // Add this line
 
   const MatchingTypeQuestion({
     super.key,
@@ -20,7 +21,8 @@ class MatchingTypeQuestion extends StatefulWidget {
     required this.onOptionsShown,
     required this.onAnswerChecked,
     required this.onVisualDisplayComplete, 
-    required this.sfxVolume, // Add this line
+    required this.sfxVolume, 
+    required this.gamemode, // Add this line
   });
 
   @override
@@ -103,14 +105,19 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       isSubmitted = false; // Reset the flag
       _initializeOptions();
       _timer?.cancel();
-      _timer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          setState(() {
-            showOptions = true;
-            widget.onOptionsShown(); // Notify that options are shown
-          });
-        }
-      });
+      if (widget.gamemode == 'arcade') {
+        showOptions = true;
+        widget.onOptionsShown(); // Notify that options are shown
+      } else {
+        _timer = Timer(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              showOptions = true;
+              widget.onOptionsShown(); // Notify that options are shown
+            });
+          }
+        });
+      }
     });
   }
 

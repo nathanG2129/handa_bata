@@ -15,6 +15,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final VoidCallback onOptionsShown; // Add the callback to start the timer
   final VoidCallback nextQuestion; // Add the nextQuestion callback
   final double sfxVolume; // Add this line
+  final String gamemode; // Add this line
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -25,6 +26,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.onOptionsShown,
     required this.nextQuestion,
     required this.sfxVolume, 
+    required this.gamemode, 
   });
 
   @override
@@ -103,14 +105,21 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       showOptions = false;
     });
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          showOptions = true;
-        });
-        widget.onOptionsShown(); // Call the callback to start the timer
-      }
-    });
+    if (widget.gamemode == 'arcade') {
+      setState(() {
+        showOptions = true;
+      });
+      widget.onOptionsShown(); // Call the callback to start the timer
+    } else {
+      _timer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          setState(() {
+            showOptions = true;
+          });
+          widget.onOptionsShown(); // Call the callback to start the timer
+        }
+      });
+    }
   }
 
   void _handleOptionSelection(int index, String option) {
@@ -277,21 +286,26 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       isAnswerCorrect = false;
       options = List<String>.from(widget.questionData['options']);
       options.shuffle(Random()); // Shuffle the options
-
+  
       // Get the correct options based on the string value
       correctOptions = widget.questionData['answer']
           .map<String>((index) => widget.questionData['options'][index as int] as String)
           .toList();
-
+  
       _timer?.cancel();
-      _timer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          setState(() {
-            showOptions = true;
-            widget.onOptionsShown(); // Notify that options are shown
-          });
-        }
-      });
+      if (widget.gamemode == 'arcade') {
+        showOptions = true;
+        widget.onOptionsShown(); // Notify that options are shown
+      } else {
+        _timer = Timer(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              showOptions = true;
+              widget.onOptionsShown(); // Notify that options are shown
+            });
+          }
+        });
+      }
     });
   }
 

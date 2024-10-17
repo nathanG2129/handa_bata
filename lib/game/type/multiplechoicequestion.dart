@@ -13,15 +13,16 @@ class MultipleChoiceQuestion extends StatefulWidget {
   final Function(int, bool) onOptionSelected; // Update the callback to include correctness
   final VoidCallback onOptionsShown; // Callback to notify when options are shown
   final double sfxVolume; // Add this line
-
+  final String gamemode; // Add gamemode parameter
 
   const MultipleChoiceQuestion({
     super.key,
     required this.questionData,
     required this.selectedOptionIndex,
     required this.onOptionSelected,
-    required this.onOptionsShown, 
+    required this.onOptionsShown,
     required this.sfxVolume,
+    required this.gamemode, // Add gamemode parameter
   });
 
   @override
@@ -64,7 +65,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       await _soundpool.play(soundId);
     }
   }
-  
+
   @override
   void didUpdateWidget(covariant MultipleChoiceQuestion oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -95,7 +96,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       'correctAnswer': correctAnswer,
       'isCorrect': isCorrect, // Add this line
     });
-  
+
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
@@ -103,7 +104,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
           _playSound(_soundId2); // Play correct answer sound
         } else {
           _playSound(_soundId1); // Play wrong answer sound
-      }
+        }
       });
 
       Future.delayed(const Duration(seconds: 1, milliseconds: 250), () {
@@ -156,14 +157,20 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       correctAnswer = options[correctAnswerIndex]; // Get the text corresponding to the correct answer index
       options.shuffle(Random()); // Shuffle the options
       _timer?.cancel();
-      _timer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          setState(() {
-            showOptions = true;
-            widget.onOptionsShown(); // Notify that options are shown
-          });
-        }
-      });
+
+      if (widget.gamemode == 'arcade') {
+        showOptions = true;
+        widget.onOptionsShown(); // Notify that options are shown
+      } else {
+        _timer = Timer(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              showOptions = true;
+              widget.onOptionsShown(); // Notify that options are shown
+            });
+          }
+        });
+      }
     });
   }
 
@@ -178,7 +185,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
         ),
       );
     }
-  
+
     return Column(
       children: [
         if (!showOptions)

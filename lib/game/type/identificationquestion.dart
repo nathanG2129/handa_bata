@@ -13,6 +13,7 @@ class IdentificationQuestion extends StatefulWidget {
   final Function(String, bool) onAnswerSubmitted; // Update the callback to include correctness
   final VoidCallback onOptionsShown;
   final double sfxVolume; // Add this line
+  final String gamemode; // Add this line
 
   const IdentificationQuestion({
     super.key,
@@ -21,6 +22,7 @@ class IdentificationQuestion extends StatefulWidget {
     required this.onAnswerSubmitted,
     required this.onOptionsShown, 
     required this.sfxVolume,
+    required this.gamemode, // Add this line
   });
 
   @override
@@ -102,14 +104,21 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     setState(() {
       showInput = false;
     });
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          showInput = true;
-        });
-        widget.onOptionsShown(); // Call the callback to start the timer
-      }
-    });
+    if (widget.gamemode == 'arcade') {
+      setState(() {
+        showInput = true;
+      });
+      widget.onOptionsShown(); // Call the callback to start the timer
+    } else {
+      _timer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          setState(() {
+            showInput = true;
+          });
+          widget.onOptionsShown(); // Call the callback to start the timer
+        }
+      });
+    }
   }
 
   void _handleOptionSelection(int index, String option) {
@@ -193,7 +202,11 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       isCheckingAnswer = false;
       showCorrectAnswer = false;
       _initializeOptions();
-      _showIntroduction();
+      if (widget.gamemode == 'arcade') {
+        showInput = true;
+      } else {
+        _showIntroduction();
+      }
     });
   }
 

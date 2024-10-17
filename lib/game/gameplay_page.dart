@@ -227,6 +227,8 @@ void readCurrentQuestion() {
 }
 
   void _startTimer() {
+    if (widget.gamemode == 'arcade') return; // Skip timer for arcade mode
+  
     _timer?.cancel();
     _progress = 1.0;
     int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
@@ -322,9 +324,11 @@ void readCurrentQuestion() {
         _controller.clear();
         _progress = 1.0; // Reset the progress bar immediately
       });
-      Future.delayed(const Duration(seconds: 5), () {
-        _startTimer(); // Restart the timer after the intro delay
-      });
+      if (widget.gamemode != 'arcade') {
+        Future.delayed(const Duration(seconds: 5), () {
+          _startTimer(); // Restart the timer after the intro delay
+        });
+      }
     } else {
       // Calculate accuracy
       int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
@@ -348,7 +352,7 @@ void readCurrentQuestion() {
             },
             fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             mode: widget.mode, // Pass the mode
-            gamemode: widget.mode,
+            gamemode: widget.gamemode,
             answeredQuestions: _answeredQuestions, // Pass the answered questions
           ),
         ),
@@ -497,6 +501,8 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
 
   void _updateHealth(bool isCorrect, String questionType, {int blankPairs = 0, String difficulty = 'normal'}) {
+    if (widget.gamemode == 'arcade') return; // Skip health update for arcade mode
+  
     setState(() {
       if (isCorrect) {
         if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
@@ -570,8 +576,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           questionData: currentQuestion,
           selectedOptionIndex: _selectedOptionIndex,
           onOptionSelected: _handleMultipleChoiceAnswerSubmission,
-          onOptionsShown: _startTimer, // Start the timer when options are shown
+          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Start the timer when options are shown
           sfxVolume: _sfxVolume, // Pass the SFX volume
+          gamemode: widget.gamemode,
         );
         break;
       case 'Fill in the Blanks':
@@ -581,19 +588,21 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           controller: _controller,
           isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
-          onOptionsShown: _startTimer, // Pass the callback to start the timer
+          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Pass the callback to start the timer
           nextQuestion: () {},
           sfxVolume: _sfxVolume, // Pass the SFX volume
+          gamemode: widget.gamemode,
         );
         break;
       case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
           key: _matchingTypeQuestionKey, // Use the global key to access the state
           questionData: currentQuestion,
-          onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
+          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startMatchingTimer, // Start the timer when options are shown
           onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
           onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
           sfxVolume: _sfxVolume, // Pass the SFX volume
+          gamemode: widget.gamemode,
         );
         break;
       case 'Identification':
@@ -602,8 +611,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           questionData: currentQuestion,
           controller: _controller,
           onAnswerSubmitted: _handleIdentificationAnswerSubmission,
-          onOptionsShown: _startTimer, // Pass the callback to start the timer
+          onOptionsShown: widget.gamemode == 'arcade' ? () {} : _startTimer, // Pass the callback to start the timer
           sfxVolume: _sfxVolume, // Pass the SFX volume
+          gamemode: widget.gamemode,
         );
         break;
       default:
@@ -641,7 +651,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                 body: SafeArea(
                   child: Column(
                     children: [
-                      ProgressBar(progress: _progress),
+                      if (widget.gamemode != 'arcade') ProgressBar(progress: _progress),
                       const SizedBox(height: 48),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 50.0),
@@ -751,7 +761,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                           ),
                         ),
                       ),
-                      HPBar(hp: _hp), // Add the HP bar at the bottom
+                      if (widget.gamemode != 'arcade') HPBar(hp: _hp), // Add the HP bar at the bottom only if not in arcade mode
                     ],
                   ),
                 ),
@@ -759,7 +769,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
             ),
           ),
         ),
-      ),
+    ),
     );
   }
 }

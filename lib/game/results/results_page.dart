@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/pages/stages_page.dart';
+import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
 import 'question_widgets.dart';
@@ -201,18 +202,35 @@ class ResultsPageState extends State<ResultsPage> {
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StagesPage(
-                                          questName: widget.category['name'], // Use the category name for questName
-                                          category: {
-                                            'id': widget.category['id'], // Ensure the category id is passed
-                                            'name': widget.category['name'],
-                                          }, selectedLanguage: widget.language,
+                                    if (widget.gamemode == 'arcade') {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ArcadeStagesPage(
+                                            category: {
+                                              'id': widget.category['id'], // Ensure the category id is passed
+                                              'name': widget.category['name'],
+                                            },
+                                            selectedLanguage: widget.language, 
+                                            questName: widget.category['name'],
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
+                                    } else {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => StagesPage(
+                                            questName: widget.category['name'], // Use the category name for questName
+                                            category: {
+                                              'id': widget.category['id'], // Ensure the category id is passed
+                                              'name': widget.category['name'],
+                                            },
+                                            selectedLanguage: widget.language,
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.white, // Text color

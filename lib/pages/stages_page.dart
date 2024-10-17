@@ -27,6 +27,7 @@ class StagesPageState extends State<StagesPage> {
   bool _isLoading = true;
   String _selectedMode = 'Normal';
 
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +36,8 @@ class StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     List<Map<String, dynamic>> stages = await _stageService.fetchStages(widget.selectedLanguage, widget.category['id']!);
+    // Filter out stages that contain the word "Arcade"
+    stages = stages.where((stage) => !stage['stageName'].toLowerCase().contains('arcade')).toList();
     setState(() {
       _stages = stages;
       _isLoading = false;

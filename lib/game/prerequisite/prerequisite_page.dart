@@ -123,15 +123,50 @@ class PrerequisitePageState extends State<PrerequisitePage> {
           gamemode: widget.gamemode,
         );
       case 'Storm':
-        return buildStormPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return StormPrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       case 'Flood':
-        return buildFloodPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return FloodPrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       case 'Tsunami':
-        return buildTsunamiPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return TsunamiPrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       case 'Volcanic':
-        return buildVolcanicPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return VolcanicPrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       case 'Drought':
-        return buildDroughtPrerequisiteContent(context, widget.stageName, widget.language, widget.category, widget.stageData, widget.mode, widget.gamemode);
+        return DroughtPrerequisiteContent(
+          stageName: widget.stageName,
+          language: widget.language,
+          category: widget.category,
+          stageData: widget.stageData,
+          mode: widget.mode,
+          gamemode: widget.gamemode,
+        );
       default:
         throw Exception('Unknown category');
     }

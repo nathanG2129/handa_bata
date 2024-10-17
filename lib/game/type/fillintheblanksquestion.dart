@@ -156,6 +156,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
 
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
+
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
 
@@ -219,6 +224,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
 
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
 
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');

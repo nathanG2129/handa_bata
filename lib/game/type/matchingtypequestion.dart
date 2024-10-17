@@ -313,6 +313,11 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     });
 
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
   
     // Convert pairs to strings for comparison
     List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
@@ -398,6 +403,11 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true
       (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+
+      // Pause the stopwatch
+      if (widget.gamemode == 'arcade') {
+        (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+      }
   
       // Randomly pair up the remaining options
       List<String> remainingSection1Options = List.from(section1Options);

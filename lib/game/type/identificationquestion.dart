@@ -160,6 +160,12 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
 
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
+
+
     String userAnswer = '';
     for (int i = 0; i < widget.questionData['answerLength']; i++) {
       userAnswer += selectedOptions[i]?.split('_')[0] ?? '_';

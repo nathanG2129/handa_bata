@@ -276,6 +276,14 @@ void readCurrentQuestion() {
     });
   }
 
+  void pauseStopwatch() {
+    _stopwatchTimer?.cancel();
+  }
+
+  void _resumeStopwatch() {
+    _startStopwatch();
+  }
+
   String _formatStopwatchTime(int seconds) {
     final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
     final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
@@ -348,6 +356,8 @@ void readCurrentQuestion() {
         Future.delayed(const Duration(seconds: 5), () {
           _startTimer(); // Restart the timer after the intro delay
         });
+      } else if (widget.gamemode == 'arcade') {
+      _resumeStopwatch();
       }
     } else {
       // Calculate accuracy

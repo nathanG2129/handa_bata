@@ -97,6 +97,11 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       'isCorrect': isCorrect, // Add this line
     });
 
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
+
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showSelectedAnswer = true;
@@ -133,6 +138,11 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
       'correctAnswer': correctAnswer,
       'isCorrect': false, // Add this line
     });
+
+    // Pause the stopwatch
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
 
     // Call the onOptionSelected callback with null index and false correctness
     widget.onOptionSelected(-1, false);

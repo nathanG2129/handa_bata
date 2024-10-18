@@ -39,7 +39,7 @@ class HeaderWidget extends StatelessWidget {
           Align(
             alignment: Alignment.center,
             child: Padding(
-              padding: const EdgeInsets.only(left: 40.0), // Adjust this value to fine-tune the position
+              padding: const EdgeInsets.only(left: 44.0), // Adjust this value to fine-tune the position
               child: IconButton(
                 icon: const Icon(Icons.person, size: 33, color: Colors.white),
                 onPressed: onToggleUserProfile,

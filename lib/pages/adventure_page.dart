@@ -7,6 +7,7 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import respo
 import '../widgets/header_widget.dart'; // Import HeaderWidget
 import '../widgets/footer_widget.dart'; // Import FooterWidget
 import '../widgets/category_button_container.dart'; // Import CategoryButtonContainer
+import 'user_profile.dart'; // Import UserProfilePage
 
 class AdventurePage extends StatefulWidget {
   final String selectedLanguage;
@@ -21,7 +22,8 @@ class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-  late String _selectedLanguage; // Add this line
+  late String _selectedLanguage;
+  bool _isUserProfileVisible = false;
 
   @override
   void initState() {
@@ -62,6 +64,12 @@ class AdventurePageState extends State<AdventurePage> {
     });
   }
 
+  void _toggleUserProfile() {
+    setState(() {
+      _isUserProfileVisible = !_isUserProfileVisible;
+    });
+  }
+
   Color _getButtonColor(String categoryName) {
     if (categoryName.contains('Quake')) {
       return const Color(0xFFF5672B);
@@ -87,8 +95,15 @@ class AdventurePageState extends State<AdventurePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        _navigateBack(context);
-        return false;
+        if (_isUserProfileVisible) {
+          setState(() {
+            _isUserProfileVisible = false;
+          });
+          return false;
+        } else {
+          _navigateBack(context);
+          return false;
+        }
       },
       child: Scaffold(
         body: ResponsiveBreakpoints(
@@ -124,7 +139,7 @@ class AdventurePageState extends State<AdventurePage> {
                             MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage)),
                           );
                         },
-                        onToggleUserProfile: () {}, // No user profile toggle in AdventurePage
+                        onToggleUserProfile: _toggleUserProfile,
                         onChangeLanguage: _changeLanguage,
                       ),
                       Expanded(
@@ -171,6 +186,8 @@ class AdventurePageState extends State<AdventurePage> {
                       ),
                     ],
                   ),
+                  if (_isUserProfileVisible)
+                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
                 ],
               ),
             ),

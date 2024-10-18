@@ -17,16 +17,14 @@ class CategoryButtonContainer extends StatefulWidget {
   });
 
   @override
-  _CategoryButtonContainerState createState() => _CategoryButtonContainerState();
+  CategoryButtonContainerState createState() => CategoryButtonContainerState();
 }
 
-class _CategoryButtonContainerState extends State<CategoryButtonContainer> {
+class CategoryButtonContainerState extends State<CategoryButtonContainer> {
   EdgeInsets _padding = const EdgeInsets.only(top: 3, left: 6, right: 6, bottom: 12); // Apply margin only to the bottom
-  double _height = 200;
 
   void _onTapDown(TapDownDetails details) {
     setState(() {
-      _height = 200; // Adjust the height when the button is pressed down
       _padding = const EdgeInsets.only(top: 3, left: 3, right: 3, bottom: 3);
     });
   }
@@ -34,14 +32,12 @@ class _CategoryButtonContainerState extends State<CategoryButtonContainer> {
   void _onTapUp(TapUpDetails details) {
     setState(() {
       _padding = const EdgeInsets.only(top: 3, left: 6, right: 6, bottom: 12);
-      _height = 200; // Adjust the height when the button is pressed down
     });
   }
 
   void _onTapCancel() {
     setState(() {
       _padding = const EdgeInsets.only(top: 3, left: 6, right: 6, bottom: 12);
-      _height = 200; // Adjust the height when the button is pressed down
     });
   }
 
@@ -73,9 +69,9 @@ class _CategoryButtonContainerState extends State<CategoryButtonContainer> {
           child: Stack(
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 1),
                 width: 385, // 10% bigger than the button width
-                height: _height, // 10% bigger than the button height
+                height: 200, // 10% bigger than the button height
                 padding: _padding, // Add padding to the container
                 color: widget.containerColor, // Set the container color
                 child: GestureDetector(

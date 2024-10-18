@@ -9,6 +9,8 @@ import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
 import '../localization/play/localization.dart'; // Import the localization file
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
+import '../widgets/header_widget.dart'; // Import HeaderWidget
+import '../widgets/footer_widget.dart'; // Import FooterWidget
 
 class PlayPage extends StatefulWidget {
   final String title;
@@ -53,18 +55,18 @@ class PlayPageState extends State<PlayPage> {
 
   @override
   Widget build(BuildContext context) {
-  return WillPopScope(
-    onWillPop: () async {
-      if (_isUserProfileVisible) {
-        setState(() {
-          _isUserProfileVisible = false;
-        });
-        return false;
-      } else {
-        _navigateBack(context);
-        return false;
-      }
-    },
+    return WillPopScope(
+      onWillPop: () async {
+        if (_isUserProfileVisible) {
+          setState(() {
+            _isUserProfileVisible = false;
+          });
+          return false;
+        } else {
+          _navigateBack(context);
+          return false;
+        }
+      },
       child: Scaffold(
         body: ResponsiveBreakpoints(
           breakpoints: const [
@@ -89,92 +91,56 @@ class PlayPageState extends State<PlayPage> {
                     width: double.infinity,
                     height: double.infinity,
                   ),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 50), // Adjust the top padding as needed
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          ElevatedButton(
-                            onPressed: _toggleUserProfile,
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: const Color(0xFF241242), // Text color
-                              backgroundColor: Colors.white, // Background color
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero, // Purely rectangular with sharp edges
-                                side: BorderSide(color: Color(0xFF241242), width: 1.0), // Border color and width
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // Adjusted padding for smaller size
-                              textStyle: GoogleFonts.rubik(fontSize: 20), // Using Rubik font
-                            ),
-                            child: Text(PlayLocalization.translate('userProfile', _selectedLanguage)),
-                          ),
-                          const SizedBox(height: 50),
-                          AdventureButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage,)),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          ArcadeButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage,)),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 60,
-                    left: 35,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        maxWidth: 100, // Adjust the width as needed
-                        maxHeight: 100, // Adjust the height as needed
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white), // Adjust the icon size and color as needed
-                        onPressed: () {
+                  Column(
+                    children: [
+                      HeaderWidget(
+                        selectedLanguage: _selectedLanguage,
+                        onBack: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: _selectedLanguage,)),
+                            MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: _selectedLanguage)),
                           );
                         },
+                        onToggleUserProfile: _toggleUserProfile,
+                        onChangeLanguage: _changeLanguage,
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 60,
-                    right: 35,
-                    child: DropdownButton<String>(
-                      icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
-                      underline: Container(), // Remove underline
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'en',
-                          child: Text('English'),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 40), // Adjust the top padding as needed
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  const SizedBox(height: 0),
+                                  AdventureButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage)),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ArcadeButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage)),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        DropdownMenuItem(
-                          value: 'fil',
-                          child: Text('Filipino'),
-                        ),
-                      ],
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          _changeLanguage(newValue);
-                        }
-                      },
-                    ),
+                      ),
+                      const FooterWidget(),
+                    ],
                   ),
                   if (_isUserProfileVisible)
-                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage,),
+                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
                 ],
               ),
             ),

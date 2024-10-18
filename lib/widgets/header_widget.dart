@@ -18,7 +18,7 @@ class HeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 10, // Add padding to avoid the status bar
+        top: MediaQuery.of(context).padding.top, // Add padding to avoid the status bar
         left: 20,
         right: 20,
         bottom: 10,

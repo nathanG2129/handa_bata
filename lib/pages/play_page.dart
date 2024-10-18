@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
 import 'package:handabatamae/widgets/arcade_button.dart';
 import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
 import 'splash_page.dart';
-import '../localization/play/localization.dart'; // Import the localization file
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_widget.dart'; // Import HeaderWidget
 import '../widgets/footer_widget.dart'; // Import FooterWidget

@@ -15,8 +15,13 @@ void showArcadeStageDialog(
   int stars, // Add stars
   String selectedLanguage, // Add selectedLanguage
 ) {
-  
-   showGeneralDialog(
+  String formatTime(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
+
+  showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: '',
@@ -42,19 +47,19 @@ void showArcadeStageDialog(
               children: [
                 Center(
                   child: Text(
-                  'Stage $stageNumber',
-                  style: GoogleFonts.vt323(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                    'Stage $stageNumber',
+                    style: GoogleFonts.vt323(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   stageData['stageDescription'] ?? '',
                   style: GoogleFonts.vt323(
-                  fontSize: 36,
+                    fontSize: 36,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -69,7 +74,7 @@ void showArcadeStageDialog(
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      bestRecord == -1 ? 'None' : '$bestRecord',
+                      bestRecord == -1 ? 'None' : formatTime(bestRecord),
                       style: GoogleFonts.vt323(
                         fontSize: 24,
                       ),
@@ -84,7 +89,7 @@ void showArcadeStageDialog(
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      currentRecord == -1 ? 'None' : '$currentRecord',
+                      currentRecord == -1 ? 'None' : formatTime(currentRecord),
                       style: GoogleFonts.vt323(
                         fontSize: 24,
                       ),
@@ -95,13 +100,6 @@ void showArcadeStageDialog(
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    print('Selected Language: $selectedLanguage');
-                    print('Category: $category');
-                    print('Stage Name: ${stageData['stageName']}');
-                    print('Stage Data: $stageData');
-                    print('Mode: $mode');
-                    print('Best Record: $bestRecord');
-                    print('Stars: $stars');
                     Navigator.of(context).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute(

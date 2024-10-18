@@ -24,6 +24,7 @@ class ResultsPage extends StatefulWidget {
   final int fullyCorrectAnswersCount;
   final List<Map<String, dynamic>> answeredQuestions;
   final String record;
+  final bool isGameOver;
 
   const ResultsPage({
     super.key,
@@ -38,7 +39,8 @@ class ResultsPage extends StatefulWidget {
     required this.gamemode,
     required this.fullyCorrectAnswersCount,
     required this.answeredQuestions,
-    required this.record,
+    required this.record, 
+    required this.isGameOver,
   });
 
   @override
@@ -60,10 +62,12 @@ class ResultsPageState extends State<ResultsPage> {
     _loadSounds();
   }
 
-  int _calculateStars(double accuracy, int score, int totalQuestions) {
-    if (accuracy > 0.9 && score == totalQuestions) {
+  int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
+    if (isGameOver) {
+      return 0;
+    } else if (accuracy > 0.9 && score == maxScore) {
       return 3;
-    } else if (score > totalQuestions / 2) {
+    } else if (score > maxScore / 2) {
       return 2;
     } else {
       return 1;
@@ -89,7 +93,7 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   void _playSoundBasedOnStars() {
-    int stars = _calculateStars(widget.accuracy, widget.score, widget.stageData['totalQuestions'] ?? 0);
+    int stars = _calculateStars(widget.accuracy, widget.score, widget.stageData['totalQuestions'] ?? 0, widget.isGameOver);
     switch (stars) {
       case 0:
         _soundpool.play(_soundIdFail);
@@ -181,10 +185,10 @@ class ResultsPageState extends State<ResultsPage> {
     });
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
-    int totalQuestions = widget.stageData['totalQuestions'] ?? 0;
-    int stars = _calculateStars(widget.accuracy, widget.score, totalQuestions);
+    int maxScore = widget.stageData['maxScore'] ?? 0; // Get the maxScore from stageData
+    int stars = _calculateStars(widget.accuracy, widget.score, maxScore, widget.isGameOver);
   
     // Update the score and stars in Firestore
     _updateScoreAndStarsInFirestore(stars);

@@ -11,7 +11,6 @@ class TextWithShadow extends StatelessWidget {
     super.key,
     required this.text,
     required this.fontSize, 
-    required ,
   });
 
   @override

@@ -82,7 +82,7 @@ void showArcadeStageDialog(
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Current Record:',
+                      'Current Season Record:',
                       style: GoogleFonts.vt323(
                         fontSize: 24,
                       ),

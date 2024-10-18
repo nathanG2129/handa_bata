@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
 import 'arcade_stages_page.dart'; // Import ArcadeStagesPage
+import 'leaderboards_page.dart'; // Import LeaderboardsPage
 import 'package:handabatamae/widgets/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
@@ -175,8 +176,68 @@ class ArcadePageState extends State<ArcadePage> {
                                         height: questListHeight,
                                         child: ListView.builder(
                                           padding: const EdgeInsets.only(top: 0),
-                                          itemCount: _categories.length,
+                                          itemCount: _categories.length + 1, // Add 1 for the Leaderboards button
                                           itemBuilder: (context, index) {
+                                            if (index == _categories.length) {
+                                              // Leaderboards button
+                                              return Padding(
+                                                padding: const EdgeInsets.only(top: 20, bottom: 20), // Ensure same margin as other buttons
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: SizedBox(
+                                                    width: MediaQuery.of(context).size.width * 0.8,
+                                                    height: 100,
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) => const LeaderboardsPage(),
+                                                          ),
+                                                        );
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                        foregroundColor: Colors.white,
+                                                        backgroundColor: const Color(0xFF28e172), // Change color to #28e172
+                                                        shape: const RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.all(Radius.circular(0)),
+                                                          side: BorderSide(color: Colors.black, width: 2.0),
+                                                        ),
+                                                      ),
+                                                      child: Stack(
+                                                        children: [
+                                                          Positioned(
+                                                            top: 6,
+                                                            left: 0,
+                                                            child: Text(
+                                                              'Leaderboards',
+                                                              style: GoogleFonts.vt323(
+                                                                fontSize: 30,
+                                                                color: Colors.white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Positioned(
+                                                            top: 43,
+                                                            left: 0,
+                                                            right: 8,
+                                                            child: Text(
+                                                              'Show the world what you\'re made of and climb the leaderboards!',
+                                                              style: GoogleFonts.vt323(
+                                                                fontSize: 22,
+                                                                color: Colors.white,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          
                                             final category = _categories[index];
                                             final buttonColor = _getButtonColor(category['name']);
                                             return Padding(

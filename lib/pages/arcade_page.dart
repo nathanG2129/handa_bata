@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
-import 'arcade_stages_page.dart'; // Import ArcadeStagesPage
 import 'leaderboards_page.dart'; // Import LeaderboardsPage
 import 'package:handabatamae/widgets/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
+import '../widgets/header_widget.dart'; // Import HeaderWidget
+import '../widgets/footer_widget.dart'; // Import FooterWidget
+import '../widgets/arcade_category_button_container.dart'; // Import ArcadeCategoryButtonContainer
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -21,7 +22,6 @@ class ArcadePageState extends State<ArcadePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-  static const double questListHeight = 475;
   late String _selectedLanguage;
 
   @override
@@ -77,6 +77,13 @@ class ArcadePageState extends State<ArcadePage> {
     }
   }
 
+  Color _darkenColor(Color color, [double amount = 0.1]) {
+    assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -108,210 +115,70 @@ class ArcadePageState extends State<ArcadePage> {
                     width: double.infinity,
                     height: double.infinity,
                   ),
-                  Positioned(
-                    top: 60,
-                    left: 35,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        maxWidth: 100,
-                        maxHeight: 100,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white),
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: '',),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 60,
-                    right: 35,
-                    child: DropdownButton<String>(
-                      icon: const Icon(Icons.language, color: Colors.white, size: 40),
-                      underline: Container(),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'en',
-                          child: Text('English'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'fil',
-                          child: Text('Filipino'),
-                        ),
-                      ],
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          _changeLanguage(newValue);
-                        }
-                      },
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 90),
-                        child: ArcadeButton(
-                          onPressed: () {
-                            // Define the action for the Arcade button if needed
+                  SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        HeaderWidget(
+                          selectedLanguage: _selectedLanguage,
+                          onBack: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
+                              ),
+                            );
                           },
+                          onToggleUserProfile: () {
+                            // Define the action for toggling user profile if needed
+                          },
+                          onChangeLanguage: _changeLanguage,
                         ),
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(0.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 30),
-                                _isLoading
-                                    ? const CircularProgressIndicator()
-                                    : SizedBox(
-                                        height: questListHeight,
-                                        child: ListView.builder(
-                                          padding: const EdgeInsets.only(top: 0),
-                                          itemCount: _categories.length + 1, // Add 1 for the Leaderboards button
-                                          itemBuilder: (context, index) {
-                                            if (index == _categories.length) {
-                                              // Leaderboards button
-                                              return Padding(
-                                                padding: const EdgeInsets.only(top: 20, bottom: 20), // Ensure same margin as other buttons
-                                                child: Align(
-                                                  alignment: Alignment.center,
-                                                  child: SizedBox(
-                                                    width: MediaQuery.of(context).size.width * 0.8,
-                                                    height: 100,
-                                                    child: ElevatedButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) => const LeaderboardsPage(),
-                                                          ),
-                                                        );
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        foregroundColor: Colors.white,
-                                                        backgroundColor: const Color(0xFF28e172), // Change color to #28e172
-                                                        shape: const RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.all(Radius.circular(0)),
-                                                          side: BorderSide(color: Colors.black, width: 2.0),
-                                                        ),
-                                                      ),
-                                                      child: Stack(
-                                                        children: [
-                                                          Positioned(
-                                                            top: 6,
-                                                            left: 0,
-                                                            child: Text(
-                                                              'Leaderboards',
-                                                              style: GoogleFonts.vt323(
-                                                                fontSize: 30,
-                                                                color: Colors.white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Positioned(
-                                                            top: 43,
-                                                            left: 0,
-                                                            right: 8,
-                                                            child: Text(
-                                                              'Show the world what you\'re made of and climb the leaderboards!',
-                                                              style: GoogleFonts.vt323(
-                                                                fontSize: 22,
-                                                                color: Colors.white,
-                                                              ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          
-                                            final category = _categories[index];
-                                            final buttonColor = _getButtonColor(category['name']);
-                                            return Padding(
-                                              padding: EdgeInsets.only(bottom: index == _categories.length - 1 ? 0 : 20),
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: SizedBox(
-                                                  width: MediaQuery.of(context).size.width * 0.8,
-                                                  height: 100,
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) => ArcadeStagesPage(
-                                                            questName: category['name'],
-                                                            category: {
-                                                              'id': category['id'],
-                                                              'name': category['name'],
-                                                            },
-                                                            selectedLanguage: _selectedLanguage,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    style: ElevatedButton.styleFrom(
-                                                      foregroundColor: Colors.white,
-                                                      backgroundColor: buttonColor,
-                                                      shape: const RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.all(Radius.circular(0)),
-                                                        side: BorderSide(color: Colors.black, width: 2.0),
-                                                      ),
-                                                    ),
-                                                    child: Stack(
-                                                      children: [
-                                                        Positioned(
-                                                          top: 6,
-                                                          left: 0,
-                                                          child: Text(
-                                                            '${category['name']}',
-                                                            style: GoogleFonts.vt323(
-                                                              fontSize: 30,
-                                                              color: Colors.white,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Positioned(
-                                                          top: 43,
-                                                          left: 0,
-                                                          right: 8,
-                                                          child: Text(
-                                                            category['description'] ?? '',
-                                                            style: GoogleFonts.vt323(
-                                                              fontSize: 22,
-                                                              color: Colors.white,
-                                                            ),
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                              ],
-                            ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: ArcadeButton(
+                            onPressed: () {
+                              // Define the action for the Arcade button if needed
+                            },
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 30),
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : Column(
+                                children: _categories.map((category) {
+                                  final buttonColor = _getButtonColor(category['name']);
+                                  final containerColor = _darkenColor(buttonColor, 0.2);
+                                  return ArcadeCategoryButtonContainer(
+                                    buttonColor: buttonColor,
+                                    containerColor: containerColor,
+                                    category: category,
+                                    selectedLanguage: _selectedLanguage,
+                                  );
+                                }).toList(),
+                              ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20, bottom: 20),
+                          child: ArcadeCategoryButtonContainer(
+                            buttonColor: const Color(0xFF28e172),
+                            containerColor: _darkenColor(const Color(0xFF28e172), 0.2),
+                            category: const {
+                              'name': 'Leaderboards',
+                              'description': 'Show the world what you\'re made of and climb the leaderboards!',
+                            },
+                            selectedLanguage: _selectedLanguage,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LeaderboardsPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const FooterWidget(),
+                      ],
+                    ),
                   ),
                 ],
               ),

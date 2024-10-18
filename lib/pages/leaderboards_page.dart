@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 
 class LeaderboardsPage extends StatefulWidget {

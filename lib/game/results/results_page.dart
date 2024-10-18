@@ -70,6 +70,13 @@ class ResultsPageState extends State<ResultsPage> {
     }
   }
 
+  int _convertRecordToSeconds(String record) {
+    final parts = record.split(':');
+    final minutes = int.parse(parts[0]);
+    final seconds = int.parse(parts[1]);
+    return (minutes * 60) + seconds;
+  }
+
   Future<void> _loadSounds() async {
     _soundIdFail = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3'));
     _soundId1Star = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3'));
@@ -102,51 +109,70 @@ class ResultsPageState extends State<ResultsPage> {
   Future<void> _updateScoreAndStarsInFirestore(int stars) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
+  
     final docRef = FirebaseFirestore.instance
         .collection('User')
         .doc(user.uid)
         .collection('GameSaveData')
         .doc(widget.category['id']);
-
+  
     final docSnapshot = await docRef.get();
     if (!docSnapshot.exists) return;
-
+  
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
-
+  
     // Find the correct stage key
-    final stageKey = stageData.keys.firstWhere(
-      (key) => key.startsWith(widget.category['id']) && key.endsWith(widget.stageName.split(' ').last),
-      orElse: () => '',
-    ); // Stage not found
-
-    if (widget.mode == 'Normal') {
-      final currentScore = stageData[stageKey]['scoreNormal'] as int;
-      if (widget.score > currentScore) {
-        stageData[stageKey]['scoreNormal'] = widget.score;
+    final stageKey = widget.gamemode == 'arcade'
+        ? stageData.keys.firstWhere(
+            (key) => key.contains('Arcade'),
+            orElse: () => '',
+          )
+        : stageData.keys.firstWhere(
+            (key) => key.startsWith(widget.category['id']) && key.endsWith(widget.stageName.split(' ').last),
+            orElse: () => '',
+          ); // Stage not found
+  
+    if (widget.gamemode == 'arcade') {
+      final currentRecord = _convertRecordToSeconds(widget.record);
+      final bestRecord = stageData[stageKey]['bestRecord'] as int? ?? -1;
+      final crntRecord = stageData[stageKey]['crntRecord'] as int? ?? -1;
+  
+      if (bestRecord == -1 || currentRecord < bestRecord) {
+        stageData[stageKey]['bestRecord'] = currentRecord;
       }
-
-      final normalStageStars = data['normalStageStars'] as List<dynamic>;
-      final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
-      final currentStars = normalStageStars[stageIndex] as int;
-      if (stars > currentStars) {
-        normalStageStars[stageIndex] = stars;
+  
+      if (crntRecord == -1 || currentRecord < crntRecord) {
+        stageData[stageKey]['crntRecord'] = currentRecord;
       }
-    } else if (widget.mode == 'Hard') {
-      final currentScore = stageData[stageKey]['scoreHard'] as int;
-      if (widget.score > currentScore) {
-        stageData[stageKey]['scoreHard'] = widget.score;
-      }
-
-      final hardStageStars = data['hardStageStars'] as List<dynamic>;
-      final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
-      final currentStars = hardStageStars[stageIndex] as int;
-      if (stars > currentStars) {
-        hardStageStars[stageIndex] = stars;
+    } else {
+      if (widget.mode == 'Normal') {
+        final currentScore = stageData[stageKey]['scoreNormal'] as int;
+        if (widget.score > currentScore) {
+          stageData[stageKey]['scoreNormal'] = widget.score;
+        }
+  
+        final normalStageStars = data['normalStageStars'] as List<dynamic>;
+        final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
+        final currentStars = normalStageStars[stageIndex] as int;
+        if (stars > currentStars) {
+          normalStageStars[stageIndex] = stars;
+        }
+      } else if (widget.mode == 'Hard') {
+        final currentScore = stageData[stageKey]['scoreHard'] as int;
+        if (widget.score > currentScore) {
+          stageData[stageKey]['scoreHard'] = widget.score;
+        }
+  
+        final hardStageStars = data['hardStageStars'] as List<dynamic>;
+        final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
+        final currentStars = hardStageStars[stageIndex] as int;
+        if (stars > currentStars) {
+          hardStageStars[stageIndex] = stars;
+        }
       }
     }
-
+  
     // Update Firestore with the new data
     await docRef.update({
       'stageData': stageData,
@@ -155,7 +181,7 @@ class ResultsPageState extends State<ResultsPage> {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     int totalQuestions = widget.stageData['totalQuestions'] ?? 0;
     int stars = _calculateStars(widget.accuracy, widget.score, totalQuestions);
@@ -190,7 +216,10 @@ class ResultsPageState extends State<ResultsPage> {
                             const SizedBox(height: 175),
                             buildReactionWidget(stars),
                             const SizedBox(height: 20),
-                            buildStarsWidget(stars),
+                            if (widget.gamemode == 'arcade')
+                              buildStatisticItem('Record', widget.record), // Display the record widget if gamemode is arcade
+                            if (widget.gamemode != 'arcade')
+                              buildStarsWidget(stars), // Display the stars widget if gamemode is not arcade
                             const SizedBox(height: 20),
                             Text(
                               'My Performance',
@@ -201,7 +230,6 @@ class ResultsPageState extends State<ResultsPage> {
                               widget.score,
                               widget.accuracy,
                               widget.streak,
-                              record: widget.gamemode == 'arcade' ? widget.record : null,
                             ),
                             const SizedBox(height: 50),
                             Row(

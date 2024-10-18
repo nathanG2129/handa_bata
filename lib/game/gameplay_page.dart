@@ -412,11 +412,17 @@ void readCurrentQuestion() {
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
         }
+      if (widget.gamemode == 'arcade') {
+        _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
+        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+      }
       } else {
         _wrongAnswersCount++;
         _currentStreak = 0; // Reset the current streak
         if (widget.gamemode == 'arcade') {
           _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
         }
       }
     });
@@ -450,10 +456,16 @@ void readCurrentQuestion() {
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
         }
+      if (widget.gamemode == 'arcade') {
+        _stopwatchSeconds -= 5 * (answerData['correctCount'] as int); // Deduct 5 seconds for each correct blank
+        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+      }
       } else {
         _currentStreak = 0; // Reset the current streak
         if (widget.gamemode == 'arcade') {
           _stopwatchSeconds += 5 * (answerData['wrongCount'] as int); // Add 5 seconds for each wrong blank
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
         }
       }
     });
@@ -491,11 +503,17 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       if (_currentStreak > _highestStreak) {
         _highestStreak = _currentStreak; // Update the highest streak
       }
+      if (widget.gamemode == 'arcade') {
+        _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
+        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+      }
     } else {
       _wrongAnswersCount++;
       _currentStreak = 0; // Reset the current streak
       if (widget.gamemode == 'arcade') {
         _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
       }
     }
   });
@@ -516,7 +534,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       // Assuming correctPairCount and incorrectPairCount are updated in MatchingTypeQuestion
       _correctAnswersCount += _matchingTypeQuestionKey.currentState?.correctPairCount ?? 0;
       _wrongAnswersCount += _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0;
-  
+
       // Check if all pairs are correct and increment the fully correct answers count
       if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
         _fullyCorrectAnswersCount++; // Increment fully correct answers count
@@ -524,18 +542,22 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
         }
+        if (widget.gamemode == 'arcade') {
+          _stopwatchSeconds -= 5 * (_matchingTypeQuestionKey.currentState?.correctPairCount ?? 0); // Deduct 5 seconds for each correct pair
+          if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+        }
       } else {
         _currentStreak = 0; // Reset the current streak
         if (widget.gamemode == 'arcade') {
           _stopwatchSeconds += 5 * (_matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0); // Add 5 seconds for each wrong pair
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
         }
       }
     });
-  
+
     // Update health
     _updateHealth(_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true, 'Matching Type', blankPairs: _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0);
-  
-    // Print fully correct answers count
   }
   
   void _handleVisualDisplayComplete() {

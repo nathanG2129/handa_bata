@@ -30,7 +30,6 @@ class ArcadeStagesPage extends StatefulWidget {
 class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
-  String _selectedMode = 'normal';
 
   @override
   void initState() {
@@ -214,36 +213,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(width: 20), // Add spacing between text and buttons
-                                        Column(
-                                          children: [
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  _selectedMode = 'normal';
-                                                });
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                foregroundColor: _selectedMode == 'normal' ? Colors.white : Colors.black, // Text color
-                                                backgroundColor: _selectedMode == 'normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9), // Background color
-                                                shape: const RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                ),
-                                                side: BorderSide(
-                                                  color: _selectedMode == 'normal' ? darken(const Color(0xFF32c067), 0.2) : const Color(0xFF1A0D30), // Darker border color
-                                                  width: 4, // Thicker border width for bottom
-                                                ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                                              ),
-                                              child: Text(
-                                                'Normal',
-                                                style: GoogleFonts.rubik(
-                                                  color: _selectedMode == 'normal' ? Colors.white : Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -282,7 +251,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                               'name': widget.category['name']!,
                                             },
                                             stageData,
-                                            _selectedMode,
+                                            'normal', // Pass the mode as 'normal'
                                             stageStats['personalBest'],
                                             stageStats['crntRecord'], // Corrected to pass currentRecord
                                             0, // Arcade stages do not have stars

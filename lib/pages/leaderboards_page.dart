@@ -12,10 +12,10 @@ class LeaderboardsPage extends StatefulWidget {
   const LeaderboardsPage({super.key});
 
   @override
-  _LeaderboardsPageState createState() => _LeaderboardsPageState();
+  LeaderboardsPageState createState() => LeaderboardsPageState();
 }
 
-class _LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerProviderStateMixin {
+class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerProviderStateMixin {
   TabController? _tabController;
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
@@ -171,7 +171,16 @@ class _LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPr
                                         } else if (snapshot.hasError) {
                                           return Center(child: Text('Error: ${snapshot.error}'));
                                         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                          return const Center(child: Text('No data available'));
+                                          return const Center(
+                                          child: Text(
+                                            'No records yet, be the first to submit one!',
+                                            style: TextStyle(
+                                            fontFamily: 'Rubik',
+                                            fontSize: 18,
+                                            color: Colors.white,
+                                            ),
+                                          ),
+                                          );
                                         } else {
                                           List<Map<String, dynamic>> leaderboardData = snapshot.data!;
                                           return Column(

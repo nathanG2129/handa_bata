@@ -27,7 +27,6 @@ class StagesPage extends StatefulWidget {
 class StagesPageState extends State<StagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
-  bool _isLoading = true;
   String _selectedMode = 'Normal';
   bool _isUserProfileVisible = false;
 
@@ -43,10 +42,9 @@ class StagesPageState extends State<StagesPage> {
     stages = stages.where((stage) => !stage['stageName'].toLowerCase().contains('arcade')).toList();
     setState(() {
       _stages = stages;
-      _isLoading = false;
     });
   }
-  
+
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};
@@ -193,13 +191,11 @@ class StagesPageState extends State<StagesPage> {
                         },
                       ),
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(0.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start, // Align to the start
-                                children: [
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverList(
+                              delegate: SliverChildListDelegate(
+                                [
                                   Padding(
                                     padding: const EdgeInsets.only(top: 20), // Adjust the top padding as needed
                                     child: Row(
@@ -280,137 +276,140 @@ class StagesPageState extends State<StagesPage> {
                                     ),
                                   ),
                                   const SizedBox(height: 10), // Reduce the space between the stage name and stage buttons
-                                  Transform.translate(
-                                    offset: const Offset(0, -30), // Move the stage buttons closer to the stage name and mode buttons
-                                    child: _isLoading
-                                        ? const Center(child: CircularProgressIndicator())
-                                        : GridView.builder(
-                                            padding: const EdgeInsets.all(20),
-                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
-                                              crossAxisSpacing: 10,
-                                              mainAxisSpacing: 80,
-                                            ),
-                                            itemCount: _stages.length,
-                                            shrinkWrap: true,
-                                            physics: const NeverScrollableScrollPhysics(),
-                                            itemBuilder: (context, index) {
-                                              final rowIndex = index ~/ 3;
-                                              final columnIndex = index % 3;
-                                              final isEvenRow = rowIndex % 2 == 0;
-                                              final stageIndex = isEvenRow
-                                                  ? index
-                                                  : (rowIndex + 1) * 3 - columnIndex - 1;
-                                              final stageNumber = stageIndex + 1;
-                                              final stageCategory = widget.category['name'];
-                                              final stageColor = _getStageColor(stageCategory);
-                                            
-                                              return FutureBuilder<Map<String, dynamic>>(
-                                                future: _fetchStageStats(stageIndex),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                                    return const Center(child: CircularProgressIndicator());
-                                                  }
-                                                  if (!snapshot.hasData) {
-                                                    return const Center(child: Text('Error loading stage stats'));
-                                                  }
-                                                  final stageStats = snapshot.data!;
-                                                  final stars = stageStats['stars'];
-                                            
-                                                  return Stack(
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      Column(
-                                                        children: [
-                                                          GestureDetector(
-                                                            onTap: () async {
-                                                              Map<String, dynamic> stageData = _stages[stageIndex];
-                                                              if (!mounted) return;
-                                                              showStageDialog(
-                                                                context,
-                                                                stageNumber,
-                                                                {
-                                                                  'id': widget.category['id']!,
-                                                                  'name': widget.category['name']!,
-                                                                },
-                                                                stageStats['maxScore'], // Pass maxScore
-                                                                stageData,
-                                                                _selectedMode,
-                                                                stageStats['personalBest'],
-                                                                stars,
-                                                                widget.selectedLanguage, // Pass selectedLanguage
-                                                              );
-                                                            },
-                                                            child: Stack(
-                                                              alignment: Alignment.center,
-                                                              children: [
-                                                                SvgPicture.string(
-                                                                  _getModifiedSvg(stageColor),
-                                                                  width: 100,
-                                                                  height: 100,
-                                                                ),
-                                                                Text(
-                                                                  '$stageNumber',
-                                                                  style: GoogleFonts.vt323(
-                                                                    fontSize: 36,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    color: Colors.white,
-                                                                  ),
-                                                                  textAlign: TextAlign.center,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                          const SizedBox(height: 10),
-                                                        ],
-                                                      ),
-                                                      Positioned(
-                                                        bottom: 0,
-                                                        child: Row(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: List.generate(3, (index) {
-                                                            return Padding(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 2.0), // Add horizontal spacing
-                                                              child: Transform.translate(
-                                                                offset: Offset(0, index == 1 ? 10 : 0), // Lower the 2nd star
-                                                                child: SvgPicture.string(
-                                                                  '''
-                                                                  <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    width="36"
-                                                                    height="36"
-                                                                    viewBox="0 0 12 11"
-                                                                  >
-                                                                    <path
-                                                                      d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-                                                                      fill="${stars > index ? '#F1B33A' : '#453958'}"
-                                                                    />
-                                                                  </svg>
-                                                                  ''',
-                                                                  width: 24,
-                                                                  height: 24,
-                                                                ),
-                                                              ),
-                                                            );
-                                                          }),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: FooterWidget(), // Move the footer inside the SingleChildScrollView
-                                  ),
                                 ],
                               ),
                             ),
-                          ),
+                            SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 70,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final rowIndex = index ~/ 3;
+                                  final columnIndex = index % 3;
+                                  final isEvenRow = rowIndex % 2 == 0;
+                                  final stageIndex = isEvenRow
+                                      ? index
+                                      : (rowIndex + 1) * 3 - columnIndex - 1;
+                                  final stageNumber = stageIndex + 1;
+                                  final stageCategory = widget.category['name'];
+                                  final stageColor = _getStageColor(stageCategory);
+  
+                                  return FutureBuilder<Map<String, dynamic>>(
+                                    future: _fetchStageStats(stageIndex),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      }
+                                      if (!snapshot.hasData) {
+                                        return const Center(child: Text('Error loading stage stats'));
+                                      }
+                                      final stageStats = snapshot.data!;
+                                      final stars = stageStats['stars'];
+  
+                                      return Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () async {
+                                                  Map<String, dynamic> stageData = _stages[stageIndex];
+                                                  if (!mounted) return;
+                                                  showStageDialog(
+                                                    context,
+                                                    stageNumber,
+                                                    {
+                                                      'id': widget.category['id']!,
+                                                      'name': widget.category['name']!,
+                                                    },
+                                                    stageStats['maxScore'], // Pass maxScore
+                                                    stageData,
+                                                    _selectedMode,
+                                                    stageStats['personalBest'],
+                                                    stars,
+                                                    widget.selectedLanguage, // Pass selectedLanguage
+                                                  );
+                                                },
+                                                child: Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    SvgPicture.string(
+                                                      _getModifiedSvg(stageColor),
+                                                      width: 100,
+                                                      height: 100,
+                                                    ),
+                                                    Text(
+                                                      '$stageNumber',
+                                                      style: GoogleFonts.vt323(
+                                                        fontSize: 36,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                            ],
+                                          ),
+                                          Positioned(
+                                            bottom: 0,
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: List.generate(3, (index) {
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 0.0), // Add horizontal spacing
+                                                  child: Transform.translate(
+                                                    offset: Offset(0, index == 1 ? 10 : 0), // Lower the 2nd star
+                                                    child: SvgPicture.string(
+                                                      '''
+                                                      <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="36"
+                                                        height="36"
+                                                        viewBox="0 0 12 11"
+                                                      >
+                                                        <path
+                                                          d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                                                          fill="${stars > index ? '#F1B33A' : '#453958'}"
+                                                        />
+                                                      </svg>
+                                                      ''',
+                                                      width: 24,
+                                                      height: 24,
+                                                    ),
+                                                  ),
+                                                );
+                                              }),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                childCount: _stages.length,
+                              ),
+                            ),
+                            const SliverToBoxAdapter(
+                              child: SizedBox(
+                              height: 20, // Adjust the height as needed
+                              ),
+                            ),
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Column(
+                                children: [
+                                  Spacer(), // Push the footer to the bottom
+                                  FooterWidget(), // Add the footer here
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

@@ -30,7 +30,6 @@ class ArcadeStagesPage extends StatefulWidget {
 class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
-  bool _isLoading = true;
   String _selectedMode = 'normal';
 
   @override
@@ -44,7 +43,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     stages = stages.where((stage) => stage['stageName'].contains('Arcade')).toList();
     setState(() {
       _stages = stages;
-      _isLoading = false;
       print(stages);
     });
   }
@@ -191,13 +189,11 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                         },
                       ),
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(0.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start, // Align to the start
-                                children: [
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverList(
+                              delegate: SliverChildListDelegate(
+                                [
                                   Padding(
                                     padding: const EdgeInsets.only(top: 20), // Adjust the top padding as needed
                                     child: Row(
@@ -252,81 +248,87 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                     ),
                                   ),
                                   const SizedBox(height: 10), // Reduce the space between the stage name and stage buttons
-                                  Transform.translate(
-                                    offset: const Offset(0, -30), // Move the stage buttons closer to the stage name and mode buttons
-                                    child: _isLoading
-                                        ? const Center(child: CircularProgressIndicator())
-                                        : GridView.builder(
-                                            padding: const EdgeInsets.all(20),
-                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
-                                              crossAxisSpacing: 10,
-                                              mainAxisSpacing: 80,
-                                            ),
-                                            itemCount: _stages.length,
-                                            shrinkWrap: true,
-                                            physics: const NeverScrollableScrollPhysics(),
-                                            itemBuilder: (context, index) {
-                                              final rowIndex = index ~/ 3;
-                                              final columnIndex = index % 3;
-                                              final isEvenRow = rowIndex % 2 == 0;
-                                              final stageIndex = isEvenRow
-                                                  ? index
-                                                  : (rowIndex + 1) * 3 - columnIndex - 1;
-                                              final stageNumber = stageIndex + 1;
-                                              final stageCategory = widget.category['name'];
-                                              final stageColor = _getStageColor(stageCategory);
-
-                                              return GestureDetector(
-                                                onTap: () async {
-                                                  Map<String, dynamic> stageData = _stages[stageIndex];
-                                                  Map<String, dynamic> stageStats = await _fetchStageStats(stageIndex);
-                                                  if (!mounted) return;
-                                                  showArcadeStageDialog(
-                                                    context,
-                                                    stageNumber,
-                                                    {
-                                                      'id': widget.category['id']!,
-                                                      'name': widget.category['name']!,
-                                                    },
-                                                    stageData,
-                                                    _selectedMode,
-                                                    stageStats['personalBest'],
-                                                    stageStats['crntRecord'], // Corrected to pass currentRecord
-                                                    0, // Arcade stages do not have stars
-                                                    widget.selectedLanguage,
-                                                  );
-                                                },
-                                                child: Stack(
-                                                  alignment: Alignment.center,
-                                                  children: [
-                                                    SvgPicture.string(
-                                                      _getModifiedSvg(stageColor),
-                                                      width: 100,
-                                                      height: 100,
-                                                    ),
-                                                    Text(
-                                                      '$stageNumber',
-                                                      style: GoogleFonts.rubik(
-                                                        fontSize: 24,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                  ),
-                                  const SizedBox(height: 20),
                                 ],
                               ),
                             ),
-                          ),
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final stageIndex = index;
+                                  final stageNumber = stageIndex + 1;
+                                  final stageCategory = widget.category['name'];
+                                  final stageColor = _getStageColor(stageCategory);
+  
+                                  return FutureBuilder<Map<String, dynamic>>(
+                                    future: _fetchStageStats(stageIndex),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      }
+                                      if (!snapshot.hasData) {
+                                        return const Center(child: Text('Error loading stage stats'));
+                                      }
+                                      final stageStats = snapshot.data!;
+  
+                                      return GestureDetector(
+                                        onTap: () async {
+                                          Map<String, dynamic> stageData = _stages[stageIndex];
+                                          if (!mounted) return;
+                                          showArcadeStageDialog(
+                                            context,
+                                            stageNumber,
+                                            {
+                                              'id': widget.category['id']!,
+                                              'name': widget.category['name']!,
+                                            },
+                                            stageData,
+                                            _selectedMode,
+                                            stageStats['personalBest'],
+                                            stageStats['crntRecord'], // Corrected to pass currentRecord
+                                            0, // Arcade stages do not have stars
+                                            widget.selectedLanguage,
+                                          );
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              SvgPicture.string(
+                                                _getModifiedSvg(stageColor),
+                                                width: 100,
+                                                height: 100,
+                                              ),
+                                              Text(
+                                                '$stageNumber',
+                                                style: GoogleFonts.rubik(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                childCount: _stages.length,
+                              ),
+                            ),
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Column(
+                                children: [
+                                  Spacer(), // Push the footer to the bottom
+                                  FooterWidget(), // Add the footer here
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const FooterWidget(), // Stick the footer to the bottom
                     ],
                   ),
                 ],

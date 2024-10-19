@@ -143,12 +143,11 @@ class AdventurePageState extends State<AdventurePage> {
                         onChangeLanguage: _changeLanguage,
                       ),
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(0.0),
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start, // Align to the start
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.only(top: 20), // Adjust the top padding as needed
@@ -174,14 +173,12 @@ class AdventurePageState extends State<AdventurePage> {
                                           }).toList(),
                                         ),
                                   const SizedBox(height: 20),
-                                  const Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: FooterWidget(), // Move the footer inside the SingleChildScrollView
-                                  ),
+                                  const Spacer(), // Push the footer to the bottom
+                                  const FooterWidget(), // Add the footer here
                                 ],
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ],

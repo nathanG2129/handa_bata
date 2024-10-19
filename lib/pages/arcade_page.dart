@@ -115,70 +115,82 @@ class ArcadePageState extends State<ArcadePage> {
                     width: double.infinity,
                     height: double.infinity,
                   ),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        HeaderWidget(
-                          selectedLanguage: _selectedLanguage,
-                          onBack: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
+                  Column(
+                    children: [
+                      HeaderWidget(
+                        selectedLanguage: _selectedLanguage,
+                        onBack: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
+                            ),
+                          );
+                        },
+                        onToggleUserProfile: () {
+                          // Define the action for toggling user profile if needed
+                        },
+                        onChangeLanguage: _changeLanguage,
+                      ),
+                      Expanded(
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 20),
+                                    child: ArcadeButton(
+                                      onPressed: () {
+                                        // Define the action for the Arcade button if needed
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 30),
+                                  _isLoading
+                                      ? const CircularProgressIndicator()
+                                      : Column(
+                                          children: _categories.map((category) {
+                                            final buttonColor = _getButtonColor(category['name']);
+                                            final containerColor = _darkenColor(buttonColor, 0.2);
+                                            return ArcadeCategoryButtonContainer(
+                                              buttonColor: buttonColor,
+                                              containerColor: containerColor,
+                                              category: category,
+                                              selectedLanguage: _selectedLanguage,
+                                            );
+                                          }).toList(),
+                                        ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                                    child: ArcadeCategoryButtonContainer(
+                                      buttonColor: const Color(0xFF28e172),
+                                      containerColor: _darkenColor(const Color(0xFF28e172), 0.2),
+                                      category: const {
+                                        'name': 'Leaderboards',
+                                        'description': 'Show the world what you\'re made of and climb the leaderboards!',
+                                      },
+                                      selectedLanguage: _selectedLanguage,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const LeaderboardsPage(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const Spacer(), // Push the footer to the bottom
+                                  const FooterWidget(), // Add the footer here
+                                ],
                               ),
-                            );
-                          },
-                          onToggleUserProfile: () {
-                            // Define the action for toggling user profile if needed
-                          },
-                          onChangeLanguage: _changeLanguage,
+                            ),
+                          ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: ArcadeButton(
-                            onPressed: () {
-                              // Define the action for the Arcade button if needed
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : Column(
-                                children: _categories.map((category) {
-                                  final buttonColor = _getButtonColor(category['name']);
-                                  final containerColor = _darkenColor(buttonColor, 0.2);
-                                  return ArcadeCategoryButtonContainer(
-                                    buttonColor: buttonColor,
-                                    containerColor: containerColor,
-                                    category: category,
-                                    selectedLanguage: _selectedLanguage,
-                                  );
-                                }).toList(),
-                              ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20, bottom: 20),
-                          child: ArcadeCategoryButtonContainer(
-                            buttonColor: const Color(0xFF28e172),
-                            containerColor: _darkenColor(const Color(0xFF28e172), 0.2),
-                            category: const {
-                              'name': 'Leaderboards',
-                              'description': 'Show the world what you\'re made of and climb the leaderboards!',
-                            },
-                            selectedLanguage: _selectedLanguage,
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LeaderboardsPage(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const FooterWidget(),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),

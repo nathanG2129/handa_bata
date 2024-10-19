@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/pages/main_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/widgets/adventure_button.dart';
 import 'package:handabatamae/widgets/arcade_button.dart';
 import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
-import 'splash_page.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_widget.dart'; // Import HeaderWidget
 import '../widgets/footer_widget.dart'; // Import FooterWidget
@@ -46,7 +46,7 @@ class PlayPageState extends State<PlayPage> {
     Navigator.pushReplacement(
     context,
     MaterialPageRoute(
-      builder: (context) => SplashPage(selectedLanguage: _selectedLanguage),
+      builder: (context) => MainPage(selectedLanguage: _selectedLanguage),
     ),
   );
   }
@@ -61,7 +61,10 @@ class PlayPageState extends State<PlayPage> {
           });
           return false;
         } else {
-          _navigateBack(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+          );
           return false;
         }
       },
@@ -96,7 +99,7 @@ class PlayPageState extends State<PlayPage> {
                         onBack: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: _selectedLanguage)),
+                            MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
                           );
                         },
                         onToggleUserProfile: _toggleUserProfile,

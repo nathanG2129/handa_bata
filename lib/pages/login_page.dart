@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:handabatamae/pages/main_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../services/auth_service.dart';
-import 'play_page.dart';
 import 'register_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -43,7 +43,7 @@ class LoginPageState extends State<LoginPage> {
         final user = await _authService.signInWithUsernameAndPassword(username, password);
 
         if (user != null) {
-          _navigateToPlayPage();
+          _navigateToMainPage();
         } else {
           _showSnackBar('Login failed. Please try again.');
         }
@@ -53,11 +53,11 @@ class LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _navigateToPlayPage() {
+  void _navigateToMainPage() {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PlayPage(title: 'Home Page', selectedLanguage: _selectedLanguage)),
+        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
       );
     }
   }

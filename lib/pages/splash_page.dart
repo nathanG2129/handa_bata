@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/pages/main_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'login_page.dart';
-import 'play_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
@@ -50,9 +50,9 @@ class SplashPageState extends State<SplashPage> {
           // Check if the widget is still mounted before using the context
           if (!context.mounted) return;
 
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
+            MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
           );
           return;
         }
@@ -65,9 +65,9 @@ class SplashPageState extends State<SplashPage> {
       // Check if the widget is still mounted before using the context
       if (!context.mounted) return;
 
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
+        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
       );
     } catch (e) {
       // Check if the widget is still mounted before using the context
@@ -87,10 +87,9 @@ class SplashPageState extends State<SplashPage> {
     if (!context.mounted) return;
 
     if (isSignedIn) {
-      // Navigate to PlayPage if the user is already signed in and chose to stay signed in
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
+        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
       );
     } else {
       // Check for local guest profile
@@ -99,11 +98,10 @@ class SplashPageState extends State<SplashPage> {
       if (!context.mounted) return;
 
       if (localGuestProfile != null) {
-        // Navigate to PlayPage if a local guest profile exists
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => PlayPage(title: 'Handa Bata', selectedLanguage: _selectedLanguage)),
-        );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+      );
       } else {
         // Sign in anonymously if no local guest profile exists
         _signInAnonymously(context);

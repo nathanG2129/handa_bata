@@ -16,6 +16,7 @@ class FooterWidget extends StatelessWidget {
       ),
       child: Column(
         children: [
+        const SizedBox(width: 50),
           Text(
             'Handa Bata © 2023',
             style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
@@ -39,6 +40,7 @@ class FooterWidget extends StatelessWidget {
                   style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
                 ),
               ),
+            const SizedBox(width: 50),
             ],
           ),
         ],

@@ -5,12 +5,12 @@ import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:handabatamae/widgets/stage_dialog.dart';
+import 'package:handabatamae/widgets/dialog_boxes/stage_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
-import '../widgets/header_widget.dart'; // Import HeaderWidget
-import '../widgets/footer_widget.dart'; // Import FooterWidget
+import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 
 // ignore: must_be_immutable
 class StagesPage extends StatefulWidget {

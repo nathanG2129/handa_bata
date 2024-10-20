@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../pages/stages_page.dart'; // Import StagesPage
+import '../../pages/stages_page.dart'; // Import StagesPage
 
 class CategoryButtonContainer extends StatefulWidget {
   final Color buttonColor;

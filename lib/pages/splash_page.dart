@@ -7,7 +7,7 @@ import 'package:handabatamae/pages/main_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
-import '../widgets/custom_button.dart';
+import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '/localization/splash/localization.dart'; // Import the localization file
 

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
 import 'leaderboards_page.dart'; // Import LeaderboardsPage
-import 'package:handabatamae/widgets/arcade_button.dart'; // Import ArcadeButton
+import 'package:handabatamae/widgets/buttons/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
-import '../widgets/header_widget.dart'; // Import HeaderWidget
-import '../widgets/footer_widget.dart'; // Import FooterWidget
-import '../widgets/arcade_category_button_container.dart'; // Import ArcadeCategoryButtonContainer
+import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
+import '../widgets/buttons/arcade_category_button_container.dart'; // Import ArcadeCategoryButtonContainer
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;

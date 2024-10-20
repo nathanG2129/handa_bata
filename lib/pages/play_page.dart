@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/main_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
-import 'package:handabatamae/widgets/adventure_button.dart';
-import 'package:handabatamae/widgets/arcade_button.dart';
+import 'package:handabatamae/widgets/buttons/adventure_button.dart';
+import 'package:handabatamae/widgets/buttons/arcade_button.dart';
 import 'adventure_page.dart'; // Import AdventurePage
 import 'arcade_page.dart'; // Import ArcadePage
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
-import '../widgets/header_widget.dart'; // Import HeaderWidget
-import '../widgets/footer_widget.dart'; // Import FooterWidget
+import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 
 class PlayPage extends StatefulWidget {
   final String title;

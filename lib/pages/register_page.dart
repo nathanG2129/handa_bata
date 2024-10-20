@@ -9,7 +9,7 @@ import '../widgets/privacy_policy_error.dart'; // Import the privacy policy erro
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart'; // Import the AuthService
 import '../styles/input_styles.dart'; // Import the InputStyles
-import '../widgets/custom_button.dart'; // Import the CustomButton
+import '../widgets/buttons/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file

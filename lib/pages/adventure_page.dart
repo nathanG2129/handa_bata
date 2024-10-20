@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'play_page.dart';
-import 'package:handabatamae/widgets/adventure_button.dart'; // Import AdventureButton
+import 'package:handabatamae/widgets/buttons/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
-import '../widgets/header_widget.dart'; // Import HeaderWidget
-import '../widgets/footer_widget.dart'; // Import FooterWidget
-import '../widgets/category_button_container.dart'; // Import CategoryButtonContainer
+import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
+import '../widgets/buttons/category_button_container.dart'; // Import CategoryButtonContainer
 import 'user_profile.dart'; // Import UserProfilePage
 
 class AdventurePage extends StatefulWidget {

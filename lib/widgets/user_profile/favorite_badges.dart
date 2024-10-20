@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
-import '../localization/play/localization.dart'; // Import the localization file
+import '../../localization/play/localization.dart'; // Import the localization file
 
 class FavoriteBadges extends StatelessWidget {
   final String selectedLanguage;

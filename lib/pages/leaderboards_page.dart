@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:handabatamae/widgets/header_widget.dart';
-import 'package:handabatamae/widgets/footer_widget.dart';
+import 'package:handabatamae/widgets/header_footer/header_widget.dart';
+import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 class LeaderboardsPage extends StatefulWidget {

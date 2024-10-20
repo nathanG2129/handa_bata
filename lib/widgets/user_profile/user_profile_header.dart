@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
-import '../localization/play/localization.dart'; // Import the localization file
+import '../../localization/play/localization.dart'; // Import the localization file
 
 class UserProfileHeader extends StatelessWidget {
   final String username;

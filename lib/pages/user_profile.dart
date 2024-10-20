@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'account_settings.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
-import 'package:handabatamae/widgets/user_profile_header.dart'; // Import UserProfileHeader
-import 'package:handabatamae/widgets/user_profile_stats.dart'; // Import UserProfileStats
-import 'package:handabatamae/widgets/favorite_badges.dart'; // Import FavoriteBadges
+import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
+import 'package:handabatamae/widgets/user_profile/user_profile_stats.dart'; // Import UserProfileStats
+import 'package:handabatamae/widgets/user_profile/favorite_badges.dart'; // Import FavoriteBadges
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 

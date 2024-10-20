@@ -3,13 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/arcade_page.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:handabatamae/widgets/arcade_stage_dialog.dart';
+import 'package:handabatamae/widgets/dialog_boxes/arcade_stage_dialog.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
-import '../widgets/header_widget.dart'; // Import HeaderWidget
-import '../widgets/footer_widget.dart'; // Import FooterWidget
+import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 
 // ignore: must_be_immutable
 class ArcadeStagesPage extends StatefulWidget {

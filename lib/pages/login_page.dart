@@ -5,7 +5,7 @@ import '../services/auth_service.dart';
 import 'register_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../widgets/custom_button.dart';
+import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '../styles/input_styles.dart';
 import '../localization/login/localization.dart'; // Import the localization file

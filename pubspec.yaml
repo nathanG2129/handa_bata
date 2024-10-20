@@ -82,8 +82,11 @@ flutter:
   
   assets:
     - assets/backgrounds/background.svg
+    - assets/characters/KladisandKloud.svg
     - assets/characters/KladisAdventure.svg
     - assets/characters/KloudArcade.svg
+    - assets/characters/KladisLearn.svg
+    - assets/characters/KloudLearn.svg
     - assets/icons/stageicon.svg
     - assets/instructions/FillinTheBlanks01.jpg
     - assets/instructions/FillinTheBlanks02.jpg

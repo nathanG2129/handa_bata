@@ -8,10 +8,10 @@ class AdventureButton extends StatefulWidget {
   const AdventureButton({super.key, required this.onPressed});
 
   @override
-  _AdventureButtonState createState() => _AdventureButtonState();
+  AdventureButtonState createState() => AdventureButtonState();
 }
 
-class _AdventureButtonState extends State<AdventureButton> {
+class AdventureButtonState extends State<AdventureButton> {
   double _scale = 1.0;
 
   @override

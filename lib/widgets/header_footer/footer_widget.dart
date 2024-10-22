@@ -32,7 +32,7 @@ class FooterWidget extends StatelessWidget {
                   style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(height: 10),
               TextButton(
                 onPressed: () {},
                 child: Text(
@@ -40,7 +40,7 @@ class FooterWidget extends StatelessWidget {
                   style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
                 ),
               ),
-            const SizedBox(width: 50),
+            const SizedBox(height: 50),
             ],
           ),
         ],

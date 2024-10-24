@@ -54,12 +54,14 @@ class ResultsPageState extends State<ResultsPage> {
   late int _soundId2Stars;
   late int _soundId3Stars;
   bool _soundsLoaded = false;
+  int stars = 0; // Add stars to the state
 
   @override
   void initState() {
     super.initState();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _loadSounds();
+    _updateScoreAndStarsInFirestore(); // Call the method in initState
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
@@ -110,7 +112,7 @@ class ResultsPageState extends State<ResultsPage> {
     }
   }
 
-  Future<void> _updateScoreAndStarsInFirestore(int stars) async {
+  Future<void> _updateScoreAndStarsInFirestore() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
   
@@ -137,6 +139,15 @@ class ResultsPageState extends State<ResultsPage> {
             orElse: () => '',
           ); // Stage not found
   
+    int maxScore = stageData[stageKey]['maxScore'] as int; // Fetch maxScore
+  
+    // Calculate stars using the fetched maxScore
+    int calculatedStars = _calculateStars(widget.accuracy, widget.score, maxScore, widget.isGameOver);
+  
+    setState(() {
+      stars = calculatedStars; // Update the state with the calculated stars
+    });
+  
     if (widget.gamemode == 'arcade') {
       final currentRecord = _convertRecordToSeconds(widget.record);
       final bestRecord = stageData[stageKey]['bestRecord'] as int? ?? -1;
@@ -159,8 +170,8 @@ class ResultsPageState extends State<ResultsPage> {
         final normalStageStars = data['normalStageStars'] as List<dynamic>;
         final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
         final currentStars = normalStageStars[stageIndex] as int;
-        if (stars > currentStars) {
-          normalStageStars[stageIndex] = stars;
+        if (calculatedStars > currentStars) {
+          normalStageStars[stageIndex] = calculatedStars;
         }
       } else if (widget.mode == 'Hard') {
         final currentScore = stageData[stageKey]['scoreHard'] as int;
@@ -171,8 +182,8 @@ class ResultsPageState extends State<ResultsPage> {
         final hardStageStars = data['hardStageStars'] as List<dynamic>;
         final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
         final currentStars = hardStageStars[stageIndex] as int;
-        if (stars > currentStars) {
-          hardStageStars[stageIndex] = stars;
+        if (calculatedStars > currentStars) {
+          hardStageStars[stageIndex] = calculatedStars;
         }
       }
     }
@@ -187,12 +198,6 @@ class ResultsPageState extends State<ResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    int maxScore = widget.stageData['maxScore'] ?? 0; // Get the maxScore from stageData
-    int stars = _calculateStars(widget.accuracy, widget.score, maxScore, widget.isGameOver);
-  
-    // Update the score and stars in Firestore
-    _updateScoreAndStarsInFirestore(stars);
-  
     return Scaffold(
       body: _soundsLoaded
           ? ResponsiveBreakpoints(
@@ -363,7 +368,7 @@ class ResultsPageState extends State<ResultsPage> {
     );
   }
 
-    Widget buildRecordWidget(String record) {
+  Widget buildRecordWidget(String record) {
     return Column(
       children: [
         Text(

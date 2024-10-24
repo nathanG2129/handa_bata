@@ -105,6 +105,46 @@ flutter:
     - assets/instructions/MatchingType05.jpg
     - assets/instructions/MultipleChoice01.jpg
     - assets/instructions/MultipleChoice02.jpg
+    - assets/badges/arcade/Accuracy.png
+    - assets/badges/arcade/Speed.png
+    - assets/badges/arcade/Streak.png
+    - assets/badges/arcade/Record.png
+    - assets/badges/quake-quest/HardComplete.png
+    - assets/badges/quake-quest/HardFullClear.png
+    - assets/badges/quake-quest/HardStage01.png
+    - assets/badges/quake-quest/HardStage02.png
+    - assets/badges/quake-quest/HardStage03.png
+    - assets/badges/quake-quest/HardStage04.png
+    - assets/badges/quake-quest/HardStage05.png
+    - assets/badges/quake-quest/HardStage06.png
+    - assets/badges/quake-quest/HardStage07.png
+    - assets/badges/quake-quest/NormalComplete.png
+    - assets/badges/quake-quest/NormalFullClear.png
+    - assets/badges/quake-quest/NormalStage01.png
+    - assets/badges/quake-quest/NormalStage02.png
+    - assets/badges/quake-quest/NormalStage03.png
+    - assets/badges/quake-quest/NormalStage04.png
+    - assets/badges/quake-quest/NormalStage05.png
+    - assets/badges/quake-quest/NormalStage06.png
+    - assets/badges/quake-quest/NormalStage07.png
+    - assets/badges/storm-quest/HardComplete.png
+    - assets/badges/storm-quest/HardFullClear.png
+    - assets/badges/storm-quest/HardStage01.png
+    - assets/badges/storm-quest/HardStage02.png
+    - assets/badges/storm-quest/HardStage03.png
+    - assets/badges/storm-quest/HardStage04.png
+    - assets/badges/storm-quest/HardStage05.png
+    - assets/badges/storm-quest/HardStage06.png
+    - assets/badges/storm-quest/HardStage07.png
+    - assets/badges/storm-quest/NormalComplete.png
+    - assets/badges/storm-quest/NormalFullClear.png
+    - assets/badges/storm-quest/NormalStage01.png
+    - assets/badges/storm-quest/NormalStage02.png
+    - assets/badges/storm-quest/NormalStage03.png
+    - assets/badges/storm-quest/NormalStage04.png
+    - assets/badges/storm-quest/NormalStage05.png
+    - assets/badges/storm-quest/NormalStage06.png
+    - assets/badges/storm-quest/NormalStage07.png
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

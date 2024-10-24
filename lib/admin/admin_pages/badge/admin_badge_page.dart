@@ -78,45 +78,45 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
           ),
         ),
         backgroundColor: const Color(0xFF381c64),
-        body: SizedBox(
-          height: double.infinity,
-          width: double.infinity,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: SvgPicture.asset(
-                  'assets/backgrounds/background.svg',
-                  fit: BoxFit.cover,
-                ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: SvgPicture.asset(
+                'assets/backgrounds/background.svg',
+                fit: BoxFit.cover,
               ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _showAddBadgeDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF381c64),
-                        shadowColor: Colors.transparent,
-                      ),
-                      child: Text('Add Badge', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
+            ),
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _showAddBadgeDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF381c64),
+                      shadowColor: Colors.transparent,
                     ),
-                    const SizedBox(height: 20),
-                    SingleChildScrollView(
+                    child: Text('Add Badge', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
+                  ),
+                  const SizedBox(height: 20),
+                  Center( // Center the BadgeDataTable
+                    child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      child: BadgeDataTable(
-                        badges: _badges,
-                        onEditBadge: _navigateToEditBadge,
-                        onDeleteBadge: _deleteBadge,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: BadgeDataTable(
+                          badges: _badges,
+                          onEditBadge: _navigateToEditBadge,
+                          onDeleteBadge: _deleteBadge,
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20), // Add bottom padding
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:handabatamae/pages/main_page.dart';
+import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../services/auth_service.dart';
 import 'register_page.dart';

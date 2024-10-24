@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
-import 'package:handabatamae/pages/main_page.dart';
+import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';

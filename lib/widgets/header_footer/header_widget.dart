@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HeaderWidget extends StatelessWidget {
   final String selectedLanguage;
@@ -18,7 +19,7 @@ class HeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top, // Add padding to avoid the status bar
+        top: MediaQuery.of(context).padding.top + 2, // Add padding to avoid the status bar
         left: 20,
         right: 20,
         bottom: 10,
@@ -38,32 +39,48 @@ class HeaderWidget extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 44.0), // Adjust this value to fine-tune the position
-              child: IconButton(
-                icon: const Icon(Icons.person, size: 33, color: Colors.white),
-                onPressed: onToggleUserProfile,
-              ),
+            child: IconButton(
+              icon: const Icon(Icons.person, size: 33, color: Colors.white),
+              onPressed: onToggleUserProfile,
             ),
           ),
-          DropdownButton<String>(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.language, color: Colors.white, size: 40),
-            underline: Container(),
-            items: const [
-              DropdownMenuItem(
+            color: const Color(0xFF241242), // Set the popup menu background color
+            offset: const Offset(0, 68), // Position the popup menu a bit lower
+            onSelected: (String newValue) {
+              onChangeLanguage(newValue);
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
                 value: 'en',
-                child: Text('English'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      selectedLanguage == 'en' ? 'English' : 'Ingles',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                    ),
+                    const SizedBox(width: 8), // Add some space between text and icon
+                    if (selectedLanguage == 'en') const Icon(Icons.check, color: Colors.white),
+                  ],
+                ),
               ),
-              DropdownMenuItem(
+              PopupMenuItem<String>(
                 value: 'fil',
-                child: Text('Filipino'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Filipino',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                    ),
+                    const SizedBox(width: 8), // Add some space between text and icon
+                    if (selectedLanguage == 'fil') const Icon(Icons.check, color: Colors.white),
+                  ],
+                ),
               ),
             ],
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                onChangeLanguage(newValue);
-              }
-            },
           ),
         ],
       ),

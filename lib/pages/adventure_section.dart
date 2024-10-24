@@ -18,10 +18,24 @@ class AdventureSection extends StatelessWidget {
     return Center(
       child: Column(
         children: [
-          TextWithShadow(
-            text: MainPageLocalization.translate('playAdventure', selectedLanguage),
-            fontSize: 70,
-          ),
+            if (selectedLanguage == 'en') 
+            TextWithShadow(
+              text: MainPageLocalization.translate('playAdventure', selectedLanguage),
+              fontSize: 70,
+            )
+            else if (selectedLanguage == 'fil') ...[
+            TextWithShadow(
+              text: MainPageLocalization.translate('playAdventure', selectedLanguage),
+              fontSize: 70,
+            ),
+            Transform.translate(
+              offset: const Offset(0, -20),
+              child: TextWithShadow(
+              text: MainPageLocalization.translate('playAdventureMode', selectedLanguage),
+              fontSize: 70,
+              ),
+            ),
+            ],
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -62,7 +76,7 @@ class AdventureSection extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 50),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF351b61),

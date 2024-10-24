@@ -91,7 +91,7 @@ class MainPageState extends State<MainPage> {
                             SliverList(
                               delegate: SliverChildListDelegate(
                                 [
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 0),
                                   WelcomeSection(selectedLanguage: _selectedLanguage),
                                   const SizedBox(height: 200),
                                   AdventureSection(selectedLanguage: _selectedLanguage),

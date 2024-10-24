@@ -18,10 +18,24 @@ class ArcadeSection extends StatelessWidget {
     return Center(
       child: Column(
         children: [
-          TextWithShadow(
-            text: MainPageLocalization.translate('playArcade', selectedLanguage),
-            fontSize: 70,
-          ),
+            if (selectedLanguage == 'en') 
+            TextWithShadow(
+              text: MainPageLocalization.translate('playArcade', selectedLanguage),
+              fontSize: 70,
+            )
+            else if (selectedLanguage == 'fil') ...[
+            TextWithShadow(
+              text: MainPageLocalization.translate('playArcade', selectedLanguage),
+              fontSize: 70,
+            ),
+            Transform.translate(
+              offset: const Offset(0, -20),
+              child: TextWithShadow(
+              text: MainPageLocalization.translate('playArcadeMode', selectedLanguage),
+              fontSize: 70,
+              ),
+            ),
+            ],
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -62,7 +76,7 @@ class ArcadeSection extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 50),
           SizedBox(
             width: 200,
             height: 50,

@@ -38,7 +38,7 @@ class WelcomeSection extends StatelessWidget {
               height: 250,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 5),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(

@@ -41,15 +41,6 @@ class PlayPageState extends State<PlayPage> {
       _selectedLanguage = language;
     });
   }  
-  
-  void _navigateBack(BuildContext context) {
-    Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => MainPage(selectedLanguage: _selectedLanguage),
-    ),
-  );
-  }
 
   @override
   Widget build(BuildContext context) {

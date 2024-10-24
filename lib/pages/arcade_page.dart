@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/pages/user_profile.dart';
 import 'play_page.dart';
 import 'leaderboards_page.dart'; // Import LeaderboardsPage
 import 'package:handabatamae/widgets/buttons/arcade_button.dart'; // Import ArcadeButton
@@ -22,6 +23,7 @@ class ArcadePageState extends State<ArcadePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
+  bool _isUserProfileVisible = false;
   late String _selectedLanguage;
 
   @override
@@ -29,6 +31,19 @@ class ArcadePageState extends State<ArcadePage> {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
     _fetchCategories();
+  }
+
+  void _toggleUserProfile() {
+    setState(() {
+      _isUserProfileVisible = !_isUserProfileVisible;
+    });
+  }
+
+  void _changeLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+      _fetchCategories();
+    });
   }
 
   Future<void> _fetchCategories() async {
@@ -56,13 +71,6 @@ class ArcadePageState extends State<ArcadePage> {
     );
   }
 
-  void _changeLanguage(String language) {
-    setState(() {
-      _selectedLanguage = language;
-      _fetchCategories();
-    });
-  }
-
   Color _getButtonColor(String categoryName) {
     if (categoryName.contains('Quake')) {
       return const Color(0xFFF5672B);
@@ -88,8 +96,15 @@ class ArcadePageState extends State<ArcadePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        _navigateBack(context);
-        return false;
+        if (_isUserProfileVisible) {
+          setState(() {
+            _isUserProfileVisible = false;
+          });
+          return false;
+        } else {
+          _navigateBack(context);
+          return false;
+        }
       },
       child: Scaffold(
         body: ResponsiveBreakpoints(
@@ -127,9 +142,7 @@ class ArcadePageState extends State<ArcadePage> {
                             ),
                           );
                         },
-                        onToggleUserProfile: () {
-                          // Define the action for toggling user profile if needed
-                        },
+                        onToggleUserProfile: _toggleUserProfile,
                         onChangeLanguage: _changeLanguage,
                       ),
                       Expanded(
@@ -192,6 +205,8 @@ class ArcadePageState extends State<ArcadePage> {
                       ),
                     ],
                   ),
+                  if (_isUserProfileVisible)
+                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
                 ],
               ),
             ),

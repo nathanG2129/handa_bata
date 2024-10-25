@@ -471,11 +471,6 @@ void readCurrentQuestion() {
         }
       }
     });
-  
-    // Delay the HP update by 1 second
-    Future.delayed(const Duration(seconds: 1), () {
-      _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
-    });
   }
   
 void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
@@ -551,9 +546,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         }
       }
     });
-
-    // Update health
-    _updateHealth(_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true, 'Matching Type', blankPairs: _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0);
   }
   
   void _handleVisualDisplayComplete() {
@@ -661,6 +653,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onVisualDisplayComplete: _handleFitBVisualDisplayComplete, // Add this callback
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
+          updateHealth: _updateHealth, // Pass the updateHealth method
         );
         break;
       case 'Matching Type':
@@ -672,6 +665,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
+          updateHealth: _updateHealth, // Pass the updateHealth method
         );
         break;
       case 'Identification':

@@ -17,6 +17,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final VoidCallback onVisualDisplayComplete; // Add this callback
   final double sfxVolume; // Add this line
   final String gamemode; // Add this line
+  final Function(bool, String, {int blankPairs, String difficulty}) updateHealth; // Add this line
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -29,6 +30,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.onVisualDisplayComplete, // Add this callback
     required this.sfxVolume, 
     required this.gamemode, 
+    required this.updateHealth, // Add this line
   });
 
   @override
@@ -203,36 +205,38 @@ void _checkAnswer() {
 }
 
 void _showAnswerVisually() async {
-  for (int i = 0; i < selectedOptions.length; i++) {
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
+    for (int i = 0; i < selectedOptions.length; i++) {
+      await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
 
-    setState(() {
-      if (selectedOptions[i] == correctOptions[i]) {
-        _playSound(_soundId2); // Play correct answer sound
-        correctness[i] = true; // Mark as correct
-      } else {
-        _playSound(_soundId1); // Play wrong answer sound
-        correctness[i] = false; // Mark as incorrect
-      }
+      setState(() {
+        if (selectedOptions[i] == correctOptions[i]) {
+          _playSound(_soundId2); // Play correct answer sound
+          correctness[i] = true; // Mark as correct
+          widget.updateHealth(true, 'Fill in the Blanks'); // Add HP for correct answer
+        } else {
+          _playSound(_soundId1); // Play wrong answer sound
+          correctness[i] = false; // Mark as incorrect
+          widget.updateHealth(false, 'Fill in the Blanks', blankPairs: 1); // Subtract HP for incorrect answer
+        }
+      });
+    }
+
+    // Show the correct answers after a delay
+    Future.delayed(const Duration(seconds: 1, milliseconds: 750), () {
+      setState(() {
+        selectedOptions = correctOptions;
+        showOptions = false;
+        // Mark all options as correct
+        correctness = List<bool?>.filled(correctOptions.length, true);
+        _isVisualDisplayComplete = true; // Set the flag to true
+      });
+    });
+
+    // Transition to the next question after showing the correct answers
+    Future.delayed(const Duration(seconds: 3), () {
+      widget.onVisualDisplayComplete();
     });
   }
-
-  // Show the correct answers after a delay
-  Future.delayed(const Duration(seconds: 1, milliseconds: 750), () {
-    setState(() {
-      selectedOptions = correctOptions;
-      showOptions = false;
-      // Mark all options as correct
-      correctness = List<bool?>.filled(correctOptions.length, true);
-      _isVisualDisplayComplete = true; // Set the flag to true
-    });
-  });
-
-  // Transition to the next question after showing the correct answers
-  Future.delayed(const Duration(seconds: 3), () {
-    widget.onVisualDisplayComplete();
-  });
-}
  
   void forceCheckAnswer() {
     if (isChecking) return; // Prevent multiple calls to forceCheckAnswer

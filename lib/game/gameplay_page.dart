@@ -188,7 +188,7 @@ void readCurrentQuestion() {
         case 'Multiple Choice':
           String questionText = currentQuestion['question'] ?? '';
           List<String> options = _multipleChoiceQuestionKey.currentState?.options ?? [];
-          textToRead = questionText + ' ';
+          textToRead = '$questionText ';
           for (int i = 0; i < options.length; i++) {
             textToRead += '${String.fromCharCode(65 + i)}. ${options[i]}. ';
           }
@@ -196,7 +196,7 @@ void readCurrentQuestion() {
         case 'Fill in the Blanks':
           String questionText = currentQuestion['question'] ?? '';
           List<String> options = _fillInTheBlanksQuestionKey.currentState?.options ?? [];
-          textToRead = questionText.replaceAll('<input>', 'blank') + ' ';
+          textToRead = '${questionText.replaceAll('<input>', 'blank')} ';
           for (int i = 0; i < options.length; i++) {
             textToRead += '${options[i]}. ';
           }
@@ -205,7 +205,7 @@ void readCurrentQuestion() {
           String questionText = currentQuestion['question'] ?? '';
           List<String> section1Options = _matchingTypeQuestionKey.currentState?.section1Options ?? [];
           List<String> section2Options = _matchingTypeQuestionKey.currentState?.section2Options ?? [];
-          textToRead = questionText + ' ';
+          textToRead = '$questionText ';
           textToRead += 'Column A options: ';
           for (int i = 0; i < section1Options.length; i++) {
             textToRead += '${section1Options[i]}. ';
@@ -476,12 +476,6 @@ void readCurrentQuestion() {
     Future.delayed(const Duration(seconds: 1), () {
       _updateHealth(answerData['isFullyCorrect'] as bool, 'Fill in the Blanks', blankPairs: answerData['wrongCount'] as int);
     });
-  
-    // Print fully correct answers count
-  
-    Future.delayed(const Duration(seconds: 6), () {
-      _nextQuestion();
-    });
   }
   
 void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
@@ -563,6 +557,12 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
   
   void _handleVisualDisplayComplete() {
+    Future.delayed(const Duration(seconds: 3), () {
+      _nextQuestion();
+    });
+  }
+
+    void _handleFitBVisualDisplayComplete() {
     Future.delayed(const Duration(seconds: 3), () {
       _nextQuestion();
     });
@@ -658,6 +658,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
           onOptionsShown: _startTimer, // Pass the callback to start the timer
           nextQuestion: () {},
+          onVisualDisplayComplete: _handleFitBVisualDisplayComplete, // Add this callback
           sfxVolume: _sfxVolume, // Pass the SFX volume
           gamemode: widget.gamemode,
         );

@@ -14,6 +14,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final Function(Map<String, dynamic>) onAnswerSubmitted; // Change the type here
   final VoidCallback onOptionsShown; // Add the callback to start the timer
   final VoidCallback nextQuestion; // Add the nextQuestion callback
+  final VoidCallback onVisualDisplayComplete; // Add this callback
   final double sfxVolume; // Add this line
   final String gamemode; // Add this line
 
@@ -25,6 +26,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.onAnswerSubmitted,
     required this.onOptionsShown,
     required this.nextQuestion,
+    required this.onVisualDisplayComplete, // Add this callback
     required this.sfxVolume, 
     required this.gamemode, 
   });
@@ -36,11 +38,13 @@ class FillInTheBlanksQuestion extends StatefulWidget {
 class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   List<String?> selectedOptions = [];
   List<bool> optionSelected = [];
+  List<bool?> correctness = []; // Add this list to track correctness
   bool showOptions = false;
   bool showUserAnswers = false;
   bool showAllRed = false;
   bool isAnswerCorrect = false;
   bool isChecking = false; // Add this flag
+  bool _isVisualDisplayComplete = false; // Add this flag
   Timer? _timer;
   List<String> options = []; // Store shuffled options
   List<String> correctOptions = []; // Store correct options based on the string value
@@ -91,6 +95,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     setState(() {
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
+      correctness = List<bool?>.filled(widget.questionData['answer'].length, null); // Initialize correctness list
       options = List<String>.from(widget.questionData['options']);
       options.shuffle(Random()); // Shuffle the options
 
@@ -149,94 +154,107 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
     });
   }
 
-  void _checkAnswer() {
-    setState(() {
-      isChecking = true; // Set the flag to true when checking starts
-    });
+void _checkAnswer() {
+  setState(() {
+    isChecking = true; // Set the flag to true when checking starts
+  });
 
-    (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
+  (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
-    // Pause the stopwatch
-    if (widget.gamemode == 'arcade') {
-      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+  // Pause the stopwatch
+  if (widget.gamemode == 'arcade') {
+    (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+  }
+
+  // Perform the immediate background check
+  String userAnswer = selectedOptions.join(',');
+  String correctAnswer = correctOptions.join(',');
+
+  int correctCount = 0;
+  int wrongCount = 0;
+  bool isFullyCorrect = true;
+
+  for (int i = 0; i < selectedOptions.length; i++) {
+    if (selectedOptions[i] == correctOptions[i]) {
+      correctCount++;
+    } else {
+      wrongCount++;
+      isFullyCorrect = false; // If any answer is wrong, set this to false
     }
+  }
 
-    String userAnswer = selectedOptions.join(',');
-    String correctAnswer = correctOptions.join(',');
+  setState(() {
+    isAnswerCorrect = userAnswer == correctAnswer;
+  });
 
-    int correctCount = 0;
-    int wrongCount = 0;
-    bool isFullyCorrect = true;
+  // Stop the timer immediately
+  widget.onAnswerSubmitted({
+    'question': widget.questionData['question'],
+    'correctAnswer': correctAnswer,
+    'answer': userAnswer,
+    'correctCount': correctCount,
+    'wrongCount': wrongCount,
+    'isFullyCorrect': isFullyCorrect, // Add this to the answer data
+    'isCorrect': isFullyCorrect,
+  });
 
-    for (int i = 0; i < selectedOptions.length; i++) {
+  // Show the correctness of the blanks visually
+  _showAnswerVisually();
+}
+
+void _showAnswerVisually() async {
+  for (int i = 0; i < selectedOptions.length; i++) {
+    await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
+
+    setState(() {
       if (selectedOptions[i] == correctOptions[i]) {
-        correctCount++;
+        _playSound(_soundId2); // Play correct answer sound
+        correctness[i] = true; // Mark as correct
       } else {
-        wrongCount++;
-        isFullyCorrect = false; // If any answer is wrong, set this to false
+        _playSound(_soundId1); // Play wrong answer sound
+        correctness[i] = false; // Mark as incorrect
       }
-    }
-
-    setState(() {
-      isAnswerCorrect = userAnswer == correctAnswer;
-    });
-
-    // Stop the timer immediately
-    widget.onAnswerSubmitted({
-      'question': widget.questionData['question'],
-      'correctAnswer': correctAnswer,
-      'answer': userAnswer,
-      'correctCount': correctCount,
-      'wrongCount': wrongCount,
-      'isFullyCorrect': isFullyCorrect, // Add this to the answer data
-      'isCorrect': isFullyCorrect,
-    });
-
-    // Show user answers after a delay
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        showUserAnswers = true;
-        _playSound(isAnswerCorrect ? _soundId2 : _soundId1); // Play correct or wrong answer sound
-      });
-
-      // Show the correct answers regardless of whether the user's answers are correct
-      Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
-        setState(() {
-          selectedOptions = correctOptions;
-          showOptions = false;
-        });
-
-        // Call nextQuestion after showing the correct answers
-        Future.delayed(const Duration(seconds: 6), () {
-          print('Going to next question...');
-          widget.nextQuestion(); // Use widget.nextQuestion for the next question
-        });
-      });
     });
   }
 
-  // Add a method to force check the answer
+  // Show the correct answers after a delay
+  Future.delayed(const Duration(seconds: 1, milliseconds: 750), () {
+    setState(() {
+      selectedOptions = correctOptions;
+      showOptions = false;
+      // Mark all options as correct
+      correctness = List<bool?>.filled(correctOptions.length, true);
+      _isVisualDisplayComplete = true; // Set the flag to true
+    });
+  });
+
+  // Transition to the next question after showing the correct answers
+  Future.delayed(const Duration(seconds: 3), () {
+    widget.onVisualDisplayComplete();
+  });
+}
+ 
   void forceCheckAnswer() {
     if (isChecking) return; // Prevent multiple calls to forceCheckAnswer
-
+  
     setState(() {
       isChecking = true; // Set the flag to true when checking starts
     });
-
+  
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
-
+  
     // Pause the stopwatch
     if (widget.gamemode == 'arcade') {
       (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
     }
-
+  
     String userAnswer = selectedOptions.join(',');
     String correctAnswer = correctOptions.join(',');
-
+  
     int correctCount = 0;
     int wrongCount = 0;
     bool isFullyCorrect = true;
-
+  
     for (int i = 0; i < selectedOptions.length; i++) {
       if (selectedOptions[i] == correctOptions[i]) {
         correctCount++;
@@ -245,11 +263,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         isFullyCorrect = false; // If any answer is wrong, set this to false
       }
     }
-
+  
     setState(() {
       isAnswerCorrect = userAnswer == correctAnswer;
     });
-
+  
     // Stop the timer immediately
     widget.onAnswerSubmitted({
       'question': widget.questionData['question'],
@@ -260,30 +278,11 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       'isFullyCorrect': isFullyCorrect, // Add this to the answer data
       'isCorrect': isFullyCorrect,
     });
-
-    // Show user answers after a delay
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        showUserAnswers = true;
-        _playSound(_soundId1); // Play correct or wrong answer sound
-      });
-
-      // Show the correct answers regardless of whether the user's answers are correct
-      Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
-        setState(() {
-          selectedOptions = correctOptions;
-          showOptions = false;
-        });
-
-        // Call nextQuestion after showing the correct answers
-        Future.delayed(const Duration(seconds: 6), () {
-          print('Going to next question...');
-          widget.nextQuestion(); // Use widget.nextQuestion for the next question
-        });
-      });
-    });
+  
+    // Show the correctness of the blanks visually
+    _showAnswerVisually();
   }
-
+ 
   // Add a method to reset the state
   void resetState() {
     setState(() {
@@ -291,8 +290,10 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       showUserAnswers = false;
       showAllRed = false;
       isChecking = false; // Reset the flag
+      _isVisualDisplayComplete = false; // Reset the flag
       selectedOptions = List<String?>.filled(widget.questionData['answer'].length, null);
       optionSelected = List<bool>.filled(widget.questionData['options'].length, false);
+      correctness = List<bool?>.filled(widget.questionData['answer'].length, null); // Reset correctness list
       isAnswerCorrect = false;
       options = List<String>.from(widget.questionData['options']);
       options.shuffle(Random()); // Shuffle the options
@@ -322,66 +323,70 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
-
+  
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
-
+  
     questionText.split(' ').forEach((word) {
       if (word.startsWith('<input>')) {
-      String suffix = word.substring(7); // Get the suffix after <input>
-      Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
-      Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
-      if (showUserAnswers) {
-        boxColor = selectedOptions[inputIndex] == correctOptions[inputIndex] ? Colors.green : Colors.red;
-      }
-      questionWidgets.add(
-        Container(
-        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: boxColor,
-          border: Border.all(color: borderColor), // Conditionally set border color
-          borderRadius: BorderRadius.circular(0),
-        ),
-        child: Text(
-          selectedOptions[inputIndex] ?? '____',
-          style: (selectedOptions[inputIndex] == null)
-            ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
-            : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        ),
-      );
-      if (suffix.isNotEmpty) {
+        String suffix = word.substring(7); // Get the suffix after <input>
+        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
+        Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
+        if (correctness[inputIndex] != null) {
+          if (_isVisualDisplayComplete) {
+            boxColor = Colors.green; // Mark as green once the correct answers are shown
+          } else {
+            boxColor = correctness[inputIndex]! ? Colors.green : Colors.red;
+          }
+        }
         questionWidgets.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: Text(
-          suffix,
-          style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Make suffix white
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            decoration: BoxDecoration(
+              color: boxColor,
+              border: Border.all(color: borderColor), // Conditionally set border color
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Text(
+              selectedOptions[inputIndex] ?? '____',
+              style: (selectedOptions[inputIndex] == null)
+                ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
+                : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+            ),
           ),
-        ),
+        );
+        if (suffix.isNotEmpty) {
+          questionWidgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(
+                suffix,
+                style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Make suffix white
+              ),
+            ),
+          );
+        }
+        inputIndex++;
+      } else {
+        questionWidgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              word,
+              style: GoogleFonts.rubik(
+                fontSize: 25,
+                color: Colors.white,
+              ),
+            ),
+          ),
         );
       }
-      inputIndex++;
-      } else {
-      questionWidgets.add(
-        Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: Text(
-          word,
-          style: GoogleFonts.rubik(
-          fontSize: 25,
-          color: Colors.white,
-          ),
-        ),
-        ),
-      );
-      }
     });
-
+  
     return Column(
       children: [
-        if (!showOptions && !showUserAnswers)
+        if (!showOptions && !showUserAnswers && !_isVisualDisplayComplete)
           const TextWithShadow(
             text: 'Fill in the Blanks',
             fontSize: 40, // Adjusted font size to 40

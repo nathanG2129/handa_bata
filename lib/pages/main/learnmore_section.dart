@@ -64,8 +64,8 @@ class LearnMoreSection extends StatelessWidget {
             onPressed: () {
               // Add navigation to Learn About Preparedness page
             },
-            width: 200,
-            height: 50,
+            width: 225,
+            height: 65,
             child: Text(
               MainPageLocalization.translate('learnMore', selectedLanguage),
               style: GoogleFonts.vt323(

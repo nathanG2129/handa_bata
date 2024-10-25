@@ -85,8 +85,8 @@ class ArcadeSection extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => ArcadePage(selectedLanguage: selectedLanguage)),
               );
             },
-            width: 200,
-            height: 50,
+            width: 225,
+            height: 65,
             child: Text(
               MainPageLocalization.translate('playArcadeButton', selectedLanguage),
               style: GoogleFonts.vt323(

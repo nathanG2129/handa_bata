@@ -85,8 +85,8 @@ class AdventureSection extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => AdventurePage(selectedLanguage: selectedLanguage)),
               );
             },
-            width: 200,
-            height: 50,
+            width: 225,
+            height: 60,
             child: Text(
               MainPageLocalization.translate('playAdventureButton', selectedLanguage),
               style: GoogleFonts.vt323(

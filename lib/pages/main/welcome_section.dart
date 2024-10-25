@@ -60,8 +60,8 @@ class WelcomeSection extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => PlayPage(selectedLanguage: selectedLanguage, title: 'Adventure')),
               );
             },
-            width: 200, // Set the desired width
-            height: 50, // Set the desired height
+            width: 225, // Set the desired width
+            height: 65, // Set the desired height
             child: Text(
               MainPageLocalization.translate('playNow', selectedLanguage),
               style: GoogleFonts.vt323(

@@ -54,7 +54,6 @@ class WelcomeSection extends StatelessWidget {
           ),
           const SizedBox(height: 30),
           Button3D(
-            text: MainPageLocalization.translate('playNow', selectedLanguage),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -63,6 +62,13 @@ class WelcomeSection extends StatelessWidget {
             },
             width: 200, // Set the desired width
             height: 50, // Set the desired height
+            child: Text(
+              MainPageLocalization.translate('playNow', selectedLanguage),
+              style: GoogleFonts.vt323(
+                fontSize: 24,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),

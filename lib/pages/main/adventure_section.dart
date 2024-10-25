@@ -79,7 +79,6 @@ class AdventureSection extends StatelessWidget {
           ),
           const SizedBox(height: 50),
           Button3D(
-            text: MainPageLocalization.translate('playAdventureButton', selectedLanguage),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -88,6 +87,13 @@ class AdventureSection extends StatelessWidget {
             },
             width: 200,
             height: 50,
+            child: Text(
+              MainPageLocalization.translate('playAdventureButton', selectedLanguage),
+              style: GoogleFonts.vt323(
+                fontSize: 24,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),

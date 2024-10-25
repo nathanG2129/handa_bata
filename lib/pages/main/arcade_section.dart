@@ -79,7 +79,6 @@ class ArcadeSection extends StatelessWidget {
           ),
           const SizedBox(height: 50),
           Button3D(
-            text: MainPageLocalization.translate('playArcadeButton', selectedLanguage),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -88,6 +87,13 @@ class ArcadeSection extends StatelessWidget {
             },
             width: 200,
             height: 50,
+            child: Text(
+              MainPageLocalization.translate('playArcadeButton', selectedLanguage),
+              style: GoogleFonts.vt323(
+                fontSize: 24,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),

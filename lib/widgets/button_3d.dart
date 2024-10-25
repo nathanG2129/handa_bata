@@ -1,44 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-class Button3D extends StatelessWidget {
-  final String text;
+class Button3D extends StatefulWidget {
   final VoidCallback onPressed;
-  final bool locked;
+  final Widget child;
+  final Color backgroundColor;
+  final Color borderColor;
   final double width;
   final double height;
 
   const Button3D({
-    super.key,
-    required this.text,
+    Key? key,
     required this.onPressed,
-    this.locked = false,
+    required this.child,
+    this.backgroundColor = const Color(0xFF351b61),
+    this.borderColor = Colors.black,
     this.width = double.infinity,
     this.height = 50.0,
-  });
+  }) : super(key: key);
+
+  @override
+  State<Button3D> createState() => _Button3DState();
+}
+
+class _Button3DState extends State<Button3D> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: locked ? null : onPressed,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: const BoxDecoration(
-          color: Color(0xFF351b61),
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 1),
+        transform: Matrix4.translationValues(
+          0,
+          _isPressed ? 8.0 : 0.0,  // Move down when pressed
+          0,
+        ),
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: widget.backgroundColor,
           border: Border(
-            top: BorderSide(width: 2, color: Colors.black),
-            left: BorderSide(width: 4, color: Colors.black),
-            right: BorderSide(width: 4, color: Colors.black),
-            bottom: BorderSide(width: 10, color: Colors.black),
+            top: BorderSide(width: 2.0, color: widget.borderColor),
+            left: BorderSide(width: 4.0, color: widget.borderColor),
+            right: BorderSide(width: 4.0, color: widget.borderColor),
+            bottom: BorderSide(
+              width: _isPressed ? 2.0 : 10.0,  // Border changes when pressed
+              color: widget.borderColor,
+            ),
           ),
         ),
-        child: Center(
-          child: Text(
-            text,
-            style: GoogleFonts.vt323(
-              fontSize: 24,
-              color: Colors.white,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onPressed,
+            child: Center(
+              child: widget.child,
             ),
           ),
         ),

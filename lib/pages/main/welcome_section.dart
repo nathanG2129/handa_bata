@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/play_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/widgets/button_3d.dart'; // Import the new button widget
 
 class WelcomeSection extends StatelessWidget {
   final String selectedLanguage;
@@ -52,30 +53,16 @@ class WelcomeSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 30),
-          SizedBox(
-            width: 200,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF351b61),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
-                ),
-              ),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => PlayPage(selectedLanguage: selectedLanguage, title: 'Adventure')),
-                );
-              },
-              child: Text(
-                MainPageLocalization.translate('playNow', selectedLanguage),
-                style: GoogleFonts.vt323(
-                  fontSize: 24,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          Button3D(
+            text: MainPageLocalization.translate('playNow', selectedLanguage),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => PlayPage(selectedLanguage: selectedLanguage, title: 'Adventure')),
+              );
+            },
+            width: 200, // Set the desired width
+            height: 50, // Set the desired height
           ),
         ],
       ),

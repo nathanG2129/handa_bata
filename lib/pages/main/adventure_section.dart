@@ -4,6 +4,7 @@ import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/widgets/button_3d.dart'; // Import the new button widget
 
 class AdventureSection extends StatelessWidget {
   final String selectedLanguage;
@@ -18,12 +19,12 @@ class AdventureSection extends StatelessWidget {
     return Center(
       child: Column(
         children: [
-            if (selectedLanguage == 'en') 
+          if (selectedLanguage == 'en') 
             TextWithShadow(
               text: MainPageLocalization.translate('playAdventure', selectedLanguage),
               fontSize: 70,
             )
-            else if (selectedLanguage == 'fil') ...[
+          else if (selectedLanguage == 'fil') ...[
             TextWithShadow(
               text: MainPageLocalization.translate('playAdventure', selectedLanguage),
               fontSize: 70,
@@ -31,11 +32,11 @@ class AdventureSection extends StatelessWidget {
             Transform.translate(
               offset: const Offset(0, -20),
               child: TextWithShadow(
-              text: MainPageLocalization.translate('playAdventureMode', selectedLanguage),
-              fontSize: 70,
+                text: MainPageLocalization.translate('playAdventureMode', selectedLanguage),
+                fontSize: 70,
               ),
             ),
-            ],
+          ],
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -77,27 +78,16 @@ class AdventureSection extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: 50),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF351b61),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.zero,
-              ),
-              minimumSize: const Size(200, 50), // Default size
-            ),
+          Button3D(
+            text: MainPageLocalization.translate('playAdventureButton', selectedLanguage),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => AdventurePage(selectedLanguage: selectedLanguage)),
               );
             },
-            child: Text(
-              MainPageLocalization.translate('playAdventureButton', selectedLanguage),
-              style: GoogleFonts.vt323(
-                fontSize: 24,
-                color: Colors.white,
-              ),
-            ),
+            width: 200,
+            height: 50,
           ),
         ],
       ),

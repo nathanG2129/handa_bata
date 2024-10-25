@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/widgets/button_3d.dart'; // Import the new button widget
 
 class LearnMoreSection extends StatelessWidget {
   final String selectedLanguage;
@@ -58,28 +59,14 @@ class LearnMoreSection extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 20),
-          SizedBox(
+          const SizedBox(height: 50),
+          Button3D(
+            text: MainPageLocalization.translate('learnMore', selectedLanguage),
+            onPressed: () {
+              // Add navigation to Learn About Preparedness page
+            },
             width: 200,
             height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF351b61),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
-                ),
-              ),
-              onPressed: () {
-                // Add navigation to Learn About Preparedness page
-              },
-              child: Text(
-                MainPageLocalization.translate('learnMore', selectedLanguage),
-                style: GoogleFonts.vt323(
-                  fontSize: 24,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           ),
         ],
       ),

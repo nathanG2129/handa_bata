@@ -47,7 +47,7 @@ class _Button3DState extends State<Button3D> {
             left: BorderSide(width: 4.0, color: widget.borderColor),
             right: BorderSide(width: 4.0, color: widget.borderColor),
             bottom: BorderSide(
-              width: _isPressed ? 2.0 : 12.0,  // Border changes when pressed
+              width: _isPressed ? 2.0 : 14.0,  // Border changes when pressed
               color: widget.borderColor,
             ),
           ),

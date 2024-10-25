@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/pages/stages_page.dart';
+import 'package:handabatamae/widgets/button_3d.dart';
 import 'play_page.dart';
 import 'package:handabatamae/widgets/buttons/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
-import '../widgets/buttons/category_button_container.dart'; // Import CategoryButtonContainer
 import 'user_profile.dart'; // Import UserProfilePage
 
 class AdventurePage extends StatefulWidget {
@@ -74,7 +76,7 @@ class AdventurePageState extends State<AdventurePage> {
     if (categoryName.contains('Quake')) {
       return const Color(0xFFF5672B);
     } else if (categoryName.contains('Storm') || categoryName.contains('Flood')) {
-      return const Color(0xFF2C62DE);
+      return const Color(0xFF2C28E1);
     } else if (categoryName.contains('Volcano')) {
       return const Color(0xFFB3261E);
     } else if (categoryName.contains('Drought') || categoryName.contains('Tsunami')) {
@@ -84,11 +86,27 @@ class AdventurePageState extends State<AdventurePage> {
     }
   }
 
-  Color _darkenColor(Color color, [double amount = 0.1]) {
+  Color _darkenColor(Color color, [double amount = 0.2]) {
     assert(amount >= 0 && amount <= 1);
     final hsl = HSLColor.fromColor(color);
     final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
     return hslDark.toColor();
+  }
+
+  void _onCategoryPressed(Map<String, dynamic> category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StagesPage(
+          questName: category['name'],
+          category: {
+            'id': category['id'],
+            'name': category['name'],
+          },
+          selectedLanguage: _selectedLanguage, // Pass the selected language
+        ),
+      ),
+    );
   }
 
   @override
@@ -163,12 +181,41 @@ class AdventurePageState extends State<AdventurePage> {
                                       : Column(
                                           children: _categories.map((category) {
                                             final buttonColor = _getButtonColor(category['name']);
-                                            final containerColor = _darkenColor(buttonColor, 0.2); // Darken the button color for the container
-                                            return CategoryButtonContainer(
-                                              buttonColor: buttonColor,
-                                              containerColor: containerColor,
-                                              category: category,
-                                              selectedLanguage: _selectedLanguage,
+                                            return Padding(
+                                              padding: const EdgeInsets.only(bottom: 40), // Apply margin only to the bottom
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Button3D(
+                                                  width: 350,
+                                                  height: 215,
+                                                  onPressed: () => _onCategoryPressed(category),
+                                                  backgroundColor: buttonColor,
+                                                  borderColor: _darkenColor(buttonColor),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(12.0),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          '${category['name']}',
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 30, // Larger font size
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 5),
+                                                        Text(
+                                                          category['description'],
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 25,
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             );
                                           }).toList(),
                                         ),

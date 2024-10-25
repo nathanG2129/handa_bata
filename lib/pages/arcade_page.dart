@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/pages/arcade_stages_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'play_page.dart';
 import 'leaderboards_page.dart'; // Import LeaderboardsPage
@@ -8,7 +10,7 @@ import 'package:handabatamae/services/stage_service.dart'; // Import StageServic
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
-import '../widgets/buttons/arcade_category_button_container.dart'; // Import ArcadeCategoryButtonContainer
+import 'package:handabatamae/widgets/button_3d.dart'; // Import Button3D
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -92,6 +94,22 @@ class ArcadePageState extends State<ArcadePage> {
     return hslDark.toColor();
   }
 
+  void _onCategoryPressed(Map<String, dynamic> category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArcadeStagesPage(
+          questName: category['name'],
+          category: {
+            'id': category['id'],
+            'name': category['name'],
+          },
+          selectedLanguage: _selectedLanguage, // Pass the selected language
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -166,25 +184,49 @@ class ArcadePageState extends State<ArcadePage> {
                                       : Column(
                                           children: _categories.map((category) {
                                             final buttonColor = _getButtonColor(category['name']);
-                                            final containerColor = _darkenColor(buttonColor, 0.2);
-                                            return ArcadeCategoryButtonContainer(
-                                              buttonColor: buttonColor,
-                                              containerColor: containerColor,
-                                              category: category,
-                                              selectedLanguage: _selectedLanguage,
+                                            return Padding(
+                                              padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Button3D(
+                                                  width: 350,
+                                                  height: 200,
+                                                  onPressed: () => _onCategoryPressed(category),
+                                                  backgroundColor: buttonColor,
+                                                  borderColor: _darkenColor(buttonColor),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          '${category['name']}',
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 30, // Larger font size
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 10),
+                                                        Text(
+                                                          category['description'],
+                                                          style: GoogleFonts.vt323(
+                                                            fontSize: 22,
+                                                            color: Colors.white, // Text color
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             );
                                           }).toList(),
                                         ),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 20, bottom: 20),
-                                    child: ArcadeCategoryButtonContainer(
-                                      buttonColor: const Color(0xFF28e172),
-                                      containerColor: _darkenColor(const Color(0xFF28e172), 0.2),
-                                      category: const {
-                                        'name': 'Leaderboards',
-                                        'description': 'Show the world what you\'re made of and climb the leaderboards!',
-                                      },
-                                      selectedLanguage: _selectedLanguage,
+                                    child: Button3D(
+                                      width: 350,
+                                      height: 150,
                                       onPressed: () {
                                         Navigator.push(
                                           context,
@@ -193,6 +235,31 @@ class ArcadePageState extends State<ArcadePage> {
                                           ),
                                         );
                                       },
+                                      backgroundColor: const Color(0xFF28e172),
+                                      borderColor: _darkenColor(const Color(0xFF28e172)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Leaderboards',
+                                              style: GoogleFonts.vt323(
+                                                fontSize: 30, // Larger font size
+                                                color: Colors.white, // Text color
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'Show the world what you\'re made of and climb the leaderboards!',
+                                              style: GoogleFonts.vt323(
+                                                fontSize: 22,
+                                                color: Colors.white, // Text color
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const Spacer(), // Push the footer to the bottom

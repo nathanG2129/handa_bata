@@ -195,8 +195,25 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         selectedSection1Option = null;
         selectedSection2Option = null;
   
-        // Check if all pairs are matched
+        // Check if we've reached the number of correct pairs
         if (userPairs.length == correctAnswers.length) {
+          // Add remaining options as single containers without creating pairs
+          for (String option in section1Options) {
+            userPairs.add({
+              'section1': option,
+              'section2': '',
+            });
+            pairColors.add(Colors.transparent);
+          }
+          for (String option in section2Options) {
+            userPairs.add({
+              'section1': '',
+              'section2': option,
+            });
+            pairColors.add(Colors.transparent);
+          }
+          section1Options.clear();
+          section2Options.clear();
           _submitPairs();
         }
       });
@@ -242,19 +259,28 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 width: 150,
                 height: 75,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: pair['section1']!.isEmpty ? Colors.transparent : 
+                         (isChecking && !pair['section2']!.isEmpty) ? color : 
+                         (!pair['section2']!.isEmpty) ? color : // Use the unique color for complete pairs
+                         const Color.fromARGB(255, 114, 109, 109), // Default gray for unpaired options
                   borderRadius: BorderRadius.circular(0),
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      pair['section1']!,
-                      softWrap: true,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 1.0), // Ensure minimum width
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        pair['section1']!,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.rubik(
+                          fontSize: 18,
+                          color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -264,39 +290,47 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 width: 150,
                 height: 75,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: pair['section2']!.isEmpty ? Colors.transparent :
+                         (isChecking && !pair['section1']!.isEmpty) ? color :
+                         (!pair['section1']!.isEmpty) ? color : // Use the unique color for complete pairs
+                         const Color.fromARGB(255, 114, 109, 109), // Default gray for unpaired options
                   borderRadius: BorderRadius.circular(0),
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: pair['section2']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      pair['section2']!,
-                      softWrap: true,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 1.0), // Ensure minimum width
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        pair['section2']!,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.rubik(
+                          fontSize: 18,
+                          color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: isChecking,
+          if (!pair['section1']!.isEmpty && !pair['section2']!.isEmpty && !isChecking)
+            Positioned.fill(
               child: TextButton(
                 onPressed: () {
                   _cancelSelection(pair['section1']!, pair['section2']!);
                 },
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.transparent, backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.transparent,
+                  backgroundColor: Colors.transparent,
                 ),
                 child: Container(),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -313,30 +347,19 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
 
   void _checkAnswerImmediately() {
     setState(() {
-      isChecking = true; // Set the flag to true
+      isChecking = true;
     });
 
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
-    // Pause the stopwatch
-    if (widget.gamemode == 'arcade') {
-      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
-    }
-  
-    // Convert pairs to strings for comparison
-    List<String> userPairStrings = userPairs.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
+    // Only check up to the number of correct pairs
+    correctPairCount = 0;
+    incorrectPairCount = 0;
+
     List<String> correctAnswerStrings = correctAnswers.map((pair) => '${pair['section1']}:${pair['section2']}').toList();
-  
-    // Sort the lists for comparison
-    userPairStrings.sort();
-    correctAnswerStrings.sort();
-  
-    setState(() {
-      correctPairCount = 0;
-      incorrectPairCount = 0;
-    });
-  
-    for (int i = 0; i < userPairs.length; i++) {
+    
+    // Only check pairs up to the number of correct answers
+    for (int i = 0; i < correctAnswers.length && i < userPairs.length; i++) {
       String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
       if (correctAnswerStrings.contains(userPairString) && pairColors[i] != Colors.red) {
         correctPairCount++;
@@ -344,69 +367,48 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         incorrectPairCount++;
       }
     }
-  
-    // Mark unselected section2 buttons as incorrect
-    for (int i = userPairs.length; i < correctAnswers.length; i++) {
-      incorrectPairCount++;
-    }
-  
-    // Notify that the answer has been checked
-    widget.onAnswerChecked();
 
+    widget.onAnswerChecked();
     _recordAnsweredQuestion(correctPairCount == correctAnswers.length);
 
-
     setState(() {
-      isChecking = false; // Set the flag to false
+      isChecking = false;
     });
   }
   
   void _showAnswerVisually() async {
     setState(() {
-      isChecking = true; // Set the flag to true
+      isChecking = true;
     });
   
+    // Only check pairs that don't have empty sections
     for (int i = 0; i < userPairs.length; i++) {
-      await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
+      if (userPairs[i]['section1']!.isEmpty || userPairs[i]['section2']!.isEmpty) {
+        continue; // Skip visual check for pairs with empty sections
+      }
+
+      await Future.delayed(const Duration(seconds: 1, milliseconds: 750));
   
       setState(() {
         String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
-        if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString) && pairColors[i] != Colors.red) {
-          pairColors[i] = Colors.green; // Correct pair
-          _playSound(_soundId2); // Play correct answer sound
-          widget.updateHealth(true, 'Matching Type'); // Add HP for correct pair
+        if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString)) {
+          pairColors[i] = Colors.green;
+          _playSound(_soundId2);
+          widget.updateHealth(true, 'Matching Type');
           if (widget.gamemode == 'arcade') {
-            widget.updateStopwatch(-5); // Deduct 5 seconds for correct answer
+            widget.updateStopwatch(-5);
           }
         } else {
-          pairColors[i] = Colors.red; // Incorrect pair
-          _playSound(_soundId1); // Play wrong answer sound
-          widget.updateHealth(false, 'Matching Type', blankPairs: 1); // Subtract HP for incorrect pair
+          pairColors[i] = Colors.red;
+          _playSound(_soundId1);
+          widget.updateHealth(false, 'Matching Type', blankPairs: 1);
           if (widget.gamemode == 'arcade') {
-            widget.updateStopwatch(5); // Add 5 seconds for incorrect answer
+            widget.updateStopwatch(5);
           }
         }
       });
     }
   
-    // Color unselected section2 buttons as red
-    for (int i = userPairs.length; i < correctAnswers.length; i++) {
-      await Future.delayed(const Duration(seconds: 1)); // Introduce a delay of 1 second
-  
-      setState(() {
-        userPairs.add({
-          'section1': section1Options[i],
-          'section2': '',
-        });
-        pairColors.add(Colors.red);
-        widget.updateHealth(false, 'Matching Type', blankPairs: 1); // Subtract HP for unselected pair
-        if (widget.gamemode == 'arcade') {
-          widget.updateStopwatch(5); // Add 5 seconds for unselected pair
-        }
-      });
-    }
-  
-    // Notify that the visual display is complete
     widget.onVisualDisplayComplete();
   }
   
@@ -417,65 +419,46 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   
   void forceCheckAnswer() {
     setState(() {
-      isChecking = true; // Set the flag to true
+      isChecking = true;
       (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
-      // Pause the stopwatch
       if (widget.gamemode == 'arcade') {
         (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
       }
-  
-      // Randomly pair up the remaining options
-      List<String> remainingSection1Options = List.from(section1Options);
-      List<String> remainingSection2Options = List.from(section2Options);
-  
-      while (remainingSection1Options.isNotEmpty && remainingSection2Options.isNotEmpty) {
-        String section1Option = remainingSection1Options.removeAt(0);
-        String section2Option = remainingSection2Options.firstWhere(
-          (option) => option != correctAnswers.firstWhere((pair) => pair['section1'] == section1Option)['section2'],
-          orElse: () => remainingSection2Options.removeAt(0),
-        );
-        remainingSection2Options.remove(section2Option);
-  
+
+      // Only pair up to the number of correct pairs
+      while (userPairs.length < correctAnswers.length && section1Options.isNotEmpty && section2Options.isNotEmpty) {
+        String section1Option = section1Options.removeAt(0);
+        String section2Option = section2Options.removeAt(0);
+        
         userPairs.add({
           'section1': section1Option,
           'section2': section2Option,
         });
         pairColors.add(const Color.fromARGB(255, 114, 109, 109));
-        incorrectPairCount++;
-  
-        // Remove the paired options from the original lists
-        section1Options.remove(section1Option);
-        section2Options.remove(section2Option);
       }
-  
-      // If there are any remaining options in section1 or section2, mark them as wrong
-      for (String section1Option in remainingSection1Options) {
+
+      // Add remaining options as single containers without creating pairs
+      for (String option in section1Options) {
         userPairs.add({
-          'section1': section1Option,
+          'section1': option,
           'section2': '',
         });
-        pairColors.add(Colors.red);
-        incorrectPairCount++;
-  
-        // Remove the option from the original list
-        section1Options.remove(section1Option);
+        pairColors.add(Colors.transparent);
       }
-  
-      for (String section2Option in remainingSection2Options) {
+
+      for (String option in section2Options) {
         userPairs.add({
           'section1': '',
-          'section2': section2Option,
+          'section2': option,
         });
-        pairColors.add(Colors.red);
-        incorrectPairCount++;
-  
-        // Remove the option from the original list
-        section2Options.remove(section2Option);
+        pairColors.add(Colors.transparent);
       }
+
+      section1Options.clear();
+      section2Options.clear();
     });
-  
-    // Show correct pairs in green
+
     _checkAnswer();
   }
 

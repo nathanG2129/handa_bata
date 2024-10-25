@@ -61,6 +61,7 @@ class ResultsPageState extends State<ResultsPage> {
     super.initState();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _loadSounds();
+    print('Lol: ${widget.record}');
     _updateScoreAndStarsInFirestore(); // Call the method in initState
   }
 
@@ -139,10 +140,15 @@ class ResultsPageState extends State<ResultsPage> {
             orElse: () => '',
           ); // Stage not found
   
-    int maxScore = stageData[stageKey]['maxScore'] as int; // Fetch maxScore
+    print('${stageKey} and ${stageData}');
+  
+    int? maxScore;
+    if (widget.gamemode != 'arcade') {
+      maxScore = stageData[stageKey]['maxScore'] as int? ?? 0; // Fetch maxScore only if gamemode is not arcade
+    }
   
     // Calculate stars using the fetched maxScore
-    int calculatedStars = _calculateStars(widget.accuracy, widget.score, maxScore, widget.isGameOver);
+    int calculatedStars = _calculateStars(widget.accuracy, widget.score, maxScore ?? 0, widget.isGameOver);
   
     setState(() {
       stars = calculatedStars; // Update the state with the calculated stars
@@ -150,8 +156,9 @@ class ResultsPageState extends State<ResultsPage> {
   
     if (widget.gamemode == 'arcade') {
       final currentRecord = _convertRecordToSeconds(widget.record);
-      final bestRecord = stageData[stageKey]['bestRecord'] as int? ?? -1;
-      final crntRecord = stageData[stageKey]['crntRecord'] as int? ?? -1;
+      print('Eto ang: ${currentRecord}');
+      final bestRecord = stageData[stageKey]['bestRecord'] as int; // Handle null value
+      final crntRecord = stageData[stageKey]['crntRecord'] as int; // Handle null value
   
       if (bestRecord == -1 || currentRecord < bestRecord) {
         stageData[stageKey]['bestRecord'] = currentRecord;

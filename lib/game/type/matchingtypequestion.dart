@@ -15,6 +15,7 @@ class MatchingTypeQuestion extends StatefulWidget {
   final double sfxVolume; // Add this line
   final String gamemode; // Add this line
   final Function(bool, String, {int blankPairs, String difficulty}) updateHealth; // Add this line
+  final Function(int) updateStopwatch; // Add this line
 
   const MatchingTypeQuestion({
     super.key,
@@ -24,7 +25,8 @@ class MatchingTypeQuestion extends StatefulWidget {
     required this.onVisualDisplayComplete, 
     required this.sfxVolume, 
     required this.gamemode, 
-    required this.updateHealth, // Add this line
+    required this.updateHealth, 
+    required this.updateStopwatch, // Add this line
   });
 
   @override
@@ -363,28 +365,34 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       isChecking = true; // Set the flag to true
     });
-
+  
     for (int i = 0; i < userPairs.length; i++) {
       await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
-
+  
       setState(() {
         String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
         if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString) && pairColors[i] != Colors.red) {
           pairColors[i] = Colors.green; // Correct pair
           _playSound(_soundId2); // Play correct answer sound
           widget.updateHealth(true, 'Matching Type'); // Add HP for correct pair
+          if (widget.gamemode == 'arcade') {
+            widget.updateStopwatch(-5); // Deduct 5 seconds for correct answer
+          }
         } else {
           pairColors[i] = Colors.red; // Incorrect pair
           _playSound(_soundId1); // Play wrong answer sound
           widget.updateHealth(false, 'Matching Type', blankPairs: 1); // Subtract HP for incorrect pair
+          if (widget.gamemode == 'arcade') {
+            widget.updateStopwatch(5); // Add 5 seconds for incorrect answer
+          }
         }
       });
     }
-
+  
     // Color unselected section2 buttons as red
     for (int i = userPairs.length; i < correctAnswers.length; i++) {
       await Future.delayed(const Duration(seconds: 1)); // Introduce a delay of 1 second
-
+  
       setState(() {
         userPairs.add({
           'section1': section1Options[i],
@@ -392,9 +400,12 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         });
         pairColors.add(Colors.red);
         widget.updateHealth(false, 'Matching Type', blankPairs: 1); // Subtract HP for unselected pair
+        if (widget.gamemode == 'arcade') {
+          widget.updateStopwatch(5); // Add 5 seconds for unselected pair
+        }
       });
     }
-
+  
     // Notify that the visual display is complete
     widget.onVisualDisplayComplete();
   }

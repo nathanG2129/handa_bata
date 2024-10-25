@@ -255,62 +255,66 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 150,
-                height: 75,
-                decoration: BoxDecoration(
-                  color: pair['section1']!.isEmpty ? Colors.transparent : 
-                         (isChecking && !pair['section2']!.isEmpty) ? color : 
-                         (!pair['section2']!.isEmpty) ? color : // Use the unique color for complete pairs
-                         const Color.fromARGB(255, 114, 109, 109), // Default gray for unpaired options
-                  borderRadius: BorderRadius.circular(0),
-                  border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Container(
-                    constraints: const BoxConstraints(minWidth: 1.0), // Ensure minimum width
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        pair['section1']!,
-                        softWrap: true,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.rubik(
-                          fontSize: 18,
-                          color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white
+              Stack(
+                children: [
+                  Container(
+                    width: 150,
+                    height: 75,
+                    decoration: BoxDecoration(
+                      color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white,
+                      borderRadius: BorderRadius.circular(0),
+                      border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          pair['section1']!,
+                          softWrap: true,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.rubik(
+                            fontSize: 18,
+                            color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    left: 2,
+                    top: 2,
+                    bottom: 2,
+                    child: Container(
+                      width: 16,
+                      decoration: BoxDecoration(
+                        color: pair['section1']!.isEmpty ? Colors.transparent : color,
+                        borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(width: 16),
               Container(
                 width: 150,
                 height: 75,
                 decoration: BoxDecoration(
-                  color: pair['section2']!.isEmpty ? Colors.transparent :
-                         (isChecking && !pair['section1']!.isEmpty) ? color :
-                         (!pair['section1']!.isEmpty) ? color : // Use the unique color for complete pairs
-                         const Color.fromARGB(255, 114, 109, 109), // Default gray for unpaired options
+                  color: pair['section2']!.isEmpty ? Colors.grey : color,
                   borderRadius: BorderRadius.circular(0),
                   border: pair['section2']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Center(
-                  child: Container(
-                    constraints: const BoxConstraints(minWidth: 1.0), // Ensure minimum width
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        pair['section2']!,
-                        softWrap: true,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.rubik(
-                          fontSize: 18,
-                          color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white
-                        ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      pair['section2']!,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.rubik(
+                        fontSize: 18,
+                        color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white,
                       ),
                     ),
                   ),
@@ -318,7 +322,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
               ),
             ],
           ),
-          if (!pair['section1']!.isEmpty && !pair['section2']!.isEmpty && !isChecking)
+          if (pair['section1']!.isNotEmpty && pair['section2']!.isNotEmpty && !isChecking)
             Positioned.fill(
               child: TextButton(
                 onPressed: () {
@@ -544,38 +548,52 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         bool isSelected = selectedSection1Option == option;
                         bool isMatched = userPairs.any((pair) => pair['section1'] == option);
                         Color? pairColor = _getPairColor(option, 'section1');
+                        section1Options.indexOf(option);
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: SizedBox(
-                            width: 150, // Set a fixed width
-                            height: 75, // Set a fixed height
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (isMatched) {
-                                  _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
-                                } else {
-                                  _handleSection1OptionTap(option);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
-                                padding: const EdgeInsets.all(16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(0),
-                                  side: const BorderSide(color: Colors.black, width: 2),
+                          child: Stack(
+                            children: [
+                              SizedBox(
+                                width: 150, // Set a fixed width
+                                height: 75, // Set a fixed height
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (isMatched) {
+                                      _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
+                                    } else {
+                                      _handleSection1OptionTap(option);
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
+                                    backgroundColor: isSelected ? Colors.grey : isMatched ? Colors.white : Colors.white,
+                                    padding: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0),
+                                      side: const BorderSide(color: Colors.black, width: 2),
+                                    ),
+                                  ),
+                                  child: Center( // Center the text
+                                    child: Text(
+                                      option,
+                                      style: GoogleFonts.rubik(fontSize: 20, color: Colors.black), // Same font size as question text
+                                    ),
+                                  ),
                                 ),
                               ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  option,
-                                  softWrap: true,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.rubik(fontSize: 18, color: isSelected || isMatched ? Colors.white : Colors.black),
+                              Positioned(
+                                left: 1,
+                                top: 1,
+                                bottom: 1,
+                                child: Container(
+                                  width: 16,
+                                  decoration: BoxDecoration(
+                                    color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242), // Default color
+                                    borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         );
                       }).toList(),

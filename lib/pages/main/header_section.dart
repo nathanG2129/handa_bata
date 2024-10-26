@@ -35,9 +35,6 @@ class HeaderSection extends StatelessWidget {
               onClose: () {
                 Navigator.of(context).pop();
               },
-              onNicknameChanged: () {
-                // Handle nickname change if needed
-              },
               selectedLanguage: selectedLanguage,
             );
           },

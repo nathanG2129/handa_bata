@@ -11,10 +11,10 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import Respo
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
-  final VoidCallback onNicknameChanged; // Add this callback
+
   final String selectedLanguage; // Add this line
 
-  const AccountSettings({super.key, required this.onClose, required this.onNicknameChanged, required this.selectedLanguage});
+  const AccountSettings({super.key, required this.onClose, required this.selectedLanguage});
 
   @override
   AccountSettingsState createState() => AccountSettingsState();
@@ -57,7 +57,7 @@ class AccountSettingsState extends State<AccountSettings> {
     try {
       await authService.updateUserProfile('nickname', newNickname);
       await _fetchUserProfile(); // Refresh the user profile
-      widget.onNicknameChanged(); // Call the callback
+      _onNicknameChanged(); // Call the callback
     } catch (e) {
       if (!mounted) return;
       // Handle error

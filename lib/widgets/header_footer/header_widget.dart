@@ -41,9 +41,83 @@ class HeaderWidget extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.center,
-            child: IconButton(
+            child: PopupMenuButton<String>(
               icon: const Icon(Icons.person, size: 33, color: Colors.white),
-              onPressed: onToggleUserProfile,
+              color: const Color(0xFF241242), // Set the popup menu background color
+              offset: const Offset(0, 64), // Position the popup menu a bit lower
+              onSelected: (String result) {
+                switch (result) {
+                  case 'My Profile':
+                    onToggleUserProfile();
+                    break;
+                  case 'Account Settings':
+                    onAccountSettings();
+                    break;
+                  // Add cases for other menu items if needed
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'My Profile',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'My Profile',
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Characters',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Characters',
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Badges',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Badges',
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Banners',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Banners',
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Account Settings',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Account Settings',
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           PopupMenuButton<String>(
@@ -83,11 +157,6 @@ class HeaderWidget extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          // Temporary icon button for Account Settings
-          IconButton(
-            icon: const Icon(Icons.settings, size: 33, color: Colors.white),
-            onPressed: onAccountSettings,
           ),
         ],
       ),

@@ -53,8 +53,8 @@ class _AdminAvatarPageState extends State<AdminAvatarPage> {
     });
   }
 
-  void _deleteAvatar(String id) async {
-    bool confirm = await AvatarDeletionDialog(avatarId: id, context: context).show();
+  void _deleteAvatar(int id) async {
+    bool confirm = await AvatarDeletionDialog(avatarId: id.toString(), context: context).show();
     if (confirm) {
       await _avatarService.deleteAvatar(id);
       _fetchAvatars();
@@ -126,7 +126,7 @@ class _AdminAvatarPageState extends State<AdminAvatarPage> {
 class AvatarDataTable extends StatelessWidget {
   final List<Map<String, dynamic>> avatars;
   final ValueChanged<Map<String, dynamic>> onEditAvatar;
-  final ValueChanged<String> onDeleteAvatar;
+  final ValueChanged<int> onDeleteAvatar;
 
   const AvatarDataTable({
     super.key,
@@ -153,18 +153,18 @@ class AvatarDataTable extends StatelessWidget {
             DataColumn(label: Text('Actions', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
           ],
           rows: avatars.map((avatar) {
-            String id = avatar['id'] ?? '';
+            int id = avatar['id'] ?? 0;
             String title = avatar['title'] ?? '';
             String imageUrl = avatar['img'] ?? '';
             return DataRow(cells: [
-              DataCell(Text(id, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
+              DataCell(Text(id.toString(), style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
               DataCell(Text(title, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
               DataCell(Text(imageUrl, style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
               DataCell(
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: id.isNotEmpty ? () => onEditAvatar(avatar) : null,
+                      onPressed: () => onEditAvatar(avatar),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF381c64),
                       ),
@@ -172,7 +172,7 @@ class AvatarDataTable extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: id.isNotEmpty ? () => onDeleteAvatar(id) : null,
+                      onPressed: () => onDeleteAvatar(id),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),

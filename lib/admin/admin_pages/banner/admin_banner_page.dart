@@ -167,7 +167,7 @@ class BannerDataTable extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: id != 0 ? () => onEditBanner(banner) : null,
+                      onPressed: () => onEditBanner(banner),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF381c64),
                       ),
@@ -175,7 +175,7 @@ class BannerDataTable extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: id != 0 ? () => onDeleteBanner(id) : null,
+                      onPressed: () => onDeleteBanner(id),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),

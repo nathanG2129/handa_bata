@@ -27,21 +27,21 @@ class AvatarService {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
         List<Map<String, dynamic>> avatars = data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
         if (avatars.isNotEmpty) {
-          int maxId = avatars.map((avatar) => int.parse(avatar['id'])).reduce((a, b) => a > b ? a : b);
+          int maxId = avatars.map((avatar) => avatar['id'] as int).reduce((a, b) => a > b ? a : b);
           return maxId + 1;
         }
       }
-      return 1;
+      return 0; // Start with 0 if no avatars exist
     } catch (e) {
       print('Error getting next ID: $e');
-      return 1;
+      return 0; // Start with 0 in case of error
     }
   }
 
   Future<void> addAvatar(Map<String, dynamic> avatar) async {
     try {
       int nextId = await getNextId();
-      avatar['id'] = nextId.toString();
+      avatar['id'] = nextId; // Set id as int
       DocumentSnapshot snapshot = await _avatarDoc.get();
       List<Map<String, dynamic>> avatars = [];
       if (snapshot.exists) {
@@ -55,7 +55,7 @@ class AvatarService {
     }
   }
 
-  Future<void> updateAvatar(String id, Map<String, dynamic> updatedAvatar) async {
+  Future<void> updateAvatar(int id, Map<String, dynamic> updatedAvatar) async {
     try {
       DocumentSnapshot snapshot = await _avatarDoc.get();
       if (snapshot.exists) {
@@ -72,7 +72,7 @@ class AvatarService {
     }
   }
 
-  Future<void> deleteAvatar(String id) async {
+  Future<void> deleteAvatar(int id) async {
     try {
       DocumentSnapshot snapshot = await _avatarDoc.get();
       if (snapshot.exists) {

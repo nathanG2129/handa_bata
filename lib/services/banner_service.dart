@@ -31,17 +31,17 @@ class BannerService {
           return maxId + 1;
         }
       }
-      return 1;
+      return 0; // Start with 0 if no banners exist
     } catch (e) {
       print('Error getting next ID: $e');
-      return 1;
+      return 0; // Start with 0 in case of error
     }
   }
 
   Future<void> addBanner(Map<String, dynamic> banner) async {
     try {
       int nextId = await getNextId();
-      banner['id'] = nextId;
+      banner['id'] = nextId; // Set id as int
       DocumentSnapshot snapshot = await _bannerDoc.get();
       List<Map<String, dynamic>> banners = [];
       if (snapshot.exists) {

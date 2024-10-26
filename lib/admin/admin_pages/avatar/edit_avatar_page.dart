@@ -24,7 +24,7 @@ class EditAvatarDialogState extends State<EditAvatarDialog> {
   }
 
   void _updateAvatar() async {
-    final String id = widget.avatar['id'];
+    final int id = widget.avatar['id'];
     final String imageUrl = _imageUrlController.text;
     final String title = _titleController.text;
 

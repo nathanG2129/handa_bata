@@ -203,7 +203,7 @@ class AdventurePageState extends State<AdventurePage> {
                                                         Text(
                                                           '${category['name']}',
                                                           style: GoogleFonts.vt323(
-                                                            fontSize: 30, // Larger font size
+                                                            fontSize: 32, // Larger font size
                                                             color: Colors.white, // Text color
                                                           ),
                                                         ),

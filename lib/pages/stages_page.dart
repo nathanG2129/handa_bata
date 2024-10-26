@@ -182,13 +182,12 @@ class StagesPageState extends State<StagesPage> {
                             ),
                           );
                         },
-                        onToggleUserProfile: _toggleUserProfile,
                         onChangeLanguage: (String newValue) {
                           setState(() {
                             widget.selectedLanguage = newValue;
                             _fetchStages(); // Fetch stages again with the new language
                           });
-                        }, onAccountSettings: () {  },
+                        }, 
                       ),
                       Expanded(
                         child: CustomScrollView(

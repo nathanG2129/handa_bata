@@ -177,15 +177,12 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                             ),
                           );
                         },
-                        onToggleUserProfile: () {
-                          // Define the action for toggling user profile if needed
-                        },
                         onChangeLanguage: (String newValue) {
                           setState(() {
                             widget.selectedLanguage = newValue;
                             _fetchStages(); // Fetch stages again with the new language
                           });
-                        }, onAccountSettings: () {  },
+                        }, 
                       ),
                       Expanded(
                         child: CustomScrollView(

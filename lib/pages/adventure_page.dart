@@ -161,8 +161,7 @@ class AdventurePageState extends State<AdventurePage> {
                             MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage)),
                           );
                         },
-                        onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
+                        onChangeLanguage: _changeLanguage, 
                       ),
                       Expanded(
                         child: CustomScrollView(

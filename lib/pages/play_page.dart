@@ -93,8 +93,7 @@ class PlayPageState extends State<PlayPage> {
                             MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
                           );
                         },
-                        onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
+                        onChangeLanguage: _changeLanguage, 
                       ),
                       Expanded(
                         child: SingleChildScrollView(

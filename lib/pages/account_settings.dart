@@ -20,15 +20,26 @@ class AccountSettings extends StatefulWidget {
   AccountSettingsState createState() => AccountSettingsState();
 }
 
-class AccountSettingsState extends State<AccountSettings> {
+class AccountSettingsState extends State<AccountSettings> with TickerProviderStateMixin {
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
     _fetchUserProfile();
+    _animationController.forward(); // Start the animation when the dialog opens
+  }
+
+  Future<void> _closeDialog() async {
+    await _animationController.reverse(); // Play the reverse animation
+    widget.onClose(); // Call the onClose callback after the animation
   }
 
   Future<void> _fetchUserProfile() async {
@@ -202,11 +213,11 @@ class AccountSettingsState extends State<AccountSettings> {
 
     return WillPopScope(
       onWillPop: () async {
-        widget.onClose();
+        await _closeDialog();
         return false;
       },
       child: GestureDetector(
-        onTap: widget.onClose,
+        onTap: _closeDialog,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: Container(
@@ -214,67 +225,72 @@ class AccountSettingsState extends State<AccountSettings> {
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110), // Update this line
-                  shape: const RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
-                    borderRadius: BorderRadius.zero, // Purely rectangular
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                        padding: EdgeInsets.all(
-                          ResponsiveValue<double>(
-                            context,
-                            defaultValue: 20.0,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 16.0),
-                              const Condition.largerThan(name: MOBILE, value: 24.0),
-                            ],
-                          ).value,
-                        ),
-                        child: UserProfileHeader(
-                          nickname: _userProfile!.nickname, // Pass nickname
-                          username: _userProfile!.username, // Pass username
-                          avatarId: _userProfile!.avatarId,
-                          level: _userProfile!.level,
-                          currentExp: _userProfile!.exp,
-                          maxExp: _userProfile!.expCap,
-                          textStyle: GoogleFonts.rubik(
-                            color: Colors.white,
-                            fontSize: ResponsiveValue<double>(
+                child: AnimatedScale(
+                  scale: _animationController.value,
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.linear,
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110), // Update this line
+                    shape: const RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
+                      borderRadius: BorderRadius.zero, // Purely rectangular
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
+                          padding: EdgeInsets.all(
+                            ResponsiveValue<double>(
                               context,
-                              defaultValue: 16,
+                              defaultValue: 20.0,
                               conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 14),
-                                const Condition.largerThan(name: MOBILE, value: 18),
+                                const Condition.smallerThan(name: MOBILE, value: 16.0),
+                                const Condition.largerThan(name: MOBILE, value: 24.0),
                               ],
                             ).value,
                           ),
-                          selectedLanguage: widget.selectedLanguage, // White font color for username and level
-                          scaleFactor: 0.8, // Adjust the scale factor for AccountSettings
-                        ),
-                      ),
-                      Flexible(
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: EdgeInsets.all(
-                              ResponsiveValue<double>(
+                          child: UserProfileHeader(
+                            nickname: _userProfile!.nickname, // Pass nickname
+                            username: _userProfile!.username, // Pass username
+                            avatarId: _userProfile!.avatarId,
+                            level: _userProfile!.level,
+                            currentExp: _userProfile!.exp,
+                            maxExp: _userProfile!.expCap,
+                            textStyle: GoogleFonts.rubik(
+                              color: Colors.white,
+                              fontSize: ResponsiveValue<double>(
                                 context,
-                                defaultValue: 10.0,
+                                defaultValue: 16,
                                 conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                  const Condition.largerThan(name: MOBILE, value: 24.0),
+                                  const Condition.smallerThan(name: MOBILE, value: 14),
+                                  const Condition.largerThan(name: MOBILE, value: 18),
                                 ],
                               ).value,
                             ),
-                            child: _buildAccountSettings(),
+                            selectedLanguage: widget.selectedLanguage, // White font color for username and level
+                            scaleFactor: 0.8, // Adjust the scale factor for AccountSettings
                           ),
                         ),
-                      ),
-                    ],
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                ResponsiveValue<double>(
+                                  context,
+                                  defaultValue: 10.0,
+                                  conditionalValues: [
+                                    const Condition.smallerThan(name: MOBILE, value: 16.0),
+                                    const Condition.largerThan(name: MOBILE, value: 24.0),
+                                  ],
+                                ).value,
+                              ),
+                              child: _buildAccountSettings(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

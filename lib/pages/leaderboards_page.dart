@@ -137,8 +137,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                         onBack: () {
                           Navigator.pop(context);
                         },
-                        onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
+                        onChangeLanguage: _changeLanguage, 
                       ),
                       if (_isLoading)
                         const Expanded(child: Center(child: CircularProgressIndicator()))

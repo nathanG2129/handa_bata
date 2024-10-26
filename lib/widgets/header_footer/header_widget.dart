@@ -1,21 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/pages/user_profile.dart';
+import 'package:handabatamae/pages/account_settings.dart';
 
-class HeaderWidget extends StatelessWidget {
+class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
   final VoidCallback onBack;
-  final VoidCallback onToggleUserProfile;
   final ValueChanged<String> onChangeLanguage;
-  final VoidCallback onAccountSettings; // Add this line
 
   const HeaderWidget({
     super.key,
     required this.selectedLanguage,
     required this.onBack,
-    required this.onToggleUserProfile,
     required this.onChangeLanguage,
-    required this.onAccountSettings, // Add this line
   });
+
+  @override
+  HeaderWidgetState createState() => HeaderWidgetState();
+}
+
+class HeaderWidgetState extends State<HeaderWidget> {
+  void _showUserProfile() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return UserProfilePage(
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+          selectedLanguage: widget.selectedLanguage,
+        );
+      },
+    );
+  }
+
+  void _showAccountSettings() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AccountSettings(
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+          selectedLanguage: widget.selectedLanguage,
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,87 +68,90 @@ class HeaderWidget extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white),
-            onPressed: onBack,
+            onPressed: widget.onBack,
           ),
           Align(
             alignment: Alignment.center,
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.person, size: 33, color: Colors.white),
-              color: const Color(0xFF241242), // Set the popup menu background color
-              offset: const Offset(0, 64), // Position the popup menu a bit lower
-              onSelected: (String result) {
-                switch (result) {
-                  case 'My Profile':
-                    onToggleUserProfile();
-                    break;
-                  case 'Account Settings':
-                    onAccountSettings();
-                    break;
-                  // Add cases for other menu items if needed
-                }
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'My Profile',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'My Profile',
-                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                      ),
-                    ],
+            child: Transform.translate(
+              offset: const Offset(0, 0), // Adjust the horizontal offset to center the popup menu
+              child: PopupMenuButton<String>(
+                icon: const Icon(Icons.person, size: 33, color: Colors.white),
+                color: const Color(0xFF241242), // Set the popup menu background color
+                offset: const Offset(0, 64), // Position the popup menu a bit lower
+                onSelected: (String result) {
+                  switch (result) {
+                    case 'My Profile':
+                      _showUserProfile();
+                      break;
+                    case 'Account Settings':
+                      _showAccountSettings();
+                      break;
+                    // Add cases for other menu items if needed
+                  }
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    value: 'My Profile',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'My Profile',
+                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Characters',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Characters',
-                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'Characters',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Characters',
+                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Badges',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Badges',
-                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'Badges',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Badges',
+                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Banners',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Banners',
-                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'Banners',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Banners',
+                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Account Settings',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Account Settings',
-                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                      ),
-                    ],
+                  PopupMenuItem<String>(
+                    value: 'Account Settings',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Account Settings',
+                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           PopupMenuButton<String>(
@@ -125,7 +159,7 @@ class HeaderWidget extends StatelessWidget {
             color: const Color(0xFF241242), // Set the popup menu background color
             offset: const Offset(0, 68), // Position the popup menu a bit lower
             onSelected: (String newValue) {
-              onChangeLanguage(newValue);
+              widget.onChangeLanguage(newValue);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               PopupMenuItem<String>(
@@ -134,11 +168,11 @@ class HeaderWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      selectedLanguage == 'en' ? 'English' : 'Ingles',
+                      widget.selectedLanguage == 'en' ? 'English' : 'Ingles',
                       style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
                     const SizedBox(width: 8), // Add some space between text and icon
-                    if (selectedLanguage == 'en') const Icon(Icons.check, color: Colors.white),
+                    if (widget.selectedLanguage == 'en') const Icon(Icons.check, color: Colors.white),
                   ],
                 ),
               ),
@@ -152,7 +186,7 @@ class HeaderWidget extends StatelessWidget {
                       style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
                     const SizedBox(width: 8), // Add some space between text and icon
-                    if (selectedLanguage == 'fil') const Icon(Icons.check, color: Colors.white),
+                    if (widget.selectedLanguage == 'fil') const Icon(Icons.check, color: Colors.white),
                   ],
                 ),
               ),

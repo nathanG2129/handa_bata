@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'header_section.dart';
@@ -19,19 +18,12 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
-  bool _isUserProfileVisible = false;
   String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-  }
-
-  void _toggleUserProfile() {
-    setState(() {
-      _isUserProfileVisible = !_isUserProfileVisible;
-    });
   }
 
   void _changeLanguage(String language) {
@@ -44,15 +36,7 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (_isUserProfileVisible) {
-          setState(() {
-            _isUserProfileVisible = false;
-          });
-          return false;
-        } else {
-          Navigator.pop(context);
-          return false;
-        }
+        return true;
       },
       child: Scaffold(
         body: ResponsiveBreakpoints(
@@ -82,7 +66,6 @@ class MainPageState extends State<MainPage> {
                     children: [
                       HeaderSection(
                         selectedLanguage: _selectedLanguage,
-                        onToggleUserProfile: _toggleUserProfile,
                         onChangeLanguage: _changeLanguage,
                       ),
                       Expanded(
@@ -117,8 +100,6 @@ class MainPageState extends State<MainPage> {
                       ),
                     ],
                   ),
-                  if (_isUserProfileVisible)
-                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
                 ],
               ),
             ),

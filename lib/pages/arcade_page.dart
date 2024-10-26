@@ -76,22 +76,49 @@ class ArcadePageState extends State<ArcadePage> {
   Color _getButtonColor(String categoryName) {
     if (categoryName.contains('Quake')) {
       return const Color(0xFFF5672B);
-    } else if (categoryName.contains('Storm') || categoryName.contains('Flood')) {
+    } else if (categoryName.contains('Storm')) {
+      return const Color(0xFF2C28E1);
+    } else if (categoryName.contains('Flood')) {
       return const Color(0xFF2C62DE);
     } else if (categoryName.contains('Volcano')) {
       return const Color(0xFFB3261E);
-    } else if (categoryName.contains('Drought') || categoryName.contains('Tsunami')) {
-      return const Color(0xFF31111D);
+    } else if (categoryName.contains('Drought')) {
+      return const Color(0xFF8D6647);
+    } else if (categoryName.contains('Tsunami')) {
+      return const Color(0xFF033C72);
     } else {
       return Colors.grey;
     }
   }
 
-  Color _darkenColor(Color color, [double amount = 0.1]) {
+  Color _darkenColor(Color color, [double amount = 0.2]) {
     assert(amount >= 0 && amount <= 1);
     final hsl = HSLColor.fromColor(color);
     final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
     return hslDark.toColor();
+  }
+
+  Map<String, String> _getCategoryText(String categoryName) {
+    if (categoryName.contains('Quake')) {
+      return {
+        'name': 'Shake',
+        'description': _selectedLanguage == 'fil'
+            ? 'Patunayan ang iyong lakas ng loob laban sa makapangyarihang pagyanig ng lupa!'
+            : 'Prove your courage against the earth\'s mighty tremors!',
+      };
+    } else if (categoryName.contains('Storm')) {
+      return {
+        'name': 'Rumble',
+        'description': _selectedLanguage == 'fil'
+            ? 'Subukin ang iyong katapangan laban sa galit ng rumaragasang bagyo!'
+            : 'Challenge your bravery against the fury of a raging typhoon!',
+      };
+    } else {
+      return {
+        'name': categoryName,
+        'description': '',
+      };
+    }
   }
 
   void _onCategoryPressed(Map<String, dynamic> category) {
@@ -184,13 +211,14 @@ class ArcadePageState extends State<ArcadePage> {
                                       : Column(
                                           children: _categories.map((category) {
                                             final buttonColor = _getButtonColor(category['name']);
+                                            final categoryText = _getCategoryText(category['name']);
                                             return Padding(
                                               padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: Button3D(
                                                   width: 350,
-                                                  height: 200,
+                                                  height: 150,
                                                   onPressed: () => _onCategoryPressed(category),
                                                   backgroundColor: buttonColor,
                                                   borderColor: _darkenColor(buttonColor),
@@ -200,7 +228,7 @@ class ArcadePageState extends State<ArcadePage> {
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(
-                                                          '${category['name']}',
+                                                          categoryText['name']!,
                                                           style: GoogleFonts.vt323(
                                                             fontSize: 30, // Larger font size
                                                             color: Colors.white, // Text color
@@ -208,7 +236,7 @@ class ArcadePageState extends State<ArcadePage> {
                                                         ),
                                                         const SizedBox(height: 10),
                                                         Text(
-                                                          category['description'],
+                                                          categoryText['description']!,
                                                           style: GoogleFonts.vt323(
                                                             fontSize: 22,
                                                             color: Colors.white, // Text color
@@ -223,7 +251,7 @@ class ArcadePageState extends State<ArcadePage> {
                                           }).toList(),
                                         ),
                                   Padding(
-                                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                                    padding: const EdgeInsets.only(top: 0, bottom: 40),
                                     child: Button3D(
                                       width: 350,
                                       height: 150,
@@ -235,7 +263,7 @@ class ArcadePageState extends State<ArcadePage> {
                                           ),
                                         );
                                       },
-                                      backgroundColor: const Color(0xFF28e172),
+                                      backgroundColor: const Color.fromARGB(255, 37, 196, 100),
                                       borderColor: _darkenColor(const Color(0xFF28e172)),
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),

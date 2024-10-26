@@ -75,14 +75,18 @@ class AdventurePageState extends State<AdventurePage> {
   Color _getButtonColor(String categoryName) {
     if (categoryName.contains('Quake')) {
       return const Color(0xFFF5672B);
-    } else if (categoryName.contains('Storm') || categoryName.contains('Flood')) {
+    } else if (categoryName.contains('Storm')) {
       return const Color(0xFF2C28E1);
+    } else if (categoryName.contains('Flood')) {
+      return const Color(0xFF2C62DE);
     } else if (categoryName.contains('Volcano')) {
       return const Color(0xFFB3261E);
-    } else if (categoryName.contains('Drought') || categoryName.contains('Tsunami')) {
-      return const Color(0xFF31111D);
+    } else if (categoryName.contains('Drought')) {
+      return const Color(0xFF8D6647);
+    } else if (categoryName.contains('Tsunami')) {
+      return const Color(0xFF033C72);
     } else {
-      return Colors.grey; // Default color
+      return Colors.grey;
     }
   }
 

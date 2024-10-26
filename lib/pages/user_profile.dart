@@ -19,11 +19,10 @@ class UserProfilePage extends StatefulWidget {
   _UserProfilePageState createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
+class _UserProfilePageState extends State<UserProfilePage> {
   bool _isLoading = true;
   UserProfile? _userProfile;
   late String _selectedLanguage; // Add this line
-  late AnimationController _animationController;
 
   final UserProfileService _userProfileService = UserProfileService();
 
@@ -31,18 +30,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize _selectedLanguage
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
     _fetchUserProfile();
-    _animationController.forward(); // Start the animation when the dialog opens
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -70,20 +58,15 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     }
   }
 
-  Future<void> _closeDialog() async {
-    await _animationController.reverse(); // Play the reverse animation
-    widget.onClose(); // Call the onClose callback after the animation
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        await _closeDialog();
+        widget.onClose();
         return false;
       },
       child: GestureDetector(
-        onTap: _closeDialog,
+        onTap: widget.onClose,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: Container(
@@ -91,71 +74,65 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: AnimatedScale(
-                  scale: _animationController.value,
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.linear,
-                  child: Card(
-                    margin: const EdgeInsets.all(20),
-                    shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
-                      borderRadius: BorderRadius.zero, // Purely rectangular
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
-                          ),
-                          child: _isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : _userProfile != null
-                                  ? UserProfileHeader(
-                                      nickname: _userProfile!.nickname, // Pass nickname
-                                      username: _userProfile!.username, // Pass username
-                                      avatarId: _userProfile!.avatarId,
-                                      level: _userProfile!.level,
-                                      currentExp: _userProfile!.exp, 
-                                      maxExp: _userProfile!.expCap,
-                                      textStyle: GoogleFonts.rubik(
-                                        color: Colors.white,
-                                        fontSize: ResponsiveValue<double>(
-                                          context,
-                                          defaultValue: 16,
-                                          conditionalValues: [
-                                            const Condition.smallerThan(name: MOBILE, value: 14),
-                                            const Condition.largerThan(name: MOBILE, value: 18),
-                                          ],
-                                        ).value,
-                                      ), selectedLanguage: _selectedLanguage,  // White font color for username and level
-                                        scaleFactor: 1.0, // Default scale factor for UserProfile
-                                    )
-                                  : const SizedBox.shrink(),
+                child: Card(
+                  margin: const EdgeInsets.all(20),
+                  shape: const RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
+                    borderRadius: BorderRadius.zero, // Purely rectangular
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
+                        padding: EdgeInsets.all(
+                          ResponsiveValue<double>(
+                            context,
+                            defaultValue: 20.0,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 16.0),
+                              const Condition.largerThan(name: MOBILE, value: 24.0),
+                            ],
+                          ).value,
                         ),
-                        Padding(
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
-                          ),
-                          child: _buildUserProfile(),
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _userProfile != null
+                                ? UserProfileHeader(
+                                    nickname: _userProfile!.nickname, // Pass nickname
+                                    username: _userProfile!.username, // Pass username
+                                    avatarId: _userProfile!.avatarId,
+                                    level: _userProfile!.level,
+                                    currentExp: _userProfile!.exp, 
+                                    maxExp: _userProfile!.expCap,
+                                    textStyle: GoogleFonts.rubik(
+                                      color: Colors.white,
+                                      fontSize: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: 16,
+                                        conditionalValues: [
+                                          const Condition.smallerThan(name: MOBILE, value: 14),
+                                          const Condition.largerThan(name: MOBILE, value: 18),
+                                        ],
+                                      ).value,
+                                    ), selectedLanguage: _selectedLanguage,  // White font color for username and level
+                                )
+                                : const SizedBox.shrink(),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(
+                          ResponsiveValue<double>(
+                            context,
+                            defaultValue: 20.0,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 16.0),
+                              const Condition.largerThan(name: MOBILE, value: 24.0),
+                            ],
+                          ).value,
                         ),
-                      ],
-                    ),
+                        child: _buildUserProfile(),
+                      ),
+                    ],
                   ),
                 ),
               ),

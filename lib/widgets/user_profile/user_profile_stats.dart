@@ -17,7 +17,7 @@ class UserProfileStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Calculate the maximum height for the text containers when the language is 'fil'
-    final double maxHeight = selectedLanguage == 'fil' ? .0 : 40.0;
+    final double maxHeight = selectedLanguage == 'fil' ? .0 : 32.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -33,10 +33,10 @@ class UserProfileStats extends StatelessWidget {
               padding: EdgeInsets.all(
                 ResponsiveValue<double>(
                   context,
-                  defaultValue: 16.0,
+                  defaultValue: 12.8,
                   conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 12.0),
-                    const Condition.largerThan(name: MOBILE, value: 20.0),
+                    const Condition.smallerThan(name: MOBILE, value: 9.6),
+                    const Condition.largerThan(name: MOBILE, value: 16.0),
                   ],
                 ).value,
               ),
@@ -52,7 +52,7 @@ class UserProfileStats extends StatelessWidget {
                         ),
                         child: Text(
                           PlayLocalization.translate('totalBadges', selectedLanguage),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                          style: const TextStyle(fontSize: 12.8, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                         ),
                       ),
                     ],
@@ -62,24 +62,24 @@ class UserProfileStats extends StatelessWidget {
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveValue<double>(
                         context,
-                        defaultValue: 8.0,
+                        defaultValue: 6.4,
                         conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 6.0),
-                          const Condition.largerThan(name: MOBILE, value: 10.0),
+                          const Condition.smallerThan(name: MOBILE, value: 4.8),
+                          const Condition.largerThan(name: MOBILE, value: 8.0),
                         ],
                       ).value,
                       horizontal: ResponsiveValue<double>(
                         context,
-                        defaultValue: 10.0,
+                        defaultValue: 8.0,
                         conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 12.0),
-                          const Condition.largerThan(name: MOBILE, value: 20.0),
+                          const Condition.smallerThan(name: MOBILE, value: 9.6),
+                          const Condition.largerThan(name: MOBILE, value: 16.0),
                         ],
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
                       '$totalBadges',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
+                      style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),
                 ],
@@ -87,7 +87,7 @@ class UserProfileStats extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12.8),
         Expanded(
           child: Card(
             color: const Color(0xFF4d278f), // Card color for Stages Cleared
@@ -99,10 +99,10 @@ class UserProfileStats extends StatelessWidget {
               padding: EdgeInsets.all(
                 ResponsiveValue<double>(
                   context,
-                  defaultValue: 16.0,
+                  defaultValue: 12.8,
                   conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 12.0),
-                    const Condition.largerThan(name: MOBILE, value: 20.0),
+                    const Condition.smallerThan(name: MOBILE, value: 9.6),
+                    const Condition.largerThan(name: MOBILE, value: 16.0),
                   ],
                 ).value,
               ),
@@ -118,7 +118,7 @@ class UserProfileStats extends StatelessWidget {
                         ),
                         child: Text(
                           PlayLocalization.translate('stagesCleared', selectedLanguage),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
+                          style: const TextStyle(fontSize: 12.8, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                         ),
                       ),
                     ],
@@ -128,24 +128,24 @@ class UserProfileStats extends StatelessWidget {
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveValue<double>(
                         context,
-                        defaultValue: 8.0,
+                        defaultValue: 6.4,
                         conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 6.0),
-                          const Condition.largerThan(name: MOBILE, value: 10.0),
+                          const Condition.smallerThan(name: MOBILE, value: 4.8),
+                          const Condition.largerThan(name: MOBILE, value: 8.0),
                         ],
                       ).value,
                       horizontal: ResponsiveValue<double>(
                         context,
-                        defaultValue: 10.0,
+                        defaultValue: 8.0,
                         conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 12.0),
-                          const Condition.largerThan(name: MOBILE, value: 20.0),
+                          const Condition.smallerThan(name: MOBILE, value: 9.6),
+                          const Condition.largerThan(name: MOBILE, value: 16.0),
                         ],
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
                       '$totalStagesCleared',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
+                      style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),
                 ],

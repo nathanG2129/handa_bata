@@ -10,6 +10,8 @@ class FavoriteBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double scaleFactor = 0.8; // Define the scale factor
+
     return Column(
       children: [
         Text(
@@ -17,10 +19,10 @@ class FavoriteBadges extends StatelessWidget {
           style: GoogleFonts.rubik(
             fontSize: ResponsiveValue<double>(
               context,
-              defaultValue: 18,
+              defaultValue: 18 * scaleFactor,
               conditionalValues: [
-                const Condition.smallerThan(name: MOBILE, value: 16),
-                const Condition.largerThan(name: MOBILE, value: 20),
+                const Condition.smallerThan(name: MOBILE, value: 16 * scaleFactor),
+                const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
               ],
             ).value,
             fontWeight: FontWeight.bold,
@@ -30,10 +32,10 @@ class FavoriteBadges extends StatelessWidget {
         SizedBox(
           height: ResponsiveValue<double>(
             context,
-            defaultValue: 10,
+            defaultValue: 10 * scaleFactor,
             conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 8),
-              const Condition.largerThan(name: MOBILE, value: 12),
+              const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
+              const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
             ],
           ).value,
         ),
@@ -51,10 +53,10 @@ class FavoriteBadges extends StatelessWidget {
                   padding: EdgeInsets.all(
                     ResponsiveValue<double>(
                       context,
-                      defaultValue: 20.0,
+                      defaultValue: 20.0 * scaleFactor,
                       conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0),
-                        const Condition.largerThan(name: MOBILE, value: 24.0),
+                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
+                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
                       ],
                     ).value,
                   ),
@@ -64,10 +66,10 @@ class FavoriteBadges extends StatelessWidget {
                         Icons.star,
                         size: ResponsiveValue<double>(
                           context,
-                          defaultValue: 40,
+                          defaultValue: 40 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30),
-                            const Condition.largerThan(name: MOBILE, value: 50),
+                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
                           ],
                         ).value,
                         color: Colors.amber,
@@ -75,10 +77,10 @@ class FavoriteBadges extends StatelessWidget {
                       SizedBox(
                         height: ResponsiveValue<double>(
                           context,
-                          defaultValue: 10,
+                          defaultValue: 10 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8),
-                            const Condition.largerThan(name: MOBILE, value: 12),
+                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
                           ],
                         ).value,
                       ),
@@ -88,10 +90,10 @@ class FavoriteBadges extends StatelessWidget {
                           color: Colors.white,
                           fontSize: ResponsiveValue<double>(
                             context,
-                            defaultValue: 16,
+                            defaultValue: 16 * scaleFactor,
                             conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14),
-                              const Condition.largerThan(name: MOBILE, value: 18),
+                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
+                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
                             ],
                           ).value,
                         ), // White text color
@@ -104,10 +106,10 @@ class FavoriteBadges extends StatelessWidget {
             SizedBox(
               width: ResponsiveValue<double>(
                 context,
-                defaultValue: 16,
+                defaultValue: 16 * scaleFactor,
                 conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 12),
-                  const Condition.largerThan(name: MOBILE, value: 20),
+                  const Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
+                  const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
                 ],
               ).value,
             ),
@@ -122,10 +124,10 @@ class FavoriteBadges extends StatelessWidget {
                   padding: EdgeInsets.all(
                     ResponsiveValue<double>(
                       context,
-                      defaultValue: 20.0,
+                      defaultValue: 20.0 * scaleFactor,
                       conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0),
-                        const Condition.largerThan(name: MOBILE, value: 24.0),
+                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
+                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
                       ],
                     ).value,
                   ),
@@ -135,10 +137,10 @@ class FavoriteBadges extends StatelessWidget {
                         Icons.star,
                         size: ResponsiveValue<double>(
                           context,
-                          defaultValue: 40,
+                          defaultValue: 40 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30),
-                            const Condition.largerThan(name: MOBILE, value: 50),
+                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
                           ],
                         ).value,
                         color: Colors.amber,
@@ -146,10 +148,10 @@ class FavoriteBadges extends StatelessWidget {
                       SizedBox(
                         height: ResponsiveValue<double>(
                           context,
-                          defaultValue: 10,
+                          defaultValue: 10 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8),
-                            const Condition.largerThan(name: MOBILE, value: 12),
+                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
                           ],
                         ).value,
                       ),
@@ -159,10 +161,10 @@ class FavoriteBadges extends StatelessWidget {
                           color: Colors.white,
                           fontSize: ResponsiveValue<double>(
                             context,
-                            defaultValue: 16,
+                            defaultValue: 16 * scaleFactor,
                             conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14),
-                              const Condition.largerThan(name: MOBILE, value: 18),
+                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
+                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
                             ],
                           ).value,
                         ), // White text color
@@ -175,10 +177,10 @@ class FavoriteBadges extends StatelessWidget {
             SizedBox(
               width: ResponsiveValue<double>(
                 context,
-                defaultValue: 16,
+                defaultValue: 16 * scaleFactor,
                 conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 12),
-                  const Condition.largerThan(name: MOBILE, value: 20),
+                  const Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
+                  const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
                 ],
               ).value,
             ),
@@ -193,10 +195,10 @@ class FavoriteBadges extends StatelessWidget {
                   padding: EdgeInsets.all(
                     ResponsiveValue<double>(
                       context,
-                      defaultValue: 20.0,
+                      defaultValue: 20.0 * scaleFactor,
                       conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0),
-                        const Condition.largerThan(name: MOBILE, value: 24.0),
+                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
+                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
                       ],
                     ).value,
                   ),
@@ -206,10 +208,10 @@ class FavoriteBadges extends StatelessWidget {
                         Icons.star,
                         size: ResponsiveValue<double>(
                           context,
-                          defaultValue: 40,
+                          defaultValue: 40 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30),
-                            const Condition.largerThan(name: MOBILE, value: 50),
+                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
                           ],
                         ).value,
                         color: Colors.amber,
@@ -217,10 +219,10 @@ class FavoriteBadges extends StatelessWidget {
                       SizedBox(
                         height: ResponsiveValue<double>(
                           context,
-                          defaultValue: 10,
+                          defaultValue: 10 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8),
-                            const Condition.largerThan(name: MOBILE, value: 12),
+                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
                           ],
                         ).value,
                       ),
@@ -230,10 +232,10 @@ class FavoriteBadges extends StatelessWidget {
                           color: Colors.white,
                           fontSize: ResponsiveValue<double>(
                             context,
-                            defaultValue: 16,
+                            defaultValue: 16 * scaleFactor,
                             conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14),
-                              const Condition.largerThan(name: MOBILE, value: 18),
+                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
+                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
                             ],
                           ).value,
                         ), // White text color

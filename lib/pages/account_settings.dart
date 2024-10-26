@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:handabatamae/widgets/button_3d.dart';
 import 'splash_page.dart'; // Import SplashPage
 import '../localization/play/localization.dart'; // Import the localization file
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
@@ -24,21 +25,15 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
-  late AnimationController _animationController;
+
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
     _fetchUserProfile();
-    _animationController.forward(); // Start the animation when the dialog opens
   }
 
   Future<void> _closeDialog() async {
-    await _animationController.reverse(); // Play the reverse animation
     widget.onClose(); // Call the onClose callback after the animation
   }
 
@@ -192,6 +187,13 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
     _fetchUserProfile();
   }
 
+  Color _darkenColor(Color color, [double amount = 0.2]) {
+    assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+
   String _redactEmail(String email) {
     List<String> parts = email.split('@');
     if (parts.length != 2) return email;
@@ -225,10 +227,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: AnimatedScale(
-                  scale: _animationController.value,
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.linear,
                   child: Card(
                     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110), // Update this line
                     shape: const RoundedRectangleBorder(
@@ -269,7 +267,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                               ).value,
                             ),
                             selectedLanguage: widget.selectedLanguage, // White font color for username and level
-                            scaleFactor: 0.8, // Adjust the scale factor for AccountSettings
                           ),
                         ),
                         Flexible(
@@ -292,7 +289,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                       ],
                     ),
                   ),
-                ),
               ),
             ),
           ),
@@ -331,21 +327,15 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                   ],
                 ),
               ),
-              ElevatedButton(
+              Button3D(
                 onPressed: _showChangeNicknameDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4d278f), // Color of the button
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  textStyle: const TextStyle(fontSize: 14), // Scale down font size
-                  minimumSize: const Size(80, 35), // Set minimum size to constrain the button
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Rectangular shape
-                    side: BorderSide(color: Colors.black, width: 3), // Black border
-                  ),
-                ),
+                backgroundColor: const Color(0xFF4d278f), // Color of the button
+                borderColor: _darkenColor(const Color(0xFF4d278f)), // Use _darkenColor method
+                width: 80 * 1.1,
+                height: 35 * 1.1,
                 child: Text(
                   PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
                 ),
               ),
             ],
@@ -406,25 +396,19 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                   ],
                 ),
               ),
-              ElevatedButton(
+              Button3D(
                 onPressed: () {
                   setState(() {
                     _showEmail = !_showEmail;
                   });
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // White background
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  textStyle: const TextStyle(fontSize: 14), // Scale down font size
-                  minimumSize: const Size(80, 35), // Set minimum size to constrain the button
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Rectangular shape
-                    side: BorderSide(color: Colors.black, width: 3), // Black border
-                  ),
-                ),
+                backgroundColor: Colors.white, // White background
+                borderColor: _darkenColor(Colors.white), // Use _darkenColor method
+                width: 80,
+                height: 35,
                 child: Text(
                   _showEmail ? PlayLocalization.translate('hide', widget.selectedLanguage) : PlayLocalization.translate('show', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.black), // Ensure text color is set to black
+                  style: const TextStyle(color: Colors.black, fontSize: 14), // Ensure text color is set to black
                 ),
               ),
             ],
@@ -456,23 +440,17 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                   ],
                 ),
               ),
-              ElevatedButton(
+              Button3D(
                 onPressed: () {
                   // Handle password change
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4d278f), // Color of the button
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  textStyle: const TextStyle(fontSize: 14), // Scale down font size
-                  minimumSize: const Size(80, 35), // Set minimum size to constrain the button
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Rectangular shape
-                    side: BorderSide(color: Colors.black, width: 3), // Black border
-                  ),
-                ),
+                backgroundColor: const Color(0xFF4d278f), // Color of the button
+                borderColor: _darkenColor(const Color(0xFF4d278f)), // Use _darkenColor method
+                width: 80,
+                height: 35,
                 child: Text(
                   PlayLocalization.translate('changePassword', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
                 ),
               ),
             ],
@@ -497,21 +475,15 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                   ],
                 ),
               ),
-              ElevatedButton(
+              Button3D(
                 onPressed: _logout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red, // Red background for logout
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  textStyle: const TextStyle(fontSize: 14), // Scale down font size
-                  minimumSize: const Size(80, 35), // Set minimum size to constrain the button
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Rectangular shape
-                    side: BorderSide(color: Colors.black, width: 3), // Black border
-                  ),
-                ),
+                backgroundColor: Colors.red, // Red background for logout
+                borderColor: _darkenColor(Colors.red), // Use _darkenColor method
+                width: 80,
+                height: 35,
                 child: Text(
                   PlayLocalization.translate('logoutButton', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
                 ),
               ),
             ],
@@ -547,21 +519,15 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                   const SizedBox(height: 10),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: ElevatedButton(
+                    child: Button3D(
                       onPressed: _showDeleteAccountDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        textStyle: const TextStyle(fontSize: 14), // Scale down font size
-                        minimumSize: const Size(80, 35), // Set minimum size to constrain the button
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero, // Rectangular shape
-                          side: BorderSide(color: Colors.black, width: 3), // Black border
-                        ),
-                      ),
+                      backgroundColor: const Color(0xFFc32929),
+                      borderColor: _darkenColor(const Color(0xFFc32929)), // Use _darkenColor method
+                      width: 80,
+                      height: 35,
                       child: Text(
                         PlayLocalization.translate('delete', widget.selectedLanguage),
-                        style: const TextStyle(color: Colors.white), // Ensure text color is set to white
+                        style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
                       ),
                     ),
                   ),

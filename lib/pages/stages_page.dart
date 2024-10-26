@@ -188,7 +188,7 @@ class StagesPageState extends State<StagesPage> {
                             widget.selectedLanguage = newValue;
                             _fetchStages(); // Fetch stages again with the new language
                           });
-                        },
+                        }, onAccountSettings: () {  },
                       ),
                       Expanded(
                         child: CustomScrollView(

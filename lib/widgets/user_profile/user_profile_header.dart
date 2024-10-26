@@ -11,6 +11,7 @@ class UserProfileHeader extends StatelessWidget {
   final int maxExp; // Maximum experience points for the current level
   final TextStyle textStyle;
   final String selectedLanguage; // Add selectedLanguage
+  final double scaleFactor; // Add scaleFactor
 
   const UserProfileHeader({
     super.key,
@@ -22,6 +23,7 @@ class UserProfileHeader extends StatelessWidget {
     required this.maxExp,
     required this.textStyle,
     required this.selectedLanguage, // Add selectedLanguage
+    this.scaleFactor = 1.0, // Default scaleFactor to 1.0
   });
 
   @override
@@ -31,10 +33,10 @@ class UserProfileHeader extends StatelessWidget {
         CircleAvatar(
           radius: ResponsiveValue<double>(
             context,
-            defaultValue: 50,
+            defaultValue: 50 * scaleFactor, // Scale down avatar size
             conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 50),
-              const Condition.largerThan(name: MOBILE, value: 80),
+              Condition.smallerThan(name: MOBILE, value: 50 * scaleFactor),
+              Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
             ],
           ).value,
           backgroundColor: Colors.grey,
@@ -42,10 +44,10 @@ class UserProfileHeader extends StatelessWidget {
             Icons.person,
             size: ResponsiveValue<double>(
               context,
-              defaultValue: 40,
+              defaultValue: 40 * scaleFactor, // Scale down icon size
               conditionalValues: [
-                const Condition.smallerThan(name: MOBILE, value: 30),
-                const Condition.largerThan(name: MOBILE, value: 50),
+                Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
+                Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
               ],
             ).value,
             color: Colors.white,
@@ -54,10 +56,10 @@ class UserProfileHeader extends StatelessWidget {
         SizedBox(
           width: ResponsiveValue<double>(
             context,
-            defaultValue: 20,
+            defaultValue: 20 * scaleFactor, // Scale down spacing
             conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 15),
-              const Condition.largerThan(name: MOBILE, value: 25),
+              Condition.smallerThan(name: MOBILE, value: 15 * scaleFactor),
+              Condition.largerThan(name: MOBILE, value: 25 * scaleFactor),
             ],
           ).value,
         ),
@@ -69,10 +71,10 @@ class UserProfileHeader extends StatelessWidget {
               style: textStyle.copyWith(
                 fontSize: ResponsiveValue<double>(
                   context,
-                  defaultValue: 23,
+                  defaultValue: 23 * scaleFactor, // Scale down font size
                   conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 18),
-                    const Condition.largerThan(name: MOBILE, value: 28),
+                    Condition.smallerThan(name: MOBILE, value: 18 * scaleFactor),
+                    Condition.largerThan(name: MOBILE, value: 28 * scaleFactor),
                   ],
                 ).value,
                 fontWeight: FontWeight.bold,
@@ -84,10 +86,10 @@ class UserProfileHeader extends StatelessWidget {
               style: textStyle.copyWith(
                 fontSize: ResponsiveValue<double>(
                   context,
-                  defaultValue: 16,
+                  defaultValue: 16 * scaleFactor, // Scale down font size
                   conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 12),
-                    const Condition.largerThan(name: MOBILE, value: 20),
+                    Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
+                    Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
                   ],
                 ).value,
                 color: Colors.white,
@@ -96,10 +98,10 @@ class UserProfileHeader extends StatelessWidget {
             SizedBox(
               height: ResponsiveValue<double>(
                 context,
-                defaultValue: 8,
+                defaultValue: 8 * scaleFactor, // Scale down spacing
                 conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 6),
-                  const Condition.largerThan(name: MOBILE, value: 10),
+                  Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
+                  Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
                 ],
               ).value,
             ),
@@ -108,10 +110,10 @@ class UserProfileHeader extends StatelessWidget {
               style: textStyle.copyWith(
                 fontSize: ResponsiveValue<double>(
                   context,
-                  defaultValue: 16,
+                  defaultValue: 16 * scaleFactor, // Scale down font size
                   conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 12),
-                    const Condition.largerThan(name: MOBILE, value: 20),
+                    Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
+                    Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
                   ],
                 ).value,
                 fontWeight: FontWeight.bold,
@@ -121,10 +123,10 @@ class UserProfileHeader extends StatelessWidget {
             SizedBox(
               height: ResponsiveValue<double>(
                 context,
-                defaultValue: 4,
+                defaultValue: 4 * scaleFactor, // Scale down spacing
                 conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 3),
-                  const Condition.largerThan(name: MOBILE, value: 5),
+                  Condition.smallerThan(name: MOBILE, value: 3 * scaleFactor),
+                  Condition.largerThan(name: MOBILE, value: 5 * scaleFactor),
                 ],
               ).value,
             ),
@@ -133,13 +135,13 @@ class UserProfileHeader extends StatelessWidget {
                 Container(
                   width: ResponsiveValue<double>(
                     context,
-                    defaultValue: 150,
+                    defaultValue: 150 * scaleFactor, // Scale down width
                     conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 120),
-                      const Condition.largerThan(name: MOBILE, value: 180),
+                      Condition.smallerThan(name: MOBILE, value: 120 * scaleFactor),
+                      Condition.largerThan(name: MOBILE, value: 180 * scaleFactor),
                     ],
                   ).value,
-                  height: 20, // Height of the XP bar
+                  height: 20 * scaleFactor, // Height of the XP bar
                   decoration: BoxDecoration(
                     color: Colors.grey[300], // Background color of the XP bar
                     borderRadius: BorderRadius.circular(0),
@@ -149,13 +151,13 @@ class UserProfileHeader extends StatelessWidget {
                 Container(
                   width: ResponsiveValue<double>(
                     context,
-                    defaultValue: 150 * (currentExp / maxExp),
+                    defaultValue: 150 * (currentExp / maxExp) * scaleFactor, // Scale down width
                     conditionalValues: [
-                      Condition.smallerThan(name: MOBILE, value: 120 * (currentExp / maxExp)),
-                      Condition.largerThan(name: MOBILE, value: 180 * (currentExp / maxExp)),
+                      Condition.smallerThan(name: MOBILE, value: 120 * (currentExp / maxExp) * scaleFactor),
+                      Condition.largerThan(name: MOBILE, value: 180 * (currentExp / maxExp) * scaleFactor),
                     ],
                   ).value,
-                  height: 20, // Match the height of the XP bar
+                  height: 20 * scaleFactor, // Match the height of the XP bar
                   decoration: BoxDecoration(
                     color: Colors.green, // Fill color of the XP bar
                     borderRadius: BorderRadius.circular(0),

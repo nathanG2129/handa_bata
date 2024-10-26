@@ -6,6 +6,7 @@ class HeaderWidget extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onToggleUserProfile;
   final ValueChanged<String> onChangeLanguage;
+  final VoidCallback onAccountSettings; // Add this line
 
   const HeaderWidget({
     super.key,
@@ -13,6 +14,7 @@ class HeaderWidget extends StatelessWidget {
     required this.onBack,
     required this.onToggleUserProfile,
     required this.onChangeLanguage,
+    required this.onAccountSettings, // Add this line
   });
 
   @override
@@ -81,6 +83,11 @@ class HeaderWidget extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          // Temporary icon button for Account Settings
+          IconButton(
+            icon: const Icon(Icons.settings, size: 33, color: Colors.white),
+            onPressed: onAccountSettings,
           ),
         ],
       ),

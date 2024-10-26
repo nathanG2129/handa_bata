@@ -94,7 +94,7 @@ class PlayPageState extends State<PlayPage> {
                           );
                         },
                         onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage,
+                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
                       ),
                       Expanded(
                         child: SingleChildScrollView(

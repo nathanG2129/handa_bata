@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:handabatamae/pages/splash_page.dart';
+import 'package:handabatamae/pages/account_settings.dart'; // Import AccountSettingsPage
 import 'package:handabatamae/widgets/header_footer/header_widget.dart';
 
 class HeaderSection extends StatelessWidget {
@@ -26,6 +27,22 @@ class HeaderSection extends StatelessWidget {
       },
       onToggleUserProfile: onToggleUserProfile,
       onChangeLanguage: onChangeLanguage,
+      onAccountSettings: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AccountSettings(
+              onClose: () {
+                Navigator.of(context).pop();
+              },
+              onNicknameChanged: () {
+                // Handle nickname change if needed
+              },
+              selectedLanguage: selectedLanguage,
+            );
+          },
+        );
+      },
     );
   }
 }

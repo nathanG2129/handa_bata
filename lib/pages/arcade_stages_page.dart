@@ -185,7 +185,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                             widget.selectedLanguage = newValue;
                             _fetchStages(); // Fetch stages again with the new language
                           });
-                        },
+                        }, onAccountSettings: () {  },
                       ),
                       Expanded(
                         child: CustomScrollView(

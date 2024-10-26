@@ -188,7 +188,7 @@ class ArcadePageState extends State<ArcadePage> {
                           );
                         },
                         onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage,
+                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
                       ),
                       Expanded(
                         child: CustomScrollView(

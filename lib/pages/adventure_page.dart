@@ -162,7 +162,7 @@ class AdventurePageState extends State<AdventurePage> {
                           );
                         },
                         onToggleUserProfile: _toggleUserProfile,
-                        onChangeLanguage: _changeLanguage,
+                        onChangeLanguage: _changeLanguage, onAccountSettings: () {  },
                       ),
                       Expanded(
                         child: CustomScrollView(

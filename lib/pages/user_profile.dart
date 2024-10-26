@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'account_settings.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
@@ -21,7 +20,6 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class _UserProfilePageState extends State<UserProfilePage> {
-  bool showAccountSettings = false;
   bool _isLoading = true;
   UserProfile? _userProfile;
   late String _selectedLanguage; // Add this line
@@ -61,11 +59,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  void _onNicknameChanged() {
-    _fetchUserProfile();
-  }
-
-   @override
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -90,67 +84,42 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Stack(
-                        children: [
-                          Container(
-                            color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                            padding: EdgeInsets.all(
-                              ResponsiveValue<double>(
-                                context,
-                                defaultValue: 20.0,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                  const Condition.largerThan(name: MOBILE, value: 24.0),
-                                ],
-                              ).value,
-                            ),
-                            child: _isLoading
-                                ? const Center(child: CircularProgressIndicator())
-                                : _userProfile != null
-                                    ? UserProfileHeader(
-                                        nickname: _userProfile!.nickname, // Pass nickname
-                                        username: _userProfile!.username, // Pass username
-                                        avatarId: _userProfile!.avatarId,
-                                        level: _userProfile!.level,
-                                        currentExp: _userProfile!.exp, 
-                                        maxExp: _userProfile!.expCap,
-                                        textStyle: GoogleFonts.rubik(
-                                          color: Colors.white,
-                                          fontSize: ResponsiveValue<double>(
-                                            context,
-                                            defaultValue: 16,
-                                            conditionalValues: [
-                                              const Condition.smallerThan(name: MOBILE, value: 14),
-                                              const Condition.largerThan(name: MOBILE, value: 18),
-                                            ],
-                                          ).value,
-                                        ), selectedLanguage: _selectedLanguage,  // White font color for username and level
-                                      )
-                                    : const SizedBox.shrink(),
-                          ),
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_horiz, size: 30, color: Colors.white), // White ellipses
-                              onSelected: (String result) {
-                                setState(() {
-                                  showAccountSettings = result == 'Account Settings';
-                                });
-                              },
-                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                const PopupMenuItem<String>(
-                                  value: 'User Profile',
-                                  child: Text('User Profile'),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'Account Settings',
-                                  child: Text('Account Settings'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      Container(
+                        color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
+                        padding: EdgeInsets.all(
+                          ResponsiveValue<double>(
+                            context,
+                            defaultValue: 20.0,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 16.0),
+                              const Condition.largerThan(name: MOBILE, value: 24.0),
+                            ],
+                          ).value,
+                        ),
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _userProfile != null
+                                ? UserProfileHeader(
+                                    nickname: _userProfile!.nickname, // Pass nickname
+                                    username: _userProfile!.username, // Pass username
+                                    avatarId: _userProfile!.avatarId,
+                                    level: _userProfile!.level,
+                                    currentExp: _userProfile!.exp, 
+                                    maxExp: _userProfile!.expCap,
+                                    textStyle: GoogleFonts.rubik(
+                                      color: Colors.white,
+                                      fontSize: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: 16,
+                                        conditionalValues: [
+                                          const Condition.smallerThan(name: MOBILE, value: 14),
+                                          const Condition.largerThan(name: MOBILE, value: 18),
+                                        ],
+                                      ).value,
+                                    ), selectedLanguage: _selectedLanguage,  // White font color for username and level
+                                      scaleFactor: 1.0, // Default scale factor for UserProfile
+                                  )
+                                : const SizedBox.shrink(),
                       ),
                       Padding(
                         padding: EdgeInsets.all(
@@ -163,17 +132,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             ],
                           ).value,
                         ),
-                        child: showAccountSettings
-                            ? AccountSettings(
-                                onClose: () {
-                                  setState(() {
-                                    showAccountSettings = false;
-                                  });
-                                  _fetchUserProfile(); // Refresh user profile after closing account settings
-                                },
-                                onNicknameChanged: _onNicknameChanged, selectedLanguage: _selectedLanguage // Pass the callback
-                              )
-                            : _buildUserProfile(),
+                        child: _buildUserProfile(),
                       ),
                     ],
                   ),
@@ -190,11 +149,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
+  
     if (_userProfile == null) {
       return const Center(child: Text('Failed to load user profile.'));
     }
-
+  
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

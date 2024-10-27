@@ -4,6 +4,7 @@ import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/pages/account_settings.dart';
 import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
+import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -76,6 +77,19 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
+  void _showBadges() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BadgePage(
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -119,6 +133,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
                       break;
                     case 'Banners':
                       _showBanners();
+                      break;
+                    case 'Badges':
+                      _showBadges();
                       break;
                     // Add cases for other menu items if needed
                   }

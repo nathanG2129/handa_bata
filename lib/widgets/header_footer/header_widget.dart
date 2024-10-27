@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/pages/account_settings.dart';
 import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
+import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -62,6 +63,19 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
+  void _showBanners() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BannerPage(
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -102,6 +116,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
                       break;
                     case 'Characters':
                       _showCharacters();
+                      break;
+                    case 'Banners':
+                      _showBanners();
                       break;
                     // Add cases for other menu items if needed
                   }

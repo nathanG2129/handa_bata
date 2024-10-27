@@ -89,6 +89,16 @@ flutter:
     - assets/avatars/Kloud.png
     - assets/avatars/Lily.png
     - assets/avatars/Noah.png
+    - assets/banners/Level01.svg
+    - assets/banners/Level02.svg
+    - assets/banners/Level03.svg
+    - assets/banners/Level04.svg
+    - assets/banners/Level05.svg
+    - assets/banners/Level06.svg
+    - assets/banners/Level07.svg
+    - assets/banners/Level08.svg
+    - assets/banners/Level09.svg
+    - assets/banners/Level10.svg
     - assets/backgrounds/background.svg
     - assets/characters/KladisandKloud.svg
     - assets/characters/KladisAdventure.svg

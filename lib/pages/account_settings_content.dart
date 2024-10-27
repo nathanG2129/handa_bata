@@ -49,9 +49,9 @@ class AccountSettingsContent extends StatelessWidget {
             title: PlayLocalization.translate('email', selectedLanguage),
             content: showEmail ? userProfile.email : redactEmail(userProfile.email),
             buttonLabel: showEmail ? PlayLocalization.translate('hide', selectedLanguage) : PlayLocalization.translate('show', selectedLanguage),
-            buttonColor: showEmail ? Colors.white : const Color(0xFF4d278f),
+            buttonColor: const Color(0xFF4d278f),
             onPressed: onToggleEmailVisibility,
-            buttonTextColor: showEmail ? Colors.black : Colors.white,
+            buttonTextColor: Colors.white,
           ),
           _buildSection(
             title: PlayLocalization.translate('password', selectedLanguage),
@@ -66,7 +66,8 @@ class AccountSettingsContent extends StatelessWidget {
             title: PlayLocalization.translate('logout', selectedLanguage),
             buttonLabel: PlayLocalization.translate('logoutButton', selectedLanguage),
             buttonColor: Colors.red,
-            onPressed: onLogout, content: 'Hello!',
+            onPressed: onLogout, 
+            content: '',
           ),
           const Divider(
             color: Colors.black,

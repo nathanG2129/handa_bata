@@ -81,6 +81,14 @@ flutter:
   #   - images/a_dot_ham.jpeg
   
   assets:
+    - assets/avatars/Alex.png
+    - assets/avatars/Amihan.png
+    - assets/avatars/Habagat.png
+    - assets/avatars/Irish.png
+    - assets/avatars/Kladis.png
+    - assets/avatars/Kloud.png
+    - assets/avatars/Lily.png
+    - assets/avatars/Noah.png
     - assets/backgrounds/background.svg
     - assets/characters/KladisandKloud.svg
     - assets/characters/KladisAdventure.svg

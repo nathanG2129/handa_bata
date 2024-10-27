@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/pages/account_settings.dart';
+import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -48,6 +49,19 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
+  void _showCharacters() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CharacterPage(
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -85,6 +99,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
                       break;
                     case 'Account Settings':
                       _showAccountSettings();
+                      break;
+                    case 'Characters':
+                      _showCharacters();
                       break;
                     // Add cases for other menu items if needed
                   }

@@ -11,7 +11,6 @@ import 'account_settings_content.dart'; // Import the new file
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
-
   final String selectedLanguage; // Add this line
 
   const AccountSettings({super.key, required this.onClose, required this.selectedLanguage});
@@ -20,20 +19,40 @@ class AccountSettings extends StatefulWidget {
   AccountSettingsState createState() => AccountSettingsState();
 }
 
-class AccountSettingsState extends State<AccountSettings> with TickerProviderStateMixin {
+class AccountSettingsState extends State<AccountSettings> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
 
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(-1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
     _fetchUserProfile();
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   Future<void> _closeDialog() async {
-    widget.onClose(); // Call the onClose callback after the animation
+    await _animationController.reverse();
+    widget.onClose();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -44,6 +63,7 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
       setState(() {
         _userProfile = userProfile ?? UserProfile.guestProfile;
         _isLoading = false;
+        _animationController.forward(); // Start the animation after loading
       });
     } catch (e) {
       if (!mounted) return;
@@ -226,6 +246,8 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
             child: Center(
               child: GestureDetector(
                 onTap: () {},
+                child: SlideTransition(
+                  position: _slideAnimation,
                   child: Card(
                     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110), // Update this line
                     shape: const RoundedRectangleBorder(
@@ -302,6 +324,7 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                       ],
                     ),
                   ),
+                ),
               ),
             ),
           ),

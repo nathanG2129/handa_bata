@@ -9,14 +9,14 @@ class Button3D extends StatefulWidget {
   final double height;
 
   const Button3D({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.child,
     this.backgroundColor = const Color(0xFF351b61),
     this.borderColor = Colors.black,
     this.width = double.infinity,
     this.height = 50.0,
-  }) : super(key: key);
+  });
 
   @override
   State<Button3D> createState() => _Button3DState();
@@ -56,6 +56,8 @@ class _Button3DState extends State<Button3D> {
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
+            splashColor: Colors.transparent, // Remove ripple effect
+            highlightColor: Colors.transparent, // Remove highlight effect
             child: Center(
               child: widget.child,
             ),

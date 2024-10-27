@@ -1,14 +1,13 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
-import 'package:handabatamae/widgets/button_3d.dart';
 import 'splash_page.dart'; // Import SplashPage
 import '../localization/play/localization.dart'; // Import the localization file
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import 'account_settings_content.dart'; // Import the new file
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -282,7 +281,21 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                                   ],
                                 ).value,
                               ),
-                              child: _buildAccountSettings(),
+                              child: AccountSettingsContent(
+                                userProfile: _userProfile!,
+                                showEmail: _showEmail,
+                                onToggleEmailVisibility: () {
+                                  setState(() {
+                                    _showEmail = !_showEmail;
+                                  });
+                                },
+                                onShowChangeNicknameDialog: _showChangeNicknameDialog,
+                                onLogout: _logout,
+                                onShowDeleteAccountDialog: _showDeleteAccountDialog,
+                                selectedLanguage: widget.selectedLanguage,
+                                darkenColor: _darkenColor,
+                                redactEmail: _redactEmail,
+                              ),
                             ),
                           ),
                         ),
@@ -294,249 +307,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildAccountSettings() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      PlayLocalization.translate('nickname', widget.selectedLanguage),
-                      style: GoogleFonts.rubik(
-                        fontSize: 16, // Scale down font size
-                        fontWeight: FontWeight.bold,
-                      ), // Use Rubik font
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      _userProfile!.nickname,
-                      style: GoogleFonts.rubik(
-                        fontSize: 14, // Scale down font size
-                      ), // Use Rubik font
-                    ),
-                  ],
-                ),
-              ),
-              Button3D(
-                onPressed: _showChangeNicknameDialog,
-                backgroundColor: const Color(0xFF4d278f), // Color of the button
-                borderColor: _darkenColor(const Color(0xFF4d278f)), // Use _darkenColor method
-                width: 80 * 1.1,
-                height: 35 * 1.1,
-                child: Text(
-                  PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      PlayLocalization.translate('birthday', widget.selectedLanguage),
-                      style: GoogleFonts.rubik(
-                        fontSize: 16, // Scale down font size
-                        fontWeight: FontWeight.bold,
-                      ), // Use Rubik font
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      _userProfile!.birthday,
-                      style: GoogleFonts.rubik(
-                        fontSize: 14, // Scale down font size
-                      ), // Use Rubik font
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      PlayLocalization.translate('email', widget.selectedLanguage),
-                      style: GoogleFonts.rubik(
-                        fontSize: 16, // Scale down font size
-                        fontWeight: FontWeight.bold,
-                      ), // Use Rubik font
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      _showEmail ? _userProfile!.email : _redactEmail(_userProfile!.email),
-                      style: GoogleFonts.rubik(
-                        fontSize: 14, // Scale down font size
-                      ), // Use Rubik font
-                    ),
-                  ],
-                ),
-              ),
-              Button3D(
-                onPressed: () {
-                  setState(() {
-                    _showEmail = !_showEmail;
-                  });
-                },
-                backgroundColor: Colors.white, // White background
-                borderColor: _darkenColor(Colors.white), // Use _darkenColor method
-                width: 80,
-                height: 35,
-                child: Text(
-                  _showEmail ? PlayLocalization.translate('hide', widget.selectedLanguage) : PlayLocalization.translate('show', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.black, fontSize: 14), // Ensure text color is set to black
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      PlayLocalization.translate('password', widget.selectedLanguage),
-                      style: GoogleFonts.rubik(
-                        fontSize: 16, // Scale down font size
-                        fontWeight: FontWeight.bold,
-                      ), // Use Rubik font
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '********',
-                      style: GoogleFonts.rubik(
-                        fontSize: 14, // Scale down font size
-                      ), // Use Rubik font
-                    ),
-                  ],
-                ),
-              ),
-              Button3D(
-                onPressed: () {
-                  // Handle password change
-                },
-                backgroundColor: const Color(0xFF4d278f), // Color of the button
-                borderColor: _darkenColor(const Color(0xFF4d278f)), // Use _darkenColor method
-                width: 80,
-                height: 35,
-                child: Text(
-                  PlayLocalization.translate('changePassword', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      PlayLocalization.translate('logout', widget.selectedLanguage),
-                      style: GoogleFonts.rubik(
-                        fontSize: 16, // Scale down font size
-                        fontWeight: FontWeight.bold,
-                      ), // Use Rubik font
-                    ),
-                  ],
-                ),
-              ),
-              Button3D(
-                onPressed: _logout,
-                backgroundColor: Colors.red, // Red background for logout
-                borderColor: _darkenColor(Colors.red), // Use _darkenColor method
-                width: 80,
-                height: 35,
-                child: Text(
-                  PlayLocalization.translate('logoutButton', widget.selectedLanguage),
-                  style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Divider(
-          color: Colors.black,
-          thickness: 1,
-          indent: 10,
-          endIndent: 10,
-        ),
-        Flexible(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    PlayLocalization.translate('accountRemoval', widget.selectedLanguage),
-                    style: GoogleFonts.rubik(
-                      fontSize: 16, // Scale down font size
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    PlayLocalization.translate('accountRemovalDescription', widget.selectedLanguage),
-                    style: GoogleFonts.rubik(
-                      fontSize: 14, // Scale down font size
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Button3D(
-                      onPressed: _showDeleteAccountDialog,
-                      backgroundColor: const Color(0xFFc32929),
-                      borderColor: _darkenColor(const Color(0xFFc32929)), // Use _darkenColor method
-                      width: 80,
-                      height: 35,
-                      child: Text(
-                        PlayLocalization.translate('delete', widget.selectedLanguage),
-                        style: const TextStyle(color: Colors.white, fontSize: 14), // Ensure text color is set to white
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

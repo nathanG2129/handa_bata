@@ -33,8 +33,8 @@ class UserProfileHeader extends StatelessWidget {
             context,
             defaultValue: 40, // Scale down avatar size
             conditionalValues: [
-              Condition.smallerThan(name: MOBILE, value: 40),
-              Condition.largerThan(name: MOBILE, value: 64),
+              const Condition.smallerThan(name: MOBILE, value: 40),
+              const Condition.largerThan(name: MOBILE, value: 64),
             ],
           ).value,
           backgroundColor: Colors.grey,
@@ -44,8 +44,8 @@ class UserProfileHeader extends StatelessWidget {
               context,
               defaultValue: 32, // Scale down icon size
               conditionalValues: [
-                Condition.smallerThan(name: MOBILE, value: 24),
-                Condition.largerThan(name: MOBILE, value: 40),
+                const Condition.smallerThan(name: MOBILE, value: 24),
+                const Condition.largerThan(name: MOBILE, value: 40),
               ],
             ).value,
             color: Colors.white,
@@ -56,8 +56,8 @@ class UserProfileHeader extends StatelessWidget {
             context,
             defaultValue: 16, // Scale down spacing
             conditionalValues: [
-              Condition.smallerThan(name: MOBILE, value: 12),
-              Condition.largerThan(name: MOBILE, value: 20),
+              const Condition.smallerThan(name: MOBILE, value: 12),
+              const Condition.largerThan(name: MOBILE, value: 20),
             ],
           ).value,
         ),
@@ -71,8 +71,8 @@ class UserProfileHeader extends StatelessWidget {
                   context,
                   defaultValue: 18, // Scale down font size
                   conditionalValues: [
-                    Condition.smallerThan(name: MOBILE, value: 14),
-                    Condition.largerThan(name: MOBILE, value: 22),
+                    const Condition.smallerThan(name: MOBILE, value: 14),
+                    const Condition.largerThan(name: MOBILE, value: 22),
                   ],
                 ).value,
                 fontWeight: FontWeight.bold,
@@ -86,8 +86,8 @@ class UserProfileHeader extends StatelessWidget {
                   context,
                   defaultValue: 12.8, // Scale down font size
                   conditionalValues: [
-                    Condition.smallerThan(name: MOBILE, value: 9.6),
-                    Condition.largerThan(name: MOBILE, value: 16),
+                    const Condition.smallerThan(name: MOBILE, value: 9.6),
+                    const Condition.largerThan(name: MOBILE, value: 16),
                   ],
                 ).value,
                 color: Colors.white,
@@ -98,8 +98,8 @@ class UserProfileHeader extends StatelessWidget {
                 context,
                 defaultValue: 6.4, // Scale down spacing
                 conditionalValues: [
-                  Condition.smallerThan(name: MOBILE, value: 4.8),
-                  Condition.largerThan(name: MOBILE, value: 8),
+                  const Condition.smallerThan(name: MOBILE, value: 4.8),
+                  const Condition.largerThan(name: MOBILE, value: 8),
                 ],
               ).value,
             ),
@@ -110,8 +110,8 @@ class UserProfileHeader extends StatelessWidget {
                   context,
                   defaultValue: 12.8, // Scale down font size
                   conditionalValues: [
-                    Condition.smallerThan(name: MOBILE, value: 9.6),
-                    Condition.largerThan(name: MOBILE, value: 16),
+                    const Condition.smallerThan(name: MOBILE, value: 9.6),
+                    const Condition.largerThan(name: MOBILE, value: 16),
                   ],
                 ).value,
                 fontWeight: FontWeight.bold,
@@ -123,8 +123,8 @@ class UserProfileHeader extends StatelessWidget {
                 context,
                 defaultValue: 3.2, // Scale down spacing
                 conditionalValues: [
-                  Condition.smallerThan(name: MOBILE, value: 2.4),
-                  Condition.largerThan(name: MOBILE, value: 4),
+                  const Condition.smallerThan(name: MOBILE, value: 2.4),
+                  const Condition.largerThan(name: MOBILE, value: 4),
                 ],
               ).value,
             ),
@@ -135,8 +135,8 @@ class UserProfileHeader extends StatelessWidget {
                     context,
                     defaultValue: 120, // Scale down width
                     conditionalValues: [
-                      Condition.smallerThan(name: MOBILE, value: 96),
-                      Condition.largerThan(name: MOBILE, value: 144),
+                      const Condition.smallerThan(name: MOBILE, value: 96),
+                      const Condition.largerThan(name: MOBILE, value: 144),
                     ],
                   ).value,
                   height: 16, // Height of the XP bar

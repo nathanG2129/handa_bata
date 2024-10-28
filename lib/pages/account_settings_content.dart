@@ -37,7 +37,7 @@ class AccountSettingsContent extends StatelessWidget {
           _buildSection(
             title: PlayLocalization.translate('nickname', selectedLanguage),
             content: userProfile.nickname,
-            buttonLabel: PlayLocalization.translate('changeNickname', selectedLanguage),
+            buttonLabel: PlayLocalization.translate('change', selectedLanguage),
             buttonColor: const Color(0xFF4d278f),
             onPressed: onShowChangeNicknameDialog,
           ),
@@ -56,7 +56,7 @@ class AccountSettingsContent extends StatelessWidget {
           _buildSection(
             title: PlayLocalization.translate('password', selectedLanguage),
             content: '********',
-            buttonLabel: PlayLocalization.translate('changePassword', selectedLanguage),
+            buttonLabel: PlayLocalization.translate('change', selectedLanguage),
             buttonColor: const Color(0xFF4d278f),
             onPressed: () {
               // Handle password change

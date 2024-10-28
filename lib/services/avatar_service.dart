@@ -85,4 +85,22 @@ class AvatarService {
       print('Error deleting avatar: $e');
     }
   }
+
+  Future<String> getAvatarNameById(int avatarId) async {
+    try {
+      DocumentSnapshot snapshot = await _avatarDoc.get();
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> avatars = data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
+        final avatar = avatars.firstWhere((avatar) => avatar['id'] == avatarId, orElse: () => {});
+        if (avatar.isNotEmpty) {
+          return avatar['title'] as String;
+        }
+      }
+      return 'Kladis.png'; // Return a default avatar name if not found
+    } catch (e) {
+      print('Error fetching avatar name: $e');
+      return 'Kladis.png'; // Return a default avatar name in case of error
+    }
+  }
 }

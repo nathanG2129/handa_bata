@@ -83,6 +83,18 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     widget.onClose();
   }
 
+  Future<void> _handleProfileUpdate(String username, String selectedLanguage) async {
+    // Refresh the user profile data
+    await _fetchUserProfile();
+    
+    // Update the state to trigger a rebuild
+    if (mounted) {
+      setState(() {
+        _selectedLanguage = selectedLanguage;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -144,7 +156,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                                         ).value,
                                       ), selectedLanguage: _selectedLanguage,  // White font color for username and level
                                       showMenuIcon: true, // Show menu icon
-                                      onProfileUpdate: _fetchUserProfile, // Add this line
+                                      onUpdateProfile: _handleProfileUpdate, // Changed from onProfileUpdate
                                   )
                                   : const SizedBox.shrink(),
                         ),
@@ -185,10 +197,20 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        SizedBox(
+          height: ResponsiveValue<double>(
+            context,
+            defaultValue: 20.0,
+            conditionalValues: [
+              const Condition.smallerThan(name: MOBILE, value: 16.0),
+              const Condition.largerThan(name: MOBILE, value: 24.0),
+            ],
+          ).value,
+        ),
         UserProfileStats(
           totalBadges: _userProfile!.totalBadgeUnlocked,
-          totalStagesCleared: _userProfile!.totalStageCleared, 
-          selectedLanguage: _selectedLanguage, // Pass the selected language
+          totalStagesCleared: _userProfile!.totalStageCleared,
+          selectedLanguage: _selectedLanguage,
         ),
         SizedBox(
           height: ResponsiveValue<double>(

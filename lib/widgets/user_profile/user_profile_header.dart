@@ -16,7 +16,7 @@ class UserProfileHeader extends StatelessWidget {
   final TextStyle textStyle;
   final String selectedLanguage; // Add selectedLanguage
   final bool showMenuIcon; // Add showMenuIcon
-  final VoidCallback? onProfileUpdate; // Add this
+  final Function(String, String)? onUpdateProfile; // Add this
 
   const UserProfileHeader({
     super.key,
@@ -29,7 +29,7 @@ class UserProfileHeader extends StatelessWidget {
     required this.textStyle,
     required this.selectedLanguage, // Add selectedLanguage
     this.showMenuIcon = false, // Default to false
-    this.onProfileUpdate, // Add this
+    this.onUpdateProfile, // Add this
   });
 
   void _handleMenuSelection(String result, BuildContext context) {
@@ -46,7 +46,7 @@ class UserProfileHeader extends StatelessWidget {
                 // Close the dialog first
                 Navigator.of(context).pop();
                 // Trigger the refresh
-                onProfileUpdate?.call();
+                onUpdateProfile?.call(username, selectedLanguage);
               },
               onClose: () {
                 Navigator.of(context).pop();
@@ -83,6 +83,9 @@ class UserProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate progress percentage for XP bar
+    double progressPercentage = maxExp > 0 ? currentExp / maxExp : 0;
+
     return Stack(
       children: [
         Row(
@@ -194,65 +197,73 @@ class UserProfileHeader extends StatelessWidget {
                     ],
                   ).value,
                 ),
-                Text(
-                  '${PlayLocalization.translate('level', selectedLanguage)}: $level',
-                  style: textStyle.copyWith(
-                    fontSize: ResponsiveValue<double>(
-                      context,
-                      defaultValue: 12.8, // Scale down font size
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 9.6),
-                        const Condition.largerThan(name: MOBILE, value: 16),
-                      ],
-                    ).value,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
                 SizedBox(
-                  height: ResponsiveValue<double>(
+                  width: ResponsiveValue<double>(
                     context,
-                    defaultValue: 3.2, // Scale down spacing
+                    defaultValue: 175,
                     conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 2.4),
-                      const Condition.largerThan(name: MOBILE, value: 4),
+                      const Condition.smallerThan(name: MOBILE, value: 150),
+                      const Condition.largerThan(name: MOBILE, value: 250),
                     ],
                   ).value,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${PlayLocalization.translate('level', selectedLanguage)}: $level',
+                        style: textStyle.copyWith(
+                          fontSize: ResponsiveValue<double>(
+                            context,
+                            defaultValue: 12.8,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 9.6),
+                              const Condition.largerThan(name: MOBILE, value: 16),
+                            ],
+                          ).value,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        '$currentExp / $maxExp',
+                        style: textStyle.copyWith(
+                          fontSize: ResponsiveValue<double>(
+                            context,
+                            defaultValue: 12.8,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 9),
+                              const Condition.largerThan(name: MOBILE, value: 14),
+                            ],
+                          ).value,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Stack(
-                  children: [
-                    Container(
-                      width: ResponsiveValue<double>(
-                        context,
-                        defaultValue: 120, // Scale down width
-                        conditionalValues: [
-                          const Condition.smallerThan(name: MOBILE, value: 96),
-                          const Condition.largerThan(name: MOBILE, value: 144),
-                        ],
-                      ).value,
-                      height: 16, // Height of the XP bar
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300], // Background color of the XP bar
-                        borderRadius: BorderRadius.circular(0),
-                        border: Border.all(color: Colors.black, width: 3), // Black border
-                      ),
+                const SizedBox(height: 4),
+                Container(
+                  width: ResponsiveValue<double>(
+                    context,
+                    defaultValue: 175,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: 150),
+                      const Condition.largerThan(name: MOBILE, value: 250),
+                    ],
+                  ).value,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(0),
+                    child: LinearProgressIndicator(
+                      value: progressPercentage,
+                      backgroundColor: Colors.black,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF28e172)),
                     ),
-                    Container(
-                      width: ResponsiveValue<double>(
-                        context,
-                        defaultValue: 120 * (currentExp / maxExp), // Scale down width
-                        conditionalValues: [
-                          Condition.smallerThan(name: MOBILE, value: 96 * (currentExp / maxExp)),
-                          Condition.largerThan(name: MOBILE, value: 144 * (currentExp / maxExp)),
-                        ],
-                      ).value,
-                      height: 16, // Match the height of the XP bar
-                      decoration: BoxDecoration(
-                        color: Colors.green, // Fill color of the XP bar
-                        borderRadius: BorderRadius.circular(0),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),

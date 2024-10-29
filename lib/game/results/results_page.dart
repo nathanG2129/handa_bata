@@ -55,6 +55,7 @@ class ResultsPageState extends State<ResultsPage> {
   late int _soundId3Stars;
   bool _soundsLoaded = false;
   int stars = 0; // Add stars to the state
+  int _xpGained = 0;
 
   @override
   void initState() {
@@ -119,11 +120,49 @@ class ResultsPageState extends State<ResultsPage> {
   
     final docRef = FirebaseFirestore.instance
         .collection('User')
-        .doc(user.uid)
-        .collection('GameSaveData')
-        .doc(widget.category['id']);
-  
-    final docSnapshot = await docRef.get();
+        .doc(user.uid);
+    
+    // Calculate XP based on gamemode and difficulty
+    if (widget.gamemode == 'arcade') {
+      _xpGained = widget.isGameOver ? 0 : 500; // Only award XP if game is completed
+    } else {
+      // Adventure mode XP calculation
+      int multiplier = widget.mode == 'Hard' ? 10 : 5;
+      _xpGained = widget.score * multiplier;
+    }
+
+    // Get user profile data for XP/Level update
+    final profileSnapshot = await docRef.collection('ProfileData').doc(user.uid).get();
+    if (profileSnapshot.exists) {
+      final profileData = profileSnapshot.data() as Map<String, dynamic>;
+      int currentXP = profileData['exp'] ?? 0;
+      int currentLevel = profileData['level'] ?? 1;
+      
+      // Add new XP
+      int newXP = currentXP + _xpGained;
+      int newLevel = currentLevel;
+      
+      // Calculate required XP for current level
+      int requiredXP = currentLevel * 100;
+      
+      // Handle level up logic
+      while (newXP >= requiredXP) {
+        newXP -= requiredXP;
+        newLevel++;
+        requiredXP = newLevel * 100; // Update required XP for next level
+      }
+      
+      // Update user profile with new XP and level data
+      await docRef.collection('ProfileData').doc(user.uid).update({
+        'exp': newXP,
+        'level': newLevel,
+        'expCap': newLevel * 100, // Set expCap based on new level
+      });
+    }
+
+    // Continue with existing game save data update
+    final gameSaveRef = docRef.collection('GameSaveData').doc(widget.category['id']);
+    final docSnapshot = await gameSaveRef.get();
     if (!docSnapshot.exists) return;
   
     final data = docSnapshot.data() as Map<String, dynamic>;
@@ -196,7 +235,7 @@ class ResultsPageState extends State<ResultsPage> {
     }
   
     // Update Firestore with the new data
-    await docRef.update({
+    await gameSaveRef.update({
       'stageData': stageData,
       'normalStageStars': data['normalStageStars'],
       'hardStageStars': data['hardStageStars'],
@@ -338,6 +377,19 @@ class ResultsPageState extends State<ResultsPage> {
                             const SizedBox(height: 10),
                             _buildAnsweredQuestionsWidget(context),
                             const SizedBox(height: 50),
+                            if (_xpGained > 0)
+                              Column(
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'XP Gained: $_xpGained',
+                                    style: GoogleFonts.vt323(
+                                      fontSize: 24,
+                                      color: Colors.yellow,
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ),

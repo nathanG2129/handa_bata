@@ -5,7 +5,6 @@ import 'services/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'web_mobile_bridge.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +12,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   SharedPreferences prefs = await SharedPreferences.getInstance();

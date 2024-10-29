@@ -107,7 +107,7 @@ class UserProfileHeader extends StatelessWidget {
                       ? Container(
                           width: ResponsiveValue<double>(
                             context,
-                            defaultValue: 50,
+                            defaultValue: 55,
                             conditionalValues: [
                               const Condition.smallerThan(name: MOBILE, value: 50),
                               const Condition.largerThan(name: MOBILE, value: 80),
@@ -115,7 +115,7 @@ class UserProfileHeader extends StatelessWidget {
                           ).value,
                           height: ResponsiveValue<double>(
                             context,
-                            defaultValue: 50,
+                            defaultValue: 55,
                             conditionalValues: [
                               const Condition.smallerThan(name: MOBILE, value: 50),
                               const Condition.largerThan(name: MOBILE, value: 80),

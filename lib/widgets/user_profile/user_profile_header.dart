@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/pages/character_page.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 import '../../localization/play/localization.dart'; // Import the localization file
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
 
 class UserProfileHeader extends StatelessWidget {
   final String username;
@@ -14,6 +16,7 @@ class UserProfileHeader extends StatelessWidget {
   final TextStyle textStyle;
   final String selectedLanguage; // Add selectedLanguage
   final bool showMenuIcon; // Add showMenuIcon
+  final VoidCallback? onProfileUpdate; // Add this
 
   const UserProfileHeader({
     super.key,
@@ -26,7 +29,57 @@ class UserProfileHeader extends StatelessWidget {
     required this.textStyle,
     required this.selectedLanguage, // Add selectedLanguage
     this.showMenuIcon = false, // Default to false
+    this.onProfileUpdate, // Add this
   });
+
+  void _handleMenuSelection(String result, BuildContext context) {
+    switch (result) {
+      case 'Change Avatar':
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return CharacterPage(
+              selectionMode: true,
+              currentAvatarId: avatarId,
+              onAvatarSelected: (newAvatarId) async {
+                // Close the dialog first
+                Navigator.of(context).pop();
+                // Trigger the refresh
+                onProfileUpdate?.call();
+              },
+              onClose: () {
+                Navigator.of(context).pop();
+              },
+            );
+          },
+        );
+        break;
+      case 'Change Nickname':
+        // Handle Change Nickname
+        break;
+      case 'Change Banner':
+        // Handle Change Banner
+        break;
+      case 'Change Favorite Badges':
+        // Handle Change Favorite Badges
+        break;
+    }
+  }
+
+  Future<String?> _getAvatarImage() async {
+    try {
+      final avatars = await AvatarService().fetchAvatars();
+      final avatar = avatars.firstWhere(
+        (avatar) => avatar['id'] == avatarId,
+        orElse: () => {'img': 'default_avatar.png'}, // Provide a default avatar
+      );
+      return avatar['img'];
+    } catch (e) {
+      print('Error fetching avatar image: $e');
+      return 'default_avatar.png'; // Return default avatar on error
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,28 +87,60 @@ class UserProfileHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: ResponsiveValue<double>(
-                context,
-                defaultValue: 40, // Scale down avatar size
-                conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 40),
-                  const Condition.largerThan(name: MOBILE, value: 64),
-                ],
-              ).value,
-              backgroundColor: Colors.grey,
-              child: Icon(
-                Icons.person,
-                size: ResponsiveValue<double>(
-                  context,
-                  defaultValue: 32, // Scale down icon size
-                  conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 24),
-                    const Condition.largerThan(name: MOBILE, value: 40),
-                  ],
-                ).value,
-                color: Colors.white,
-              ),
+            FutureBuilder<String?>(
+              future: _getAvatarImage(),
+              builder: (context, snapshot) {
+                return CircleAvatar(
+                  radius: ResponsiveValue<double>(
+                    context,
+                    defaultValue: 40,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: 40),
+                      const Condition.largerThan(name: MOBILE, value: 64),
+                    ],
+                  ).value,
+                  backgroundColor: Colors.white,
+                  child: snapshot.hasData
+                      ? Container(
+                          width: ResponsiveValue<double>(
+                            context,
+                            defaultValue: 50,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 50),
+                              const Condition.largerThan(name: MOBILE, value: 80),
+                            ],
+                          ).value,
+                          height: ResponsiveValue<double>(
+                            context,
+                            defaultValue: 50,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 50),
+                              const Condition.largerThan(name: MOBILE, value: 80),
+                            ],
+                          ).value,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/avatars/${snapshot.data}'),
+                              fit: BoxFit.cover,
+                              filterQuality: FilterQuality.none,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.person,
+                          size: ResponsiveValue<double>(
+                            context,
+                            defaultValue: 32,
+                            conditionalValues: [
+                              const Condition.smallerThan(name: MOBILE, value: 24),
+                              const Condition.largerThan(name: MOBILE, value: 40),
+                            ],
+                          ).value,
+                          color: Colors.grey,
+                        ),
+                );
+              },
             ),
             SizedBox(
               width: ResponsiveValue<double>(
@@ -253,22 +338,7 @@ class UserProfileHeader extends StatelessWidget {
                   ),
                 ),
               ],
-              onSelected: (String result) {
-                switch (result) {
-                  case 'Change Avatar':
-                    // Handle Change Avatar
-                    break;
-                  case 'Change Nickname':
-                    // Handle Change Nickname
-                    break;
-                  case 'Change Banner':
-                    // Handle Change Banner
-                    break;
-                  case 'Change Favorite Badges':
-                    // Handle Change Favorite Badges
-                    break;
-                }
-              },
+              onSelected: (String result) => _handleMenuSelection(result, context),
             ),
           ),
       ],

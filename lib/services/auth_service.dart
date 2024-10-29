@@ -473,4 +473,21 @@ class AuthService {
     String profileJson = jsonEncode(profile.toMap());
     await prefs.setString('user_profile', profileJson); // Ensure the key is 'user_profile'
   }
+
+  Future<void> updateAvatarId(int avatarId) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .update({'avatarId': avatarId});
+      }
+    } catch (e) {
+      print('Error updating avatar ID: $e');
+      rethrow;
+    }
+  }
 }

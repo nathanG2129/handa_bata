@@ -1,13 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/avatar_service.dart';
+import 'package:handabatamae/services/auth_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CharacterPage extends StatefulWidget {
   final VoidCallback onClose;
+  final bool selectionMode;
+  final int? currentAvatarId;
+  final Function(int)? onAvatarSelected;
 
-  const CharacterPage({super.key, required this.onClose});
+  const CharacterPage({
+    super.key, 
+    required this.onClose,
+    this.selectionMode = false,
+    this.currentAvatarId,
+    this.onAvatarSelected,
+  });
 
   @override
   _CharacterPageState createState() => _CharacterPageState();
@@ -17,6 +27,8 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
   late Future<List<Map<String, dynamic>>> _avatarsFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  int? _selectedAvatarId;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -33,6 +45,7 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+    _selectedAvatarId = widget.currentAvatarId;
   }
 
   @override
@@ -44,6 +57,30 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
   Future<void> _closeDialog() async {
     await _animationController.reverse();
     widget.onClose();
+  }
+
+  void _handleAvatarTap(int avatarId) {
+    if (widget.selectionMode) {
+      setState(() {
+        _selectedAvatarId = avatarId;
+      });
+    }
+  }
+
+  Future<void> _handleAvatarUpdate(int avatarId) async {
+    try {
+      await _authService.updateAvatarId(avatarId);
+      widget.onAvatarSelected?.call(avatarId);
+      _closeDialog();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update avatar. Please try again.'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -133,38 +170,43 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
                                       itemCount: avatars.length,
                                       itemBuilder: (context, index) {
                                         final avatar = avatars[index];
+                                        final bool isSelected = _selectedAvatarId == avatar['id'];
+                                        
                                         return Card(
                                           color: Colors.transparent,
                                           elevation: 0,
-                                          child: Center(
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                CircleAvatar(
-                                                  radius: 30,
-                                                  backgroundColor: Colors.white,
-                                                  child: Container(
-                                                    width: 40,
-                                                    height: 40,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.rectangle,
-                                                      image: DecorationImage(
-                                                        image: AssetImage('assets/avatars/${avatar['img']}'),
-                                                        fit: BoxFit.cover,
-                                                        filterQuality: FilterQuality.none,
+                                          child: GestureDetector(
+                                            onTap: () => _handleAvatarTap(avatar['id']),
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 30,
+                                                    backgroundColor: isSelected ? const Color(0xFF9474CC) : Colors.white,
+                                                    child: Container(
+                                                      width: 40,
+                                                      height: 40,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.rectangle,
+                                                        image: DecorationImage(
+                                                          image: AssetImage('assets/avatars/${avatar['img']}'),
+                                                          fit: BoxFit.cover,
+                                                          filterQuality: FilterQuality.none,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(height: 0),
-                                                Text(
-                                                  avatar['title'] ?? 'Avatar',
-                                                  style: GoogleFonts.vt323(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
+                                                  const SizedBox(height: 0),
+                                                  Text(
+                                                    avatar['title'] ?? 'Avatar',
+                                                    style: GoogleFonts.vt323(
+                                                      color: Colors.white,
+                                                      fontSize: 16,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
@@ -173,6 +215,24 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
                                   ),
                                 ),
                               ),
+                              if (widget.selectionMode) ...[
+                                Container(
+                                  width: double.infinity,
+                                  color: const Color(0xFF3A1A5F),
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.black,
+                                      textStyle: GoogleFonts.vt323(fontSize: 20),
+                                    ),
+                                    onPressed: _selectedAvatarId != null 
+                                      ? () => _handleAvatarUpdate(_selectedAvatarId!)
+                                      : null,
+                                    child: const Text('Save Changes'),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

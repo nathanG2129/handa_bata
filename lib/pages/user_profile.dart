@@ -144,6 +144,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                                         ).value,
                                       ), selectedLanguage: _selectedLanguage,  // White font color for username and level
                                       showMenuIcon: true, // Show menu icon
+                                      onProfileUpdate: _fetchUserProfile, // Add this line
                                   )
                                   : const SizedBox.shrink(),
                         ),

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:939684811739:android:dd60047753b31e34300dfe",
+        "mobilesdk_app_id": "1:939684811739:android:b4c08ad000963026300dfe",
         "android_client_info": {
-          "package_name": "com.example.handabatamae"
+          "package_name": "com.handabatamae.app"
         }
       },
       "oauth_client": [],

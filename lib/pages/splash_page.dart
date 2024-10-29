@@ -128,11 +128,15 @@ class SplashPageState extends State<SplashPage> {
         child: MaxWidthBox(
           maxWidth: 1200,
           child: ResponsiveScaledBox(
-            width: (ResponsiveValue<double>(context, conditionalValues: [
-              const Condition.equals(name: MOBILE, value: 450),
-              const Condition.between(start: 800, end: 1100, value: 800),
-              const Condition.between(start: 1000, end: 1200, value: 1000),
-            ]).value), // Provide a default value
+            width: ResponsiveValue<double>(
+              context,
+              defaultValue: 450.0,
+              conditionalValues: [
+                const Condition.equals(name: MOBILE, value: 450.0),
+                const Condition.between(start: 800, end: 1100, value: 800.0),
+                const Condition.between(start: 1000, end: 1200, value: 1000.0),
+              ],
+            ).value,
             child: Stack(
               children: [
                 SvgPicture.asset(

@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.handabatamae"
+    namespace = "com.handabatamae.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,9 +23,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.handabatamae"        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.handabatamae.app"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -43,4 +41,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
 }

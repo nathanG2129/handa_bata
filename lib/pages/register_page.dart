@@ -13,6 +13,7 @@ import '../widgets/buttons/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
+import 'package:cloud_functions/cloud_functions.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String selectedLanguage; // Add this line
@@ -87,6 +88,24 @@ class RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       _selectedLanguage = language;
     });
+  }
+
+  Future<void> _testCloudFunction() async {
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('helloWorld')
+          .call();
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Function Response: ${result.data}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -290,6 +309,11 @@ class RegistrationPageState extends State<RegistrationPage> {
                                     Navigator.pop(context);
                                   },
                                 ),
+                                ElevatedButton(
+                                  onPressed: _testCloudFunction,
+                                  child: const Text('Test Cloud Function'),
+                                ),
+                                const SizedBox(height: 20),
                               ],
                             ),
                           ),

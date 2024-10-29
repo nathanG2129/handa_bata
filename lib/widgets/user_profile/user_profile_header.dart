@@ -140,7 +140,7 @@ class UserProfileHeader extends StatelessWidget {
                               const Condition.largerThan(name: MOBILE, value: 40),
                             ],
                           ).value,
-                          color: Colors.grey,
+                          color: const Color.fromARGB(255, 0, 0, 0),
                         ),
                 );
               },
@@ -159,7 +159,7 @@ class UserProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  username,
+                  nickname,
                   style: textStyle.copyWith(
                     fontSize: ResponsiveValue<double>(
                       context,
@@ -174,17 +174,17 @@ class UserProfileHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  nickname,
+                  '@$username',
                   style: textStyle.copyWith(
-                    fontSize: ResponsiveValue<double>(
-                      context,
-                      defaultValue: 12.8, // Scale down font size
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 9.6),
-                        const Condition.largerThan(name: MOBILE, value: 16),
-                      ],
-                    ).value,
-                    color: Colors.white,
+                  fontSize: ResponsiveValue<double>(
+                    context,
+                    defaultValue: 12.8, // Scale down font size
+                    conditionalValues: [
+                    const Condition.smallerThan(name: MOBILE, value: 9.6),
+                    const Condition.largerThan(name: MOBILE, value: 16),
+                    ],
+                  ).value,
+                  color: Colors.white,
                   ),
                 ),
                 SizedBox(

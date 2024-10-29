@@ -23,6 +23,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
+  String _userRole = 'user';
 
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -41,7 +42,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    _fetchUserProfile();
+    _fetchUserProfileAndRole();
   }
 
   @override
@@ -55,19 +56,21 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
     widget.onClose();
   }
 
-  Future<void> _fetchUserProfile() async {
+  Future<void> _fetchUserProfileAndRole() async {
     AuthService authService = AuthService();
     try {
       UserProfile? userProfile = await authService.getUserProfile();
+      String? role = await authService.getUserRole(userProfile?.profileId ?? '');
+      
       if (!mounted) return;
       setState(() {
         _userProfile = userProfile ?? UserProfile.guestProfile;
+        _userRole = role ?? 'guest';
         _isLoading = false;
-        _animationController.forward(); // Start the animation after loading
+        _animationController.forward();
       });
     } catch (e) {
       if (!mounted) return;
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)} $e')),
       );
@@ -81,7 +84,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
     AuthService authService = AuthService();
     try {
       await authService.updateUserProfile('nickname', newNickname);
-      await _fetchUserProfile(); // Refresh the user profile
+      await _fetchUserProfileAndRole(); // Refresh the user profile
       _onNicknameChanged(); // Call the callback
     } catch (e) {
       if (!mounted) return;
@@ -203,7 +206,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   }
 
   void _onNicknameChanged() {
-    _fetchUserProfile();
+    _fetchUserProfileAndRole();
   }
 
   Color _darkenColor(Color color, [double amount = 0.2]) {
@@ -317,6 +320,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
                                 selectedLanguage: widget.selectedLanguage,
                                 darkenColor: _darkenColor,
                                 redactEmail: _redactEmail,
+                                userRole: _userRole,
                               ),
                             ),
                           ),

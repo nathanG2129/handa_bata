@@ -34,6 +34,8 @@ class PlayLocalization {
       'changeAvatar': 'Change Avatar',
       'changeBanner': 'Change Banner',
       'changeFavoriteBadges': 'Change Favorite Badges',
+      'register': 'Register Account',
+      'registerButton': 'Register',
     },
     'fil': {
       'userProfile': 'Aking Profile',
@@ -69,6 +71,8 @@ class PlayLocalization {
       'changeAvatar': 'Baguhin ang Avatar',
       'changeBanner': 'Baguhin ang Banner',
       'changeFavoriteBadges': 'Baguhin ang Mga\nPaboritong Badge',
+      'register': 'Magparehistro ng Account',
+      'registerButton': 'Magparehistro',
     },
   };
 

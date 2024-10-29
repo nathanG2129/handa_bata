@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/pages/register_page.dart';
 import 'package:handabatamae/widgets/button_3d.dart';
 import '../localization/play/localization.dart';
 
@@ -14,6 +15,7 @@ class AccountSettingsContent extends StatelessWidget {
   final String selectedLanguage;
   final Color Function(Color, [double]) darkenColor;
   final String Function(String) redactEmail;
+  final String userRole;
 
   const AccountSettingsContent({
     super.key,
@@ -26,6 +28,7 @@ class AccountSettingsContent extends StatelessWidget {
     required this.selectedLanguage,
     required this.darkenColor,
     required this.redactEmail,
+    required this.userRole,
   });
 
   @override
@@ -63,10 +66,21 @@ class AccountSettingsContent extends StatelessWidget {
             },
           ),
           _buildSection(
-            title: PlayLocalization.translate('logout', selectedLanguage),
-            buttonLabel: PlayLocalization.translate('logoutButton', selectedLanguage),
-            buttonColor: Colors.red,
-            onPressed: onLogout, 
+            title: userRole == 'guest' 
+              ? PlayLocalization.translate('register', selectedLanguage)
+              : PlayLocalization.translate('logout', selectedLanguage),
+            buttonLabel: userRole == 'guest'
+              ? PlayLocalization.translate('registerButton', selectedLanguage)
+              : PlayLocalization.translate('logoutButton', selectedLanguage),
+            buttonColor: userRole == 'guest' ? const Color(0xFF4d278f) : Colors.red,
+            onPressed: userRole == 'guest'
+              ? () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegistrationPage(selectedLanguage: selectedLanguage),
+                  ),
+                )
+              : onLogout,
             content: '',
           ),
           const Divider(

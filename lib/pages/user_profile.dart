@@ -197,16 +197,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: ResponsiveValue<double>(
-            context,
-            defaultValue: 20.0,
-            conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 16.0),
-              const Condition.largerThan(name: MOBILE, value: 24.0),
-            ],
-          ).value,
-        ),
         UserProfileStats(
           totalBadges: _userProfile!.totalBadgeUnlocked,
           totalStagesCleared: _userProfile!.totalStageCleared,

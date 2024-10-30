@@ -890,7 +890,7 @@ class AuthService {
     required int score,
     required int stars,
     required String mode,
-    String? record,
+    int? record,
     required bool isArcade,
   }) async {
     try {
@@ -902,11 +902,29 @@ class AuthService {
 
       // Update local data
       if (isArcade && record != null) {
-        // For arcade mode, find the correct stage key_Creat
+        // For arcade mode, find the correct stage key
         String arcadeStageKey = localData.stageData.keys
             .firstWhere((key) => key.contains('Arcade'), 
             orElse: () => stageName);
-        localData.stageData[arcadeStageKey]?['bestRecord'] = record;
+        
+        // Get current records
+        int currentBestRecord = localData.stageData[arcadeStageKey]?['bestRecord'];
+        int currentRecord = localData.stageData[arcadeStageKey]?['crntRecord'];
+        
+        // Update records only if:
+        // 1. Current record is -1 (no record yet)
+        // 2. New record is lower than current record (better time)
+
+        //Update personal best record
+        if (currentBestRecord == -1 || record < currentBestRecord) {
+          localData.stageData[arcadeStageKey]?['bestRecord'] = record;
+        }
+
+        //Update current season record
+        if (currentRecord == -1 || record < currentRecord) {
+          localData.stageData[arcadeStageKey]?['crntRecord'] = record;
+        }
+
       } else {
         // For normal mode, find the correct stage key
         String stageKey = localData.stageData.keys

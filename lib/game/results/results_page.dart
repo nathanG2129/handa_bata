@@ -185,7 +185,7 @@ class ResultsPageState extends State<ResultsPage> {
           score: widget.score,
           stars: calculatedStars,
           mode: widget.mode.toLowerCase(),
-          record: widget.record,
+          record: _convertRecordToSeconds(widget.record),
           isArcade: true,
         );
       } else {

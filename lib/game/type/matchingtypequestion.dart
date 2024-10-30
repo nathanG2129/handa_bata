@@ -354,6 +354,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       isChecking = true;
     });
 
+    if (widget.gamemode == 'arcade') {
+      (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
+    }
+
     (context.findAncestorStateOfType<GameplayPageState>())?.stopTts();
 
     // Only check up to the number of correct pairs

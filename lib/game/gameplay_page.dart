@@ -335,6 +335,19 @@ void readCurrentQuestion() {
               stageData: {
                 ...widget.stageData,
                 'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+                'maxScore': _questions.fold(0, (sum, question) {
+                  if (question['type'] == 'Multiple Choice') {
+                    return sum + 1;
+                  } else if (question['type'] == 'Fill in the Blanks') {
+                    return sum + (question['answer'] as List).length;
+                  } else if (question['type'] == 'Identification') {
+                    return sum + 1;
+                  } else if (question['type'] == 'Matching Type') {
+                    return sum + (question['answerPairs'] as List).length;
+                  } else {
+                    return sum;
+                  }
+                }),
               },
               mode: widget.mode, // Pass the mode
               gamemode: widget.gamemode,
@@ -381,6 +394,19 @@ void readCurrentQuestion() {
             stageData: {
               ...widget.stageData,
               'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
+              'maxScore': _questions.fold(0, (sum, question) {
+                if (question['type'] == 'Multiple Choice') {
+                  return sum + 1;
+                } else if (question['type'] == 'Fill in the Blanks') {
+                  return sum + (question['answer'] as List).length;
+                } else if (question['type'] == 'Identification') {
+                  return sum + 1;
+                } else if (question['type'] == 'Matching Type') {
+                  return sum + (question['answerPairs'] as List).length;
+                } else {
+                  return sum;
+                }
+              }),
             },
             fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
             mode: widget.mode, // Pass the mode

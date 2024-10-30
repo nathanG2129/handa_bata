@@ -1,15 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
+import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
 import 'question_widgets.dart';
 import 'results_widgets.dart';
+import '../../services/auth_service.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -56,6 +57,7 @@ class ResultsPageState extends State<ResultsPage> {
   bool _soundsLoaded = false;
   int stars = 0; // Add stars to the state
   int _xpGained = 0;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -67,6 +69,7 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
+    print('Accuracy: $accuracy, Score: $score, MaxScore: $maxScore, IsGameOver: $isGameOver');
     if (isGameOver) {
       return 0;
     } else if (accuracy > 0.9 && score == maxScore) {
@@ -115,131 +118,74 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   Future<void> _updateScoreAndStarsInFirestore() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-  
-    final docRef = FirebaseFirestore.instance
-        .collection('User')
-        .doc(user.uid);
-    
-    // Calculate XP based on gamemode and difficulty
-    if (widget.gamemode == 'arcade') {
-      _xpGained = widget.isGameOver ? 0 : 500; // Only award XP if game is completed
-    } else {
-      // Adventure mode XP calculation
-      int multiplier = widget.mode == 'Hard' ? 10 : 5;
-      _xpGained = widget.score * multiplier;
-    }
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-    // Get user profile data for XP/Level update
-    final profileSnapshot = await docRef.collection('ProfileData').doc(user.uid).get();
-    if (profileSnapshot.exists) {
-      final profileData = profileSnapshot.data() as Map<String, dynamic>;
-      int currentXP = profileData['exp'] ?? 0;
-      int currentLevel = profileData['level'] ?? 1;
-      
-      // Add new XP
-      int newXP = currentXP + _xpGained;
-      int newLevel = currentLevel;
-      
-      // Calculate required XP for current level
-      int requiredXP = currentLevel * 100;
-      
-      // Handle level up logic
-      while (newXP >= requiredXP) {
-        newXP -= requiredXP;
-        newLevel++;
-        requiredXP = newLevel * 100; // Update required XP for next level
+      // Calculate XP based on gamemode and difficulty
+      if (widget.gamemode == 'arcade') {
+        _xpGained = widget.isGameOver ? 0 : 500;
+      } else {
+        int multiplier = widget.mode == 'Hard' ? 10 : 5;
+        _xpGained = widget.score * multiplier;
       }
-      
-      // Update user profile with new XP and level data
-      await docRef.collection('ProfileData').doc(user.uid).update({
-        'exp': newXP,
-        'level': newLevel,
-        'expCap': newLevel * 100, // Set expCap based on new level
+
+      // Get user profile and update XP/Level
+      UserProfile? profile = await _authService.getUserProfile();
+      if (profile != null) {
+        int newXP = profile.exp + _xpGained;
+        int newLevel = profile.level;
+        int requiredXP = profile.level * 100;
+
+        // Handle level up logic
+        while (newXP >= requiredXP) {
+          newXP -= requiredXP;
+          newLevel++;
+          requiredXP = newLevel * 100;
+        }
+
+        // Update profile with new XP and level
+        await _authService.updateUserProfile('exp', newXP);
+        await _authService.updateUserProfile('level', newLevel);
+        await _authService.updateUserProfile('expCap', newLevel * 100);
+      }
+
+      // Calculate stars
+      int calculatedStars = _calculateStars(
+        widget.accuracy, 
+        widget.score, 
+        widget.stageData['maxScore'],
+        widget.isGameOver
+      );
+
+      setState(() {
+        stars = calculatedStars;
       });
-    }
 
-    // Continue with existing game save data update
-    final gameSaveRef = docRef.collection('GameSaveData').doc(widget.category['id']);
-    final docSnapshot = await gameSaveRef.get();
-    if (!docSnapshot.exists) return;
-  
-    final data = docSnapshot.data() as Map<String, dynamic>;
-    final stageData = data['stageData'] as Map<String, dynamic>;
-  
-    // Find the correct stage key
-    final stageKey = widget.gamemode == 'arcade'
-        ? stageData.keys.firstWhere(
-            (key) => key.contains('Arcade'),
-            orElse: () => '',
-          )
-        : stageData.keys.firstWhere(
-            (key) => key.startsWith(widget.category['id']) && key.endsWith(widget.stageName.split(' ').last),
-            orElse: () => '',
-          ); // Stage not found
-  
-    print('${stageKey} and ${stageData}');
-  
-    int? maxScore;
-    if (widget.gamemode != 'arcade') {
-      maxScore = stageData[stageKey]['maxScore'] as int? ?? 0; // Fetch maxScore only if gamemode is not arcade
+      // Update game progress
+      if (widget.gamemode == 'arcade') {
+        await _authService.updateGameProgress(
+          categoryId: widget.category['id'],
+          stageName: widget.stageName,
+          score: widget.score,
+          stars: calculatedStars,
+          mode: widget.mode.toLowerCase(),
+          record: widget.record,
+          isArcade: true,
+        );
+      } else {
+        await _authService.updateGameProgress(
+          categoryId: widget.category['id'],
+          stageName: widget.stageName,
+          score: widget.score,
+          stars: calculatedStars,
+          mode: widget.mode.toLowerCase(),
+          isArcade: false,
+        );
+      }
+    } catch (e) {
+      print('Error updating score and stars: $e');
     }
-  
-    // Calculate stars using the fetched maxScore
-    int calculatedStars = _calculateStars(widget.accuracy, widget.score, maxScore ?? 0, widget.isGameOver);
-  
-    setState(() {
-      stars = calculatedStars; // Update the state with the calculated stars
-    });
-  
-    if (widget.gamemode == 'arcade') {
-      final currentRecord = _convertRecordToSeconds(widget.record);
-      print('Eto ang: ${currentRecord}');
-      final bestRecord = stageData[stageKey]['bestRecord'] as int; // Handle null value
-      final crntRecord = stageData[stageKey]['crntRecord'] as int; // Handle null value
-  
-      if (bestRecord == -1 || currentRecord < bestRecord) {
-        stageData[stageKey]['bestRecord'] = currentRecord;
-      }
-  
-      if (crntRecord == -1 || currentRecord < crntRecord) {
-        stageData[stageKey]['crntRecord'] = currentRecord;
-      }
-    } else {
-      if (widget.mode == 'Normal') {
-        final currentScore = stageData[stageKey]['scoreNormal'] as int;
-        if (widget.score > currentScore) {
-          stageData[stageKey]['scoreNormal'] = widget.score;
-        }
-  
-        final normalStageStars = data['normalStageStars'] as List<dynamic>;
-        final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
-        final currentStars = normalStageStars[stageIndex] as int;
-        if (calculatedStars > currentStars) {
-          normalStageStars[stageIndex] = calculatedStars;
-        }
-      } else if (widget.mode == 'Hard') {
-        final currentScore = stageData[stageKey]['scoreHard'] as int;
-        if (widget.score > currentScore) {
-          stageData[stageKey]['scoreHard'] = widget.score;
-        }
-  
-        final hardStageStars = data['hardStageStars'] as List<dynamic>;
-        final stageIndex = int.parse(stageKey.replaceAll(widget.category['id'], '')) - 1;
-        final currentStars = hardStageStars[stageIndex] as int;
-        if (calculatedStars > currentStars) {
-          hardStageStars[stageIndex] = calculatedStars;
-        }
-      }
-    }
-  
-    // Update Firestore with the new data
-    await gameSaveRef.update({
-      'stageData': stageData,
-      'normalStageStars': data['normalStageStars'],
-      'hardStageStars': data['hardStageStars'],
-    });
   }
 
   @override

@@ -15,10 +15,10 @@ class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key, required this.onClose, required this.selectedLanguage});
 
   @override
-  _UserProfilePageState createState() => _UserProfilePageState();
+  UserProfilePageState createState() => UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
+class UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   UserProfile? _userProfile;
   late String _selectedLanguage; // Add this line

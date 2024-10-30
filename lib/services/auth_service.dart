@@ -783,35 +783,36 @@ class AuthService {
     }
     
     // Create stageData map
-    Map<String, Map<String, dynamic>> stageData = {};
-    for (var stage in stages) {
-      String stageName = stage['stageName'];
-      if (stageName.contains('Arcade')) {
-        stageData[stageName] = {
-          'bestRecord': -1,
-          'crntRecord': -1,
-        };
-      } else {
-        int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-          if (question['type'] == 'Multiple Choice') {
-            return sum + 1;
-          } else if (question['type'] == 'Fill in the Blanks') {
-            return sum + (question['answer'] as List).length;
-          } else if (question['type'] == 'Identification') {
-            return sum + 1;
-          } else if (question['type'] == 'Matching Type') {
-            return sum + (question['answerPairs'] as List).length;
-          } else {
-            return sum;
-          }
-        });
-        stageData[stageName] = {
-          'maxScore': maxScore,
-          'scoreHard': 0,
-          'scoreNormal': 0,
-        };
-      }
+  Map<String, Map<String, dynamic>> stageData = {};
+  for (var stage in stages) {
+    String stageName = stage['stageName'];
+    if (stageName.contains('Arcade')) {
+      stageData[stageName] = {
+        'bestRecord': -1,
+        'crntRecord': -1,
+      };
+    } else {
+      //Calculate maxScore
+      int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+        if (question['type'] == 'Multiple Choice') {
+          return sum + 1;
+        } else if (question['type'] == 'Fill in the Blanks') {
+          return sum + (question['answer'] as List).length;
+        } else if (question['type'] == 'Identification') {
+          return sum + 1;
+        } else if (question['type'] == 'Matching Type') {
+          return sum + (question['answerPairs'] as List).length;
+        } else {
+          return sum;
+        }
+      });
+      stageData[stageName] = {
+        'maxScore': maxScore,
+        'scoreHard': 0,
+        'scoreNormal': 0,
+      };
     }
+  }
     
     return GameSaveData(
       stageData: stageData,
@@ -901,17 +902,32 @@ class AuthService {
 
       // Update local data
       if (isArcade && record != null) {
-        localData.stageData[stageName]?['bestRecord'] = record;
+        // For arcade mode, find the correct stage key_Creat
+        String arcadeStageKey = localData.stageData.keys
+            .firstWhere((key) => key.contains('Arcade'), 
+            orElse: () => stageName);
+        localData.stageData[arcadeStageKey]?['bestRecord'] = record;
       } else {
+        // For normal mode, find the correct stage key
+        String stageKey = localData.stageData.keys
+            .firstWhere((key) => key.endsWith(stageName.split(' ').last),
+            orElse: () => stageName);
+        
+        // Update score
         String scoreKey = mode == 'normal' ? 'scoreNormal' : 'scoreHard';
-        localData.stageData[stageName]?[scoreKey] = score;
+        if (localData.stageData[stageKey] != null) {
+          localData.stageData[stageKey]![scoreKey] = score;
+        }
         
         // Update stars
         List<int> stageStars = mode == 'normal' 
             ? localData.normalStageStars 
             : localData.hardStageStars;
         
-        int stageIndex = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        // Extract stage number from stageName (e.g., "Stage 1" -> 1)
+        int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), ''));
+        int stageIndex = stageNumber - 1;
+        
         if (stageIndex >= 0 && stageIndex < stageStars.length) {
           if (stars > stageStars[stageIndex]) {
             stageStars[stageIndex] = stars;

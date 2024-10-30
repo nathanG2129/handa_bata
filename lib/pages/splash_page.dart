@@ -59,8 +59,11 @@ class SplashPageState extends State<SplashPage> {
       }
 
       // If no guest account exists, create a new one
-      await FirebaseAuth.instance.signInAnonymously();
-      await authService.createGuestProfile(); // Create guest profile in Firestore
+      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+      User? user = userCredential.user;
+      if (user != null) {
+        await authService.createGuestProfile(user);
+      }
 
       // Check if the widget is still mounted before using the context
       if (!context.mounted) return;

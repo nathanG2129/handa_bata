@@ -137,7 +137,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
     try {
       await authService.deleteUserAccount();
       await authService.clearLocalGuestProfile(); // Clear local guest profile
-      await authService.logout();
+      await authService.signOut();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -186,22 +186,20 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   Future<void> _logout() async {
     try {
       AuthService authService = AuthService();
-      await authService.logout();
-      await authService.clearLocalGuestProfile(); // Clear local guest profile
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)),
-          (Route<dynamic> route) => false,
-        );
-      }
+      await authService.signOut();
+      
+      if (!mounted) return;
+      
+      // Navigate to splash page and clear navigation stack
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage,)),
+        (Route<dynamic> route) => false,
+      );
     } catch (e) {
-      if (mounted) {
-        // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${PlayLocalization.translate('error', widget.selectedLanguage)} $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${PlayLocalization.translate('errorLoggingOut', widget.selectedLanguage)} $e')),
+      );
     }
   }
 

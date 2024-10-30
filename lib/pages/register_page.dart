@@ -11,6 +11,8 @@ import '../widgets/buttons/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String selectedLanguage; // Add this line
@@ -50,18 +52,71 @@ class RegistrationPageState extends State<RegistrationPage> {
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => EmailVerificationDialog(
-          email: _emailController.text,
-          selectedLanguage: _selectedLanguage,
-          username: _usernameController.text,
-          password: _passwordController.text,
-          birthday: _birthdayController.text,
-          onClose: () => Navigator.of(context).pop(),
-        ),
-      );
+      // Check if current user is a guest
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String? role = currentUser != null ? 
+          await AuthService().getUserRole(currentUser.uid) : null;
+
+      if (role == 'guest') {
+        // Convert guest to user
+        try {
+          await AuthService().convertGuestToUser(
+            _emailController.text,
+            _passwordController.text,
+            _usernameController.text,
+            _usernameController.text, // Using username as nickname
+            _birthdayController.text,
+          );
+          
+          // Show success dialog
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(RegisterLocalization.translate('success', _selectedLanguage)),
+                content: Text(RegisterLocalization.translate('guest_conversion_success', _selectedLanguage)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(RegisterLocalization.translate('ok', _selectedLanguage)),
+                  ),
+                ],
+              ),
+            );
+          }
+        } catch (e) {
+          // Show error dialog
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(RegisterLocalization.translate('error', _selectedLanguage)),
+                content: Text(e.toString()),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(RegisterLocalization.translate('ok', _selectedLanguage)),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      } else {
+        // Regular registration flow
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => EmailVerificationDialog(
+            email: _emailController.text,
+            selectedLanguage: _selectedLanguage,
+            username: _usernameController.text,
+            password: _passwordController.text,
+            birthday: _birthdayController.text,
+            onClose: () => Navigator.of(context).pop(),
+          ),
+        );
+      }
     }
   }
 

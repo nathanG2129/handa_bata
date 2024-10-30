@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,19 +8,27 @@ import '../models/user_model.dart';
 import '../models/game_save_data.dart'; // Add this import
 import '../services/stage_service.dart'; // Add this import
 
+/// Service for handling authentication and user profile management.
+/// Supports both regular users and guest accounts with offline capabilities.
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final StageService _stageService = StageService(); // Initialize StageService
+  final String defaultLanguage;
 
-  AuthService() {
+  static const String USER_PROFILE_KEY = 'user_profile';
+  static const String GUEST_PROFILE_KEY = 'guest_profile';
+  static const String GUEST_UID_KEY = 'guest_uid';
+
+  List<StreamSubscription> _subscriptions = [];
+
+  AuthService({this.defaultLanguage = 'en'}) {
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        syncGuestProfile();
-        syncUserProfile();
+        syncProfiles();
       }
     });
-    _listenToFirestoreChanges(); // Add this line
+    _listenToFirestoreChanges();
   }
 
   Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
@@ -50,11 +59,11 @@ class AuthService {
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
 
         // Fetch categories and create gameSaveData documents
-        List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage); // Assuming 'en' as the language
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
         for (Map<String, dynamic> category in categories) {
           // Fetch stages for the category
-          List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
+          List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
           int stageCount = stages.length;
           
           // Initialize arrays with default values
@@ -129,6 +138,9 @@ class AuthService {
           'email': email,
           'role': role,
         });
+
+        // Save user profile locally
+        await saveUserProfileLocally(userProfile);
       }
 
       return user;
@@ -137,160 +149,95 @@ class AuthService {
     }
   }
 
-  Future<void> createGuestProfile() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      UserProfile guestProfile = UserProfile(
-        profileId: user.uid,
-        username: 'Guest',
-        nickname: 'Guest',
-        avatarId: 0,
-        badgeShowcase: [0, 0, 0],
-        bannerId: 0,
-        exp: 0,
-        expCap: 100,
-        hasShownCongrats: false,
-        level: 1,
-        totalBadgeUnlocked: 0,
-        totalStageCleared: 0,
-        unlockedBadge: List<int>.filled(40, 0),
-        unlockedBanner: List<int>.filled(10, 0),
-        email: 'guest@example.com',
-        birthday: '2000-01-01',
-      );
+  Future<void> createGuestProfile(User user) async {
+    UserProfile guestProfile = UserProfile(
+      profileId: user.uid,
+      username: 'Guest',
+      nickname: 'Guest',
+      avatarId: 0,
+      badgeShowcase: [0, 0, 0],
+      bannerId: 0,
+      exp: 0,
+      expCap: 100,
+      hasShownCongrats: false,
+      level: 1,
+      totalBadgeUnlocked: 0,
+      totalStageCleared: 0,
+      unlockedBadge: List<int>.filled(40, 0),
+      unlockedBanner: List<int>.filled(10, 0),
+      email: 'guest@example.com',
+      birthday: '2000-01-01',
+    );
 
-      await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(guestProfile.toMap());
+    // Save profile to Firestore
+    await _firestore
+        .collection('User')
+        .doc(user.uid)
+        .collection('ProfileData')
+        .doc(user.uid)
+        .set(guestProfile.toMap());
 
-      // Fetch categories and create gameSaveData documents
-      List<Map<String, dynamic>> categories = await _stageService.fetchCategories('en'); // Assuming 'en' as the language
-      CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
-      for (Map<String, dynamic> category in categories) {
-        // Fetch stages for the category
-        List<Map<String, dynamic>> stages = await _stageService.fetchStages('en', category['id']);
-        int stageCount = stages.length;
+    // Save profile locally
+    await saveUserProfileLocally(guestProfile);
+
+    // Create GameSaveData for guest
+    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+    for (Map<String, dynamic> category in categories) {
+      List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
+      GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
+      
+      // Save locally first
+      await saveGameSaveDataLocally(category['id'], gameSaveData);
+      
+      // Then save to Firebase if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('GameSaveData')
+            .doc(category['id'])
+            .set(gameSaveData.toMap());
+      }
+    }
+  }
+
+    Future<void> syncProfile(String role) async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        UserProfile? localProfile = role == 'guest' 
+            ? await getLocalGuestProfile()
+            : await getLocalUserProfile();
         
-        // Initialize arrays with default values
-        List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
-        List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
-        List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
-        List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
-        List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
-        
-        // Unlock the first stage by default
-        if (stageCount > 0) {
-          unlockedNormalStages[0] = true;
-          unlockedHardStages[0] = true;
-        }
-        
-        // Create stageData map
-        Map<String, Map<String, dynamic>> stageData = {};
-        for (var stage in stages) {
-          String stageName = stage['stageName'];
-          if (stageName.contains('Arcade')) {
-            stageData[stageName] = {
-              'bestRecord': -1,
-              'crntRecord': -1,
-            };
-          } else {
-            int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-              if (question['type'] == 'Multiple Choice') {
-                return sum + 1;
-              } else if (question['type'] == 'Fill in the Blanks') {
-                return sum + (question['answer'] as List).length;
-              } else if (question['type'] == 'Identification') {
-                return sum + 1;
-              } else if (question['type'] == 'Matching Type') {
-                return sum + (question['answerPairs'] as List).length;
-              } else {
-                return sum;
-              }
-            });
-            stageData[stageName] = {
-              'maxScore': maxScore,
-              'scoreHard': 0,
-              'scoreNormal': 0,
-            };
+        if (localProfile != null) {
+          await _firestore
+              .collection('User')
+              .doc(localProfile.profileId)
+              .collection('ProfileData')
+              .doc(localProfile.profileId)
+              .set(localProfile.toMap());
+          
+          if (role == 'guest') {
+            await clearLocalGuestProfile();
           }
         }
-        
-        // Create gameSaveData document
-        GameSaveData gameSaveData = GameSaveData(
-          stageData: stageData,
-          normalStageStars: normalStageStars,
-          hardStageStars: hardStageStars,
-          unlockedNormalStages: unlockedNormalStages,
-          unlockedHardStages: unlockedHardStages,
-          hasSeenPrerequisite: hasSeenPrerequisite,
-        );
-        
-        // Remove arcade stages from stars related fields
-        for (var stage in stages) {
-          String stageName = stage['stageName'];
-          if (stageName.contains('Arcade')) {
-            int index = stages.indexOf(stage);
-            normalStageStars.removeAt(index);
-            hardStageStars.removeAt(index);
-            unlockedHardStages.removeAt(index);
-          }
-        }
-        
-        await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
       }
-
-      await _firestore.collection('User').doc(user.uid).set({
-        'email': 'guest@example.com',
-        'role': 'guest',
-      });
-
-      // Save guest account details locally
-      await saveGuestAccountDetails(user.uid);
-      await saveGuestProfileLocally(guestProfile); // Save guest profile locally
+    } catch (e) {
+      print('Error syncing ${role} profile: $e');
+      rethrow;
     }
   }
-
-    Future<void> syncUserProfile() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult != ConnectivityResult.none) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userProfileString = prefs.getString('userProfile');
-      if (userProfileString != null) {
-        Map<String, dynamic> userProfileMap = jsonDecode(userProfileString);
-        UserProfile userProfile = UserProfile.fromMap(userProfileMap);
-        try {
-          await _firestore.collection('User').doc(userProfile.profileId).collection('ProfileData').doc(userProfile.profileId).set(userProfile.toMap());
-          prefs.remove('userProfile'); // Remove local data after successful sync
-        } catch (e) {
-        }
-      }
-    }
-  }
-
-  Future<void> syncGuestProfile() async {
-  var connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult != ConnectivityResult.none) {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? guestProfileString = prefs.getString('guestProfile');
-    if (guestProfileString != null) {
-      Map<String, dynamic> guestProfileMap = jsonDecode(guestProfileString);
-      UserProfile guestProfile = UserProfile.fromMap(guestProfileMap);
-      try {
-        await _firestore.collection('User').doc(guestProfile.profileId).collection('ProfileData').doc(guestProfile.profileId).set(guestProfile.toMap());
-        prefs.remove('guestProfile'); // Remove local data after successful sync
-      } catch (e) {
-      }
-    }
-  }
-}
 
   Future<void> saveGuestProfileLocally(UserProfile profile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String profileJson = jsonEncode(profile.toMap());
-    await prefs.setString('guest_profile', profileJson);
+    await prefs.setString(GUEST_PROFILE_KEY, profileJson);
   }
 
   Future<UserProfile?> getLocalGuestProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? profileJson = prefs.getString('guest_profile');
+    String? profileJson = prefs.getString(GUEST_PROFILE_KEY);
     if (profileJson != null) {
       Map<String, dynamic> profileMap = jsonDecode(profileJson);
       return UserProfile.fromMap(profileMap);
@@ -300,7 +247,7 @@ class AuthService {
 
   Future<void> clearLocalGuestProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('guest_profile');
+    await prefs.remove(GUEST_PROFILE_KEY);
   }
 
   Future<bool> isSignedIn() async {
@@ -310,26 +257,48 @@ class AuthService {
 
   Future<void> saveGuestAccountDetails(String uid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('guest_uid', uid);
+    await prefs.setString(GUEST_UID_KEY, uid);
   }
 
   Future<String?> getGuestAccountDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('guest_uid');
+    return prefs.getString(GUEST_UID_KEY);
   }
 
   Future<void> clearGuestAccountDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('guest_uid');
+    await prefs.remove(GUEST_UID_KEY);
   }
 
-  Future<void> updateUserProfile(String field, String newValue) async {
+  Future<void> updateUserProfile(String field, dynamic value) async {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).update({field: newValue});
+        // Get current profile
+        UserProfile? currentProfile = await getLocalUserProfile();
+        if (currentProfile == null) {
+          currentProfile = await getUserProfile();
+        }
+        
+        // Update profile locally
+        Map<String, dynamic> profileMap = currentProfile!.toMap();
+        profileMap[field] = value;
+        UserProfile updatedProfile = UserProfile.fromMap(profileMap);
+        await saveUserProfileLocally(updatedProfile);
+
+        // Try to update Firebase if online
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          await _firestore
+              .collection('User')
+              .doc(user.uid)
+              .collection('ProfileData')
+              .doc(user.uid)
+              .update({field: value});
+        }
       }
     } catch (e) {
+      print('Error updating user profile: $e');
       rethrow;
     }
   }
@@ -364,8 +333,10 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      await clearGuestAccountDetails(); // Clear guest account details on sign out
+      await clearAllLocalData(); // Clear all local data, not just guest details
     } catch (e) {
+      print('Error signing out: $e');
+      rethrow;
     }
   }
 
@@ -376,40 +347,39 @@ class AuthService {
         return UserProfile.guestProfile;
       }
 
-      DocumentSnapshot profileDoc = await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).get();
-      if (!profileDoc.exists) {
-        return UserProfile.guestProfile;
+      // Always check local storage first
+      UserProfile? localProfile = await getLocalUserProfile();
+      if (localProfile != null) {
+        return localProfile;
       }
 
-      Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
-      return UserProfile(
-        profileId: data['profileId'],
-        username: data['username'],
-        nickname: data['nickname'],
-        avatarId: data['avatarId'],
-        badgeShowcase: List<int>.from(data['badgeShowcase']),
-        bannerId: data['bannerId'],
-        exp: data['exp'],
-        expCap: data['expCap'],
-        hasShownCongrats: data['hasShownCongrats'],
-        level: data['level'],
-        totalBadgeUnlocked: data['totalBadgeUnlocked'],
-        totalStageCleared: data['totalStageCleared'],
-        unlockedBadge: List<int>.from(data['unlockedBadge']),
-        unlockedBanner: List<int>.from(data['unlockedBanner']),
-        email: data['email'],
-        birthday: data['birthday'],
-      );
-    } catch (e) {
-      return UserProfile.guestProfile;
-    }
-  }
+      // Only if no local profile, get from Firebase
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        DocumentSnapshot profileDoc = await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .get();
+        
+        if (!profileDoc.exists) {
+          return UserProfile.guestProfile;
+        }
 
-  Future<void> logout() async {
-    try {
-      await _auth.signOut();
-      await clearGuestAccountDetails(); // Clear guest account details on logout
+        Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
+        UserProfile profile = UserProfile.fromMap(data);
+        
+        // Save to local storage
+        await saveUserProfileLocally(profile);
+        
+        return profile;
+      }
+      
+      return UserProfile.guestProfile;
     } catch (e) {
+      print('Error getting user profile: $e');
+      return UserProfile.guestProfile;
     }
   }
 
@@ -448,15 +418,70 @@ class AuthService {
   }
 
     void _listenToFirestoreChanges() {
-    _firestore.collectionGroup('ProfileData').snapshots().listen((snapshot) {
-      for (var change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added ||
-            change.type == DocumentChangeType.modified ||
-            change.type == DocumentChangeType.removed) {
-          _syncFirestoreToLocal(change.doc);
-        }
-      }
-    });
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      _subscriptions.add(
+        _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('ProfileData')
+            .doc(currentUser.uid)
+            .snapshots()
+            .listen(
+          (docSnapshot) async {
+            if (!docSnapshot.exists) return;
+
+            // Check if we have local changes pending sync
+            bool hasLocalChanges = await hasLocalUserProfile();
+            if (hasLocalChanges) {
+              // Don't overwrite local changes
+              return;
+            }
+
+            var connectivityResult = await (Connectivity().checkConnectivity());
+            if (connectivityResult != ConnectivityResult.none) {
+              UserProfile userProfile = UserProfile.fromMap(docSnapshot.data() as Map<String, dynamic>);
+              await saveUserProfileLocally(userProfile);
+            }
+          },
+          onError: (error) {
+            print('Error listening to Firestore changes: $error');
+          },
+        ),
+      );
+
+      // GameSaveData listener
+      _subscriptions.add(
+        _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('GameSaveData')
+            .snapshots()
+            .listen(
+          (QuerySnapshot snapshot) async {
+            var connectivityResult = await (Connectivity().checkConnectivity());
+            if (connectivityResult != ConnectivityResult.none) {
+              for (var change in snapshot.docChanges) {
+                if (change.type == DocumentChangeType.modified) {
+                  String categoryId = change.doc.id;
+                  GameSaveData gameSaveData = GameSaveData.fromMap(
+                    change.doc.data() as Map<String, dynamic>
+                  );
+                  await saveGameSaveDataLocally(categoryId, gameSaveData);
+                }
+              }
+            }
+          },
+          onError: (error) {
+            print('Error listening to GameSaveData changes: $error');
+          },
+        ),
+      );
+    } catch (e) {
+      print('Error setting up Firestore listener: $e');
+    }
   }
 
     Future<void> _syncFirestoreToLocal(DocumentSnapshot doc) async {
@@ -469,24 +494,407 @@ class AuthService {
   }
 
     Future<void> saveUserProfileLocally(UserProfile profile) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String profileJson = jsonEncode(profile.toMap());
-    await prefs.setString('user_profile', profileJson); // Ensure the key is 'user_profile'
+    try {
+      if (!_validateUserProfile(profile)) {
+        throw Exception('Invalid user profile data');
+      }
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String profileJson = jsonEncode(profile.toMap());
+      await prefs.setString(USER_PROFILE_KEY, profileJson);
+    } catch (e) {
+      print('Error saving user profile locally: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateAvatarId(int avatarId) async {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        await _firestore
-            .collection('User')
-            .doc(user.uid)
-            .collection('ProfileData')
-            .doc(user.uid)
-            .update({'avatarId': avatarId});
+        // Get and update local profile first
+        UserProfile? currentProfile = await getLocalUserProfile();
+        if (currentProfile == null) {
+          currentProfile = await getUserProfile();
+        }
+        
+        // Update locally
+        Map<String, dynamic> profileMap = currentProfile!.toMap();
+        profileMap['avatarId'] = avatarId;
+        UserProfile updatedProfile = UserProfile.fromMap(profileMap);
+        await saveUserProfileLocally(updatedProfile);
+
+        // Update Firebase if online
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          await _firestore
+              .collection('User')
+              .doc(user.uid)
+              .collection('ProfileData')
+              .doc(user.uid)
+              .update({'avatarId': avatarId});
+        }
       }
     } catch (e) {
       print('Error updating avatar ID: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> clearLocalUserProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(USER_PROFILE_KEY);
+  }
+
+  Future<bool> hasLocalUserProfile() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      return prefs.containsKey(USER_PROFILE_KEY);
+    } catch (e) {
+      print('Error checking local user profile: $e');
+      return false;
+    }
+  }
+
+  Future<bool> hasLocalGuestProfile() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      return prefs.containsKey(GUEST_PROFILE_KEY);
+    } catch (e) {
+      print('Error checking local guest profile: $e');
+      return false;
+    }
+  }
+
+  Future<UserProfile?> getLocalUserProfile() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? profileJson = prefs.getString(USER_PROFILE_KEY);
+      if (profileJson != null) {
+        Map<String, dynamic> profileMap = jsonDecode(profileJson);
+        return UserProfile.fromMap(profileMap);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting local user profile: $e');
+      return null;
+    }
+  }
+
+  Future<void> clearAllLocalData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> keysToRemove = [
+        USER_PROFILE_KEY,
+        GUEST_PROFILE_KEY,
+        GUEST_UID_KEY,
+      ];
+      
+      // Add GameSaveData keys
+      List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+      for (var category in categories) {
+        keysToRemove.add('game_save_data_${category['id']}');
+      }
+      
+      await Future.wait(
+        keysToRemove.map((key) => prefs.remove(key))
+      );
+    } catch (e) {
+      print('Error clearing all local data: $e');
+      rethrow;
+    }
+  }
+
+  bool _validateUserProfile(UserProfile profile) {
+    return profile.profileId.isNotEmpty &&
+        profile.username.isNotEmpty &&
+        profile.nickname.isNotEmpty &&
+        profile.level > 0 &&
+        profile.expCap > 0;
+  }
+
+  /// Converts a guest account to a regular user account while preserving all data.
+  /// Returns the updated User object or null if conversion fails.
+  Future<User?> convertGuestToUser(String email, String password, String username, String nickname, String birthday) async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return null;
+
+      // Get current guest profile and game save data
+      UserProfile? guestProfile = await getLocalUserProfile();
+      if (guestProfile == null) return null;
+
+      // Create email/password credentials and link account
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await currentUser.linkWithCredential(credential);
+
+      // Update profile data
+      UserProfile updatedProfile = UserProfile(
+        profileId: currentUser.uid,
+        username: username,
+        nickname: nickname,
+        avatarId: guestProfile.avatarId,
+        badgeShowcase: guestProfile.badgeShowcase,
+        bannerId: guestProfile.bannerId,
+        exp: guestProfile.exp,
+        expCap: guestProfile.expCap,
+        hasShownCongrats: guestProfile.hasShownCongrats,
+        level: guestProfile.level,
+        totalBadgeUnlocked: guestProfile.totalBadgeUnlocked,
+        totalStageCleared: guestProfile.totalStageCleared,
+        unlockedBadge: guestProfile.unlockedBadge,
+        unlockedBanner: guestProfile.unlockedBanner,
+        email: email,
+        birthday: birthday,
+      );
+
+      // Save updated profile locally
+      await saveUserProfileLocally(updatedProfile);
+
+      // Update Firestore if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        try {
+          WriteBatch batch = _firestore.batch();
+          // ... existing batch operations ...
+          await _executeBatchWithRetry(batch);
+        } catch (e) {
+          print('Error converting guest to user: $e');
+          return null;
+        }
+      }
+
+      return currentUser;
+    } catch (e) {
+      print('Error converting guest to user: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> saveGameSaveDataLocally(String categoryId, GameSaveData data) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String saveDataJson = jsonEncode(data.toMap());
+      await prefs.setString('game_save_data_$categoryId', saveDataJson);
+    } catch (e) {
+      print('Error saving game save data locally: $e');
+      rethrow;
+    }
+  }
+
+  Future<GameSaveData?> getLocalGameSaveData(String categoryId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? saveDataJson = prefs.getString('game_save_data_$categoryId');
+      if (saveDataJson != null) {
+        Map<String, dynamic> saveDataMap = jsonDecode(saveDataJson);
+        return GameSaveData.fromMap(saveDataMap);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting local game save data: $e');
+      return null;
+    }
+  }
+
+  Future<void> _executeBatchWithRetry(WriteBatch batch, {int maxRetries = 3}) async {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        await batch.commit();
+        return;
+      } catch (e) {
+        attempts++;
+        if (attempts == maxRetries) rethrow;
+        await Future.delayed(Duration(seconds: 1 * attempts));
+      }
+    }
+  }
+
+  Future<GameSaveData> _createInitialGameSaveData(List<Map<String, dynamic>> stages) async {
+    int stageCount = stages.length;
+    
+    // Initialize arrays with default values
+    List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
+    List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
+    List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
+    List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
+    List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
+    
+    // Unlock the first stage by default
+    if (stageCount > 0) {
+      unlockedNormalStages[0] = true;
+      unlockedHardStages[0] = true;
+    }
+    
+    // Create stageData map
+    Map<String, Map<String, dynamic>> stageData = {};
+    for (var stage in stages) {
+      String stageName = stage['stageName'];
+      if (stageName.contains('Arcade')) {
+        stageData[stageName] = {
+          'bestRecord': -1,
+          'crntRecord': -1,
+        };
+      } else {
+        int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
+          if (question['type'] == 'Multiple Choice') {
+            return sum + 1;
+          } else if (question['type'] == 'Fill in the Blanks') {
+            return sum + (question['answer'] as List).length;
+          } else if (question['type'] == 'Identification') {
+            return sum + 1;
+          } else if (question['type'] == 'Matching Type') {
+            return sum + (question['answerPairs'] as List).length;
+          } else {
+            return sum;
+          }
+        });
+        stageData[stageName] = {
+          'maxScore': maxScore,
+          'scoreHard': 0,
+          'scoreNormal': 0,
+        };
+      }
+    }
+    
+    return GameSaveData(
+      stageData: stageData,
+      normalStageStars: normalStageStars,
+      hardStageStars: hardStageStars,
+      unlockedNormalStages: unlockedNormalStages,
+      unlockedHardStages: unlockedHardStages,
+      hasSeenPrerequisite: hasSeenPrerequisite,
+    );
+  }
+
+  Future<QuerySnapshot?> _safeFirestoreGet(Query query, {int maxRetries = 3}) async {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        return await query.get();
+      } catch (e) {
+        attempts++;
+        if (attempts == maxRetries) return null;
+        await Future.delayed(Duration(seconds: 1 * attempts));
+      }
+    }
+    return null;
+  }
+
+  Future<void> dispose() async {
+    for (var subscription in _subscriptions) {
+      await subscription.cancel();
+    }
+    _subscriptions.clear();
+  }
+
+  /// Synchronizes local profile and game save data with Firestore when online.
+  /// Handles both user and guest profiles.
+  Future<void> syncProfiles() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult != ConnectivityResult.none) {
+      User? currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        String? role = await getUserRole(currentUser.uid);
+        
+        // Sync profile data
+        if (role == 'guest') {
+          await syncProfile('guest');
+        } else {
+          await syncProfile('user');
+        }
+
+        // Sync GameSaveData
+        // First get local data for each category
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+        for (var category in categories) {
+          String categoryId = category['id'];
+          GameSaveData? localData = await getLocalGameSaveData(categoryId);
+          
+          if (localData != null) {
+            // If we have local data, sync it to Firestore
+            await _firestore
+                .collection('User')
+                .doc(currentUser.uid)
+                .collection('GameSaveData')
+                .doc(categoryId)
+                .set(localData.toMap());
+          } else {
+            // If no local data, get from Firestore and save locally
+            DocumentSnapshot firestoreData = await _firestore
+                .collection('User')
+                .doc(currentUser.uid)
+                .collection('GameSaveData')
+                .doc(categoryId)
+                .get();
+
+            if (firestoreData.exists) {
+              GameSaveData gameSaveData = GameSaveData.fromMap(
+                firestoreData.data() as Map<String, dynamic>
+              );
+              await saveGameSaveDataLocally(categoryId, gameSaveData);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /// Updates game progress including score, stars, and unlocks next stage if applicable
+  Future<void> updateGameProgress({
+    required String categoryId,
+    required String stageName,
+    required int score,
+    required int stars,
+    required String mode,
+    String? record,
+    required bool isArcade,
+  }) async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      GameSaveData? localData = await getLocalGameSaveData(categoryId);
+      if (localData == null) return;
+
+      // Update local data
+      if (isArcade && record != null) {
+        localData.stageData[stageName]?['bestRecord'] = record;
+      } else {
+        String scoreKey = mode == 'normal' ? 'scoreNormal' : 'scoreHard';
+        localData.stageData[stageName]?[scoreKey] = score;
+        
+        // Update stars
+        List<int> stageStars = mode == 'normal' 
+            ? localData.normalStageStars 
+            : localData.hardStageStars;
+        
+        int stageIndex = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        if (stageIndex >= 0 && stageIndex < stageStars.length) {
+          if (stars > stageStars[stageIndex]) {
+            stageStars[stageIndex] = stars;
+          }
+        }
+      }
+
+      // Save locally
+      await saveGameSaveDataLocally(categoryId, localData);
+
+      // Sync with Firestore if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('GameSaveData')
+            .doc(categoryId)
+            .set(localData.toMap());
+      }
+    } catch (e) {
+      print('Error updating game progress: $e');
       rethrow;
     }
   }

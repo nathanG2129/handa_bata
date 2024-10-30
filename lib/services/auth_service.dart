@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -37,10 +38,12 @@ class AuthService {
       User? user = result.user;
 
       if (user != null) {
+        String finalNickname = nickname.isEmpty ? _generateRandomNickname() : nickname;
+        
         UserProfile userProfile = UserProfile(
           profileId: user.uid,
           username: username,
-          nickname: nickname,
+          nickname: finalNickname,
           avatarId: 0,
           badgeShowcase: [0, 0, 0],
           bannerId: 0,
@@ -153,7 +156,7 @@ class AuthService {
     UserProfile guestProfile = UserProfile(
       profileId: user.uid,
       username: 'Guest',
-      nickname: 'Guest',
+      nickname: _generateRandomNickname(),  // Generate random nickname
       avatarId: 0,
       badgeShowcase: [0, 0, 0],
       bannerId: 0,
@@ -165,8 +168,8 @@ class AuthService {
       totalStageCleared: 0,
       unlockedBadge: List<int>.filled(40, 0),
       unlockedBanner: List<int>.filled(10, 0),
-      email: 'guest@example.com',
-      birthday: '2000-01-01',
+      email: '',
+      birthday: '',
     );
 
     // Save profile to Firestore
@@ -625,31 +628,54 @@ class AuthService {
       UserProfile? guestProfile = await getLocalUserProfile();
       if (guestProfile == null) return null;
 
-      // Fetch all game save data before conversion
-      List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
-      Map<String, GameSaveData> gameSaveDataMap = {};
-      
-      // Store all current game save data
-      for (var category in categories) {
-        String categoryId = category['id'];
-        GameSaveData? saveData = await getLocalGameSaveData(categoryId);
-        if (saveData != null) {
-          gameSaveDataMap[categoryId] = saveData;
-        }
-      }
+      // Use the provided nickname or generate one if not provided
+      String finalNickname = nickname.isEmpty ? _generateRandomNickname() : nickname;
+
+      // Store conversion data for later use after OTP verification
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_conversion', jsonEncode({
+        'email': email,
+        'password': password,
+        'username': username,
+        'nickname': finalNickname,
+        'birthday': birthday,
+        'guestProfile': guestProfile.toMap(),
+      }));
+
+      return currentUser;
+    } catch (e) {
+      print('Error preparing guest conversion: $e');
+      rethrow;
+    }
+  }
+
+  // Add new method to complete the conversion after OTP verification
+  Future<User?> completeGuestConversion() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? pendingConversionData = prefs.getString('pending_conversion');
+      if (pendingConversionData == null) return null;
+
+      Map<String, dynamic> conversionData = jsonDecode(pendingConversionData);
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return null;
+
+      // Get the guest profile data which includes the nickname
+      Map<String, dynamic> guestProfileData = conversionData['guestProfile'];
+      UserProfile guestProfile = UserProfile.fromMap(guestProfileData);
 
       // Create email/password credentials and link account
       AuthCredential credential = EmailAuthProvider.credential(
-        email: email,
-        password: password,
+        email: conversionData['email'],
+        password: conversionData['password'],
       );
       await currentUser.linkWithCredential(credential);
 
-      // Update profile data
+      // Update profile data, keeping the original nickname
       UserProfile updatedProfile = UserProfile(
         profileId: currentUser.uid,
-        username: username,
-        nickname: nickname,
+        username: conversionData['username'],
+        nickname: guestProfile.nickname,  // Keep the original nickname
         avatarId: guestProfile.avatarId,
         badgeShowcase: guestProfile.badgeShowcase,
         bannerId: guestProfile.bannerId,
@@ -661,57 +687,41 @@ class AuthService {
         totalStageCleared: guestProfile.totalStageCleared,
         unlockedBadge: guestProfile.unlockedBadge,
         unlockedBanner: guestProfile.unlockedBanner,
-        email: email,
-        birthday: birthday,
+        email: conversionData['email'],
+        birthday: conversionData['birthday'],
       );
-
-      // Save updated profile locally
-      await saveUserProfileLocally(updatedProfile);
 
       // Update Firestore if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        try {
-          WriteBatch batch = _firestore.batch();
-          
-          // Update main user document
-          batch.set(_firestore.collection('User').doc(currentUser.uid), {
-            'email': email,
-            'role': 'user'  // Convert from guest to regular user
-          });
+        WriteBatch batch = _firestore.batch();
+        
+        batch.set(_firestore.collection('User').doc(currentUser.uid), {
+          'email': conversionData['email'],
+          'role': 'user'
+        });
 
-          // Update profile data
-          batch.set(
-            _firestore
-                .collection('User')
-                .doc(currentUser.uid)
-                .collection('ProfileData')
-                .doc(currentUser.uid),
-            updatedProfile.toMap()
-          );
+        batch.set(
+          _firestore
+              .collection('User')
+              .doc(currentUser.uid)
+              .collection('ProfileData')
+              .doc(currentUser.uid),
+          updatedProfile.toMap()
+        );
 
-          // Update all game save data
-          for (var entry in gameSaveDataMap.entries) {
-            batch.set(
-              _firestore
-                  .collection('User')
-                  .doc(currentUser.uid)
-                  .collection('GameSaveData')
-                  .doc(entry.key),
-              entry.value.toMap()
-            );
-          }
-
-          await _executeBatchWithRetry(batch);
-        } catch (e) {
-          print('Error converting guest to user: $e');
-          return null;
-        }
+        await _executeBatchWithRetry(batch);
       }
+
+      // Save updated profile locally
+      await saveUserProfileLocally(updatedProfile);
+      
+      // Clear pending conversion data
+      await prefs.remove('pending_conversion');
 
       return currentUser;
     } catch (e) {
-      print('Error converting guest to user: $e');
+      print('Error completing guest conversion: $e');
       rethrow;
     }
   }
@@ -926,5 +936,11 @@ class AuthService {
       print('Error updating game progress: $e');
       rethrow;
     }
+  }
+
+  String _generateRandomNickname() {
+    final random = Random();
+    final number = random.nextInt(90000) + 10000; // Generates number between 10000-99999
+    return 'player$number';
   }
 }

@@ -52,58 +52,21 @@ class RegistrationPageState extends State<RegistrationPage> {
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      // Check if current user is a guest
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      String? role = currentUser != null ? 
-          await AuthService().getUserRole(currentUser.uid) : null;
-
+      String? role = await AuthService().getUserRole(FirebaseAuth.instance.currentUser?.uid ?? '');
+      
       if (role == 'guest') {
-        // Convert guest to user
-        try {
-          await AuthService().convertGuestToUser(
-            _emailController.text,
-            _passwordController.text,
-            _usernameController.text,
-            _usernameController.text, // Using username as nickname
-            _birthdayController.text,
-          );
-          
-          // Show success dialog
-          if (mounted) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(RegisterLocalization.translate('success', _selectedLanguage)),
-                content: Text(RegisterLocalization.translate('guest_conversion_success', _selectedLanguage)),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(RegisterLocalization.translate('ok', _selectedLanguage)),
-                  ),
-                ],
-              ),
-            );
-          }
-        } catch (e) {
-          // Show error dialog
-          if (mounted) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(RegisterLocalization.translate('error', _selectedLanguage)),
-                content: Text(e.toString()),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(RegisterLocalization.translate('ok', _selectedLanguage)),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-      } else {
-        // Regular registration flow
+        // For guest conversion, first store the conversion data
+        await AuthService().convertGuestToUser(
+          _emailController.text,
+          _passwordController.text,
+          _usernameController.text,
+          '', // Empty nickname will trigger random generation
+          _birthdayController.text,
+        );
+      }
+
+      // Show email verification dialog for both paths
+      if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,

@@ -6,10 +6,10 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../services/auth_service.dart';
 import '../pages/main/main_page.dart';
-import 'dart:math';
 import 'dart:ui';
 import '../widgets/buttons/button_3d.dart';
 import '../widgets/loading_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   final String email;
@@ -110,47 +110,42 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
           });
 
       if (result.data['success']) {
-        try {
-          User? user = await _authService.registerWithEmailAndPassword(
+        User? user;
+        
+        // Check if this is a guest conversion
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        bool isGuestConversion = prefs.containsKey('pending_conversion');
+
+        if (isGuestConversion) {
+          user = await _authService.completeGuestConversion();
+        } else {
+          user = await _authService.registerWithEmailAndPassword(
             widget.email,
             widget.password,
             widget.username,
-            _generateRandomNickname(),
+            '',
             widget.birthday,
             role: 'user',
           );
+        }
 
-          if (user != null) {
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
-              ),
-            );
-          }
-        } catch (e) {
+        if (user != null) {
           if (!mounted) return;
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating account: $e')),
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
+            ),
           );
         }
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      print('Firebase Function Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid OTP: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
-  }
-
-  String _generateRandomNickname() {
-    final random = Random();
-    final number = random.nextInt(90000) + 10000; // Generates number between 10000-99999
-    return 'player$number';
   }
 
   Future<void> _closeDialog() async {

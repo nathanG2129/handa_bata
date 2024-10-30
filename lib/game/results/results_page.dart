@@ -6,6 +6,7 @@ import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
+import 'package:handabatamae/widgets/loading_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
 import 'question_widgets.dart';
@@ -55,7 +56,8 @@ class ResultsPageState extends State<ResultsPage> {
   late int _soundId2Stars;
   late int _soundId3Stars;
   bool _soundsLoaded = false;
-  int stars = 0; // Add stars to the state
+  bool _starsCalculated = false;
+  int stars = 0;
   int _xpGained = 0;
   final AuthService _authService = AuthService();
 
@@ -63,9 +65,23 @@ class ResultsPageState extends State<ResultsPage> {
   void initState() {
     super.initState();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
-    _loadSounds();
+    _initializeResultsPage();
     print('Lol: ${widget.record}');
     _updateScoreAndStarsInFirestore(); // Call the method in initState
+  }
+
+  Future<void> _initializeResultsPage() async {
+    // Load sounds and calculate stars in parallel
+    await Future.wait([
+      _loadSounds(),
+      _updateScoreAndStarsInFirestore(),
+    ]);
+    
+    // Both operations are complete, play sound and show the page
+    _playSoundBasedOnStars();
+    setState(() {
+      _starsCalculated = true;
+    });
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
@@ -96,7 +112,6 @@ class ResultsPageState extends State<ResultsPage> {
     setState(() {
       _soundsLoaded = true;
     });
-    _playSoundBasedOnStars();
   }
 
   void _playSoundBasedOnStars() {
@@ -191,7 +206,7 @@ class ResultsPageState extends State<ResultsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _soundsLoaded
+      body: (_soundsLoaded && _starsCalculated)
           ? ResponsiveBreakpoints(
               breakpoints: const [
                 Breakpoint(start: 0, end: 450, name: MOBILE),
@@ -345,9 +360,7 @@ class ResultsPageState extends State<ResultsPage> {
               )
           ) : Container(
               color: const Color(0xFF5E31AD),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const LoadingWidget(),
             ),
     );
   }

@@ -177,6 +177,12 @@ class AuthService {
         .doc(user.uid)
         .set(guestProfile.toMap());
 
+    // Add this: Save user document with email and role
+    await _firestore.collection('User').doc(user.uid).set({
+      'email': 'guest@example.com',
+      'role': 'guest',
+    });
+
     // Save profile locally
     await saveUserProfileLocally(guestProfile);
 
@@ -276,9 +282,7 @@ class AuthService {
       if (user != null) {
         // Get current profile
         UserProfile? currentProfile = await getLocalUserProfile();
-        if (currentProfile == null) {
-          currentProfile = await getUserProfile();
-        }
+        currentProfile ??= await getUserProfile();
         
         // Update profile locally
         Map<String, dynamic> profileMap = currentProfile!.toMap();
@@ -513,9 +517,7 @@ class AuthService {
       if (user != null) {
         // Get and update local profile first
         UserProfile? currentProfile = await getLocalUserProfile();
-        if (currentProfile == null) {
-          currentProfile = await getUserProfile();
-        }
+        currentProfile ??= await getUserProfile();
         
         // Update locally
         Map<String, dynamic> profileMap = currentProfile!.toMap();
@@ -623,6 +625,19 @@ class AuthService {
       UserProfile? guestProfile = await getLocalUserProfile();
       if (guestProfile == null) return null;
 
+      // Fetch all game save data before conversion
+      List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+      Map<String, GameSaveData> gameSaveDataMap = {};
+      
+      // Store all current game save data
+      for (var category in categories) {
+        String categoryId = category['id'];
+        GameSaveData? saveData = await getLocalGameSaveData(categoryId);
+        if (saveData != null) {
+          gameSaveDataMap[categoryId] = saveData;
+        }
+      }
+
       // Create email/password credentials and link account
       AuthCredential credential = EmailAuthProvider.credential(
         email: email,
@@ -658,7 +673,35 @@ class AuthService {
       if (connectivityResult != ConnectivityResult.none) {
         try {
           WriteBatch batch = _firestore.batch();
-          // ... existing batch operations ...
+          
+          // Update main user document
+          batch.set(_firestore.collection('User').doc(currentUser.uid), {
+            'email': email,
+            'role': 'user'  // Convert from guest to regular user
+          });
+
+          // Update profile data
+          batch.set(
+            _firestore
+                .collection('User')
+                .doc(currentUser.uid)
+                .collection('ProfileData')
+                .doc(currentUser.uid),
+            updatedProfile.toMap()
+          );
+
+          // Update all game save data
+          for (var entry in gameSaveDataMap.entries) {
+            batch.set(
+              _firestore
+                  .collection('User')
+                  .doc(currentUser.uid)
+                  .collection('GameSaveData')
+                  .doc(entry.key),
+              entry.value.toMap()
+            );
+          }
+
           await _executeBatchWithRetry(batch);
         } catch (e) {
           print('Error converting guest to user: $e');
@@ -768,20 +811,6 @@ class AuthService {
       unlockedHardStages: unlockedHardStages,
       hasSeenPrerequisite: hasSeenPrerequisite,
     );
-  }
-
-  Future<QuerySnapshot?> _safeFirestoreGet(Query query, {int maxRetries = 3}) async {
-    int attempts = 0;
-    while (attempts < maxRetries) {
-      try {
-        return await query.get();
-      } catch (e) {
-        attempts++;
-        if (attempts == maxRetries) return null;
-        await Future.delayed(Duration(seconds: 1 * attempts));
-      }
-    }
-    return null;
   }
 
   Future<void> dispose() async {

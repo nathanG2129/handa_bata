@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/pages/email_verification_dialog.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
-import '../helpers/dialog_helpers.dart'; // Import the dialog helpers
 import '../helpers/date_helpers.dart'; // Import the date helpers
 import '../widgets/privacy_policy_error.dart'; // Import the privacy policy error widget
-import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart'; // Import the AuthService
 import '../styles/input_styles.dart'; // Import the InputStyles
 import '../widgets/buttons/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
-import 'package:cloud_functions/cloud_functions.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String selectedLanguage; // Add this line
@@ -38,7 +35,6 @@ class RegistrationPageState extends State<RegistrationPage> {
   bool _hasSymbol = false;
   bool _isPasswordFieldTouched = false;
 
-  final AuthService _authService = AuthService();
   String _selectedLanguage = 'en'; // Add language selection
 
   @override
@@ -54,33 +50,18 @@ class RegistrationPageState extends State<RegistrationPage> {
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      final username = _usernameController.text;
-      final email = _emailController.text;
-      final birthday = _birthdayController.text;
-      final password = _passwordController.text;
-
-      try {
-        User? user = await _authService.registerWithEmailAndPassword(
-          email,
-          password,
-          username,
-          username, // Pass username as nickname
-          birthday,
-          role: 'user', // Pass the role parameter
-        );
-
-        if (user != null && !user.emailVerified) {
-          await user.sendEmailVerification();
-          if (!mounted) return;
-          showEmailVerificationDialog(context, _selectedLanguage);
-        }
-      } on FirebaseAuthException catch (e) {
-        if (!mounted) return;
-        // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => EmailVerificationDialog(
+          email: _emailController.text,
+          selectedLanguage: _selectedLanguage,
+          username: _usernameController.text,
+          password: _passwordController.text,
+          birthday: _birthdayController.text,
+          onClose: () => Navigator.of(context).pop(),
+        ),
+      );
     }
   }
 
@@ -88,24 +69,6 @@ class RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       _selectedLanguage = language;
     });
-  }
-
-  Future<void> _testCloudFunction() async {
-    try {
-      final result = await FirebaseFunctions.instance
-          .httpsCallable('helloWorld')
-          .call();
-      
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Function Response: ${result.data}')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
   }
 
   @override
@@ -309,11 +272,6 @@ class RegistrationPageState extends State<RegistrationPage> {
                                     Navigator.pop(context);
                                   },
                                 ),
-                                ElevatedButton(
-                                  onPressed: _testCloudFunction,
-                                  child: const Text('Test Cloud Function'),
-                                ),
-                                const SizedBox(height: 20),
                               ],
                             ),
                           ),

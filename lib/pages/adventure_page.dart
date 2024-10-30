@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/stages_page.dart';
-import 'package:handabatamae/widgets/button_3d.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'play_page.dart';
 import 'package:handabatamae/widgets/buttons/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService

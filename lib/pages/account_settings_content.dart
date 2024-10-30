@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/register_page.dart';
-import 'package:handabatamae/widgets/button_3d.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import '../localization/play/localization.dart';
 
 class AccountSettingsContent extends StatelessWidget {

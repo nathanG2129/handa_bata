@@ -10,7 +10,7 @@ import 'package:handabatamae/services/stage_service.dart'; // Import StageServic
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
-import 'package:handabatamae/widgets/button_3d.dart'; // Import Button3D
+import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;

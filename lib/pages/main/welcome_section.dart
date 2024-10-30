@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/play_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:handabatamae/widgets/button_3d.dart'; // Import the new button widget
+import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import the new button widget
 
 class WelcomeSection extends StatelessWidget {
   final String selectedLanguage;

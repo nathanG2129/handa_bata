@@ -4,7 +4,7 @@ import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:handabatamae/widgets/button_3d.dart'; // Import the new button widget
+import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import the new button widget
 
 class AdventureSection extends StatelessWidget {
   final String selectedLanguage;

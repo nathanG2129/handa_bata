@@ -35,7 +35,7 @@ class TextWithShadow extends StatelessWidget {
               color: Colors.transparent,
               shadows: [
                 const Shadow(
-                  offset: Offset(0, 6.5),
+                  offset: Offset(0, 5.5),
                   blurRadius: 0.0,
                   color: Color(0xFF241242), // Updated shadow color
                 ),

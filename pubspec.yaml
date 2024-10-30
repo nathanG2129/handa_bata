@@ -164,6 +164,7 @@ flutter:
     - assets/badges/storm-quest/NormalStage05.png
     - assets/badges/storm-quest/NormalStage06.png
     - assets/badges/storm-quest/NormalStage07.png
+    - assets/gifs/Walking.gif
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

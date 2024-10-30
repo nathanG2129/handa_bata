@@ -44,27 +44,29 @@ class AccountSettingsContent extends StatelessWidget {
             buttonColor: const Color(0xFF4d278f),
             onPressed: onShowChangeNicknameDialog,
           ),
-          _buildSection(
-            title: PlayLocalization.translate('birthday', selectedLanguage),
-            content: userProfile.birthday,
-          ),
-          _buildSection(
-            title: PlayLocalization.translate('email', selectedLanguage),
-            content: showEmail ? userProfile.email : redactEmail(userProfile.email),
-            buttonLabel: showEmail ? PlayLocalization.translate('hide', selectedLanguage) : PlayLocalization.translate('show', selectedLanguage),
-            buttonColor: const Color(0xFF4d278f),
-            onPressed: onToggleEmailVisibility,
-            buttonTextColor: Colors.white,
-          ),
-          _buildSection(
-            title: PlayLocalization.translate('password', selectedLanguage),
-            content: '********',
-            buttonLabel: PlayLocalization.translate('change', selectedLanguage),
-            buttonColor: const Color(0xFF4d278f),
-            onPressed: () {
-              // Handle password change
-            },
-          ),
+          if (userRole != 'guest') ...[
+            _buildSection(
+              title: PlayLocalization.translate('birthday', selectedLanguage),
+              content: userProfile.birthday,
+            ),
+            _buildSection(
+              title: PlayLocalization.translate('email', selectedLanguage),
+              content: showEmail ? userProfile.email : redactEmail(userProfile.email),
+              buttonLabel: showEmail ? PlayLocalization.translate('hide', selectedLanguage) : PlayLocalization.translate('show', selectedLanguage),
+              buttonColor: const Color(0xFF4d278f),
+              onPressed: onToggleEmailVisibility,
+              buttonTextColor: Colors.white,
+            ),
+            _buildSection(
+              title: PlayLocalization.translate('password', selectedLanguage),
+              content: '********',
+              buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+              buttonColor: const Color(0xFF4d278f),
+              onPressed: () {
+                // Handle password change
+              },
+            ),
+          ],
           _buildSection(
             title: userRole == 'guest' 
               ? PlayLocalization.translate('register', selectedLanguage)
@@ -89,43 +91,44 @@ class AccountSettingsContent extends StatelessWidget {
             indent: 10,
             endIndent: 10,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  PlayLocalization.translate('accountRemoval', selectedLanguage),
-                  style: GoogleFonts.rubik(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  PlayLocalization.translate('accountRemovalDescription', selectedLanguage),
-                  style: GoogleFonts.rubik(
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Button3D(
-                    onPressed: onShowDeleteAccountDialog,
-                    backgroundColor: const Color(0xFFc32929),
-                    borderColor: darkenColor(const Color(0xFFc32929)),
-                    width: 150,
-                    height: 40,
-                    child: Text(
-                      PlayLocalization.translate('delete', selectedLanguage),
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 16),
+          if (userRole != 'guest')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    PlayLocalization.translate('accountRemoval', selectedLanguage),
+                    style: GoogleFonts.rubik(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  Text(
+                    PlayLocalization.translate('accountRemovalDescription', selectedLanguage),
+                    style: GoogleFonts.rubik(
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Button3D(
+                      onPressed: onShowDeleteAccountDialog,
+                      backgroundColor: const Color(0xFFc32929),
+                      borderColor: darkenColor(const Color(0xFFc32929)),
+                      width: 150,
+                      height: 40,
+                      child: Text(
+                        PlayLocalization.translate('delete', selectedLanguage),
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

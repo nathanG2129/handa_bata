@@ -83,6 +83,7 @@ class MainPageState extends State<MainPage> {
                                   const SizedBox(height: 200),
                                   LearnMoreSection(selectedLanguage: _selectedLanguage),
                                   const SizedBox(height: 200),
+                                  const SizedBox(height: 20),
                                 ],
                               ),
                             ),

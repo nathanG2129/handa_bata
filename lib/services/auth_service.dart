@@ -283,25 +283,37 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        // Get current profile
-        UserProfile? currentProfile = await getLocalUserProfile();
-        currentProfile ??= await getUserProfile();
-        
-        // Update profile locally
-        Map<String, dynamic> profileMap = currentProfile!.toMap();
-        profileMap[field] = value;
-        UserProfile updatedProfile = UserProfile.fromMap(profileMap);
-        await saveUserProfileLocally(updatedProfile);
+        // If updating level, check for banner unlocks
+        if (field == 'level') {
+          UserProfile? currentProfile = await getUserProfile();
+          if (currentProfile != null && value > currentProfile.level) {
+            // Level increased, update unlockedBanner array if needed
+            List<int> unlockedBanners = currentProfile.unlockedBanner;
+            if (value <= unlockedBanners.length && unlockedBanners[value - 1] != 1) {
+              unlockedBanners[value - 1] = 1;
+              await _firestore
+                  .collection('User')
+                  .doc(user.uid)
+                  .collection('ProfileData')
+                  .doc(user.uid)
+                  .update({'unlockedBanner': unlockedBanners});
+            }
+          }
+        }
 
-        // Try to update Firebase if online
-        var connectivityResult = await (Connectivity().checkConnectivity());
-        if (connectivityResult != ConnectivityResult.none) {
-          await _firestore
-              .collection('User')
-              .doc(user.uid)
-              .collection('ProfileData')
-              .doc(user.uid)
-              .update({field: value});
+        // Update the specified field
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .update({field: value});
+
+        // Update local cache if needed
+        UserProfile? profile = await getUserProfile();
+        if (profile != null) {
+          profile = profile.copyWith(updates: {field: value});
+          await saveUserProfileLocally(profile);
         }
       }
     } catch (e) {

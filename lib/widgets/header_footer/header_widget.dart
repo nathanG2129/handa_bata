@@ -5,6 +5,9 @@ import 'package:handabatamae/pages/account_settings.dart';
 import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
+import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/banner_service.dart';
+import 'package:handabatamae/widgets/notifications/banner_unlock_notification.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -23,6 +26,81 @@ class HeaderWidget extends StatefulWidget {
 }
 
 class HeaderWidgetState extends State<HeaderWidget> {
+  final AuthService _authService = AuthService();
+  final BannerService _bannerService = BannerService();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUnlockedBanners();
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  Future<void> _checkForUnlockedBanners() async {
+    try {
+      final userProfile = await _authService.getUserProfile();
+      if (userProfile == null) return;
+
+      final int currentLevel = userProfile.level;
+      final List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
+      final List<int> unlockedBanners = userProfile.unlockedBanner;
+      
+      // Get all newly unlocked banners
+      List<Map<String, dynamic>> newlyUnlockedBanners = [];
+      for (int level = 1; level <= currentLevel; level++) {
+        if (level <= banners.length && unlockedBanners[level - 1] != 1) {
+          newlyUnlockedBanners.add(banners[level - 1]);
+          unlockedBanners[level - 1] = 1;
+        }
+      }
+
+      // Update unlocked banners in one go if there are any changes
+      if (newlyUnlockedBanners.isNotEmpty) {
+        await _authService.updateUserProfile('unlockedBanner', unlockedBanners);
+        
+        // Show all notifications at once
+        if (mounted) {
+          for (int i = 0; i < newlyUnlockedBanners.length; i++) {
+            _showBannerUnlockNotification(
+              newlyUnlockedBanners[i]['title'],
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking for unlocked banners: $e');
+    }
+  }
+
+  void _showBannerUnlockNotification(String bannerTitle) {
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: MediaQuery.of(context).size.width,
+        child: BannerUnlockNotification(
+          bannerTitle: bannerTitle,
+          onDismiss: _removeOverlay,
+          onViewBanner: () {
+            _removeOverlay();
+            _showBanners();
+          },
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
   void _showUserProfile() {
     showDialog(
       context: context,

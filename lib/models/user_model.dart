@@ -96,4 +96,12 @@ class UserProfile {
     email: '',
     birthday: '2000-01-01',
   );
+
+  UserProfile copyWith({Map<String, dynamic>? updates}) {
+    Map<String, dynamic> currentMap = this.toMap();
+    if (updates != null) {
+      currentMap.addAll(updates);
+    }
+    return UserProfile.fromMap(currentMap);
+  }
 }

@@ -5,6 +5,7 @@ import 'package:handabatamae/pages/banner_details_dialog.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/services/auth_service.dart';
 
 class BannerPage extends StatefulWidget {
   final VoidCallback onClose;
@@ -19,11 +20,14 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   late Future<List<Map<String, dynamic>>> _bannersFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late Future<int> _userLevelFuture;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
     _bannersFuture = BannerService().fetchBanners();
+    _userLevelFuture = _getUserLevel();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -35,6 +39,11 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+  }
+
+  Future<int> _getUserLevel() async {
+    final userProfile = await _authService.getUserProfile();
+    return userProfile?.level ?? 1;
   }
 
   @override
@@ -73,20 +82,22 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _bannersFuture,
+                child: FutureBuilder<List<dynamic>>(
+                  future: Future.wait([_bannersFuture, _userLevelFuture]),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
                       return const Center(child: Text('No banners found.'));
                     } else {
                       if (!_animationController.isAnimating && !_animationController.isCompleted) {
                         _animationController.forward();
                       }
-                      final banners = snapshot.data!;
+                      final banners = snapshot.data![0] as List<Map<String, dynamic>>;
+                      final userLevel = snapshot.data![1] as int;
+
                       return SlideTransition(
                         position: _slideAnimation,
                         child: Card(
@@ -129,40 +140,47 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                                     child: GridView.builder(
                                       padding: const EdgeInsets.all(2.0),
                                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 1, // Use a single-column grid
+                                        crossAxisCount: 1,
                                         crossAxisSpacing: 0.0,
-                                        mainAxisSpacing: 2.0, // Reduce the vertical spacing
+                                        mainAxisSpacing: 2.0,
                                       ),
                                       shrinkWrap: true,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemCount: banners.length,
                                       itemBuilder: (context, index) {
                                         final banner = banners[index];
-                                        return GestureDetector(
-                                          onTap: () => _showBannerDetails(banner),
-                                          child: Card(
-                                            color: Colors.transparent,
-                                            elevation: 0,
-                                            margin: const EdgeInsets.symmetric(vertical: 0.0), // Reduce the margin
-                                            child: Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  SvgPicture.asset(
-                                                    'assets/banners/${banner['img']}',
-                                                    width: 150,
-                                                    height: 150,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                  const SizedBox(height: 5), // Reduce the space between image and text
-                                                  Text(
-                                                    banner['title'] ?? 'Banner',
-                                                    style: GoogleFonts.vt323(
-                                                      color: Colors.white,
-                                                      fontSize: 20,
+                                        final isUnlocked = (index + 1) <= userLevel;
+
+                                        return Opacity(
+                                          opacity: isUnlocked ? 1.0 : 0.5,
+                                          child: GestureDetector(
+                                            onTap: isUnlocked ? () => _showBannerDetails(banner) : null,
+                                            child: Card(
+                                              color: Colors.transparent,
+                                              elevation: 0,
+                                              margin: const EdgeInsets.symmetric(vertical: 0.0),
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    SvgPicture.asset(
+                                                      'assets/banners/${banner['img']}',
+                                                      width: 150,
+                                                      height: 150,
+                                                      fit: BoxFit.cover,
                                                     ),
-                                                  ),
-                                                ],
+                                                    const SizedBox(height: 5),
+                                                    Text(
+                                                      isUnlocked 
+                                                          ? banner['title'] ?? 'Banner'
+                                                          : 'Unlocks at Level ${index + 1}',
+                                                      style: GoogleFonts.vt323(
+                                                        color: Colors.white,
+                                                        fontSize: 20,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),

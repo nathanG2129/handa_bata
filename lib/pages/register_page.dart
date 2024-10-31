@@ -52,33 +52,65 @@ class RegistrationPageState extends State<RegistrationPage> {
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
-      String? role = await AuthService().getUserRole(FirebaseAuth.instance.currentUser?.uid ?? '');
-      
-      if (role == 'guest') {
-        // For guest conversion, first store the conversion data
-        await AuthService().convertGuestToUser(
-          _emailController.text,
-          _passwordController.text,
-          _usernameController.text,
-          '', // Empty nickname will trigger random generation
-          _birthdayController.text,
-        );
-      }
+      try {
+        // Check if username is taken
+        bool isUsernameTaken = await AuthService().isUsernameTaken(_usernameController.text);
+        
+        if (isUsernameTaken) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  RegisterLocalization.translate('username_taken', _selectedLanguage),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
 
-      // Show email verification dialog for both paths
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => EmailVerificationDialog(
-            email: _emailController.text,
-            selectedLanguage: _selectedLanguage,
-            username: _usernameController.text,
-            password: _passwordController.text,
-            birthday: _birthdayController.text,
-            onClose: () => Navigator.of(context).pop(),
-          ),
-        );
+        String? role = await AuthService().getUserRole(FirebaseAuth.instance.currentUser?.uid ?? '');
+        
+        if (role == 'guest') {
+          // For guest conversion
+          await AuthService().convertGuestToUser(
+            _emailController.text,
+            _passwordController.text,
+            _usernameController.text,
+            '', // Empty nickname will trigger random generation
+            _birthdayController.text,
+          );
+        }
+
+        // Show email verification dialog only if username is unique
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) => EmailVerificationDialog(
+              email: _emailController.text,
+              selectedLanguage: _selectedLanguage,
+              username: _usernameController.text,
+              password: _passwordController.text,
+              birthday: _birthdayController.text,
+              onClose: () => Navigator.of(context).pop(),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error: $e',
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

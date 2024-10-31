@@ -999,4 +999,19 @@ class AuthService {
     final number = random.nextInt(90000) + 10000; // Generates number between 10000-99999
     return 'player$number';
   }
+
+  /// Checks if a username is already taken
+  Future<bool> isUsernameTaken(String username) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collectionGroup('ProfileData')
+          .where('username', isEqualTo: username)
+          .get();
+      
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking username availability: $e');
+      rethrow;
+    }
+  }
 }

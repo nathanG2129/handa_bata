@@ -91,7 +91,6 @@ class AccountSettingsContent extends StatelessWidget {
             indent: 10,
             endIndent: 10,
           ),
-          if (userRole != 'guest')
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: Column(

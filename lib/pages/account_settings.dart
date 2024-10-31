@@ -140,7 +140,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
         await authService.clearAllLocalData();
         await authService.signOut();
       } else {
-        // For regular users, delete account from Firebase and clear local data
+        // For regular users, delete account from Firebase and clear local data (and sign out)
         await authService.deleteUserAccount();
         await authService.clearAllLocalData();
         await authService.signOut();

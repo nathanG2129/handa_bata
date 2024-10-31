@@ -216,7 +216,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       return avatar['img'];
     } catch (e) {
       print('Error fetching avatar image: $e');
-      return 'default_avatar.png';
+      return 'Kladis.png';
     }
   }
 

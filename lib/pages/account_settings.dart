@@ -273,16 +273,6 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
                       children: [
                         Container(
                           color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
-                          ),
                           child: UserProfileHeader(
                             nickname: _userProfile!.nickname, // Pass nickname
                             username: _userProfile!.username, // Pass username
@@ -301,7 +291,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
                                 ],
                               ).value,
                             ),
-                            selectedLanguage: widget.selectedLanguage, // White font color for username and level
+                            selectedLanguage: widget.selectedLanguage, bannerId: _userProfile!.bannerId, // White font color for username and level
                           ),
                         ),
                         Flexible(

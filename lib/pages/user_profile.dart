@@ -124,16 +124,6 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
                       children: [
                         Container(
                           color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
-                          ),
                           child: _isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : _userProfile != null
@@ -156,7 +146,7 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
                                         ).value,
                                       ), selectedLanguage: _selectedLanguage,  // White font color for username and level
                                       showMenuIcon: true, // Show menu icon
-                                      onUpdateProfile: _handleProfileUpdate, // Changed from onProfileUpdate
+                                      onUpdateProfile: _handleProfileUpdate, bannerId: _userProfile!.bannerId, // Changed from onProfileUpdate
                                   )
                                   : const SizedBox.shrink(),
                         ),

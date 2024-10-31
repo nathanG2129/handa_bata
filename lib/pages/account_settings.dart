@@ -135,9 +135,17 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   Future<void> _deleteAccount() async {
     AuthService authService = AuthService();
     try {
-      await authService.deleteUserAccount();
-      await authService.clearLocalGuestProfile(); // Clear local guest profile
-      await authService.signOut();
+      if (_userRole == 'guest') {
+        // For guest accounts, just clear local data and sign out
+        await authService.clearAllLocalData();
+        await authService.signOut();
+      } else {
+        // For regular users, delete account from Firebase and clear local data
+        await authService.deleteUserAccount();
+        await authService.clearAllLocalData();
+        await authService.signOut();
+      }
+
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -146,7 +154,6 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
       );
     } catch (e) {
       if (!mounted) return;
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e')),
       );
@@ -158,8 +165,14 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(PlayLocalization.translate('confirmAccountDeletion', widget.selectedLanguage)),
-          content: Text(PlayLocalization.translate('accountDeletionWarning', widget.selectedLanguage)),
+          title: Text(PlayLocalization.translate(
+            _userRole == 'guest' ? 'deleteGuestAccount' : 'deleteAccount', 
+            widget.selectedLanguage
+          )),
+          content: Text(PlayLocalization.translate(
+            _userRole == 'guest' ? 'deleteGuestAccountConfirmation' : 'deleteAccountConfirmation', 
+            widget.selectedLanguage
+          )),
           actions: [
             TextButton(
               onPressed: () {

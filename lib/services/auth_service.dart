@@ -394,24 +394,46 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        // Specify the subcollections you want to delete
-        List<String> subcollections = ['ProfileData', 'GameSaveData'];
-  
-        // Delete all documents in each subcollection
-        for (String subcollection in subcollections) {
-          var subcollectionDocs = await _firestore.collection('User').doc(user.uid).collection(subcollection).get();
-          for (var doc in subcollectionDocs.docs) {
-            await doc.reference.delete();
-          }
-        }
-  
-        // Delete user document from Firestore
-        await _firestore.collection('User').doc(user.uid).delete();
         
+        // Delete from Firestore regardless of role
+        await _deleteFirestoreData(user.uid);
+
         // Delete user from Firebase Authentication
         await user.delete();
+        // Clear all local data
+        await clearAllLocalData();
       }
     } catch (e) {
+      print('Error deleting account: $e');
+      rethrow;
+    }
+  }
+
+  // Helper method to handle Firestore deletion
+  Future<void> _deleteFirestoreData(String uid) async {
+    try {
+      // Delete all documents in subcollections
+      List<String> subcollections = ['ProfileData', 'GameSaveData'];
+      
+      WriteBatch batch = _firestore.batch();
+      
+      // Delete subcollection documents
+      for (String subcollection in subcollections) {
+        QuerySnapshot subcollectionDocs = 
+          await _firestore.collection('User').doc(uid).collection(subcollection).get();
+        
+        for (var doc in subcollectionDocs.docs) {
+          batch.delete(doc.reference);
+        }
+      }
+      
+      // Delete the main user document
+      batch.delete(_firestore.collection('User').doc(uid));
+      
+      // Commit the batch
+      await _executeBatchWithRetry(batch);
+    } catch (e) {
+      print('Error deleting Firestore data: $e');
       rethrow;
     }
   }

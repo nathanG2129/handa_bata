@@ -7,6 +7,8 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/auth_service.dart';
 
+enum BannerFilter { all, myCollection }
+
 class BannerPage extends StatefulWidget {
   final VoidCallback onClose;
 
@@ -22,6 +24,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   late Animation<Offset> _slideAnimation;
   late Future<int> _userLevelFuture;
   final AuthService _authService = AuthService();
+  BannerFilter _currentFilter = BannerFilter.all;
 
   @override
   void initState() {
@@ -63,6 +66,47 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
       builder: (BuildContext context) {
         return BannerDetailsDialog(banner: banner);
       },
+    );
+  }
+
+  Widget _buildFilterDropdown() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3A1A5F),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<BannerFilter>(
+          isExpanded: true,
+          value: _currentFilter,
+          dropdownColor: const Color(0xFF3A1A5F),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          style: GoogleFonts.vt323(
+            color: Colors.white,
+            fontSize: 20,
+          ),
+          onChanged: (BannerFilter? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _currentFilter = newValue;
+              });
+            }
+          },
+          items: const [
+            DropdownMenuItem(
+              value: BannerFilter.all,
+              child: Text('All'),
+            ),
+            DropdownMenuItem(
+              value: BannerFilter.myCollection,
+              child: Text('My Collection'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -127,65 +171,92 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                                 child: SingleChildScrollView(
                                   child: Container(
                                     color: const Color(0xFF241242),
-                                    padding: EdgeInsets.all(
-                                      ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 20.0,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                          const Condition.largerThan(name: MOBILE, value: 24.0),
-                                        ],
-                                      ).value,
-                                    ),
-                                    child: GridView.builder(
-                                      padding: const EdgeInsets.all(2.0),
-                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 1,
-                                        crossAxisSpacing: 0.0,
-                                        mainAxisSpacing: 2.0,
-                                      ),
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: banners.length,
-                                      itemBuilder: (context, index) {
-                                        final banner = banners[index];
-                                        final isUnlocked = (index + 1) <= userLevel;
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: _buildFilterDropdown(),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: EdgeInsets.all(
+                                            ResponsiveValue<double>(
+                                              context,
+                                              defaultValue: 20.0,
+                                              conditionalValues: [
+                                                const Condition.smallerThan(name: MOBILE, value: 16.0),
+                                                const Condition.largerThan(name: MOBILE, value: 24.0),
+                                              ],
+                                            ).value,
+                                          ),
+                                          child: Builder(
+                                            builder: (context) {
+                                              // Filter banners first
+                                              final visibleBanners = banners.where((banner) {
+                                                final index = banners.indexOf(banner);
+                                                final isUnlocked = (index + 1) <= userLevel;
+                                                return _currentFilter == BannerFilter.all || isUnlocked;
+                                              }).toList();
 
-                                        return Opacity(
-                                          opacity: isUnlocked ? 1.0 : 0.5,
-                                          child: GestureDetector(
-                                            onTap: isUnlocked ? () => _showBannerDetails(banner) : null,
-                                            child: Card(
-                                              color: Colors.transparent,
-                                              elevation: 0,
-                                              margin: const EdgeInsets.symmetric(vertical: 0.0),
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      'assets/banners/${banner['img']}',
-                                                      width: 150,
-                                                      height: 150,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                    const SizedBox(height: 5),
-                                                    Text(
-                                                      isUnlocked 
-                                                          ? banner['title'] ?? 'Banner'
-                                                          : 'Unlocks at Level ${index + 1}',
-                                                      style: GoogleFonts.vt323(
-                                                        color: Colors.white,
-                                                        fontSize: 20,
+                                              return GridView.builder(
+                                                padding: const EdgeInsets.all(4.0),
+                                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 1,
+                                                  crossAxisSpacing: 0.0,
+                                                  mainAxisSpacing: 2.0,
+                                                  mainAxisExtent: 210,
+                                                ),
+                                                shrinkWrap: true,
+                                                physics: const NeverScrollableScrollPhysics(),
+                                                itemCount: visibleBanners.length, // Use filtered list length
+                                                itemBuilder: (context, index) {
+                                                  final banner = visibleBanners[index]; // Use filtered list
+                                                  final originalIndex = banners.indexOf(banner);
+                                                  final isUnlocked = (originalIndex + 1) <= userLevel;
+
+                                                  return Opacity(
+                                                    opacity: isUnlocked ? 1.0 : 0.5,
+                                                    child: GestureDetector(
+                                                      onTap: isUnlocked ? () => _showBannerDetails(banner) : null,
+                                                      child: Card(
+                                                        color: Colors.transparent,
+                                                        elevation: 0,
+                                                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                                        child: Center(
+                                                          child: Column(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              SvgPicture.asset(
+                                                                'assets/banners/${banner['img']}',
+                                                                width: 150,
+                                                                height: 150,
+                                                                fit: BoxFit.contain,
+                                                              ),
+                                                              const SizedBox(height: 5),
+                                                              Text(
+                                                                isUnlocked 
+                                                                    ? banner['title'] ?? 'Banner'
+                                                                    : 'Unlocks at Level ${index + 1}',
+                                                                style: GoogleFonts.vt323(
+                                                                  color: Colors.white,
+                                                                  fontSize: 20,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
+                                                  );
+                                                },
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

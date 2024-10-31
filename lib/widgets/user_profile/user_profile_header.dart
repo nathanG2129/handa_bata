@@ -5,6 +5,7 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import Respo
 import '../../localization/play/localization.dart'; // Import the localization file
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
+import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 
 class UserProfileHeader extends StatelessWidget {
   final String username;
@@ -59,7 +60,23 @@ class UserProfileHeader extends StatelessWidget {
         // Handle Change Nickname
         break;
       case 'Change Banner':
-        // Handle Change Banner
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return BannerPage(
+              selectionMode: true,
+              currentBannerId: avatarId,
+              onBannerSelected: (newBannerId) async {
+                Navigator.of(context).pop();
+                onUpdateProfile?.call(username, selectedLanguage);
+              },
+              onClose: () {
+                Navigator.of(context).pop();
+              },
+            );
+          },
+        );
         break;
       case 'Change Favorite Badges':
         // Handle Change Favorite Badges

@@ -1026,4 +1026,35 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<void> updateBannerId(int bannerId) async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      // Update local profile first
+      UserProfile? currentProfile = await getLocalUserProfile();
+      currentProfile ??= await getUserProfile();
+      
+      // Update locally
+      Map<String, dynamic> profileMap = currentProfile!.toMap();
+      profileMap['bannerId'] = bannerId;
+      UserProfile updatedProfile = UserProfile.fromMap(profileMap);
+      await saveUserProfileLocally(updatedProfile);
+
+      // Update Firebase if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('ProfileData')
+            .doc(currentUser.uid)
+            .update({'bannerId': bannerId});
+      }
+    } catch (e) {
+      print('Error updating banner ID: $e');
+      rethrow;
+    }
+  }
 }

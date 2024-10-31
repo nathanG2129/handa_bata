@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/pages/account_settings.dart';
 import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
@@ -8,6 +11,8 @@ import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/notifications/banner_unlock_notification.dart';
+import 'package:handabatamae/services/avatar_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -28,16 +33,37 @@ class HeaderWidget extends StatefulWidget {
 class HeaderWidgetState extends State<HeaderWidget> {
   final AuthService _authService = AuthService();
   final BannerService _bannerService = BannerService();
+  final UserProfileService _userProfileService = UserProfileService();
   OverlayEntry? _overlayEntry;
+  int? _currentAvatarId;
+
+  late StreamSubscription<int> _avatarSubscription;
 
   @override
   void initState() {
     super.initState();
     _checkForUnlockedBanners();
+    _authService.getUserProfile().then((profile) {
+      if (mounted && profile != null) {
+        setState(() {
+          _currentAvatarId = profile.avatarId;
+        });
+      }
+    });
+
+    // Listen to avatar updates
+    _avatarSubscription = _userProfileService.avatarStream.listen((newAvatarId) {
+      if (mounted) {
+        setState(() {
+          _currentAvatarId = newAvatarId;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _avatarSubscription.cancel();
     _removeOverlay();
     super.dispose();
   }
@@ -132,8 +158,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
   void _showCharacters() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return CharacterPage(
+          selectionMode: true,
+          currentAvatarId: _currentAvatarId,
+          onAvatarSelected: (newAvatarId) async {
+            await _authService.updateAvatarId(newAvatarId);
+            Navigator.of(context).pop();
+            if (mounted) {
+              setState(() {
+                _currentAvatarId = newAvatarId;
+              });
+            }
+          },
           onClose: () {
             Navigator.of(context).pop();
           },
@@ -168,36 +206,31 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 2, // Add padding to avoid the status bar
-        left: 20,
-        right: 20,
-        bottom: 10,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF351B61),
-        border: Border(
-          bottom: BorderSide(color: Colors.white, width: 2.0), // Add white border to the bottom
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white),
-            onPressed: widget.onBack,
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Transform.translate(
-              offset: const Offset(0, 0), // Adjust the horizontal offset to center the popup menu
-              child: PopupMenuButton<String>(
-                icon: const Icon(Icons.person, size: 33, color: Colors.white),
-                color: const Color(0xFF241242), // Set the popup menu background color
-                offset: const Offset(0, 64), // Position the popup menu a bit lower
+  Future<String?> _getAvatarImage(int avatarId) async {
+    try {
+      final avatars = await AvatarService().fetchAvatars();
+      final avatar = avatars.firstWhere(
+        (avatar) => avatar['id'] == avatarId,
+        orElse: () => {'img': 'Kladis.png'},
+      );
+      return avatar['img'];
+    } catch (e) {
+      print('Error fetching avatar image: $e');
+      return 'default_avatar.png';
+    }
+  }
+
+  Widget _buildAvatarButton() {
+    return FutureBuilder<UserProfile?>(
+      future: _authService.getUserProfile(),
+      builder: (context, profileSnapshot) {
+        if (profileSnapshot.hasData && profileSnapshot.data != null) {
+          return FutureBuilder<String?>(
+            future: _getAvatarImage(profileSnapshot.data!.avatarId),
+            builder: (context, avatarSnapshot) {
+              return PopupMenuButton<String>(
+                color: const Color(0xFF241242),
+                offset: const Offset(0, 64),
                 onSelected: (String result) {
                   switch (result) {
                     case 'My Profile':
@@ -280,7 +313,144 @@ class HeaderWidgetState extends State<HeaderWidget> {
                     ),
                   ),
                 ],
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.white,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      image: DecorationImage(
+                        image: AssetImage('assets/avatars/${avatarSnapshot.data ?? 'default_avatar.png'}'),
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        }
+        return PopupMenuButton<String>(
+          icon: const Icon(Icons.person, size: 33, color: Colors.white),
+          color: const Color(0xFF241242),
+          offset: const Offset(0, 64),
+          onSelected: (String result) {
+            switch (result) {
+              case 'My Profile':
+                _showUserProfile();
+                break;
+              case 'Account Settings':
+                _showAccountSettings();
+                break;
+              case 'Characters':
+                _showCharacters();
+                break;
+              case 'Banners':
+                _showBanners();
+                break;
+              case 'Badges':
+                _showBadges();
+                break;
+              // Add cases for other menu items if needed
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'My Profile',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'My Profile',
+                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                  ),
+                ],
               ),
+            ),
+            PopupMenuItem<String>(
+              value: 'Characters',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Characters',
+                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'Badges',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Badges',
+                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'Banners',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Banners',
+                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'Account Settings',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Account Settings',
+                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 2, // Add padding to avoid the status bar
+        left: 20,
+        right: 20,
+        bottom: 10,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF351B61),
+        border: Border(
+          bottom: BorderSide(color: Colors.white, width: 2.0), // Add white border to the bottom
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, size: 33, color: Colors.white),
+            onPressed: widget.onBack,
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: Transform.translate(
+              offset: const Offset(0, 0),
+              child: _buildAvatarButton(),
             ),
           ),
           PopupMenuButton<String>(

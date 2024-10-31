@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -70,6 +71,7 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
       await _authService.updateAvatarId(avatarId);
+      UserProfileService().updateAvatar(avatarId);
       widget.onAvatarSelected?.call(avatarId);
       _closeDialog();
     } catch (e) {

@@ -161,7 +161,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                                     filterQuality: FilterQuality.none, // Make the image pixelated
                                                   ),
                                                   const SizedBox(height: 5), // Reduce the space between image and text
-                                                  Container(
+                                                  SizedBox(
                                                     width: 100, // Set the width to match the badge image
                                                     child: Text(
                                                       badge['title'] ?? 'Badge',

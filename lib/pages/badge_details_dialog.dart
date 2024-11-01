@@ -19,9 +19,9 @@ class BadgeDetailsDialogState extends State<BadgeDetailsDialog> with SingleTicke
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 200),
     );
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.linear,

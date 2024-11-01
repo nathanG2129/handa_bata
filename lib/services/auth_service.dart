@@ -9,6 +9,7 @@ import '../models/user_model.dart';
 import '../models/game_save_data.dart'; // Add this import
 import '../services/stage_service.dart'; // Add this import
 import '../services/banner_service.dart'; // Add this import
+import '../services/badge_service.dart'; // Add this import
 
 /// Service for handling authentication and user profile management.
 /// Supports both regular users and guest accounts with offline capabilities.
@@ -17,6 +18,7 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final StageService _stageService = StageService(); // Initialize StageService
   final BannerService _bannerService = BannerService(); // Initialize BannerService
+  final BadgeService _badgeService = BadgeService(); // Add this line
   final String defaultLanguage;
 
   static const String USER_PROFILE_KEY = 'user_profile';
@@ -42,9 +44,11 @@ class AuthService {
       if (user != null) {
         String finalNickname = nickname.isEmpty ? _generateRandomNickname() : nickname;
         
-        // Get the number of banners
+        // Get the number of banners and badges
         List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
+        List<Map<String, dynamic>> badges = await _badgeService.fetchBadges();
         int bannerCount = banners.length;
+        int badgeCount = badges.length;
         
         UserProfile userProfile = UserProfile(
           profileId: user.uid,
@@ -59,8 +63,8 @@ class AuthService {
           level: 1,
           totalBadgeUnlocked: 0,
           totalStageCleared: 0,
-          unlockedBadge: List<int>.filled(40, 0),
-          unlockedBanner: List<int>.filled(bannerCount, 0), // Dynamic size based on banner count
+          unlockedBadge: List<int>.filled(badgeCount, 0), // Dynamic size based on badge count
+          unlockedBanner: List<int>.filled(bannerCount, 0),
           email: email,
           birthday: birthday,
         );
@@ -159,9 +163,11 @@ class AuthService {
   }
 
   Future<void> createGuestProfile(User user) async {
-    // Get the number of banners
+    // Get the number of banners and badges
     List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
+    List<Map<String, dynamic>> badges = await _badgeService.fetchBadges();
     int bannerCount = banners.length;
+    int badgeCount = badges.length;
     
     UserProfile guestProfile = UserProfile(
       profileId: user.uid,
@@ -176,8 +182,8 @@ class AuthService {
       level: 1,
       totalBadgeUnlocked: 0,
       totalStageCleared: 0,
-      unlockedBadge: List<int>.filled(40, 0),
-      unlockedBanner: List<int>.filled(bannerCount, 0), // Dynamic size based on banner count
+      unlockedBadge: List<int>.filled(badgeCount, 0), // Dynamic size based on badge count
+      unlockedBanner: List<int>.filled(bannerCount, 0),
       email: '',
       birthday: '',
     );

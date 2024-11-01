@@ -98,7 +98,7 @@ class UserProfile {
   );
 
   UserProfile copyWith({Map<String, dynamic>? updates}) {
-    Map<String, dynamic> currentMap = this.toMap();
+    Map<String, dynamic> currentMap = toMap();
     if (updates != null) {
       currentMap.addAll(updates);
     }

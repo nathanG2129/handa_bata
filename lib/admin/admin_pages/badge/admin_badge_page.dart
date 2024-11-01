@@ -90,16 +90,7 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _showAddBadgeDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF381c64),
-                      shadowColor: Colors.transparent,
-                    ),
-                    child: Text('Add Badge', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-                  ),
-                  const SizedBox(height: 20),
-                  Center( // Center the BadgeDataTable
+                  Center(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Padding(
@@ -112,7 +103,16 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20), // Add bottom padding
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _showAddBadgeDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF381c64),
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: Text('Add Badge', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

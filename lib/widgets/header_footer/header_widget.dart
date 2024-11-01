@@ -161,7 +161,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return CharacterPage(
-          selectionMode: true,
+          selectionMode: false,
           currentAvatarId: _currentAvatarId,
           onAvatarSelected: (newAvatarId) async {
             await _authService.updateAvatarId(newAvatarId);

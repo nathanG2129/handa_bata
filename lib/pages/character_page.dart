@@ -21,10 +21,10 @@ class CharacterPage extends StatefulWidget {
   });
 
   @override
-  _CharacterPageState createState() => _CharacterPageState();
+  CharacterPageState createState() => CharacterPageState();
 }
 
-class _CharacterPageState extends State<CharacterPage> with SingleTickerProviderStateMixin {
+class CharacterPageState extends State<CharacterPage> with SingleTickerProviderStateMixin {
   late Future<List<Map<String, dynamic>>> _avatarsFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -172,13 +172,17 @@ class _CharacterPageState extends State<CharacterPage> with SingleTickerProvider
                                       itemCount: avatars.length,
                                       itemBuilder: (context, index) {
                                         final avatar = avatars[index];
-                                        final bool isSelected = _selectedAvatarId == avatar['id'];
+                                        final bool isSelected = widget.selectionMode 
+                                            ? _selectedAvatarId == avatar['id']
+                                            : widget.currentAvatarId == avatar['id'];
                                         
                                         return Card(
                                           color: Colors.transparent,
                                           elevation: 0,
                                           child: GestureDetector(
-                                            onTap: () => _handleAvatarTap(avatar['id']),
+                                            onTap: widget.selectionMode 
+                                                ? () => _handleAvatarTap(avatar['id'])
+                                                : null,
                                             child: Center(
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,

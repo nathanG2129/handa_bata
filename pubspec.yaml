@@ -124,6 +124,10 @@ flutter:
     - assets/instructions/MatchingType05.jpg
     - assets/instructions/MultipleChoice01.jpg
     - assets/instructions/MultipleChoice02.jpg
+    - assets/badges/volcano-quest/PlaceholderBadge.png
+    - assets/badges/drought-quest/PlaceholderBadge.png
+    - assets/badges/tsunami-quest/PlaceholderBadge.png
+    - assets/badges/flood-quest/PlaceholderBadge.png
     - assets/badges/arcade/Accuracy.png
     - assets/badges/arcade/Speed.png
     - assets/badges/arcade/Streak.png

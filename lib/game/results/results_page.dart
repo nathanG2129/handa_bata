@@ -27,6 +27,7 @@ class ResultsPage extends StatefulWidget {
   final List<Map<String, dynamic>> answeredQuestions;
   final String record;
   final bool isGameOver;
+  final double averageTimePerQuestion;
 
   const ResultsPage({
     super.key,
@@ -43,6 +44,7 @@ class ResultsPage extends StatefulWidget {
     required this.answeredQuestions,
     required this.record, 
     required this.isGameOver,
+    required this.averageTimePerQuestion,
   });
 
   @override

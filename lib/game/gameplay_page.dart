@@ -82,6 +82,10 @@ class GameplayPageState extends State<GameplayPage> {
   int _stopwatchSeconds = 0;
   String _stopwatchTime = '00:00';
 
+  int _totalTimeInSeconds = 0;
+  int _questionsAnswered = 0;
+  double _averageTimePerQuestion = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -355,6 +359,7 @@ void readCurrentQuestion() {
               answeredQuestions: _answeredQuestions, // Pass the answered questions
               record: _stopwatchTime, 
               isGameOver: _isGameOver, // Pass the final stopwatch time as bestRecord
+              averageTimePerQuestion: _averageTimePerQuestion, // Add this parameter
             ),
           ),
         );
@@ -414,6 +419,7 @@ void readCurrentQuestion() {
             answeredQuestions: _answeredQuestions, // Pass the answered questions
             record: _stopwatchTime, 
             isGameOver: _isGameOver, // Pass the final stopwatch time as bestRecord
+            averageTimePerQuestion: _averageTimePerQuestion, // Add this parameter
           ),
         ),
       );
@@ -429,8 +435,15 @@ void readCurrentQuestion() {
     setState(() {
       _selectedOptionIndex = index;
       _isCorrect = isCorrect;
+      
+      // Update questions answered and total time for arcade mode
+      if (widget.gamemode == 'arcade') {
+        _questionsAnswered++;
+        _totalTimeInSeconds = _stopwatchSeconds;
+        _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
+      }
+
       if (index == null) {
-        // Forced check, increment wrong answers count
         _wrongAnswersCount++;
         _currentStreak = 0; // Reset the current streak
       } else if (_isCorrect == true) {
@@ -440,11 +453,11 @@ void readCurrentQuestion() {
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak; // Update the highest streak
         }
-      if (widget.gamemode == 'arcade') {
-        _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
-        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
-        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
-      }
+        if (widget.gamemode == 'arcade') {
+          _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
+          if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+        }
       } else {
         _wrongAnswersCount++;
         _currentStreak = 0; // Reset the current streak
@@ -476,6 +489,14 @@ void readCurrentQuestion() {
         'isCorrect': answerData['isCorrect'],
         'type': 'Fill in the Blanks',
       });
+      
+      // Update questions answered and total time for arcade mode
+      if (widget.gamemode == 'arcade') {
+        _questionsAnswered++;
+        _totalTimeInSeconds = _stopwatchSeconds;
+        _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
+      }
+
       _correctAnswersCount += (answerData['correctCount'] as int);
       _wrongAnswersCount += (answerData['wrongCount'] as int);
       if (answerData['isFullyCorrect'] as bool) {
@@ -504,6 +525,14 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   setState(() {
     _isCorrect = isCorrect;
+    
+    // Update questions answered and total time for arcade mode
+    if (widget.gamemode == 'arcade') {
+      _questionsAnswered++;
+      _totalTimeInSeconds = _stopwatchSeconds;
+      _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
+    }
+
     if (_isCorrect == true) {
       _correctAnswersCount++;
       _fullyCorrectAnswersCount++; // Increment fully correct answers count

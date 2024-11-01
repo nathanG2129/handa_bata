@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
@@ -12,6 +13,7 @@ import 'package:soundpool/soundpool.dart'; // Import soundpool package
 import 'question_widgets.dart';
 import 'results_widgets.dart';
 import '../../services/auth_service.dart';
+import '../../services/badge_unlock_service.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -178,6 +180,38 @@ class ResultsPageState extends State<ResultsPage> {
       setState(() {
         stars = calculatedStars;
       });
+
+      // Check for badge unlocks
+      final badgeUnlockService = BadgeUnlockService(_authService);
+      
+      if (widget.gamemode == 'arcade') {
+        // Convert record time to seconds
+        final recordParts = widget.record.split(':');
+        final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
+        
+        await badgeUnlockService.checkArcadeBadges(
+          totalTime: totalSeconds,
+          accuracy: widget.accuracy * 100, // Convert to percentage
+          streak: widget.streak,
+          averageTimePerQuestion: widget.averageTimePerQuestion,
+        );
+      } else {
+        // Get current stage stars for the category
+        GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
+        if (saveData != null) {
+          List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
+              ? saveData.normalStageStars 
+              : saveData.hardStageStars;
+          
+          await badgeUnlockService.checkAdventureBadges(
+            questName: widget.category['name'],
+            stageName: widget.stageName,
+            difficulty: widget.mode.toLowerCase(),
+            stars: calculatedStars,
+            allStageStars: stageStars,
+          );
+        }
+      }
 
       // Update game progress
       if (widget.gamemode == 'arcade') {

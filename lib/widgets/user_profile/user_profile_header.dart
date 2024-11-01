@@ -327,9 +327,9 @@ class UserProfileHeader extends StatelessWidget {
                     if (showMenuIcon)
                       Positioned(
                         top: -10,
-                        right: -10,
+                        right: 0,
                         child: PopupMenuButton<String>(
-                          offset: const Offset(-8, 40),
+                          offset: const Offset(-0, 40),
                           icon: SvgPicture.string(
                             '''
                             <svg

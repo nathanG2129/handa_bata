@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -38,6 +39,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
   int? _currentAvatarId;
 
   late StreamSubscription<int> _avatarSubscription;
+
+  Queue<String> _pendingNotifications = Queue<String>();
+  bool _isShowingNotification = false;
 
   @override
   void initState() {
@@ -95,18 +99,30 @@ class HeaderWidgetState extends State<HeaderWidget> {
       if (newlyUnlockedBanners.isNotEmpty) {
         await _authService.updateUserProfile('unlockedBanner', unlockedBanners);
         
-        // Show all notifications at once
-        if (mounted) {
-          for (int i = 0; i < newlyUnlockedBanners.length; i++) {
-            _showBannerUnlockNotification(
-              newlyUnlockedBanners[i]['title'],
-            );
-          }
+        // Queue up notifications instead of showing them immediately
+        for (var banner in newlyUnlockedBanners) {
+          _pendingNotifications.add(banner['title']);
+        }
+        
+        // Start showing notifications if not already showing
+        if (!_isShowingNotification) {
+          _showNextNotification();
         }
       }
     } catch (e) {
       print('Error checking for unlocked banners: $e');
     }
+  }
+
+  void _showNextNotification() {
+    if (_pendingNotifications.isEmpty) {
+      _isShowingNotification = false;
+      return;
+    }
+
+    _isShowingNotification = true;
+    String nextBanner = _pendingNotifications.removeFirst();
+    _showBannerUnlockNotification(nextBanner);
   }
 
   void _showBannerUnlockNotification(String bannerTitle) {
@@ -115,10 +131,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
         width: MediaQuery.of(context).size.width,
         child: BannerUnlockNotification(
           bannerTitle: bannerTitle,
-          onDismiss: _removeOverlay,
+          onDismiss: () {
+            _removeOverlay();
+            // Show next notification after current one is dismissed
+            Future.delayed(const Duration(milliseconds: 300), () {
+              _showNextNotification();
+            });
+          },
           onViewBanner: () {
             _removeOverlay();
             _showBanners();
+            // Show next notification after a delay
+            Future.delayed(const Duration(milliseconds: 300), () {
+              _showNextNotification();
+            });
           },
         ),
       ),

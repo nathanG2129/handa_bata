@@ -34,8 +34,8 @@ class _BannerUnlockNotificationState extends State<BannerUnlockNotification> wit
     );
     _controller.forward();
 
-    // Auto dismiss after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
+    // Increased auto-dismiss time to 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         _dismissNotification();
       }
@@ -61,7 +61,7 @@ class _BannerUnlockNotificationState extends State<BannerUnlockNotification> wit
         child: Align(
           alignment: Alignment.topCenter,
           child: Padding(
-            padding: const EdgeInsets.only(top: 0.0),
+            padding: const EdgeInsets.only(top: 70.0),
             child: FadeTransition(
               opacity: _animation,
               child: SlideTransition(

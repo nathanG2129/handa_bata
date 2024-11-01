@@ -154,7 +154,7 @@ class BadgeDataTable extends StatelessWidget {
             DataColumn(label: Text('Actions', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20))),
           ],
           rows: badges.map((badge) {
-            int id = badge['id'] ?? 0;
+            int id = badge['id'] ?? -1;
             String title = badge['title'] ?? '';
             String imageUrl = badge['img'] ?? '';
             String description = badge['description'] ?? '';
@@ -167,7 +167,7 @@ class BadgeDataTable extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: id != 0 ? () => onEditBadge(badge) : null,
+                      onPressed: id != -1 ? () => onEditBadge(badge) : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF381c64),
                       ),
@@ -175,7 +175,7 @@ class BadgeDataTable extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: id != 0 ? () => onDeleteBadge(id) : null,
+                      onPressed: id != -1 ? () => onDeleteBadge(id) : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),

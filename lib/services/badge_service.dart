@@ -31,10 +31,10 @@ class BadgeService {
           return maxId + 1;
         }
       }
-      return 1;
+      return 0;
     } catch (e) {
       print('Error getting next ID: $e');
-      return 1;
+      return 0;
     }
   }
 

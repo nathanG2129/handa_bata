@@ -416,12 +416,19 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
+        String? role = await getUserRole(user.uid);
         
         // Delete from Firestore regardless of role
         await _deleteFirestoreData(user.uid);
 
-        // Delete user from Firebase Authentication
-        await user.delete();
+        // For guest accounts, we need to delete the anonymous auth user
+        if (role == 'guest') {
+          await user.delete();  // Delete the anonymous auth user
+        } else {
+          // For regular users, reauthenticate if needed and then delete
+          await user.delete();
+        }
+
         // Clear all local data
         await clearAllLocalData();
       }
@@ -535,7 +542,7 @@ class AuthService {
     }
   }
 
-    Future<void> _syncFirestoreToLocal(DocumentSnapshot doc) async {
+  Future<void> _syncFirestoreToLocal(DocumentSnapshot doc) async {
     String userId = doc.id;
     DocumentSnapshot userProfileDoc = await _firestore.collection('User').doc(userId).collection('ProfileData').doc(userId).get();
     if (userProfileDoc.exists) {

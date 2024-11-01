@@ -135,16 +135,8 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   Future<void> _deleteAccount() async {
     AuthService authService = AuthService();
     try {
-      if (_userRole == 'guest') {
-        // For guest accounts, just clear local data and sign out
-        await authService.clearAllLocalData();
-        await authService.signOut();
-      } else {
-        // For regular users, delete account from Firebase and clear local data (and sign out)
-        await authService.deleteUserAccount();
-        await authService.clearAllLocalData();
-        await authService.signOut();
-      }
+      await authService.deleteUserAccount();
+      await authService.signOut();
 
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(

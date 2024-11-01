@@ -74,17 +74,65 @@ class EditStagePageState extends State<EditStagePage> {
 
   void _addQuestion(String type) {
     setState(() {
-      _questions.add({
+      Map<String, dynamic> newQuestion = {
         'type': type,
-        'question': '',
-        'answer': '',
-        'answerLength': 0,
-        'options': [],
-        'space': [],
-        'section1': [],
-        'section2': [],
-        'answerPairs': [],
-      });
+        'question': widget.language == 'fil' ? 'Ilagay ang iyong tanong dito' : 'Enter your question here',
+      };
+
+      switch (type) {
+        case 'Multiple Choice':
+          newQuestion.addAll({
+            'options': widget.language == 'fil' 
+                ? ['Pagpipilian 1', 'Pagpipilian 2', 'Pagpipilian 3', 'Pagpipilian 4']
+                : ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+            'answer': 0,
+          });
+          break;
+
+        case 'Fill in the Blanks':
+          newQuestion.addAll({
+            'options': widget.language == 'fil'
+                ? ['Salita 1', 'Salita 2', 'Salita 3', 'Salita 4']
+                : ['Word 1', 'Word 2', 'Word 3', 'Word 4'],
+            'answer': [0, 1],
+          });
+          break;
+
+        case 'Matching Type':
+          newQuestion.addAll({
+            'section1': widget.language == 'fil'
+                ? ['Aytem 1', 'Aytem 2', 'Aytem 3']
+                : ['Item 1', 'Item 2', 'Item 3'],
+            'section2': widget.language == 'fil'
+                ? ['Tugma 1', 'Tugma 2', 'Tugma 3']
+                : ['Match 1', 'Match 2', 'Match 3'],
+            'answerPairs': widget.language == 'fil'
+                ? [
+                    {'section1': 'Aytem 1', 'section2': 'Tugma 1'},
+                    {'section1': 'Aytem 2', 'section2': 'Tugma 2'},
+                    {'section1': 'Aytem 3', 'section2': 'Tugma 3'},
+                  ]
+                : [
+                    {'section1': 'Item 1', 'section2': 'Match 1'},
+                    {'section1': 'Item 2', 'section2': 'Match 2'},
+                    {'section1': 'Item 3', 'section2': 'Match 3'},
+                  ],
+          });
+          break;
+
+        case 'Identification':
+          newQuestion.addAll({
+            'answer': widget.language == 'fil' ? 'Sagot' : 'Answer',
+            'answerLength': widget.language == 'fil' ? 5 : 6,
+            'options': widget.language == 'fil' 
+                ? ['S', 'A', 'G', 'O', 'T']
+                : ['A', 'N', 'S', 'W', 'E', 'R'],
+            'space': widget.language == 'fil' ? [5] : [6],
+          });
+          break;
+      }
+
+      _questions.add(newQuestion);
     });
   }
 

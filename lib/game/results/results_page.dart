@@ -71,7 +71,7 @@ class ResultsPageState extends State<ResultsPage> {
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
     print('Lol: ${widget.record}');
-    _updateScoreAndStarsInFirestore(); // Call the method in initState
+    _updateScoreAndStarsInFirestore();
   }
 
   Future<void> _initializeResultsPage() async {
@@ -237,6 +237,11 @@ class ResultsPageState extends State<ResultsPage> {
     } catch (e) {
       print('Error updating score and stars: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override

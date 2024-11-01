@@ -1,5 +1,6 @@
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'dart:collection';
 
 class QuestBadgeRange {
   final int stageStart;     // First badge ID for normal stages
@@ -11,15 +12,17 @@ class QuestBadgeRange {
 
 class BadgeUnlockService {
   final AuthService _authService;
+  static final Queue<int> _pendingBadgeNotifications = Queue<int>();
+  static bool _isShowingNotification = false;
   
   // Quest badge ranges
   static const Map<String, QuestBadgeRange> questBadgeRanges = {
-    'Quake': QuestBadgeRange(0, 14, 16),
-    'Storm': QuestBadgeRange(18, 32, 34),
-    'Volcano': QuestBadgeRange(40, 54, 56),
-    'Drought': QuestBadgeRange(58, 72, 74),
-    'Tsunami': QuestBadgeRange(76, 90, 92),
-    'Landslide': QuestBadgeRange(94, 108, 110),
+    'Quake Quest': QuestBadgeRange(0, 14, 16),
+    'Storm Quest': QuestBadgeRange(18, 32, 34),
+    'Volcano Quest': QuestBadgeRange(40, 54, 56),
+    'Drought Quest': QuestBadgeRange(58, 72, 74),
+    'Tsunami Quest': QuestBadgeRange(76, 90, 92),
+    'Flood Quest': QuestBadgeRange(94, 108, 110),
   };
 
   BadgeUnlockService(this._authService);
@@ -38,6 +41,7 @@ class BadgeUnlockService {
       if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
         unlockedBadges[badgeId] = 1;
         hasNewUnlocks = true;
+        _pendingBadgeNotifications.add(badgeId);
       }
     }
 
@@ -119,5 +123,16 @@ class BadgeUnlockService {
 
   bool _hasAllStagesFullyCleared(List<int> stageStars) {
     return stageStars.every((stars) => stars == 3);
+  }
+
+  // Add this method to get pending notifications
+  static Queue<int> get pendingNotifications => _pendingBadgeNotifications;
+
+  // Add this method to check notification status
+  static bool get isShowingNotification => _isShowingNotification;
+
+  // Add this method to set notification status
+  static set isShowingNotification(bool value) {
+    _isShowingNotification = value;
   }
 } 

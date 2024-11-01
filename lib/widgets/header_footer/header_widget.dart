@@ -14,6 +14,9 @@ import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/notifications/banner_unlock_notification.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/widgets/notifications/badge_unlock_notification.dart';
+import 'package:handabatamae/services/badge_unlock_service.dart';
+import 'package:handabatamae/services/badge_service.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -34,19 +37,24 @@ class HeaderWidget extends StatefulWidget {
 class HeaderWidgetState extends State<HeaderWidget> {
   final AuthService _authService = AuthService();
   final BannerService _bannerService = BannerService();
+  final BadgeService _badgeService = BadgeService();
   final UserProfileService _userProfileService = UserProfileService();
   OverlayEntry? _overlayEntry;
   int? _currentAvatarId;
 
   late StreamSubscription<int> _avatarSubscription;
 
-  Queue<String> _pendingNotifications = Queue<String>();
-  bool _isShowingNotification = false;
+  Queue<String> _pendingBannerNotifications = Queue<String>();
+  bool _isShowingBannerNotification = false;
+
+  Queue<int> _pendingBadgeNotifications = Queue<int>();
+  bool _isShowingBadgeNotification = false;
 
   @override
   void initState() {
     super.initState();
     _checkForUnlockedBanners();
+    _checkForUnlockedBadges();
     _authService.getUserProfile().then((profile) {
       if (mounted && profile != null) {
         setState(() {
@@ -101,12 +109,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
         
         // Queue up notifications instead of showing them immediately
         for (var banner in newlyUnlockedBanners) {
-          _pendingNotifications.add(banner['title']);
+          _pendingBannerNotifications.add(banner['title']);
         }
         
         // Start showing notifications if not already showing
-        if (!_isShowingNotification) {
-          _showNextNotification();
+        if (!_isShowingBannerNotification) {
+          _showNextBannerNotification();
         }
       }
     } catch (e) {
@@ -114,15 +122,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
     }
   }
 
-  void _showNextNotification() {
-    if (_pendingNotifications.isEmpty) {
-      _isShowingNotification = false;
+  void _showNextBannerNotification() {
+    if (_pendingBannerNotifications.isEmpty) {
+      _isShowingBannerNotification = false;
+      if (!_isShowingBadgeNotification && _pendingBadgeNotifications.isNotEmpty) {
+        _showNextBadgeNotification();
+      }
       return;
     }
 
-    _isShowingNotification = true;
-    String nextBanner = _pendingNotifications.removeFirst();
-    _showBannerUnlockNotification(nextBanner);
+    if (!_isShowingBannerNotification && !_isShowingBadgeNotification) {
+      _isShowingBannerNotification = true;
+      String nextBanner = _pendingBannerNotifications.removeFirst();
+      _showBannerUnlockNotification(nextBanner);
+    }
   }
 
   void _showBannerUnlockNotification(String bannerTitle) {
@@ -135,7 +148,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
             _removeOverlay();
             // Show next notification after current one is dismissed
             Future.delayed(const Duration(milliseconds: 300), () {
-              _showNextNotification();
+              _showNextBannerNotification();
             });
           },
           onViewBanner: () {
@@ -143,7 +156,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
             _showBanners();
             // Show next notification after a delay
             Future.delayed(const Duration(milliseconds: 300), () {
-              _showNextNotification();
+              _showNextBannerNotification();
             });
           },
         ),
@@ -448,6 +461,62 @@ class HeaderWidgetState extends State<HeaderWidget> {
         );
       },
     );
+  }
+
+  void _checkForUnlockedBadges() {
+    if (!_isShowingBadgeNotification && BadgeUnlockService.pendingNotifications.isNotEmpty) {
+      _pendingBadgeNotifications.addAll(BadgeUnlockService.pendingNotifications);
+      _showNextBadgeNotification();
+    }
+  }
+
+  void _showBadgeUnlockNotification(int badgeId) async {
+    try {
+      final badges = await _badgeService.fetchBadges();
+      final badge = badges.firstWhere((b) => b['id'] == badgeId);
+      
+      _overlayEntry = OverlayEntry(
+        builder: (context) => Positioned(
+          width: MediaQuery.of(context).size.width,
+          child: BadgeUnlockNotification(
+            badgeTitle: badge['title'],
+            onDismiss: () {
+              _overlayEntry?.remove();
+              _overlayEntry = null;
+              _isShowingBadgeNotification = false;
+              _showNextBadgeNotification();
+            },
+            onViewBadge: () {
+              _overlayEntry?.remove();
+              _overlayEntry = null;
+              _showBadges();
+              _isShowingBadgeNotification = false;
+              _showNextBadgeNotification();
+            },
+          ),
+        ),
+      );
+
+      Overlay.of(context).insert(_overlayEntry!);
+      _isShowingBadgeNotification = true;
+    } catch (e) {
+      print('Error showing badge notification: $e');
+    }
+  }
+
+  void _showNextBadgeNotification() {
+    if (_pendingBadgeNotifications.isEmpty) {
+      _isShowingBadgeNotification = false;
+      if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
+        _showNextBannerNotification();
+      }
+      return;
+    }
+
+    if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
+      int nextBadgeId = _pendingBadgeNotifications.removeFirst();
+      _showBadgeUnlockNotification(nextBadgeId);
+    }
   }
 
   @override

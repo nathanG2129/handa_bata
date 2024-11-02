@@ -70,7 +70,6 @@ class ResultsPageState extends State<ResultsPage> {
     super.initState();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
-    print('Lol: ${widget.record}');
     _updateScoreAndStarsInFirestore();
   }
 
@@ -89,7 +88,6 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
-    print('Accuracy: $accuracy, Score: $score, MaxScore: $maxScore, IsGameOver: $isGameOver');
     if (isGameOver) {
       return 0;
     } else if (accuracy > 0.9 && score == maxScore) {
@@ -235,7 +233,6 @@ class ResultsPageState extends State<ResultsPage> {
         );
       }
     } catch (e) {
-      print('Error updating score and stars: $e');
     }
   }
 

@@ -11,11 +11,10 @@ class BadgeService {
         // print('Fetched data: $data'); // Debug print
         return data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
       } else {
-        print('Badge document does not exist'); // Debug print
+        // Debug print
         return [];
       }
     } catch (e) {
-      print('Error fetching badges: $e');
       return [];
     }
   }
@@ -33,7 +32,6 @@ class BadgeService {
       }
       return 0;
     } catch (e) {
-      print('Error getting next ID: $e');
       return 0;
     }
   }
@@ -51,7 +49,6 @@ class BadgeService {
       badges.add(badge);
       await _badgeDoc.update({'badges': badges});
     } catch (e) {
-      print('Error adding badge: $e');
     }
   }
 
@@ -68,7 +65,6 @@ class BadgeService {
         }
       }
     } catch (e) {
-      print('Error updating badge: $e');
     }
   }
 
@@ -82,7 +78,6 @@ class BadgeService {
         await _badgeDoc.update({'badges': badges});
       }
     } catch (e) {
-      print('Error deleting badge: $e');
     }
   }
 }

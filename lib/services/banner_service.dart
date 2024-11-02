@@ -8,14 +8,13 @@ class BannerService {
       DocumentSnapshot snapshot = await _bannerDoc.get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        print('Fetched data: $data'); // Debug print
+        // Debug print
         return data['banners'] != null ? List<Map<String, dynamic>>.from(data['banners']) : [];
       } else {
-        print('Banner document does not exist'); // Debug print
+        // Debug print
         return [];
       }
     } catch (e) {
-      print('Error fetching banners: $e');
       return [];
     }
   }
@@ -33,7 +32,6 @@ class BannerService {
       }
       return 0; // Start with 0 if no banners exist
     } catch (e) {
-      print('Error getting next ID: $e');
       return 0; // Start with 0 in case of error
     }
   }
@@ -51,7 +49,6 @@ class BannerService {
       banners.add(banner);
       await _bannerDoc.update({'banners': banners});
     } catch (e) {
-      print('Error adding banner: $e');
     }
   }
 
@@ -68,7 +65,6 @@ class BannerService {
         }
       }
     } catch (e) {
-      print('Error updating banner: $e');
     }
   }
 
@@ -82,7 +78,6 @@ class BannerService {
         await _bannerDoc.update({'banners': banners});
       }
     } catch (e) {
-      print('Error deleting banner: $e');
     }
   }
 }

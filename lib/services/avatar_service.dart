@@ -8,14 +8,13 @@ class AvatarService {
       DocumentSnapshot snapshot = await _avatarDoc.get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        print('Fetched data: $data'); // Debug print
+        // Debug print
         return data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
       } else {
-        print('Avatar document does not exist'); // Debug print
+        // Debug print
         return [];
       }
     } catch (e) {
-      print('Error fetching avatars: $e');
       return [];
     }
   }
@@ -33,7 +32,6 @@ class AvatarService {
       }
       return 0; // Start with 0 if no avatars exist
     } catch (e) {
-      print('Error getting next ID: $e');
       return 0; // Start with 0 in case of error
     }
   }
@@ -51,7 +49,6 @@ class AvatarService {
       avatars.add(avatar);
       await _avatarDoc.update({'avatars': avatars});
     } catch (e) {
-      print('Error adding avatar: $e');
     }
   }
 
@@ -68,7 +65,6 @@ class AvatarService {
         }
       }
     } catch (e) {
-      print('Error updating avatar: $e');
     }
   }
 
@@ -82,7 +78,6 @@ class AvatarService {
         await _avatarDoc.update({'avatars': avatars});
       }
     } catch (e) {
-      print('Error deleting avatar: $e');
     }
   }
 }

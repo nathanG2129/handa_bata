@@ -43,7 +43,6 @@ class RegistrationPageState extends State<RegistrationPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected language: $_selectedLanguage');
   }
 
   void _register() async {

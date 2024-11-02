@@ -125,7 +125,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     _playSound(_soundId3); // Play select answer sound
     setState(() {
       if (index < 0 || index >= optionSelected.length) {
-        print('Index out of range: $index');
         return;
       }
 

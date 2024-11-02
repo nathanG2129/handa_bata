@@ -96,7 +96,6 @@ class UserProfileHeader extends StatelessWidget {
       );
       return avatar['img'];
     } catch (e) {
-      print('Error fetching avatar image: $e');
       return 'Kladis.png'; // Return default avatar on error
     }
   }
@@ -110,7 +109,6 @@ class UserProfileHeader extends StatelessWidget {
       );
       return banner['img'];
     } catch (e) {
-      print('Error fetching banner image: $e');
       return 'Level01.svg';
     }
   }

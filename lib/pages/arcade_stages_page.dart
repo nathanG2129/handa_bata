@@ -42,7 +42,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     stages = stages.where((stage) => stage['stageName'].contains('Arcade')).toList();
     setState(() {
       _stages = stages;
-      print(stages);
     });
   }
 

@@ -76,7 +76,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
           .call({'email': widget.email});
     } catch (e) {
       if (!mounted) return;
-      print('Firebase Function Error: $e'); // Add logging
+      // Add logging
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error sending OTP: $e')),
       );

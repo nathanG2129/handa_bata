@@ -155,12 +155,11 @@ class GameplayPageState extends State<GameplayPage> {
       await _audioPlayer.setVolume(_musicVolume); // Set the volume
       await _audioPlayer.play(); // Play the background music
     } catch (e) {
-      print("Error playing background music: $e");
     }
   }
 
   Future<void> _speak(String text) async {
-    print("TTS: Speaking text: $text"); // Debugging statement
+    // Debugging statement
     String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
     await flutterTts.setLanguage(locale);
     await flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
@@ -227,13 +226,13 @@ void readCurrentQuestion() {
           textToRead = 'Unknown question type';
       }
 
-      print("TTS: Reading question: $textToRead"); // Debugging statement
+      // Debugging statement
       _speak(textToRead);
     } else {
-      print("TTS: No answered question data available."); // Debugging statement
+      // Debugging statement
     }
   } else {
-    print("TTS: Text-to-Speech is disabled."); // Debugging statement
+    // Debugging statement
   }
 }
 

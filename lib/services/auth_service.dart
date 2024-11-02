@@ -249,7 +249,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error syncing ${role} profile: $e');
       rethrow;
     }
   }
@@ -333,7 +332,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error updating user profile: $e');
       rethrow;
     }
   }
@@ -370,7 +368,6 @@ class AuthService {
       await _auth.signOut();
       await clearAllLocalData(); // Clear all local data, not just guest details
     } catch (e) {
-      print('Error signing out: $e');
       rethrow;
     }
   }
@@ -413,7 +410,6 @@ class AuthService {
       
       return UserProfile.guestProfile;
     } catch (e) {
-      print('Error getting user profile: $e');
       return UserProfile.guestProfile;
     }
   }
@@ -439,7 +435,6 @@ class AuthService {
         await clearAllLocalData();
       }
     } catch (e) {
-      print('Error deleting account: $e');
       rethrow;
     }
   }
@@ -468,7 +463,6 @@ class AuthService {
       // Commit the batch
       await _executeBatchWithRetry(batch);
     } catch (e) {
-      print('Error deleting Firestore data: $e');
       rethrow;
     }
   }
@@ -511,7 +505,6 @@ class AuthService {
             }
           },
           onError: (error) {
-            print('Error listening to Firestore changes: $error');
           },
         ),
       );
@@ -539,12 +532,10 @@ class AuthService {
             }
           },
           onError: (error) {
-            print('Error listening to GameSaveData changes: $error');
           },
         ),
       );
     } catch (e) {
-      print('Error setting up Firestore listener: $e');
     }
   }
 
@@ -566,7 +557,6 @@ class AuthService {
       String profileJson = jsonEncode(profile.toMap());
       await prefs.setString(USER_PROFILE_KEY, profileJson);
     } catch (e) {
-      print('Error saving user profile locally: $e');
       rethrow;
     }
   }
@@ -597,7 +587,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error updating avatar ID: $e');
       rethrow;
     }
   }
@@ -612,7 +601,6 @@ class AuthService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.containsKey(USER_PROFILE_KEY);
     } catch (e) {
-      print('Error checking local user profile: $e');
       return false;
     }
   }
@@ -622,7 +610,6 @@ class AuthService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.containsKey(GUEST_PROFILE_KEY);
     } catch (e) {
-      print('Error checking local guest profile: $e');
       return false;
     }
   }
@@ -637,7 +624,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting local user profile: $e');
       return null;
     }
   }
@@ -661,7 +647,6 @@ class AuthService {
         keysToRemove.map((key) => prefs.remove(key))
       );
     } catch (e) {
-      print('Error clearing all local data: $e');
       rethrow;
     }
   }
@@ -701,7 +686,6 @@ class AuthService {
 
       return currentUser;
     } catch (e) {
-      print('Error preparing guest conversion: $e');
       rethrow;
     }
   }
@@ -778,7 +762,6 @@ class AuthService {
 
       return currentUser;
     } catch (e) {
-      print('Error completing guest conversion: $e');
       rethrow;
     }
   }
@@ -789,7 +772,6 @@ class AuthService {
       String saveDataJson = jsonEncode(data.toMap());
       await prefs.setString('game_save_data_$categoryId', saveDataJson);
     } catch (e) {
-      print('Error saving game save data locally: $e');
       rethrow;
     }
   }
@@ -804,7 +786,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting local game save data: $e');
       return null;
     }
   }
@@ -1024,7 +1005,6 @@ class AuthService {
             .set(localData.toMap());
       }
     } catch (e) {
-      print('Error updating game progress: $e');
       rethrow;
     }
   }
@@ -1045,7 +1025,6 @@ class AuthService {
       
       return querySnapshot.docs.isNotEmpty;
     } catch (e) {
-      print('Error checking username availability: $e');
       rethrow;
     }
   }
@@ -1076,7 +1055,6 @@ class AuthService {
             .update({'bannerId': bannerId});
       }
     } catch (e) {
-      print('Error updating banner ID: $e');
       rethrow;
     }
   }

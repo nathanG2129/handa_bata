@@ -118,7 +118,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
         }
       }
     } catch (e) {
-      print('Error checking for unlocked banners: $e');
     }
   }
 
@@ -254,7 +253,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
       );
       return avatar['img'];
     } catch (e) {
-      print('Error fetching avatar image: $e');
       return 'Kladis.png';
     }
   }
@@ -500,7 +498,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
       Overlay.of(context).insert(_overlayEntry!);
       _isShowingBadgeNotification = true;
     } catch (e) {
-      print('Error showing badge notification: $e');
     }
   }
 

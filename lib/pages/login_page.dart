@@ -30,7 +30,6 @@ class LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
-    print('Selected language: $_selectedLanguage');
 
   }
 

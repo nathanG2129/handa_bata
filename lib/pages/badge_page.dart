@@ -1,11 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/badge_details_dialog.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/services/auth_service.dart';
 
 enum BadgeFilter {
+  myCollection,
   allBadges,
   quakeBadges,
   stormBadges,
@@ -29,7 +32,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   late Future<List<Map<String, dynamic>>> _badgesFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
-  final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.allBadges);
+  final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -77,6 +81,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
 
   String _getFilterName(BadgeFilter filter) {
     switch (filter) {
+      case BadgeFilter.myCollection:
+        return 'My Collection';
       case BadgeFilter.allBadges:
         return 'All Badges';
       case BadgeFilter.quakeBadges:
@@ -130,7 +136,12 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  List<Map<String, dynamic>> _filterBadges(List<Map<String, dynamic>> badges, BadgeFilter filter) {
+  List<Map<String, dynamic>> _filterBadges(List<Map<String, dynamic>> badges, BadgeFilter filter, List<int> unlockedBadges) {
+    if (filter == BadgeFilter.myCollection) {
+      return badges.where((badge) => 
+        unlockedBadges[badges.indexOf(badge)] == 1).toList();
+    }
+    
     if (filter == BadgeFilter.allBadges) return badges;
     
     String prefix = filter.toString().split('.').last.replaceAll('Badges', '').toLowerCase();
@@ -159,21 +170,25 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _badgesFuture,
+                child: FutureBuilder<List<dynamic>>(
+                  future: Future.wait([
+                    _badgesFuture,
+                    _authService.getUserProfile(),
+                  ]),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
                       return const Center(child: Text('No badges found.'));
                     } else {
                       if (!_animationController.isAnimating && !_animationController.isCompleted) {
                         _animationController.forward();
                       }
-                      final badges = snapshot.data!;
-                      final filteredBadges = _filterBadges(badges, _filterNotifier.value);
+                      final badges = snapshot.data![0] as List<Map<String, dynamic>>;
+                      final userProfile = snapshot.data![1] as UserProfile;
+                      
                       return SlideTransition(
                         position: _slideAnimation,
                         child: Card(
@@ -212,7 +227,11 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                         ValueListenableBuilder<BadgeFilter>(
                                           valueListenable: _filterNotifier,
                                           builder: (context, currentFilter, _) {
-                                            final filteredBadges = _filterBadges(badges, currentFilter);
+                                            final filteredBadges = _filterBadges(
+                                              badges, 
+                                              currentFilter,
+                                              userProfile.unlockedBadge,
+                                            );
                                             return Container(
                                               padding: EdgeInsets.all(
                                                 ResponsiveValue<double>(
@@ -242,36 +261,42 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                                 itemCount: filteredBadges.length,
                                                 itemBuilder: (context, index) {
                                                   final badge = filteredBadges[index];
-                                                  return GestureDetector(
-                                                    onTap: () => _showBadgeDetails(badge),
-                                                    child: Card(
-                                                      color: Colors.transparent,
-                                                      elevation: 0,
-                                                      margin: const EdgeInsets.symmetric(vertical: 0.0), // Reduce the margin
-                                                      child: Center(
-                                                        child: Column(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: [
-                                                            Image.asset(
-                                                              'assets/badges/${badge['img']}',
-                                                              width: 50,
-                                                              height: 50,
-                                                              fit: BoxFit.cover,
-                                                              filterQuality: FilterQuality.none, // Make the image pixelated
-                                                            ),
-                                                            const SizedBox(height: 5), // Reduce the space between image and text
-                                                            SizedBox(
-                                                              width: 100, // Set the width to match the badge image
-                                                              child: Text(
-                                                                badge['title'] ?? 'Badge',
-                                                                textAlign: TextAlign.center,
-                                                                style: GoogleFonts.vt323(
-                                                                  color: Colors.white,
-                                                                  fontSize: 20,
+                                                  final originalIndex = badges.indexWhere((b) => b['id'] == badge['id']);
+                                                  final isUnlocked = userProfile.unlockedBadge[originalIndex] == 1;
+                                                  
+                                                  return Opacity(
+                                                    opacity: isUnlocked || currentFilter == BadgeFilter.myCollection ? 1.0 : 0.5,
+                                                    child: GestureDetector(
+                                                      onTap: isUnlocked ? () => _showBadgeDetails(badge) : null,
+                                                      child: Card(
+                                                        color: Colors.transparent,
+                                                        elevation: 0,
+                                                        margin: const EdgeInsets.symmetric(vertical: 0.0),
+                                                        child: Center(
+                                                          child: Column(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              Image.asset(
+                                                                'assets/badges/${badge['img']}',
+                                                                width: 50,
+                                                                height: 50,
+                                                                fit: BoxFit.cover,
+                                                                filterQuality: FilterQuality.none,
+                                                              ),
+                                                              const SizedBox(height: 5),
+                                                              SizedBox(
+                                                                width: 100,
+                                                                child: Text(
+                                                                  badge['title'] ?? 'Badge',
+                                                                  textAlign: TextAlign.center,
+                                                                  style: GoogleFonts.vt323(
+                                                                    color: Colors.white,
+                                                                    fontSize: 20,
+                                                                  ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                          ],
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
                                                     ),

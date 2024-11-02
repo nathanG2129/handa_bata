@@ -71,6 +71,7 @@ class ResultsPageState extends State<ResultsPage> {
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
     print('Lol: ${widget.record}');
+    _updateScoreAndStarsInFirestore();
   }
 
   Future<void> _initializeResultsPage() async {

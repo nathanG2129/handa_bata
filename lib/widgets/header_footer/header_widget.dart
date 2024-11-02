@@ -46,6 +46,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Queue<String> _pendingBannerNotifications = Queue<String>();
   bool _isShowingBannerNotification = false;
+
+  Queue<int> _pendingBadgeNotifications = Queue<int>();
   bool _isShowingBadgeNotification = false;
 
   @override
@@ -75,7 +77,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
   void dispose() {
     _avatarSubscription.cancel();
     _removeOverlay();
-    BadgeUnlockService.clearAllNotifications(); // Clear notifications when widget disposes
     super.dispose();
   }
 
@@ -124,7 +125,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
   void _showNextBannerNotification() {
     if (_pendingBannerNotifications.isEmpty) {
       _isShowingBannerNotification = false;
-      if (!_isShowingBadgeNotification && BadgeUnlockService.pendingNotifications.isNotEmpty) {
+      if (!_isShowingBadgeNotification && _pendingBadgeNotifications.isNotEmpty) {
         _showNextBadgeNotification();
       }
       return;
@@ -463,20 +464,16 @@ class HeaderWidgetState extends State<HeaderWidget> {
   }
 
   void _checkForUnlockedBadges() {
-    print('Checking for unlocked badges');
-    print('Current badge queue: ${BadgeUnlockService.pendingNotifications.toList()}');
-    print('Is showing badge notification: $_isShowingBadgeNotification');
     if (!_isShowingBadgeNotification && BadgeUnlockService.pendingNotifications.isNotEmpty) {
+      _pendingBadgeNotifications.addAll(BadgeUnlockService.pendingNotifications);
       _showNextBadgeNotification();
     }
   }
 
   void _showBadgeUnlockNotification(int badgeId) async {
-    print('Showing badge notification for ID: $badgeId');
     try {
       final badges = await _badgeService.fetchBadges();
       final badge = badges.firstWhere((b) => b['id'] == badgeId);
-      print('Found badge: ${badge['title']}');
       
       _overlayEntry = OverlayEntry(
         builder: (context) => Positioned(
@@ -484,20 +481,16 @@ class HeaderWidgetState extends State<HeaderWidget> {
           child: BadgeUnlockNotification(
             badgeTitle: badge['title'],
             onDismiss: () {
-              print('Badge notification dismissed: $badgeId');
               _overlayEntry?.remove();
               _overlayEntry = null;
               _isShowingBadgeNotification = false;
-              BadgeUnlockService.clearNotification(badgeId);
               _showNextBadgeNotification();
             },
             onViewBadge: () {
-              print('Badge notification viewed: $badgeId');
               _overlayEntry?.remove();
               _overlayEntry = null;
               _showBadges();
               _isShowingBadgeNotification = false;
-              BadgeUnlockService.clearNotification(badgeId);
               _showNextBadgeNotification();
             },
           ),
@@ -508,20 +501,11 @@ class HeaderWidgetState extends State<HeaderWidget> {
       _isShowingBadgeNotification = true;
     } catch (e) {
       print('Error showing badge notification: $e');
-      BadgeUnlockService.clearNotification(badgeId);
-      _isShowingBadgeNotification = false;
-      _showNextBadgeNotification();
     }
   }
 
   void _showNextBadgeNotification() {
-    print('Attempting to show next badge notification');
-    print('Current queue: ${BadgeUnlockService.pendingNotifications.toList()}');
-    print('Is showing badge: $_isShowingBadgeNotification');
-    print('Is showing banner: $_isShowingBannerNotification');
-    
-    if (BadgeUnlockService.pendingNotifications.isEmpty) {
-      print('No more badge notifications to show');
+    if (_pendingBadgeNotifications.isEmpty) {
       _isShowingBadgeNotification = false;
       if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
         _showNextBannerNotification();
@@ -530,8 +514,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
     }
 
     if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
-      int nextBadgeId = BadgeUnlockService.pendingNotifications.first;
-      print('Showing next badge notification: $nextBadgeId');
+      int nextBadgeId = _pendingBadgeNotifications.removeFirst();
       _showBadgeUnlockNotification(nextBadgeId);
     }
   }

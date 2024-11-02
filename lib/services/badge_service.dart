@@ -8,7 +8,7 @@ class BadgeService {
       DocumentSnapshot snapshot = await _badgeDoc.get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        print('Fetched data: $data'); // Debug print
+        // print('Fetched data: $data'); // Debug print
         return data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
       } else {
         print('Badge document does not exist'); // Debug print

@@ -30,6 +30,7 @@ class BadgeUnlockService {
   // Helper method to unlock badges
   Future<void> _unlockBadges(List<int> badgeIds) async {
     if (badgeIds.isEmpty) return;
+    print('Attempting to unlock badges: $badgeIds');
 
     UserProfile? profile = await _authService.getUserProfile();
     if (profile == null) return;
@@ -39,9 +40,11 @@ class BadgeUnlockService {
 
     for (int badgeId in badgeIds) {
       if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
+        print('Unlocking new badge: $badgeId');
         unlockedBadges[badgeId] = 1;
         hasNewUnlocks = true;
         _pendingBadgeNotifications.add(badgeId);
+        print('Current notification queue: ${_pendingBadgeNotifications.toList()}');
       }
     }
 
@@ -134,5 +137,19 @@ class BadgeUnlockService {
   // Add this method to set notification status
   static set isShowingNotification(bool value) {
     _isShowingNotification = value;
+  }
+
+  // Add new method to clear a specific badge from notifications
+  static void clearNotification(int badgeId) {
+    print('Clearing badge notification: $badgeId');
+    print('Before clear - Queue: ${_pendingBadgeNotifications.toList()}');
+    _pendingBadgeNotifications.remove(badgeId);
+    print('After clear - Queue: ${_pendingBadgeNotifications.toList()}');
+  }
+
+  // Add method to clear all notifications
+  static void clearAllNotifications() {
+    _pendingBadgeNotifications.clear();
+    _isShowingNotification = false;
   }
 } 

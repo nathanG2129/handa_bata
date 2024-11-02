@@ -70,10 +70,10 @@ class ResultsPageState extends State<ResultsPage> {
     super.initState();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
-    _updateScoreAndStarsInFirestore();
   }
 
   Future<void> _initializeResultsPage() async {
+    print('🎮 Initializing results page...');
     // Load sounds and calculate stars in parallel
     await Future.wait([
       _loadSounds(),

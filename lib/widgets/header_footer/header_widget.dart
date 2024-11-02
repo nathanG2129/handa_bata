@@ -462,16 +462,27 @@ class HeaderWidgetState extends State<HeaderWidget> {
   }
 
   void _checkForUnlockedBadges() {
+    print('🔍 Checking for unlocked badges...');
+    print('🔍 Current showing state - Badge: $_isShowingBadgeNotification, Banner: $_isShowingBannerNotification');
+    print('🔍 Pending notifications in service: ${BadgeUnlockService.pendingNotifications.toList()}');
+    
     if (!_isShowingBadgeNotification && BadgeUnlockService.pendingNotifications.isNotEmpty) {
+      print('🔍 Adding pending notifications to local queue');
       _pendingBadgeNotifications.addAll(BadgeUnlockService.pendingNotifications);
+      // Clear the service's queue after adding to local queue
+      BadgeUnlockService.pendingNotifications.clear();
+      print('🔍 Local queue after adding: ${_pendingBadgeNotifications.toList()}');
+      print('🔍 Service queue after clearing: ${BadgeUnlockService.pendingNotifications.toList()}');
       _showNextBadgeNotification();
     }
   }
 
   void _showBadgeUnlockNotification(int badgeId) async {
+    print('🎯 Showing badge unlock notification for ID: $badgeId');
     try {
       final badges = await _badgeService.fetchBadges();
       final badge = badges.firstWhere((b) => b['id'] == badgeId);
+      print('🎯 Found badge: ${badge['title']}');
       
       _overlayEntry = OverlayEntry(
         builder: (context) => Positioned(
@@ -498,13 +509,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
       Overlay.of(context).insert(_overlayEntry!);
       _isShowingBadgeNotification = true;
     } catch (e) {
+      print('🎯 Error showing badge notification: $e');
     }
   }
 
   void _showNextBadgeNotification() {
+    print('📢 Attempting to show next badge notification');
+    print('📢 Current queues - Badge: ${_pendingBadgeNotifications.toList()}, Banner: ${_pendingBannerNotifications.toList()}');
+    print('📢 Current showing state - Badge: $_isShowingBadgeNotification, Banner: $_isShowingBannerNotification');
+
     if (_pendingBadgeNotifications.isEmpty) {
+      print('📢 No more badge notifications to show');
       _isShowingBadgeNotification = false;
       if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
+        print('📢 Switching to banner notifications');
         _showNextBannerNotification();
       }
       return;
@@ -512,7 +530,10 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
     if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
       int nextBadgeId = _pendingBadgeNotifications.removeFirst();
+      print('📢 Showing notification for badge ID: $nextBadgeId');
       _showBadgeUnlockNotification(nextBadgeId);
+    } else {
+      print('📢 Skipping notification - already showing something');
     }
   }
 

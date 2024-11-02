@@ -30,6 +30,7 @@ class BadgeUnlockService {
   // Helper method to unlock badges
   Future<void> _unlockBadges(List<int> badgeIds) async {
     if (badgeIds.isEmpty) return;
+    print('🏅 Attempting to unlock badges: $badgeIds');
 
     UserProfile? profile = await _authService.getUserProfile();
     if (profile == null) return;
@@ -39,14 +40,17 @@ class BadgeUnlockService {
 
     for (int badgeId in badgeIds) {
       if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
+        print('🏅 New badge unlocked: $badgeId');
         unlockedBadges[badgeId] = 1;
         hasNewUnlocks = true;
         _pendingBadgeNotifications.add(badgeId);
+        print('🏅 Current pending notifications queue: ${_pendingBadgeNotifications.toList()}');
       }
     }
 
     if (hasNewUnlocks) {
       int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
+      print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
       await _authService.updateUserProfile('unlockedBadge', unlockedBadges);
       await _authService.updateUserProfile('totalBadgeUnlocked', totalUnlocked);
     }

@@ -10,6 +10,7 @@ import 'package:handabatamae/services/auth_service.dart';
 import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '/localization/splash/localization.dart'; // Import the localization file
+import '../widgets/loading_widget.dart';
 
 class SplashPage extends StatefulWidget {
   final String selectedLanguage;
@@ -39,6 +40,15 @@ class SplashPageState extends State<SplashPage> {
 
   Future<void> _signInAnonymously(BuildContext context) async {
     try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const LoadingWidget();
+        },
+      );
+
       AuthService authService = AuthService();
 
       // Check if a guest account already exists
@@ -73,7 +83,11 @@ class SplashPageState extends State<SplashPage> {
         MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
       );
     } catch (e) {
-      // Check if the widget is still mounted before using the context
+      // Remove the loading dialog in case of error
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
       if (!context.mounted) return;
 
       // Handle error
@@ -84,10 +98,22 @@ class SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _checkSignInStatus(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const LoadingWidget();
+      },
+    );
+
     AuthService authService = AuthService();
     bool isSignedIn = await authService.isSignedIn();
 
     if (!context.mounted) return;
+
+    // Remove the loading dialog
+    Navigator.of(context).pop();
 
     if (isSignedIn) {
       Navigator.pushReplacement(
@@ -101,10 +127,10 @@ class SplashPageState extends State<SplashPage> {
       if (!context.mounted) return;
 
       if (localGuestProfile != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+        );
       } else {
         // Sign in anonymously if no local guest profile exists
         _signInAnonymously(context);

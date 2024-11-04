@@ -147,6 +147,7 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
                                       ), selectedLanguage: _selectedLanguage,  // White font color for username and level
                                       showMenuIcon: true, // Show menu icon
                                       onUpdateProfile: _handleProfileUpdate, bannerId: _userProfile!.bannerId, // Changed from onProfileUpdate
+                                      badgeShowcase: _userProfile!.badgeShowcase,
                                   )
                                   : const SizedBox.shrink(),
                         ),

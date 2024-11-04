@@ -7,6 +7,7 @@ import '../../localization/play/localization.dart'; // Import the localization f
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
+import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 
 class UserProfileHeader extends StatelessWidget {
   final String username;
@@ -20,6 +21,7 @@ class UserProfileHeader extends StatelessWidget {
   final bool showMenuIcon; // Add showMenuIcon
   final Function(String, String)? onUpdateProfile; // Add this
   final int bannerId;
+  final List<int> badgeShowcase; // Add badgeShowcase to UserProfileHeader constructor
 
   const UserProfileHeader({
     super.key,
@@ -34,6 +36,7 @@ class UserProfileHeader extends StatelessWidget {
     required this.bannerId,
     this.showMenuIcon = false, // Default to false
     this.onUpdateProfile, // Add this
+    required this.badgeShowcase, // Add badgeShowcase to UserProfileHeader constructor
   });
 
   void _handleMenuSelection(String result, BuildContext context) {
@@ -82,7 +85,23 @@ class UserProfileHeader extends StatelessWidget {
         );
         break;
       case 'Change Favorite Badges':
-        // Handle Change Favorite Badges
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return BadgePage(
+              selectionMode: true,
+              currentBadgeShowcase: badgeShowcase, // Add badgeShowcase to UserProfileHeader constructor
+              onBadgesSelected: (newBadgeIds) async {
+                Navigator.of(context).pop();
+                onUpdateProfile?.call(username, selectedLanguage);
+              },
+              onClose: () {
+                Navigator.of(context).pop();
+              },
+            );
+          },
+        );
         break;
     }
   }

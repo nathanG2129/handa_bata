@@ -21,8 +21,17 @@ enum BadgeFilter {
 
 class BadgePage extends StatefulWidget {
   final VoidCallback onClose;
+  final bool selectionMode;
+  final List<int>? currentBadgeShowcase;
+  final Function(List<int>)? onBadgesSelected;
 
-  const BadgePage({super.key, required this.onClose});
+  const BadgePage({
+    super.key, 
+    required this.onClose,
+    this.selectionMode = false,
+    this.currentBadgeShowcase,
+    this.onBadgesSelected,
+  });
 
   @override
   _BadgePageState createState() => _BadgePageState();
@@ -34,6 +43,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   late Animation<Offset> _slideAnimation;
   final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
   final AuthService _authService = AuthService();
+  final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
 
   @override
   void initState() {
@@ -50,12 +60,16 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+    if (widget.selectionMode && widget.currentBadgeShowcase != null) {
+      _selectedBadgesNotifier.value = List.from(widget.currentBadgeShowcase!);
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _filterNotifier.dispose();
+    _selectedBadgesNotifier.dispose();
     super.dispose();
   }
 
@@ -154,6 +168,161 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     }
   }
 
+  void _handleBadgeSelection(int badgeId) {
+    List<int> currentSelection = List.from(_selectedBadgesNotifier.value);
+    
+    if (currentSelection.contains(badgeId)) {
+      currentSelection.remove(badgeId);
+    } else if (currentSelection.length < 3) {
+      currentSelection.add(badgeId);
+    }
+    
+    _selectedBadgesNotifier.value = currentSelection;
+  }
+
+  Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
+    try {
+      final AuthService authService = AuthService();
+      await authService.updateUserProfile('badgeShowcase', badgeIds);
+      widget.onBadgesSelected?.call(badgeIds);
+      _closeDialog();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update favorite badges. Please try again.'),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildBadgeGrid(List<Map<String, dynamic>> badges, List<int> unlockedBadges) {
+    return ValueListenableBuilder<BadgeFilter>(
+      valueListenable: _filterNotifier,
+      builder: (context, currentFilter, _) {
+        var filteredBadges = _filterBadges(badges, currentFilter, unlockedBadges);
+        
+        final visibleBadges = widget.selectionMode
+            ? filteredBadges.where((badge) {
+                final index = badges.indexOf(badge);
+                return unlockedBadges[index] == 1;
+              }).toList()
+            : filteredBadges;
+
+        return Container(
+          padding: EdgeInsets.all(
+            ResponsiveValue<double>(
+              context,
+              defaultValue: 20.0,
+              conditionalValues: [
+                const Condition.smallerThan(name: MOBILE, value: 16.0),
+                const Condition.largerThan(name: MOBILE, value: 24.0),
+              ],
+            ).value,
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(2.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: ResponsiveValue<int>(
+                context,
+                defaultValue: 2,
+                conditionalValues: [
+                  const Condition.largerThan(name: TABLET, value: 4),
+                ],
+              ).value,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 20.0,
+            ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: visibleBadges.length,
+            itemBuilder: (context, index) {
+              final badge = visibleBadges[index];
+              final originalIndex = badges.indexOf(badge);
+              final isUnlocked = unlockedBadges[originalIndex] == 1;
+
+              return ValueListenableBuilder<List<int>>(
+                valueListenable: _selectedBadgesNotifier,
+                builder: (context, selectedBadges, _) {
+                  final isSelected = selectedBadges.contains(badge['id']);
+                  
+                  return Opacity(
+                    opacity: isUnlocked || widget.selectionMode ? 1.0 : 0.5,
+                    child: GestureDetector(
+                      onTap: widget.selectionMode
+                          ? () => _handleBadgeSelection(badge['id'])
+                          : isUnlocked 
+                              ? () => _showBadgeDetails(badge)
+                              : null,
+                      child: Card(
+                        color: Colors.transparent,
+                        elevation: 0,
+                        margin: const EdgeInsets.symmetric(vertical: 0.0),
+                        child: Container(
+                          decoration: isSelected
+                              ? BoxDecoration(
+                                  border: Border.all(color: const Color(0xFF9474CC), width: 2)
+                                )
+                              : null,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/badges/${badge['img']}',
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  filterQuality: FilterQuality.none,
+                                ),
+                                const SizedBox(height: 5),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    badge['title'] ?? 'Badge',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: _selectedBadgesNotifier,
+      builder: (context, selectedBadges, _) {
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            textStyle: GoogleFonts.vt323(fontSize: 20),
+          ),
+          onPressed: selectedBadges.length == 3 
+              ? () => _handleBadgeUpdate(selectedBadges)
+              : null,
+          child: const Text('Save Changes'),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -220,92 +389,20 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                     color: const Color(0xFF241242),
                                     child: Column(
                                       children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: _buildFilterDropdown(),
-                                        ),
-                                        ValueListenableBuilder<BadgeFilter>(
-                                          valueListenable: _filterNotifier,
-                                          builder: (context, currentFilter, _) {
-                                            final filteredBadges = _filterBadges(
-                                              badges, 
-                                              currentFilter,
-                                              userProfile.unlockedBadge,
-                                            );
-                                            return Container(
-                                              padding: EdgeInsets.all(
-                                                ResponsiveValue<double>(
-                                                  context,
-                                                  defaultValue: 20.0,
-                                                  conditionalValues: [
-                                                    const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                                    const Condition.largerThan(name: MOBILE, value: 24.0),
-                                                  ],
-                                                ).value,
-                                              ),
-                                              child: GridView.builder(
-                                                padding: const EdgeInsets.all(2.0),
-                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: ResponsiveValue<int>(
-                                                    context,
-                                                    defaultValue: 2,
-                                                    conditionalValues: [
-                                                      const Condition.largerThan(name: TABLET, value: 4),
-                                                    ],
-                                                  ).value,
-                                                  crossAxisSpacing: 0.0,
-                                                  mainAxisSpacing: 20.0,
-                                                ),
-                                                shrinkWrap: true,
-                                                physics: const NeverScrollableScrollPhysics(),
-                                                itemCount: filteredBadges.length,
-                                                itemBuilder: (context, index) {
-                                                  final badge = filteredBadges[index];
-                                                  final originalIndex = badges.indexWhere((b) => b['id'] == badge['id']);
-                                                  final isUnlocked = userProfile.unlockedBadge[originalIndex] == 1;
-                                                  
-                                                  return Opacity(
-                                                    opacity: isUnlocked || currentFilter == BadgeFilter.myCollection ? 1.0 : 0.5,
-                                                    child: GestureDetector(
-                                                      onTap: isUnlocked ? () => _showBadgeDetails(badge) : null,
-                                                      child: Card(
-                                                        color: Colors.transparent,
-                                                        elevation: 0,
-                                                        margin: const EdgeInsets.symmetric(vertical: 0.0),
-                                                        child: Center(
-                                                          child: Column(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            children: [
-                                                              Image.asset(
-                                                                'assets/badges/${badge['img']}',
-                                                                width: 50,
-                                                                height: 50,
-                                                                fit: BoxFit.cover,
-                                                                filterQuality: FilterQuality.none,
-                                                              ),
-                                                              const SizedBox(height: 5),
-                                                              SizedBox(
-                                                                width: 100,
-                                                                child: Text(
-                                                                  badge['title'] ?? 'Badge',
-                                                                  textAlign: TextAlign.center,
-                                                                  style: GoogleFonts.vt323(
-                                                                    color: Colors.white,
-                                                                    fontSize: 20,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            );
-                                          },
-                                        ),
+                                        if (!widget.selectionMode)
+                                          Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: _buildFilterDropdown(),
+                                          ),
+                                        _buildBadgeGrid(badges, userProfile.unlockedBadge),
+                                        if (widget.selectionMode) ...[
+                                          Container(
+                                            width: double.infinity,
+                                            color: const Color(0xFF3A1A5F),
+                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                            child: _buildSaveButton(),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),

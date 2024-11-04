@@ -284,6 +284,7 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
                               ).value,
                             ),
                             selectedLanguage: widget.selectedLanguage, bannerId: _userProfile!.bannerId, // White font color for username and level
+                            badgeShowcase: _userProfile!.badgeShowcase,
                           ),
                         ),
                         Flexible(

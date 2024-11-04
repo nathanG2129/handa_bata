@@ -203,7 +203,10 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
             ],
           ).value,
         ),
-        FavoriteBadges(selectedLanguage: _selectedLanguage,),
+        FavoriteBadges(
+          selectedLanguage: _selectedLanguage,
+          badgeShowcase: _userProfile!.badgeShowcase,
+        ),
       ],
     );
   }

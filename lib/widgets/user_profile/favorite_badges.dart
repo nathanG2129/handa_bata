@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
-import '../../localization/play/localization.dart'; // Import the localization file
+import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import '../../localization/play/localization.dart';
+import '../../services/badge_service.dart';
 
 class FavoriteBadges extends StatelessWidget {
   final String selectedLanguage;
+  final List<int> badgeShowcase;
 
-  const FavoriteBadges({super.key, required this.selectedLanguage});
+  const FavoriteBadges({
+    super.key, 
+    required this.selectedLanguage,
+    required this.badgeShowcase,
+  });
+
+  Future<List<Map<String, dynamic>>> _getBadgeDetails() async {
+    try {
+      final BadgeService badgeService = BadgeService();
+      final List<Map<String, dynamic>> allBadges = await badgeService.fetchBadges();
+      
+      return badgeShowcase.map((badgeId) {
+        return allBadges.firstWhere(
+          (badge) => badge['id'] == badgeId,
+          orElse: () => {'img': 'default.png', 'title': 'Badge'},
+        );
+      }).toList();
+    } catch (e) {
+      return List.generate(3, (index) => {'img': 'default.png', 'title': 'Badge'});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    const double scaleFactor = 0.8; // Define the scale factor
+    const double scaleFactor = 0.8;
 
     return Column(
       children: [
@@ -27,7 +49,7 @@ class FavoriteBadges extends StatelessWidget {
             ).value,
             fontWeight: FontWeight.bold,
             color: Colors.black,
-          ), // Use Rubik font and white color
+          ),
         ),
         SizedBox(
           height: ResponsiveValue<double>(
@@ -39,55 +61,111 @@ class FavoriteBadges extends StatelessWidget {
             ],
           ).value,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-              child: Card(
-                color: const Color(0xFF4d278f), // Card color for badges
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1), // Black border
-                  borderRadius: BorderRadius.zero, // Purely rectangular
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    ResponsiveValue<double>(
-                      context,
-                      defaultValue: 20.0 * scaleFactor,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
-                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
-                      ],
-                    ).value,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 40 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
-                          ],
-                        ).value,
-                        color: Colors.amber,
-                      ),
-                      SizedBox(
-                        height: ResponsiveValue<double>(
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: _getBadgeDetails(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final badges = snapshot.data ?? 
+              List.generate(3, (index) => {'img': 'default.png', 'title': 'Badge ${index + 1}'});
+
+            return Column(
+              children: [
+                // Badge images in colored containers
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: badges.map((badge) => Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveValue<double>(
                           context,
                           defaultValue: 10 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
+                            const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
                           ],
                         ).value,
                       ),
-                      Text(
-                        'Badge 1',
-                        style: TextStyle(
-                          color: Colors.white,
+                      child: Card(
+                        color: const Color(0xFF4d278f),
+                        shape: const RoundedRectangleBorder(
+                          side: BorderSide(color: Colors.black, width: 1),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: Padding(
+                            padding: EdgeInsets.all(
+                              ResponsiveValue<double>(
+                                context,
+                                defaultValue: 12.0 * scaleFactor,
+                                conditionalValues: [
+                                  const Condition.smallerThan(name: MOBILE, value: 8.0 * scaleFactor),
+                                  const Condition.largerThan(name: MOBILE, value: 16.0 * scaleFactor),
+                                ],
+                              ).value,
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/badges/${badge['img']}',
+                                width: ResponsiveValue<double>(
+                                  context,
+                                  defaultValue: 64 * scaleFactor,
+                                  conditionalValues: [
+                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                                  ],
+                                ).value,
+                                height: ResponsiveValue<double>(
+                                  context,
+                                  defaultValue: 64 * scaleFactor,
+                                  conditionalValues: [
+                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                                  ],
+                                ).value,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )).toList(),
+                ),
+                // Badge titles below
+                SizedBox(
+                  height: ResponsiveValue<double>(
+                    context,
+                    defaultValue: 8 * scaleFactor,
+                    conditionalValues: [
+                      const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
+                      const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
+                    ],
+                  ).value,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: badges.map((badge) => Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveValue<double>(
+                          context,
+                          defaultValue: 8 * scaleFactor,
+                          conditionalValues: [
+                            const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
+                          ],
+                        ).value,
+                      ),
+                      child: Text(
+                        badge['title'] ?? 'Badge',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.vt323(
+                          color: Colors.black,
                           fontSize: ResponsiveValue<double>(
                             context,
                             defaultValue: 16 * scaleFactor,
@@ -96,156 +174,14 @@ class FavoriteBadges extends StatelessWidget {
                               const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
                             ],
                           ).value,
-                        ), // White text color
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  )).toList(),
                 ),
-              ),
-            ),
-            SizedBox(
-              width: ResponsiveValue<double>(
-                context,
-                defaultValue: 16 * scaleFactor,
-                conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
-                  const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
-                ],
-              ).value,
-            ),
-            Expanded(
-              child: Card(
-                color: const Color(0xFF4d278f), // Card color for badges
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1), // Black border
-                  borderRadius: BorderRadius.zero, // Purely rectangular
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    ResponsiveValue<double>(
-                      context,
-                      defaultValue: 20.0 * scaleFactor,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
-                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
-                      ],
-                    ).value,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 40 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
-                          ],
-                        ).value,
-                        color: Colors.amber,
-                      ),
-                      SizedBox(
-                        height: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 10 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
-                          ],
-                        ).value,
-                      ),
-                      Text(
-                        'Badge 2',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 16 * scaleFactor,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
-                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
-                            ],
-                          ).value,
-                        ), // White text color
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: ResponsiveValue<double>(
-                context,
-                defaultValue: 16 * scaleFactor,
-                conditionalValues: [
-                  const Condition.smallerThan(name: MOBILE, value: 12 * scaleFactor),
-                  const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
-                ],
-              ).value,
-            ),
-            Expanded(
-              child: Card(
-                color: const Color(0xFF4d278f), // Card color for badges
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1), // Black border
-                  borderRadius: BorderRadius.zero, // Purely rectangular
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    ResponsiveValue<double>(
-                      context,
-                      defaultValue: 20.0 * scaleFactor,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 16.0 * scaleFactor),
-                        const Condition.largerThan(name: MOBILE, value: 24.0 * scaleFactor),
-                      ],
-                    ).value,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 40 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 30 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 50 * scaleFactor),
-                          ],
-                        ).value,
-                        color: Colors.amber,
-                      ),
-                      SizedBox(
-                        height: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 10 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
-                          ],
-                        ).value,
-                      ),
-                      Text(
-                        'Badge 3',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 16 * scaleFactor,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
-                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
-                            ],
-                          ).value,
-                        ), // White text color
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ],
     );

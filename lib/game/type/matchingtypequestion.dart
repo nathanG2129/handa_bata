@@ -382,20 +382,31 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       await Future.delayed(const Duration(seconds: 1, milliseconds: 750));
   
       setState(() {
-        String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
-        if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString)) {
-          pairColors[i] = Colors.green;
-          _playSound(_soundId2);
-          widget.updateHealth(true, 'Matching Type');
-          if (widget.gamemode == 'arcade') {
-            widget.updateStopwatch(-5);
-          }
-        } else {
+        // If the pair was force-paired (had grey color), always mark it as incorrect
+        if (pairColors[i] == Colors.grey) {
           pairColors[i] = Colors.red;
           _playSound(_soundId1);
           widget.updateHealth(false, 'Matching Type', blankPairs: 1);
           if (widget.gamemode == 'arcade') {
             widget.updateStopwatch(5);
+          }
+        } else {
+          // Only check correctness for user-made pairs
+          String userPairString = '${userPairs[i]['section1']}:${userPairs[i]['section2']}';
+          if (correctAnswers.any((pair) => '${pair['section1']}:${pair['section2']}' == userPairString)) {
+            pairColors[i] = Colors.green;
+            _playSound(_soundId2);
+            widget.updateHealth(true, 'Matching Type');
+            if (widget.gamemode == 'arcade') {
+              widget.updateStopwatch(-5);
+            }
+          } else {
+            pairColors[i] = Colors.red;
+            _playSound(_soundId1);
+            widget.updateHealth(false, 'Matching Type', blankPairs: 1);
+            if (widget.gamemode == 'arcade') {
+              widget.updateStopwatch(5);
+            }
           }
         }
       });
@@ -405,9 +416,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     await Future.delayed(const Duration(seconds: 2));
     setState(() {
       showCorrectAnswer = true;
-      // Replace user pairs with correct pairs
       userPairs = List.from(correctAnswers);
-      // Set all colors to green
       pairColors = List.filled(correctAnswers.length, Colors.green);
     });
   
@@ -428,23 +437,33 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         (context.findAncestorStateOfType<GameplayPageState>())?.pauseStopwatch();
       }
 
-      // Only pair up to the number of correct pairs
+      // Create deliberately wrong pairs for remaining options
       while (userPairs.length < correctAnswers.length && section1Options.isNotEmpty && section2Options.isNotEmpty) {
         String section1Option = section1Options.removeAt(0);
-        String section2Option = section2Options.removeAt(0);
+        
+        // Find a section2 option that doesn't form a correct pair with section1Option
+        String section2Option = section2Options.firstWhere(
+          (option) => !correctAnswers.any((pair) => 
+            pair['section1'] == section1Option && pair['section2'] == option
+          ),
+          orElse: () => section2Options[0], // If no wrong match found, just take the first one
+        );
+        section2Options.remove(section2Option);
         
         userPairs.add({
           'section1': section1Option,
           'section2': section2Option,
         });
-        pairColors.add(const Color.fromARGB(255, 114, 109, 109));
+        // Use a neutral color for force-paired options
+        pairColors.add(Colors.grey);
       }
 
-      // Simply clear any remaining options
+      // Clear remaining options
       section1Options.clear();
       section2Options.clear();
     });
 
+    // These pairs will be checked normally in _checkAnswer
     _checkAnswer();
   }
 

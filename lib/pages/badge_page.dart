@@ -60,8 +60,11 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+
     if (widget.selectionMode && widget.currentBadgeShowcase != null) {
-      _selectedBadgesNotifier.value = List.from(widget.currentBadgeShowcase!);
+      _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
+          .where((id) => id != -1)
+          .toList();
     }
   }
 
@@ -175,16 +178,24 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       currentSelection.remove(badgeId);
     } else if (currentSelection.length < 3) {
       currentSelection.add(badgeId);
+    } else {
+      currentSelection.removeAt(0);
+      currentSelection.add(badgeId);
     }
     
-    _selectedBadgesNotifier.value = currentSelection;
+    _selectedBadgesNotifier.value = List.from(currentSelection);
   }
 
   Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
     try {
+      List<int> paddedBadgeIds = List.from(badgeIds);
+      while (paddedBadgeIds.length < 3) {
+        paddedBadgeIds.add(-1);
+      }
+      
       final AuthService authService = AuthService();
-      await authService.updateUserProfile('badgeShowcase', badgeIds);
-      widget.onBadgesSelected?.call(badgeIds);
+      await authService.updateUserProfile('badgeShowcase', paddedBadgeIds);
+      widget.onBadgesSelected?.call(paddedBadgeIds);
       _closeDialog();
     } catch (e) {
       if (mounted) {
@@ -248,23 +259,26 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                   final isSelected = selectedBadges.contains(badge['id']);
                   
                   return Opacity(
-                    opacity: isUnlocked || widget.selectionMode ? 1.0 : 0.5,
+                    opacity: widget.selectionMode ? (isUnlocked ? 1.0 : 0.5) : (isUnlocked ? 1.0 : 0.5),
                     child: GestureDetector(
-                      onTap: widget.selectionMode
-                          ? () => _handleBadgeSelection(badge['id'])
-                          : isUnlocked 
-                              ? () => _showBadgeDetails(badge)
-                              : null,
+                      onTap: () {
+                        if (widget.selectionMode && isUnlocked) {
+                          _handleBadgeSelection(badge['id']);
+                        } else if (!widget.selectionMode && isUnlocked) {
+                          _showBadgeDetails(badge);
+                        }
+                      },
                       child: Card(
                         color: Colors.transparent,
                         elevation: 0,
                         margin: const EdgeInsets.symmetric(vertical: 0.0),
                         child: Container(
-                          decoration: isSelected
-                              ? BoxDecoration(
-                                  border: Border.all(color: const Color(0xFF9474CC), width: 2)
-                                )
-                              : null,
+                          decoration: BoxDecoration(
+                            border: isSelected
+                                ? Border.all(color: const Color(0xFF9474CC), width: 2)
+                                : null,
+                            color: Colors.transparent,
+                          ),
                           child: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,

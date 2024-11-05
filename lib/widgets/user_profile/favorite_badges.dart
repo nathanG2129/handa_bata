@@ -20,13 +20,16 @@ class FavoriteBadges extends StatelessWidget {
       final List<Map<String, dynamic>> allBadges = await badgeService.fetchBadges();
       
       return badgeShowcase.map((badgeId) {
+        if (badgeId == -1) {
+          return {'img': '', 'title': ''};
+        }
         return allBadges.firstWhere(
           (badge) => badge['id'] == badgeId,
           orElse: () => {'img': 'default.png', 'title': 'Badge'},
         );
       }).toList();
     } catch (e) {
-      return List.generate(3, (index) => {'img': 'default.png', 'title': 'Badge'});
+      return List.generate(3, (index) => {'img': '', 'title': ''});
     }
   }
 
@@ -76,7 +79,7 @@ class FavoriteBadges extends StatelessWidget {
             }
 
             final badges = snapshot.data ?? 
-              List.generate(3, (index) => {'img': 'default.png', 'title': 'Badge ${index + 1}'});
+              List.generate(3, (index) => {'img': '', 'title': ''});
 
             return Column(
               children: [
@@ -92,27 +95,29 @@ class FavoriteBadges extends StatelessWidget {
                       child: AspectRatio(
                         aspectRatio: 1,
                         child: Center(
-                          child: Image.asset(
-                            'assets/badges/${badge['img']}',
-                            width: ResponsiveValue<double>(
-                              context,
-                              defaultValue: 64 * scaleFactor,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                              ],
-                            ).value,
-                            height: ResponsiveValue<double>(
-                              context,
-                              defaultValue: 64 * scaleFactor,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                              ],
-                            ).value,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.none,
-                          ),
+                          child: badge['img'].isNotEmpty 
+                            ? Image.asset(
+                                'assets/badges/${badge['img']}',
+                                width: ResponsiveValue<double>(
+                                  context,
+                                  defaultValue: 64 * scaleFactor,
+                                  conditionalValues: [
+                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                                  ],
+                                ).value,
+                                height: ResponsiveValue<double>(
+                                  context,
+                                  defaultValue: 64 * scaleFactor,
+                                  conditionalValues: [
+                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                                  ],
+                                ).value,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.none,
+                              )
+                            : const SizedBox.shrink(), // Empty box when no badge
                         ),
                       ),
                     ),
@@ -143,24 +148,25 @@ class FavoriteBadges extends StatelessWidget {
                           ],
                         ).value,
                       ),
-                          // Start of Selection
-                              // Start of Selection
-                              child: Text(
-                                badge['title'] ?? 'Badge',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.rubik(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: ResponsiveValue<double>(
-                                    context,
-                                    defaultValue: 12 * scaleFactor,
-                                    conditionalValues: [
-                                      const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
-                                      const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
-                                    ],
-                                  ).value,
-                                ),
-                              ),
+                      // Only show title if badge['title'] is not empty
+                      child: badge['title'].isNotEmpty 
+                        ? Text(
+                            badge['title'],
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.rubik(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: ResponsiveValue<double>(
+                                context,
+                                defaultValue: 12 * scaleFactor,
+                                conditionalValues: [
+                                  const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
+                                  const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
+                                ],
+                              ).value,
+                            ),
+                          )
+                        : const SizedBox.shrink(), // Empty box when no title
                     ),
                   )).toList(),
                 ),

@@ -268,31 +268,40 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                       opacity: opacity,
                       child: Stack(
                         children: [
-                          ElevatedButton(
-                            onPressed: widget.selectedOptionIndex == null
-                                ? () {
-                                    _handleOptionSelected(index);
-                                  }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: textColor,
-                              backgroundColor: buttonColor,
-                              padding: const EdgeInsets.all(16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0),
-                                side: const BorderSide(color: Colors.black, width: 2),
-                              ),
-                              disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
+                            curve: Curves.easeInOut, // Use a smooth curve for the transition
+                            decoration: BoxDecoration(
+                              color: buttonColor,
+                              borderRadius: BorderRadius.circular(0),
+                              border: Border.all(color: Colors.black, width: 1),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 56.0), // Add padding to the left to make space for the letter container
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  options[index],
-                                  style: GoogleFonts.rubik(
-                                    fontSize: 20,
-                                    color: buttonColor == Colors.white ? Colors.black : Colors.white,
+                            child: ElevatedButton(
+                              onPressed: widget.selectedOptionIndex == null
+                                  ? () {
+                                      _handleOptionSelected(index);
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: textColor,
+                                backgroundColor: Colors.transparent, // Set to transparent to use AnimatedContainer's color
+                                padding: const EdgeInsets.all(16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0),
+                                  side: const BorderSide(color: Colors.black, width: 2),
+                                ),
+                                disabledBackgroundColor: Colors.transparent, // Ensure the background color is not transparent when disabled
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 56.0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    options[index],
+                                    style: GoogleFonts.rubik(
+                                      fontSize: 20,
+                                      color: buttonColor == Colors.white ? Colors.black : Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -306,11 +315,11 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                               width: 50,
                               decoration: const BoxDecoration(
                                 color: Color(0xFF241242),
-                                borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                                borderRadius: BorderRadius.zero,
                               ),
                               child: Center(
                                 child: Text(
-                                  String.fromCharCode(65 + index), // A, B, C, D, etc.
+                                  String.fromCharCode(65 + index),
                                   style: GoogleFonts.rubik(fontSize: 24, color: Colors.white),
                                 ),
                               ),

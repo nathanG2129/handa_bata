@@ -365,7 +365,9 @@ void _showAnswerVisually() async {
         }
 
         questionWidgets.add(
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
+            curve: Curves.easeInOut, // Use a smooth curve for the transition
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(

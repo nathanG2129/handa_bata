@@ -303,9 +303,22 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                   ),
                   borderRadius: BorderRadius.circular(0),
                 ),
-                child: Text(
-                  answerText,
-                  style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black), // Updated font style
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
+                  curve: Curves.easeInOut, // Use a smooth curve for the transition
+                  color: showCorrectAnswer
+                      ? Colors.green
+                      : (isCheckingAnswer
+                          ? (isCorrect == 0
+                              ? Colors.white
+                              : (isCorrect == 2
+                                  ? Colors.green
+                                  : Colors.red))
+                          : Colors.white),
+                  child: Text(
+                    answerText,
+                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black), // Updated font style
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

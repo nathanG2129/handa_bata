@@ -285,21 +285,25 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
               Container(
                 width: 150,
                 constraints: const BoxConstraints(minHeight: 75),
-                decoration: BoxDecoration(
-                  color: pair['section2']!.isEmpty ? Colors.grey : color,
-                  borderRadius: BorderRadius.circular(0),
-                  border: pair['section2']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: Center(
-                  child: Text(
-                    pair['section2']!,
-                    softWrap: true,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.rubik(
-                      fontSize: 18,
-                      height: 1.2,
-                      color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
+                  curve: Curves.easeInOut, // Use a smooth curve for the transition
+                  decoration: BoxDecoration(
+                    color: pair['section2']!.isEmpty ? Colors.grey : color,
+                    borderRadius: BorderRadius.circular(0),
+                    border: pair['section2']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: Center(
+                    child: Text(
+                      pair['section2']!,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.rubik(
+                        fontSize: 18,
+                        height: 1.2,
+                        color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white,
+                      ),
                     ),
                   ),
                 ),

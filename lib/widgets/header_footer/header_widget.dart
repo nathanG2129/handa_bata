@@ -83,6 +83,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
   void _removeOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
+    _isShowingBannerNotification = false;
   }
 
   Future<void> _checkForUnlockedBanners() async {
@@ -145,6 +146,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
           bannerTitle: bannerTitle,
           onDismiss: () {
             _removeOverlay();
+            // Reset the showing state and show next notification
+            _isShowingBannerNotification = false;
             // Show next notification after current one is dismissed
             Future.delayed(const Duration(milliseconds: 300), () {
               _showNextBannerNotification();
@@ -152,6 +155,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
           },
           onViewBanner: () {
             _removeOverlay();
+            // Reset the showing state before showing banners
+            _isShowingBannerNotification = false;
             _showBanners();
             // Show next notification after a delay
             Future.delayed(const Duration(milliseconds: 300), () {

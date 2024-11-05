@@ -55,6 +55,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   late Soundpool _soundpool;
   late int _soundId1, _soundId2, _soundId3;
   bool _soundsLoaded = false;
+  List<int?> optionPositions = []; // Stores the blank position (1-based) for each option
 
   @override
   void initState() {
@@ -107,6 +108,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       correctOptions = widget.questionData['answer']
           .map<String>((index) => widget.questionData['options'][index as int] as String)
           .toList();
+      optionPositions = List<int?>.filled(widget.questionData['options'].length, null);
     });
   }
 
@@ -138,15 +140,21 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
         return;
       }
 
-      int optionIndex = selectedOptions.indexOf(option);
-      if (optionIndex != -1) {
-        selectedOptions[optionIndex] = null;
+      if (optionSelected[index]) {
+        // Deselect the option
+        int selectedIndex = selectedOptions.indexOf(option);
+        if (selectedIndex != -1) {
+          selectedOptions[selectedIndex] = null;
+          optionPositions[index] = null; // Clear the position
+        }
         optionSelected[index] = false;
       } else {
+        // Select the option
         int emptyIndex = selectedOptions.indexOf(null);
         if (emptyIndex != -1) {
           selectedOptions[emptyIndex] = option;
           optionSelected[index] = true;
+          optionPositions[index] = emptyIndex + 1; // Store 1-based position
         }
       }
 
@@ -411,53 +419,97 @@ void _showAnswerVisually() async {
         if (showOptions)
           const SizedBox(height: 32),
         if (showOptions)
-          SizedBox(
-            height: 200, // Adjust the height as needed
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: GridView.builder(
+              shrinkWrap: true, // Allow the grid to take only the space it needs
+              physics: const NeverScrollableScrollPhysics(), // Disable scrolling
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 3, // Adjust the aspect ratio as needed
                 mainAxisSpacing: 8.0,
                 crossAxisSpacing: 8.0,
+                mainAxisExtent: 75, // Set initial height, will expand if needed
               ),
               itemCount: options.length,
               itemBuilder: (context, index) {
                 String option = options[index];
                 return isChecking
                     ? Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                         decoration: BoxDecoration(
                           color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                           border: Border.all(color: Colors.black, width: 2),
                           borderRadius: BorderRadius.circular(0),
                         ),
-                        child: Center(
-                          child: Text(
-                            option,
-                            style: GoogleFonts.rubik(
-                              fontSize: 18,
-                              color: optionSelected[index] ? Colors.transparent : Colors.black, // Make text invisible when selected
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                option,
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.rubik(
+                                  fontSize: 18,
+                                  height: 1.2,
+                                  color: optionSelected[index] ? Colors.transparent : Colors.black,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (optionSelected[index] && optionPositions[index] != null)
+                              Center(
+                                child: Text(
+                                  optionPositions[index].toString(),
+                                  style: GoogleFonts.rubik(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       )
-                    : ElevatedButton(
-                        onPressed: () {
-                          _handleOptionSelection(index, option);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.black, // Make text invisible when selected
-                          backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
-                          padding: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0),
-                            side: const BorderSide(color: Colors.black, width: 2),
+                    : Container(
+                        constraints: const BoxConstraints(minHeight: 75),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _handleOptionSelection(index, option);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                            backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                              side: const BorderSide(color: Colors.black, width: 2),
+                            ),
                           ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            option,
-                            style: GoogleFonts.rubik(fontSize: 18),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Text(
+                                  option,
+                                  softWrap: true,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.rubik(
+                                    fontSize: 18,
+                                    height: 1.2,
+                                    color: optionSelected[index] ? Colors.transparent : Colors.black,
+                                  ),
+                                ),
+                              ),
+                              if (optionSelected[index] && optionPositions[index] != null)
+                                Center(
+                                  child: Text(
+                                    optionPositions[index].toString(),
+                                    style: GoogleFonts.rubik(
+                                      fontSize: 24,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       );

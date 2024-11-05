@@ -52,7 +52,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   late Soundpool _soundpool;
   late int _soundId1, _soundId2, _soundId3;
   bool _soundsLoaded = false;
-  
+  bool showCorrectAnswer = false;
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +123,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
           }
         });
       }
+      showCorrectAnswer = false;
     });
   }
 
@@ -398,6 +400,16 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         }
       });
     }
+    
+    // Add delay then show correct answers
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      showCorrectAnswer = true;
+      // Replace user pairs with correct pairs
+      userPairs = List.from(correctAnswers);
+      // Set all colors to green
+      pairColors = List.filled(correctAnswers.length, Colors.green);
+    });
   
     widget.onVisualDisplayComplete();
   }

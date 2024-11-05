@@ -240,13 +240,19 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                 itemBuilder: (context, index) {
                   Color buttonColor = Colors.white;
                   Color textColor = Colors.black;
-                  if (showAllRed) {
-                    buttonColor = Colors.red;
-                    textColor = Colors.white;
-                  } else if (showSelectedAnswer && index == widget.selectedOptionIndex) {
+                  double opacity = 1.0; // Default opacity
+
+                  // If an option is selected but not showing all answers yet
+                  if (widget.selectedOptionIndex != null && !showAllAnswers) {
+                    // Selected option stays at full opacity, others are dimmed
+                    opacity = (index == widget.selectedOptionIndex) ? 1.0 : 0.5;
+                  }
+
+                  if (showSelectedAnswer && index == widget.selectedOptionIndex) {
                     buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                     textColor = Colors.white;
                   } else if (showAllAnswers) {
+                    opacity = 1.0; // Restore full opacity when showing all answers
                     if (index == widget.selectedOptionIndex) {
                       buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                       textColor = Colors.white;
@@ -255,56 +261,63 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                       textColor = Colors.white;
                     }
                   }
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Stack(
-                      children: [
-                        ElevatedButton(
-                          onPressed: widget.selectedOptionIndex == null
-                              ? () {
-                                  _handleOptionSelected(index);
-                                }
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: textColor,
-                            backgroundColor: buttonColor,
-                            padding: const EdgeInsets.all(16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0),
-                              side: const BorderSide(color: Colors.black, width: 2),
+                    child: Opacity(
+                      opacity: opacity,
+                      child: Stack(
+                        children: [
+                          ElevatedButton(
+                            onPressed: widget.selectedOptionIndex == null
+                                ? () {
+                                    _handleOptionSelected(index);
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: textColor,
+                              backgroundColor: buttonColor,
+                              padding: const EdgeInsets.all(16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0),
+                                side: const BorderSide(color: Colors.black, width: 2),
+                              ),
+                              disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
                             ),
-                            disabledBackgroundColor: buttonColor, // Ensure the background color is not transparent when disabled
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 56.0), // Add padding to the left to make space for the letter container
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                options[index],
-                                style: GoogleFonts.rubik(fontSize: 20, color: Colors.black), // Same font size as question text
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 56.0), // Add padding to the left to make space for the letter container
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  options[index],
+                                  style: GoogleFonts.rubik(
+                                    fontSize: 20,
+                                    color: buttonColor == Colors.white ? Colors.black : Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 50,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF241242),
-                              borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
-                            ),
-                            child: Center(
-                              child: Text(
-                                String.fromCharCode(65 + index), // A, B, C, D, etc.
-                                style: GoogleFonts.rubik(fontSize: 24, color: Colors.white),
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 50,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF241242),
+                                borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                              ),
+                              child: Center(
+                                child: Text(
+                                  String.fromCharCode(65 + index), // A, B, C, D, etc.
+                                  style: GoogleFonts.rubik(fontSize: 24, color: Colors.white),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },

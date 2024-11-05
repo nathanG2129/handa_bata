@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/character_page.dart';
 import 'package:handabatamae/services/banner_service.dart';
+import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 import '../../localization/play/localization.dart'; // Import the localization file
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
+import 'package:handabatamae/services/auth_service.dart';
 
 class UserProfileHeader extends StatelessWidget {
   final String username;
@@ -39,6 +41,20 @@ class UserProfileHeader extends StatelessWidget {
     required this.badgeShowcase, // Add badgeShowcase to UserProfileHeader constructor
   });
 
+  Future<void> _updateNickname(String newNickname, BuildContext dialogContext) async {
+    try {
+      final AuthService authService = AuthService();
+      await authService.updateUserProfile('nickname', newNickname);
+      // Call onUpdateProfile to refresh the UI
+      onUpdateProfile?.call(username, selectedLanguage);
+    } catch (e) {
+      if (onUpdateProfile == null) return;
+      ScaffoldMessenger.of(dialogContext).showSnackBar(
+        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', selectedLanguage)} $e')),
+      );
+    }
+  }
+
   void _handleMenuSelection(String result, BuildContext context) {
     switch (result) {
       case 'Change Avatar':
@@ -50,9 +66,7 @@ class UserProfileHeader extends StatelessWidget {
               selectionMode: true,
               currentAvatarId: avatarId,
               onAvatarSelected: (newAvatarId) async {
-                // Close the dialog first
                 Navigator.of(context).pop();
-                // Trigger the refresh
                 onUpdateProfile?.call(username, selectedLanguage);
               },
               onClose: () {
@@ -63,7 +77,22 @@ class UserProfileHeader extends StatelessWidget {
         );
         break;
       case 'Change Nickname':
-        // Handle Change Nickname
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (BuildContext dialogContext) {
+            return ChangeNicknameDialog(
+              currentNickname: nickname,
+              selectedLanguage: selectedLanguage,
+              onNicknameChanged: (newNickname) => _updateNickname(newNickname, dialogContext), // Pass context here
+              darkenColor: (Color color, [double amount = 0.2]) {
+                final hsl = HSLColor.fromColor(color);
+                final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+                return hslDark.toColor();
+              },
+            );
+          },
+        );
         break;
       case 'Change Banner':
         showDialog(
@@ -91,7 +120,7 @@ class UserProfileHeader extends StatelessWidget {
           builder: (BuildContext context) {
             return BadgePage(
               selectionMode: true,
-              currentBadgeShowcase: badgeShowcase, // Add badgeShowcase to UserProfileHeader constructor
+              currentBadgeShowcase: badgeShowcase,
               onBadgesSelected: (newBadgeIds) async {
                 Navigator.of(context).pop();
                 onUpdateProfile?.call(username, selectedLanguage);

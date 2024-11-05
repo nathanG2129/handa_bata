@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
 import 'splash_page.dart'; // Import SplashPage
 import '../localization/play/localization.dart'; // Import the localization file
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
@@ -20,7 +21,7 @@ class AccountSettings extends StatefulWidget {
   AccountSettingsState createState() => AccountSettingsState();
 }
 
-class AccountSettingsState extends State<AccountSettings> with SingleTickerProviderStateMixin {
+class AccountSettingsState extends State<AccountSettings> with TickerProviderStateMixin {
   bool _isLoading = true;
   UserProfile? _userProfile;
   bool _showEmail = false;
@@ -97,37 +98,15 @@ class AccountSettingsState extends State<AccountSettings> with SingleTickerProvi
   }
 
   void _showChangeNicknameDialog() {
-    final TextEditingController controller = TextEditingController(text: _userProfile?.nickname ?? '');
-
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(PlayLocalization.translate('changeNickname', widget.selectedLanguage)),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: PlayLocalization.translate('newNickname', widget.selectedLanguage),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30.0),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(PlayLocalization.translate('cancel', widget.selectedLanguage)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _updateNickname(controller.text);
-              },
-              child: Text(PlayLocalization.translate('save', widget.selectedLanguage)),
-            ),
-          ],
+        return ChangeNicknameDialog(
+          currentNickname: _userProfile?.nickname ?? '',
+          selectedLanguage: widget.selectedLanguage,
+          onNicknameChanged: _updateNickname,
+          darkenColor: _darkenColor,
         );
       },
     );

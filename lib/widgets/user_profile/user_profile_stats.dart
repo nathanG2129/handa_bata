@@ -25,8 +25,7 @@ class UserProfileStats extends StatelessWidget {
         Expanded(
           child: Card(
             color: const Color(0xFF4d278f), // Card color for Total Badges
-            shape: const RoundedRectangleBorder(
-              side: BorderSide(color: Colors.black, width: 1), // Black border
+            shape: const RoundedRectangleBorder(// Black border
               borderRadius: BorderRadius.zero, // Purely rectangular
             ),
             child: Padding(

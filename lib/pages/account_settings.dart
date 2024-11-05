@@ -8,7 +8,7 @@ import '../localization/play/localization.dart'; // Import the localization file
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 import 'account_settings_content.dart'; // Import the new file
-import 'package:handabatamae/widgets/user_profile/favorite_badges.dart'; // Import FavoriteBadges
+// Import FavoriteBadges
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;

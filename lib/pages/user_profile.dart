@@ -193,15 +193,10 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
           totalStagesCleared: _userProfile!.totalStageCleared,
           selectedLanguage: _selectedLanguage,
         ),
-        SizedBox(
-          height: ResponsiveValue<double>(
-            context,
-            defaultValue: 20.0,
-            conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 16.0),
-              const Condition.largerThan(name: MOBILE, value: 24.0),
-            ],
-          ).value,
+        const Divider(
+          color: Colors.black,
+          thickness: 1.5,
+          height: 32,
         ),
         FavoriteBadges(
           selectedLanguage: _selectedLanguage,

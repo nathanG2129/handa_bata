@@ -32,25 +32,32 @@ class FavoriteBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double scaleFactor = 0.8;
+    const double scaleFactor = 0.9;
 
     return Column(
       children: [
-        Text(
-          PlayLocalization.translate('favoriteBadges', selectedLanguage),
-          style: GoogleFonts.rubik(
-            fontSize: ResponsiveValue<double>(
-              context,
-              defaultValue: 18 * scaleFactor,
-              conditionalValues: [
-                const Condition.smallerThan(name: MOBILE, value: 16 * scaleFactor),
-                const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
-              ],
-            ).value,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+            // Start of Selection
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Transform.translate(
+                offset: const Offset(3, 0), // Adjust the offset as needed
+                child: Text(
+                  PlayLocalization.translate('favoriteBadges', selectedLanguage),
+                  style: GoogleFonts.rubik(
+                    fontSize: ResponsiveValue<double>(
+                      context,
+                      defaultValue: 18 * scaleFactor,
+                      conditionalValues: [
+                        const Condition.smallerThan(name: MOBILE, value: 16 * scaleFactor),
+                        const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
+                      ],
+                    ).value,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
         SizedBox(
           height: ResponsiveValue<double>(
             context,
@@ -77,59 +84,34 @@ class FavoriteBadges extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: badges.map((badge) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 10 * scaleFactor,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
-                          ],
-                        ).value,
+                    child: Card(
+                      color: const Color(0xFF4d278f),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
                       ),
-                      child: Card(
-                        color: const Color(0xFF4d278f),
-                        shape: const RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.black, width: 1),
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: Padding(
-                            padding: EdgeInsets.all(
-                              ResponsiveValue<double>(
-                                context,
-                                defaultValue: 12.0 * scaleFactor,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 8.0 * scaleFactor),
-                                  const Condition.largerThan(name: MOBILE, value: 16.0 * scaleFactor),
-                                ],
-                              ).value,
-                            ),
-                            child: Center(
-                              child: Image.asset(
-                                'assets/badges/${badge['img']}',
-                                width: ResponsiveValue<double>(
-                                  context,
-                                  defaultValue: 64 * scaleFactor,
-                                  conditionalValues: [
-                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                                  ],
-                                ).value,
-                                height: ResponsiveValue<double>(
-                                  context,
-                                  defaultValue: 64 * scaleFactor,
-                                  conditionalValues: [
-                                    const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                    const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                                  ],
-                                ).value,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.none,
-                              ),
-                            ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Center(
+                          child: Image.asset(
+                            'assets/badges/${badge['img']}',
+                            width: ResponsiveValue<double>(
+                              context,
+                              defaultValue: 64 * scaleFactor,
+                              conditionalValues: [
+                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                              ],
+                            ).value,
+                            height: ResponsiveValue<double>(
+                              context,
+                              defaultValue: 64 * scaleFactor,
+                              conditionalValues: [
+                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
+                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
+                              ],
+                            ).value,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.none,
                           ),
                         ),
                       ),
@@ -140,10 +122,10 @@ class FavoriteBadges extends StatelessWidget {
                 SizedBox(
                   height: ResponsiveValue<double>(
                     context,
-                    defaultValue: 8 * scaleFactor,
+                    defaultValue: 3 * scaleFactor,
                     conditionalValues: [
-                      const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
-                      const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
+                      const Condition.smallerThan(name: MOBILE, value: 1 * scaleFactor),
+                      const Condition.largerThan(name: MOBILE, value: 5 * scaleFactor),
                     ],
                   ).value,
                 ),
@@ -154,28 +136,31 @@ class FavoriteBadges extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                         horizontal: ResponsiveValue<double>(
                           context,
-                          defaultValue: 8 * scaleFactor,
+                          defaultValue: 12 * scaleFactor,
                           conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 6 * scaleFactor),
-                            const Condition.largerThan(name: MOBILE, value: 10 * scaleFactor),
+                            const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
+                            const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
                           ],
                         ).value,
                       ),
-                      child: Text(
-                        badge['title'] ?? 'Badge',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.vt323(
-                          color: Colors.black,
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 16 * scaleFactor,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 14 * scaleFactor),
-                              const Condition.largerThan(name: MOBILE, value: 18 * scaleFactor),
-                            ],
-                          ).value,
-                        ),
-                      ),
+                          // Start of Selection
+                              // Start of Selection
+                              child: Text(
+                                badge['title'] ?? 'Badge',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.rubik(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: ResponsiveValue<double>(
+                                    context,
+                                    defaultValue: 12 * scaleFactor,
+                                    conditionalValues: [
+                                      const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
+                                      const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
+                                    ],
+                                  ).value,
+                                ),
+                              ),
                     ),
                   )).toList(),
                 ),

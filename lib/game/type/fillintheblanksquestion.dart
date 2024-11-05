@@ -349,29 +349,38 @@ void _showAnswerVisually() async {
     questionText.split(' ').forEach((word) {
       if (word.startsWith('<input>')) {
         String suffix = word.substring(7); // Get the suffix after <input>
-        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white;
-        Color borderColor = selectedOptions[inputIndex] == null ? Colors.white : Colors.black;
+        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white; // Always white border
+        Color textColor = Colors.white; // Default text color
+        
         if (correctness[inputIndex] != null) {
           if (_isVisualDisplayComplete) {
-            boxColor = Colors.green; // Mark as green once the correct answers are shown
+            boxColor = Colors.green;
+            textColor = Colors.white;
           } else {
             boxColor = correctness[inputIndex]! ? Colors.green : Colors.red;
+            textColor = Colors.white;
           }
+        } else if (selectedOptions[inputIndex] != null) {
+          textColor = Colors.black; // Black text for selected options
         }
+
         questionWidgets.add(
           Container(
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: boxColor,
-              border: Border.all(color: borderColor), // Conditionally set border color
+              border: Border.all(
+                color: Colors.white, // Always white border
+                width: 2, // Make border more visible
+              ),
               borderRadius: BorderRadius.circular(0),
             ),
             child: Text(
               selectedOptions[inputIndex] ?? '____',
               style: (selectedOptions[inputIndex] == null)
                 ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
-                : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
             ),
           ),
         );

@@ -197,21 +197,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   
         // Check if we've reached the number of correct pairs
         if (userPairs.length == correctAnswers.length) {
-          // Add remaining options as single containers without creating pairs
-          for (String option in section1Options) {
-            userPairs.add({
-              'section1': option,
-              'section2': '',
-            });
-            pairColors.add(Colors.transparent);
-          }
-          for (String option in section2Options) {
-            userPairs.add({
-              'section1': '',
-              'section2': option,
-            });
-            pairColors.add(Colors.transparent);
-          }
+          // Simply clear remaining options instead of adding them as empty pairs
           section1Options.clear();
           section2Options.clear();
           _submitPairs();
@@ -259,24 +245,22 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 children: [
                   Container(
                     width: 150,
-                    height: 75,
+                    constraints: const BoxConstraints(minHeight: 75),
                     decoration: BoxDecoration(
                       color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white,
                       borderRadius: BorderRadius.circular(0),
                       border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(24, 16, 8, 16),
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          pair['section1']!,
-                          softWrap: true,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.rubik(
-                            fontSize: 18,
-                            color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
-                          ),
+                      child: Text(
+                        pair['section1']!,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.rubik(
+                          fontSize: 18,
+                          height: 1.2,
+                          color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
                         ),
                       ),
                     ),
@@ -289,7 +273,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                       width: 16,
                       decoration: BoxDecoration(
                         color: pair['section1']!.isEmpty ? Colors.transparent : color,
-                        borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                        borderRadius: BorderRadius.zero,
                       ),
                     ),
                   ),
@@ -298,24 +282,22 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
               const SizedBox(width: 16),
               Container(
                 width: 150,
-                height: 75,
+                constraints: const BoxConstraints(minHeight: 75),
                 decoration: BoxDecoration(
                   color: pair['section2']!.isEmpty ? Colors.grey : color,
                   borderRadius: BorderRadius.circular(0),
                   border: pair['section2']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      pair['section2']!,
-                      softWrap: true,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.rubik(
-                        fontSize: 18,
-                        color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white,
-                      ),
+                  child: Text(
+                    pair['section2']!,
+                    softWrap: true,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.rubik(
+                      fontSize: 18,
+                      height: 1.2,
+                      color: pair['section2']!.isEmpty ? Colors.transparent : Colors.white,
                     ),
                   ),
                 ),
@@ -446,23 +428,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         pairColors.add(const Color.fromARGB(255, 114, 109, 109));
       }
 
-      // Add remaining options as single containers without creating pairs
-      for (String option in section1Options) {
-        userPairs.add({
-          'section1': option,
-          'section2': '',
-        });
-        pairColors.add(Colors.transparent);
-      }
-
-      for (String option in section2Options) {
-        userPairs.add({
-          'section1': '',
-          'section2': option,
-        });
-        pairColors.add(Colors.transparent);
-      }
-
+      // Simply clear any remaining options
       section1Options.clear();
       section2Options.clear();
     });
@@ -557,9 +523,9 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Stack(
                             children: [
-                              SizedBox(
-                                width: 150, // Set a fixed width
-                                height: 75, // Set a fixed height
+                              Container(
+                                width: 150,
+                                constraints: const BoxConstraints(minHeight: 75),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (isMatched) {
@@ -571,16 +537,20 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
                                     backgroundColor: isSelected ? Colors.grey : isMatched ? Colors.white : Colors.white,
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.fromLTRB(24, 16, 8, 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(0),
                                       side: const BorderSide(color: Colors.black, width: 2),
                                     ),
                                   ),
-                                  child: Center( // Center the text
+                                  child: Center(
                                     child: Text(
                                       option,
-                                      style: GoogleFonts.rubik(fontSize: 20, color: Colors.black), // Same font size as question text
+                                      style: GoogleFonts.rubik(
+                                        fontSize: 18,
+                                        height: 1.2,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -592,8 +562,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                 child: Container(
                                   width: 16,
                                   decoration: BoxDecoration(
-                                    color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242), // Default color
-                                    borderRadius: BorderRadius.zero, // Set borderRadius to zero for sharp corners
+                                    color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242),
+                                    borderRadius: BorderRadius.zero,
                                   ),
                                 ),
                               ),
@@ -612,9 +582,9 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         Color? pairColor = _getPairColor(option, 'section2');
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: SizedBox(
-                            width: 150, // Set a fixed width
-                            height: 75, // Set a fixed height
+                          child: Container(
+                            width: 150,
+                            constraints: const BoxConstraints(minHeight: 75),
                             child: ElevatedButton(
                               onPressed: () {
                                 if (isMatched) {
@@ -626,19 +596,20 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
                                 backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(0),
                                   side: const BorderSide(color: Colors.black, width: 2),
                                 ),
                               ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  option,
-                                  softWrap: true,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.rubik(fontSize: 18, color: isSelected || isMatched ? Colors.white : Colors.black),
+                              child: Text(
+                                option,
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.rubik(
+                                  fontSize: 18,
+                                  height: 1.2,
+                                  color: isSelected || isMatched ? Colors.white : Colors.black,
                                 ),
                               ),
                             ),

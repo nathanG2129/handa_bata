@@ -83,55 +83,63 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
               side: BorderSide(color: Colors.black, width: 1),
               borderRadius: BorderRadius.zero,
             ),
-            backgroundColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                    style: GoogleFonts.rubik(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+            backgroundColor: const Color(0xFF351b61),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                          // Start of Selection
+                          Center(
+                            child: Text(
+                              PlayLocalization.translate('changeNickname', widget.selectedLanguage),
+                              style: GoogleFonts.vt323(
+                                fontSize: 28,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _controller,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: PlayLocalization.translate('', widget.selectedLanguage),
+                          labelStyle: const TextStyle(color: Colors.white70),
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                          enabledBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                            borderSide: BorderSide(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      labelText: PlayLocalization.translate('newNickname', widget.selectedLanguage),
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
-                        borderSide: BorderSide(color: Colors.black),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
-                        borderSide: BorderSide(color: Colors.black, width: 2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
+                ),
+                Container(
+                  color: const Color(0xFF241242),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      SizedBox(
-                        width: 75,
-                        child: Button3D(
-                          backgroundColor: const Color(0xFFc32929),
-                          borderColor: widget.darkenColor(const Color(0xFFc32929), 0.2),
-                          onPressed: _handleClose,
-                          child: Text(
-                            PlayLocalization.translate('cancel', widget.selectedLanguage),
-                            style: GoogleFonts.vt323(
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
+                      TextButton(
+                        onPressed: _handleClose,
+                        child: Text(
+                          PlayLocalization.translate('cancel', widget.selectedLanguage),
+                          style: GoogleFonts.vt323(
+                            color: Colors.white,
+                            fontSize: 18,
                           ),
                         ),
                       ),
@@ -139,22 +147,22 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
                       SizedBox(
                         width: 75,
                         child: Button3D(
-                          backgroundColor: const Color(0xFF4d278f),
-                          borderColor: widget.darkenColor(const Color(0xFF4d278f), 0.2),
+                          backgroundColor: const Color(0xFFF1B33A),
+                          borderColor: const Color(0xFF8B5A00),
                           onPressed: _handleSave,
                           child: Text(
                             PlayLocalization.translate('save', widget.selectedLanguage),
                             style: GoogleFonts.vt323(
-                              color: Colors.white,
-                              fontSize: 15,
+                              color: Colors.black,
+                              fontSize: 18,
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

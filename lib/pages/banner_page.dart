@@ -291,52 +291,63 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                             side: BorderSide(color: Colors.black, width: 1),
                             borderRadius: BorderRadius.zero,
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                color: const Color(0xFF3A1A5F),
-                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                child: Center(
-                                  child: Text(
-                                    'Banners',
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.white,
-                                      fontSize: 42,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: MediaQuery.of(context).size.height * 0.7,
+                              maxHeight: MediaQuery.of(context).size.height * 0.7,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  color: const Color(0xFF3A1A5F),
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                  child: Center(
+                                    child: Text(
+                                      'Banners',
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.white,
+                                        fontSize: 42,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Flexible(
-                                child: SingleChildScrollView(
+                                Expanded(
                                   child: Container(
                                     color: const Color(0xFF241242),
                                     child: Column(
                                       children: [
-                                        if (!widget.selectionMode)
-                                          Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Align(
-                                              alignment: Alignment.centerRight,
-                                              child: _buildFilterDropdown(),
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                if (!widget.selectionMode)
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    child: Align(
+                                                      alignment: Alignment.centerRight,
+                                                      child: _buildFilterDropdown(),
+                                                    ),
+                                                  ),
+                                                _buildBannerGrid(banners, userLevel),
+                                              ],
                                             ),
                                           ),
-                                        _buildBannerGrid(banners, userLevel),
-                                        if (widget.selectionMode) ...[
+                                        ),
+                                        if (widget.selectionMode)
                                           Container(
                                             width: double.infinity,
                                             color: const Color(0xFF3A1A5F),
                                             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                                             child: _buildSaveButton(),
                                           ),
-                                        ],
                                       ],
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );

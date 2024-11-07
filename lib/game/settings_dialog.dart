@@ -18,6 +18,7 @@ class SettingsDialog extends StatefulWidget {
   final ValueChanged<double> onMusicVolumeChanged; // Add this line
   final double sfxVolume; // Add this line
   final ValueChanged<double> onSfxVolumeChanged; // Add this line
+  final Future<void> Function() onQuitGame;
 
   const SettingsDialog({
     super.key,
@@ -35,6 +36,7 @@ class SettingsDialog extends StatefulWidget {
     required this.onMusicVolumeChanged, // Add this line
     required this.sfxVolume, // Add this line
     required this.onSfxVolumeChanged, // Add this line
+    required this.onQuitGame,
   });
 
   @override
@@ -262,21 +264,34 @@ class SettingsDialogState extends State<SettingsDialog> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black, // Text color
-                    backgroundColor: const Color(0xFFF1B33A), // Background color
+                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFFF1B33A),
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
+                      borderRadius: BorderRadius.all(Radius.circular(0)),
                     ),
                     side: const BorderSide(
-                      color: Color(0xFF8B5A00), // Much darker border color
-                      width: 4, // Thicker border width
+                      color: Color(0xFF8B5A00),
+                      width: 4,
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   ),
-                  onPressed: () {
-                    // Handle quit game action
+                  onPressed: () async {
+                    print('🎮 Quit Game button pressed');
+                    Navigator.of(context).pop(); // Close the dialog first
+                    print('🎮 Dialog closed, calling onQuitGame');
+                    try {
+                      await widget.onQuitGame(); // Wait for quit game to complete
+                      print('🎮 onQuitGame completed successfully');
+                    } catch (e) {
+                      print('❌ Error in onQuitGame: $e');
+                    }
                   },
-                  child: const Text('Quit Game'),
+                  child: Text(
+                    'Quit Game',
+                    style: GoogleFonts.rubik(
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ],

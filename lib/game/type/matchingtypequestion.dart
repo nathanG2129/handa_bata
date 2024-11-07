@@ -499,6 +499,11 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     return null;
   }
 
+  void cancelTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(

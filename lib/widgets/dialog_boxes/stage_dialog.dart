@@ -1,23 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 // Import the GameplayPage
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void showStageDialog(
   BuildContext context,
   int stageNumber,
   Map<String, String> category,
-  int maxScore, // Change parameter name to maxScore
+  int maxScore,
   Map<String, dynamic> stageData,
   String mode,
-  int personalBest, // Add personal best score
-  int stars, // Add stars
-  String selectedLanguage, // Add selectedLanguage
-) {
+  int personalBest,
+  int stars,
+  String selectedLanguage,
+) async {
+  // Check for saved game
+  final user = FirebaseAuth.instance.currentUser;
+  Map<String, dynamic>? savedGame;
   
-   showGeneralDialog(
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance
+        .collection('User')
+        .doc(user.uid)
+        .collection('GameProgress')
+        .doc('${category['id']}_Stage ${stageNumber}_${mode.toLowerCase()}')
+        .get();
+        
+    if (doc.exists) {
+      savedGame = doc.data();
+    }
+  }
+
+  showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: '',
@@ -96,6 +115,45 @@ void showStageDialog(
                   ),
                 ),
                 const SizedBox(height: 30),
+                if (savedGame != null) ...[
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => GameplayPage(
+                            language: selectedLanguage,
+                            category: {
+                              'id': category['id'],
+                              'name': category['name'],
+                            },
+                            stageName: 'Stage $stageNumber',
+                            stageData: {
+                              ...stageData,
+                              'savedGame': savedGame,
+                            },
+                            mode: mode,
+                            gamemode: 'adventure',
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF32C067),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
+                    child: Text(
+                      'Resume Game',
+                      style: GoogleFonts.vt323(fontSize: 24),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();

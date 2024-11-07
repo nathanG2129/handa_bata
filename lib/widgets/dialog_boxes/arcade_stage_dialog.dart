@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/game/gameplay_page.dart';
 // Import the GameplayPage
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void showArcadeStageDialog(
   BuildContext context,
@@ -10,15 +13,35 @@ void showArcadeStageDialog(
   Map<String, String> category,
   Map<String, dynamic> stageData,
   String mode,
-  int bestRecord, // Change parameter name to bestRecord
-  int currentRecord, // Add currentRecord
-  int stars, // Add stars
-  String selectedLanguage, // Add selectedLanguage
-) {
+  int bestRecord,
+  int currentRecord,
+  int stars,
+  String selectedLanguage,
+) async {
   String formatTime(int seconds) {
     final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
     final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
     return '$minutes:$remainingSeconds';
+  }
+
+  // Check for saved game
+  final user = FirebaseAuth.instance.currentUser;
+  Map<String, dynamic>? savedGame;
+  
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance
+        .collection('User')
+        .doc(user.uid)
+        .collection('GameProgress')
+        .doc('${category['id']}_${stageData['stageName']}_${mode.toLowerCase()}')
+        .get();
+        
+    print('🎮 Checking for saved game at: ${category['id']}_${stageData['stageName']}_${mode.toLowerCase()}');
+    if (doc.exists) {
+      savedGame = doc.data();
+      print('🎮 Found saved game: ${savedGame != null}');
+      print('🎮 Saved game data: $savedGame');
+    }
   }
 
   showGeneralDialog(
@@ -97,6 +120,44 @@ void showArcadeStageDialog(
                     ),
                   ],
                 ),
+                if (savedGame != null) ...[
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => GameplayPage(
+                            language: selectedLanguage,
+                            category: {
+                              'id': category['id'],
+                              'name': category['name'],
+                            },
+                            stageName: stageData['stageName'],
+                            stageData: {
+                              ...stageData,
+                              'savedGame': savedGame,
+                            },
+                            mode: mode,
+                            gamemode: 'arcade',
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF32C067),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
+                    child: Text(
+                      'Resume Game',
+                      style: GoogleFonts.vt323(fontSize: 24),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {

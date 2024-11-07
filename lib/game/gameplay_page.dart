@@ -8,11 +8,15 @@ import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
 import 'package:handabatamae/game/type/identificationquestion.dart';
+import 'package:handabatamae/pages/arcade_stages_page.dart';
+import 'package:handabatamae/pages/stages_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'settings_dialog.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -86,12 +90,15 @@ class GameplayPageState extends State<GameplayPage> {
   int _questionsAnswered = 0;
   double _averageTimePerQuestion = 0.0;
 
+  // Add this field to track if the page is being disposed
+  bool _isDisposing = false;
+
   @override
   void initState() {
     super.initState();
     _playBackgroundMusic();
-    _initializeQuestions();
-    _loadSettings(); 
+    _loadSavedGameOrInitialize();
+    _loadSettings();
     flutterTts = FlutterTts(); // Ensure TTS is initialized
     if (widget.language == 'fil') {
       _selectedVoice = _maleVoiceFil;
@@ -174,9 +181,38 @@ class GameplayPageState extends State<GameplayPage> {
   }
   
   @override
-  void dispose() {  
-    flutterTts.stop(); // Stop the TTS
-    _audioPlayer.dispose(); // Dispose the audio player when the widget is disposed
+  void dispose() {
+    print('🎮 Disposing GameplayPage');
+    _isDisposing = true;
+
+    // Cancel timers
+    _timer?.cancel();
+    _timer = null;
+    _stopwatchTimer?.cancel();
+    _stopwatchTimer = null;
+
+    // Cleanup TTS
+    Future.microtask(() async {
+      try {
+        await flutterTts.stop();
+        await flutterTts.pause();
+      } catch (e) {
+        print('❌ Error disposing TTS: $e');
+      }
+    });
+
+    // Cleanup audio
+    Future.microtask(() async {
+      try {
+        await _audioPlayer.pause();
+        await _audioPlayer.stop();
+        await _audioPlayer.setVolume(0);
+        await _audioPlayer.dispose();
+      } catch (e) {
+        print('❌ Error disposing audio player: $e');
+      }
+    });
+
     super.dispose();
   }
 
@@ -237,17 +273,23 @@ void readCurrentQuestion() {
 }
 
   void _startTimer() {
+    if (_isDisposing) return;
+    
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
-    readCurrentQuestion(); // Read the next question
+    int timerDuration = widget.mode == 'Hard' ? 100 : 300;
+    readCurrentQuestion();
     _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
+      if (_isDisposing) {
+        timer.cancel();
+        return;
+      }
       setState(() {
         _progress -= 0.01;
         if (_progress <= 0) {
           _progress = 0;
           _timer?.cancel();
-          _forceCheckAnswer(); // Force check the answer when the timer reaches zero
+          _forceCheckAnswer();
         }
       });
     });
@@ -634,6 +676,215 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     });
   }
 
+  Future<void> handleQuitGame() async {
+    print('🎮 Starting handleQuitGame');
+  
+    // Stop any ongoing processes first
+    print('🎮 Stopping timers and audio');
+    _timer?.cancel();
+    _timer = null;
+    _stopwatchTimer?.cancel();
+    _stopwatchTimer = null;
+
+    // Properly cleanup TTS
+    print('🎮 Cleaning up TTS');
+    try {
+      await flutterTts.stop();
+      await flutterTts.pause(); // Add pause to ensure TTS is fully stopped
+    } catch (e) {
+      print('❌ Error cleaning up TTS: $e');
+    }
+
+    // Properly cleanup audio
+    print('🎮 Cleaning up audio');
+    try {
+      await _audioPlayer.pause(); // First pause
+      await _audioPlayer.stop(); // Then stop
+    } catch (e) {
+      print('❌ Error cleaning up audio: $e');
+    }
+
+    // Cancel any ongoing question timers
+    print('🎮 Canceling question timers');
+    _multipleChoiceQuestionKey.currentState?.cancelTimer();
+    _fillInTheBlanksQuestionKey.currentState?.cancelTimer();
+    _matchingTypeQuestionKey.currentState?.cancelTimer();
+    _identificationQuestionKey.currentState?.cancelTimer();
+
+    // Save the game state
+    print('🎮 Saving game state');
+    await _saveGameState();
+    print('🎮 Game state saved');
+
+    // Check if widget is still mounted before navigation
+    if (!mounted) {
+      print('❌ Widget not mounted, canceling navigation');
+      return;
+    }
+  
+    print('🎮 Starting navigation');
+    print('🎮 Gamemode: ${widget.gamemode}');
+  
+    try {
+      // Set disposing flag after navigation starts
+      setState(() {
+        _isDisposing = true;
+      });
+
+      if (widget.gamemode == 'arcade') {
+        print('🎮 Navigating to ArcadeStagesPage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ArcadeStagesPage(
+              category: {
+                'id': widget.category['id'],
+                'name': widget.category['name'],
+              },
+              selectedLanguage: widget.language,
+              questName: widget.category['name'],
+              savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+            ),
+          ),
+        );
+      } else {
+        print('🎮 Navigating to StagesPage');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StagesPage(
+              questName: widget.category['name'],
+              category: {
+                'id': widget.category['id'],
+                'name': widget.category['name'],
+              },
+              selectedLanguage: widget.language,
+              savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+            ),
+          ),
+        );
+      }
+      print('🎮 Navigation completed');
+    } catch (e) {
+      print('❌ Navigation error: $e');
+    }
+  }
+
+  void _loadSavedGameOrInitialize() {
+    final savedGame = widget.stageData['savedGame'];
+    if (savedGame != null) {
+      setState(() {
+        // Load the questions from the saved game
+        _questions = List<Map<String, dynamic>>.from(savedGame['questions'] ?? []);
+        
+        // Get the current question index
+        _currentQuestionIndex = savedGame['currentQuestionIndex'];
+        
+        // Check if the last question was answered by looking at answeredQuestions
+        final answeredQuestions = List<Map<String, dynamic>>.from(savedGame['answeredQuestions']);
+        if (answeredQuestions.isNotEmpty && 
+            answeredQuestions.last['question'] == _questions[_currentQuestionIndex]['question']) {
+          // If the current question was answered, move to the next one
+          _currentQuestionIndex++;
+        }
+        
+        // Set total questions from the saved questions list
+        _totalQuestions = savedGame['totalQuestions'];
+        
+        _correctAnswersCount = savedGame['score'];
+        
+        // Load answered questions and other stats
+        final totalAnswers = savedGame['answeredQuestions'].length;
+        _wrongAnswersCount = totalAnswers - savedGame['score'];
+        _currentStreak = 0; // Reset streak on resume
+        _highestStreak = savedGame['streak'];
+        _fullyCorrectAnswersCount = savedGame['fullyCorrectAnswersCount'];
+        _answeredQuestions = List<Map<String, dynamic>>.from(savedGame['answeredQuestions']);
+        
+        if (widget.gamemode == 'arcade') {
+          _stopwatchTime = savedGame['stopwatchTime'];
+          _stopwatchSeconds = _convertTimeToSeconds(savedGame['stopwatchTime']);
+          _averageTimePerQuestion = savedGame['averageTimePerQuestion'].toDouble();
+          _questionsAnswered = totalAnswers;
+        } else {
+          _hp = savedGame['hp'].toDouble();
+        }
+        
+        _isLoading = false;
+      });
+
+      // If in arcade mode, start the stopwatch with saved time
+      if (widget.gamemode == 'arcade') {
+        _startStopwatch();
+      }
+
+      // Start timer for the next question
+      if (widget.gamemode != 'arcade') {
+        Future.delayed(const Duration(seconds: 5), () {
+          _startTimer();
+        });
+      }
+    } else {
+      _initializeQuestions();
+    }
+  }
+
+  int _convertTimeToSeconds(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  // Add a method to handle saving game state
+  Future<void> _saveGameState() async {
+    print('🎮 Starting _saveGameState');
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Make sure the stageName format matches exactly
+        final docId = widget.stageName.contains('Arcade') 
+            ? '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}'
+            : '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
+        
+        print('🎮 Saving to document ID: $docId');
+        
+        // Create progress data
+        Map<String, dynamic> progressData = {
+          'timestamp': DateTime.now(),
+          'completed': false,
+          'score': _correctAnswersCount,
+          'accuracy': _correctAnswersCount / (_correctAnswersCount + _wrongAnswersCount),
+          'streak': _calculateStreak(),
+          'answeredQuestions': _answeredQuestions,
+          'currentQuestionIndex': _currentQuestionIndex,
+          'totalQuestions': _totalQuestions,
+          'fullyCorrectAnswersCount': _fullyCorrectAnswersCount,
+          'questions': _questions,
+          'gamemode': widget.gamemode,
+        };
+
+        // Add gamemode-specific data
+        if (widget.gamemode == 'arcade') {
+          progressData['stopwatchTime'] = _stopwatchTime;
+          progressData['averageTimePerQuestion'] = _averageTimePerQuestion;
+          progressData['questionsAnswered'] = _questionsAnswered;
+        } else {
+          progressData['hp'] = _hp;
+        }
+
+        print('🎮 Saving progress data: $progressData');
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(user.uid)
+            .collection('GameProgress')
+            .doc(docId)
+            .set(progressData);
+        print('🎮 Save completed');
+      }
+    } catch (e) {
+      print('❌ Error saving game state: $e');
+    }
+  }
+
    @override
   Widget build(BuildContext context) {
     if (_isLoading || !_bgMusicLoaded) {
@@ -850,6 +1101,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                           _sfxVolume = value;
                                         });
                                       },
+                                      onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
                                     );
                                   },
                                 );

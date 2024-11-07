@@ -17,8 +17,15 @@ class StagesPage extends StatefulWidget {
   final String questName;
   final Map<String, String> category;
   String selectedLanguage;
+  final String? savedGameDocId;
 
-  StagesPage({super.key, required this.questName, required this.category, required this.selectedLanguage});
+  StagesPage({
+    super.key,
+    required this.questName,
+    required this.category,
+    required this.selectedLanguage,
+    this.savedGameDocId,
+  });
 
   @override
   StagesPageState createState() => StagesPageState();
@@ -47,7 +54,7 @@ class StagesPageState extends State<StagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};
+    if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
 
     final docRef = FirebaseFirestore.instance
         .collection('User')
@@ -56,22 +63,47 @@ class StagesPageState extends State<StagesPage> {
         .doc(widget.category['id']);
 
     final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0, 'maxScore': 0};
+    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
 
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
     final stageKey = '${widget.category['id']}${stageIndex + 1}';
 
+    // Check for saved game if savedGameDocId matches this stage
+    Map<String, dynamic>? savedGame;
+    if (widget.savedGameDocId != null) {
+      final savedGameDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(user.uid)
+          .collection('GameProgress')
+          .doc(widget.savedGameDocId)
+          .get();
+      
+      if (savedGameDoc.exists) {
+        savedGame = savedGameDoc.data();
+      }
+    }
+
     if (_selectedMode == 'Normal') {
       final personalBest = stageData[stageKey]['scoreNormal'] as int;
       final maxScore = stageData[stageKey]['maxScore'] as int;
       final stars = data['normalStageStars'][stageIndex] as int;
-      return {'personalBest': personalBest, 'stars': stars, 'maxScore': maxScore};
+      return {
+        'personalBest': personalBest,
+        'stars': stars,
+        'maxScore': maxScore,
+        'savedGame': savedGame,
+      };
     } else {
       final personalBest = stageData[stageKey]['scoreHard'] as int;
       final maxScore = stageData[stageKey]['maxScore'] as int;
       final stars = data['hardStageStars'][stageIndex] as int;
-      return {'personalBest': personalBest, 'stars': stars, 'maxScore': maxScore};
+      return {
+        'personalBest': personalBest,
+        'stars': stars,
+        'maxScore': maxScore,
+        'savedGame': savedGame,
+      };
     }
   }
 

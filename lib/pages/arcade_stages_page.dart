@@ -16,12 +16,14 @@ class ArcadeStagesPage extends StatefulWidget {
   final String questName;
   final Map<String, String> category;
   String selectedLanguage;
+  final String? savedGameDocId;
 
   ArcadeStagesPage({
     super.key, 
     required this.questName, 
     required this.category, 
-    required this.selectedLanguage});
+    required this.selectedLanguage, 
+    this.savedGameDocId});
 
   @override
   ArcadeStagesPageState createState() => ArcadeStagesPageState();
@@ -47,7 +49,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'crntRecord': 0};
+    if (user == null) return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
   
     final docRef = FirebaseFirestore.instance
         .collection('User')
@@ -56,7 +58,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         .doc(widget.category['id']);
   
     final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'crntRecord': 0};
+    if (!docSnapshot.exists) return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
   
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
@@ -70,15 +72,31 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     });
   
     if (arcadeStageKey == null) {
-      return {'personalBest': 0, 'crntRecord': 0};
+      return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
     }
   
     final personalBest = stageData[arcadeStageKey]['bestRecord'] as int? ?? 0;
     final crntRecord = stageData[arcadeStageKey]['crntRecord'] as int? ?? 0;
   
+    // Check for saved game if savedGameDocId matches this stage
+    Map<String, dynamic>? savedGame;
+    if (widget.savedGameDocId != null) {
+      final savedGameDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(user.uid)
+          .collection('GameProgress')
+          .doc(widget.savedGameDocId)
+          .get();
+      
+      if (savedGameDoc.exists) {
+        savedGame = savedGameDoc.data();
+      }
+    }
+  
     return {
       'personalBest': personalBest,
       'crntRecord': crntRecord,
+      'savedGame': savedGame,
     };
   }
 

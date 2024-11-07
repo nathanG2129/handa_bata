@@ -184,6 +184,11 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
     });
   }
 
+  void cancelTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (correctAnswer == null || !options.contains(correctAnswer)) {

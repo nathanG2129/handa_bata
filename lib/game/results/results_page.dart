@@ -14,6 +14,7 @@ import 'question_widgets.dart';
 import 'results_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -68,6 +69,7 @@ class ResultsPageState extends State<ResultsPage> {
   @override
   void initState() {
     super.initState();
+    _deleteSavedGame();
     _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
   }
@@ -233,6 +235,27 @@ class ResultsPageState extends State<ResultsPage> {
         );
       }
     } catch (e) {
+    }
+  }
+
+  Future<void> _deleteSavedGame() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final docId = '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
+        print('🎮 Deleting saved game at: $docId');
+        
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(user.uid)
+            .collection('GameProgress')
+            .doc(docId)
+            .delete();
+            
+        print('🎮 Saved game deleted');
+      }
+    } catch (e) {
+      print('❌ Error deleting saved game: $e');
     }
   }
 

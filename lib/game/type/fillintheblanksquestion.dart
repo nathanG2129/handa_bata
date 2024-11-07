@@ -339,6 +339,11 @@ void _showAnswerVisually() async {
     });
   }
 
+  void cancelTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];

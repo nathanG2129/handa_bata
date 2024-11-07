@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/game/gameplay_page.dart';
 // Import the GameplayPage
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
@@ -120,46 +119,6 @@ void showArcadeStageDialog(
                     ),
                   ],
                 ),
-                if (savedGame != null) ...[
-                  const SizedBox(height: 20),
-                  if (!(savedGame['completed'] ?? false)) ...[
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => GameplayPage(
-                              language: selectedLanguage,
-                              category: {
-                                'id': category['id'],
-                                'name': category['name'],
-                              },
-                              stageName: stageData['stageName'],
-                              stageData: {
-                                ...stageData,
-                                'savedGame': savedGame,
-                              },
-                              mode: mode,
-                              gamemode: 'arcade',
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: const Color(0xFF32C067),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                      ),
-                      child: Text(
-                        'Resume Game',
-                        style: GoogleFonts.vt323(fontSize: 24),
-                      ),
-                    ),
-                  ],
-                ],
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {

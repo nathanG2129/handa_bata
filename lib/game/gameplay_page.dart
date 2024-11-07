@@ -215,8 +215,9 @@ class GameplayPageState extends State<GameplayPage> {
       }
     });
 
-    if (!_isGameOver) {
-      _saveGameState(); // Auto-save when leaving the game
+    // Only save state for non-arcade modes
+    if (!_isGameOver && widget.gamemode != 'arcade') {
+      _saveGameState();
     }
 
     super.dispose();

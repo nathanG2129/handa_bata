@@ -1077,6 +1077,9 @@ class AuthService {
     required String gamemode,
     required Map<String, dynamic> gameState,
   }) async {
+    // Skip saving for arcade mode
+    if (gamemode == 'arcade') return;
+
     try {
       // Create document ID in consistent format
       final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
@@ -1123,16 +1126,18 @@ class AuthService {
     print('🎮 Starting handleGameQuit in AuthService');
 
     try {
-      // Save the game state
-      await saveGameState(
-        userId: userId,
-        categoryId: categoryId,
-        stageName: stageName,
-        mode: mode,
-        gamemode: gamemode,
-        gameState: gameState,
-      );
-      print('🎮 Game state saved');
+      // Only save state for non-arcade modes
+      if (gamemode != 'arcade') {
+        await saveGameState(
+          userId: userId,
+          categoryId: categoryId,
+          stageName: stageName,
+          mode: mode,
+          gamemode: gamemode,
+          gameState: gameState,
+        );
+        print('🎮 Game state saved');
+      }
 
       // Execute cleanup callback
       onCleanup();

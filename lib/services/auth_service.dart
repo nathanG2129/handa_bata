@@ -10,6 +10,7 @@ import '../models/game_save_data.dart'; // Add this import
 import '../services/stage_service.dart'; // Add this import
 import '../services/banner_service.dart'; // Add this import
 import '../services/badge_service.dart'; // Add this import
+import 'package:flutter/material.dart';  // For BuildContext and VoidCallback
 
 /// Service for handling authentication and user profile management.
 /// Supports both regular users and guest accounts with offline capabilities.
@@ -435,6 +436,7 @@ class AuthService {
         await clearAllLocalData();
       }
     } catch (e) {
+      print('❌ Error deleting user account: $e');
       rethrow;
     }
   }
@@ -442,12 +444,16 @@ class AuthService {
   // Helper method to handle Firestore deletion
   Future<void> _deleteFirestoreData(String uid) async {
     try {
-      // Delete all documents in subcollections
-      List<String> subcollections = ['ProfileData', 'GameSaveData'];
+      // Define all subcollections to delete
+      List<String> subcollections = [
+        'ProfileData', 
+        'GameSaveData',
+        'GameProgress', // Add GameProgress to the list
+      ];
       
       WriteBatch batch = _firestore.batch();
       
-      // Delete subcollection documents
+      // Delete all documents in each subcollection
       for (String subcollection in subcollections) {
         QuerySnapshot subcollectionDocs = 
           await _firestore.collection('User').doc(uid).collection(subcollection).get();
@@ -462,7 +468,10 @@ class AuthService {
       
       // Commit the batch
       await _executeBatchWithRetry(batch);
+      
+      print('🗑️ Deleted all user data including GameProgress collection');
     } catch (e) {
+      print('❌ Error deleting Firestore data: $e');
       rethrow;
     }
   }
@@ -1056,6 +1065,128 @@ class AuthService {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Saves the current game state both locally and to Firebase when online
+  Future<void> saveGameState({
+    required String userId,
+    required String categoryId,
+    required String stageName,
+    required String mode,
+    required String gamemode,
+    required Map<String, dynamic> gameState,
+  }) async {
+    try {
+      // Create document ID in consistent format
+      final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+      
+      // First save locally
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String gameStateJson = jsonEncode({
+        'timestamp': DateTime.now().toIso8601String(),
+        ...gameState
+      });
+      await prefs.setString('game_progress_$docId', gameStateJson);
+
+      // Then save to Firebase if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(userId)
+            .collection('GameProgress')
+            .doc(docId)
+            .set({
+          'timestamp': DateTime.now(),
+          ...gameState
+        });
+      }
+    } catch (e) {
+      print('❌ Error saving game state: $e');
+      rethrow;
+    }
+  }
+
+  /// Handles game quit including saving state and cleanup
+  Future<void> handleGameQuit({
+    required String userId,
+    required String categoryId,
+    required String stageName,
+    required String mode,
+    required String gamemode,
+    required Map<String, dynamic> gameState,
+    required VoidCallback onCleanup,
+    required Function(BuildContext) navigateBack,
+    required BuildContext context,
+  }) async {
+    print('🎮 Starting handleGameQuit in AuthService');
+
+    try {
+      // Save the game state
+      await saveGameState(
+        userId: userId,
+        categoryId: categoryId,
+        stageName: stageName,
+        mode: mode,
+        gamemode: gamemode,
+        gameState: gameState,
+      );
+      print('🎮 Game state saved');
+
+      // Execute cleanup callback
+      onCleanup();
+      print('🎮 Cleanup completed');
+
+      // Navigate back
+      if (context.mounted) {
+        navigateBack(context);
+      }
+      print('🎮 Navigation completed');
+
+    } catch (e) {
+      print('❌ Error in handleGameQuit: $e');
+      rethrow;
+    }
+  }
+
+  /// Retrieves saved game state
+  Future<Map<String, dynamic>?> getSavedGameState({
+    required String userId,
+    required String categoryId,
+    required String stageName,
+    required String mode,
+  }) async {
+    try {
+      final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+      
+      // Check local storage first
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? localGameState = prefs.getString('game_progress_$docId');
+      
+      if (localGameState != null) {
+        return jsonDecode(localGameState);
+      }
+
+      // If not in local storage and online, check Firebase
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        DocumentSnapshot doc = await _firestore
+            .collection('User')
+            .doc(userId)
+            .collection('GameProgress')
+            .doc(docId)
+            .get();
+          
+        if (doc.exists) {
+          return doc.data() as Map<String, dynamic>;
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      print('❌ Error retrieving game state: $e');
+      return null;
     }
   }
 }

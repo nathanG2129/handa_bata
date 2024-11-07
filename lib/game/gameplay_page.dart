@@ -16,7 +16,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/services/auth_service.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -92,6 +92,8 @@ class GameplayPageState extends State<GameplayPage> {
 
   // Add this field to track if the page is being disposed
   bool _isDisposing = false;
+
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -212,6 +214,10 @@ class GameplayPageState extends State<GameplayPage> {
         print('❌ Error disposing audio player: $e');
       }
     });
+
+    if (!_isGameOver) {
+      _saveGameState(); // Auto-save when leaving the game
+    }
 
     super.dispose();
   }
@@ -406,6 +412,7 @@ void readCurrentQuestion() {
         );
       });
     } else if (_currentQuestionIndex < _totalQuestions - 1) {
+      _saveGameState(); // Auto-save after each question
       setState(() {
         _currentQuestionIndex++;
         _selectedOptionIndex = null;
@@ -679,95 +686,88 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   Future<void> handleQuitGame() async {
     print('🎮 Starting handleQuitGame');
   
-    // Stop any ongoing processes first
-    print('🎮 Stopping timers and audio');
-    _timer?.cancel();
-    _timer = null;
-    _stopwatchTimer?.cancel();
-    _stopwatchTimer = null;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-    // Properly cleanup TTS
-    print('🎮 Cleaning up TTS');
-    try {
-      await flutterTts.stop();
-      await flutterTts.pause(); // Add pause to ensure TTS is fully stopped
-    } catch (e) {
-      print('❌ Error cleaning up TTS: $e');
+    // Store context in local variable to ensure type safety
+    final BuildContext currentContext = context;
+
+    Map<String, dynamic> gameState = {
+      'completed': false,
+      'score': _correctAnswersCount,
+      'accuracy': _correctAnswersCount / (_correctAnswersCount + _wrongAnswersCount),
+      'streak': _calculateStreak(),
+      'answeredQuestions': _answeredQuestions,
+      'currentQuestionIndex': _currentQuestionIndex,
+      'totalQuestions': _totalQuestions,
+      'fullyCorrectAnswersCount': _fullyCorrectAnswersCount,
+      'questions': _questions,
+      'gamemode': widget.gamemode,
+    };
+
+    // Add gamemode-specific data
+    if (widget.gamemode == 'arcade') {
+      gameState['stopwatchTime'] = _stopwatchTime;
+      gameState['averageTimePerQuestion'] = _averageTimePerQuestion;
+      gameState['questionsAnswered'] = _questionsAnswered;
+    } else {
+      gameState['hp'] = _hp;
     }
 
-    // Properly cleanup audio
-    print('🎮 Cleaning up audio');
-    try {
-      await _audioPlayer.pause(); // First pause
-      await _audioPlayer.stop(); // Then stop
-    } catch (e) {
-      print('❌ Error cleaning up audio: $e');
-    }
-
-    // Cancel any ongoing question timers
-    print('🎮 Canceling question timers');
-    _multipleChoiceQuestionKey.currentState?.cancelTimer();
-    _fillInTheBlanksQuestionKey.currentState?.cancelTimer();
-    _matchingTypeQuestionKey.currentState?.cancelTimer();
-    _identificationQuestionKey.currentState?.cancelTimer();
-
-    // Save the game state
-    print('🎮 Saving game state');
-    await _saveGameState();
-    print('🎮 Game state saved');
-
-    // Check if widget is still mounted before navigation
-    if (!mounted) {
-      print('❌ Widget not mounted, canceling navigation');
-      return;
-    }
-  
-    print('🎮 Starting navigation');
-    print('🎮 Gamemode: ${widget.gamemode}');
-  
-    try {
-      // Set disposing flag after navigation starts
-      setState(() {
-        _isDisposing = true;
-      });
-
-      if (widget.gamemode == 'arcade') {
-        print('🎮 Navigating to ArcadeStagesPage');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ArcadeStagesPage(
-              category: {
-                'id': widget.category['id'],
-                'name': widget.category['name'],
-              },
-              selectedLanguage: widget.language,
-              questName: widget.category['name'],
-              savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+    await _authService.handleGameQuit(
+      userId: user.uid,
+      categoryId: widget.category['id'],
+      stageName: widget.stageName,
+      mode: widget.mode.toLowerCase(),
+      gamemode: widget.gamemode,
+      gameState: gameState,
+      onCleanup: () {
+        // Cleanup logic
+        _timer?.cancel();
+        _timer = null;
+        _stopwatchTimer?.cancel();
+        _stopwatchTimer = null;
+        flutterTts.stop();
+        flutterTts.pause();
+        _audioPlayer.pause();
+        _audioPlayer.stop();
+        _audioPlayer.dispose();
+      },
+      navigateBack: (BuildContext context) {
+        if (widget.gamemode == 'arcade') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ArcadeStagesPage(
+                category: {
+                  'id': widget.category['id'],
+                  'name': widget.category['name'],
+                },
+                selectedLanguage: widget.language,
+                questName: widget.category['name'],
+                savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+              ),
             ),
-          ),
-        );
-      } else {
-        print('🎮 Navigating to StagesPage');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StagesPage(
-              questName: widget.category['name'],
-              category: {
-                'id': widget.category['id'],
-                'name': widget.category['name'],
-              },
-              selectedLanguage: widget.language,
-              savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StagesPage(
+                questName: widget.category['name'],
+                category: {
+                  'id': widget.category['id'],
+                  'name': widget.category['name'],
+                },
+                selectedLanguage: widget.language,
+                savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
+              ),
             ),
-          ),
-        );
-      }
-      print('🎮 Navigation completed');
-    } catch (e) {
-      print('❌ Navigation error: $e');
-    }
+          );
+        }
+      },
+      context: currentContext,
+    );
   }
 
   void _loadSavedGameOrInitialize() {
@@ -834,22 +834,12 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     return int.parse(parts[0]) * 60 + int.parse(parts[1]);
   }
 
-  // Add a method to handle saving game state
   Future<void> _saveGameState() async {
     print('🎮 Starting _saveGameState');
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Make sure the stageName format matches exactly
-        final docId = widget.stageName.contains('Arcade') 
-            ? '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}'
-            : '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
-        
-        print('🎮 Saving to document ID: $docId');
-        
-        // Create progress data
-        Map<String, dynamic> progressData = {
-          'timestamp': DateTime.now(),
+        Map<String, dynamic> gameState = {
           'completed': false,
           'score': _correctAnswersCount,
           'accuracy': _correctAnswersCount / (_correctAnswersCount + _wrongAnswersCount),
@@ -864,21 +854,22 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
         // Add gamemode-specific data
         if (widget.gamemode == 'arcade') {
-          progressData['stopwatchTime'] = _stopwatchTime;
-          progressData['averageTimePerQuestion'] = _averageTimePerQuestion;
-          progressData['questionsAnswered'] = _questionsAnswered;
+          gameState['stopwatchTime'] = _stopwatchTime;
+          gameState['averageTimePerQuestion'] = _averageTimePerQuestion;
+          gameState['questionsAnswered'] = _questionsAnswered;
         } else {
-          progressData['hp'] = _hp;
+          gameState['hp'] = _hp;
         }
 
-        print('🎮 Saving progress data: $progressData');
-        await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(docId)
-            .set(progressData);
-        print('🎮 Save completed');
+        await _authService.saveGameState(
+          userId: user.uid,
+          categoryId: widget.category['id'],
+          stageName: widget.stageName,
+          mode: widget.mode.toLowerCase(),
+          gamemode: widget.gamemode,
+          gameState: gameState,
+        );
+        print('🎮 Game state saved');
       }
     } catch (e) {
       print('❌ Error saving game state: $e');

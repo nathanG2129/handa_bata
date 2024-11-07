@@ -328,7 +328,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
             foregroundColor: Colors.black,
             textStyle: GoogleFonts.vt323(fontSize: 20),
           ),
-          onPressed: selectedBadges.length == 3 
+          onPressed: selectedBadges.isNotEmpty 
               ? () => _handleBadgeUpdate(selectedBadges)
               : null,
           child: const Text('Save Changes'),

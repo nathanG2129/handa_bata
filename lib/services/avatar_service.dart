@@ -14,8 +14,10 @@ class AvatarService {
       if (localAvatars.isNotEmpty) {
         // If we have cached data, use it immediately
         
-        // Try to update cache in background if online
-        _updateCacheIfOnline();
+        // Make this awaited and handle errors
+        await _updateCacheIfOnline().catchError((e) {
+          print('Background cache update failed: $e');
+        });
         
         return localAvatars;
       }

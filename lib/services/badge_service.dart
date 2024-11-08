@@ -9,7 +9,20 @@ class BadgeService {
 
   Future<List<Map<String, dynamic>>> fetchBadges() async {
     try {
-      // Try to get from Firebase first
+      // Always check local cache first
+      List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
+      if (localBadges.isNotEmpty) {
+        // If we have cached data, use it immediately
+        
+        // Add background sync
+        _updateCacheIfOnline().catchError((e) {
+          print('Background cache update failed: $e');
+        });
+        
+        return localBadges;
+      }
+      
+      // If no local cache, then try Firebase
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot snapshot = await _badgeDoc.get();
@@ -140,6 +153,23 @@ class BadgeService {
       }
     } catch (e) {
       // If Firebase update fails, at least we have local storage
+    }
+  }
+
+  Future<void> _updateCacheIfOnline() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        DocumentSnapshot snapshot = await _badgeDoc.get();
+        if (snapshot.exists) {
+          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+          List<Map<String, dynamic>> badges = 
+              data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+          await _storeBadgesLocally(badges);
+        }
+      }
+    } catch (e) {
+      rethrow;
     }
   }
 }

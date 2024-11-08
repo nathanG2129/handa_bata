@@ -44,11 +44,37 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   }
 
   Future<void> _fetchStages() async {
-    List<Map<String, dynamic>> stages = await _stageService.fetchStages(widget.selectedLanguage, widget.category['id']!);
-    stages = stages.where((stage) => stage['stageName'].contains('Arcade')).toList();
-    setState(() {
-      _stages = stages;
-    });
+    try {
+      print('ArcadeStagesPage: Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
+      
+      List<Map<String, dynamic>> stages = await _stageService.fetchStages(
+        widget.selectedLanguage, 
+        widget.category['id']!
+      );
+      
+      print('ArcadeStagesPage: Received ${stages.length} stages from service');
+      print('ArcadeStagesPage: Raw stages: $stages');
+      
+      if (mounted) {
+        setState(() {
+          // Only include arcade stages
+          _stages = stages.where((stage) => 
+            stage['stageName'].toLowerCase().contains('arcade')
+          ).toList();
+          
+          print('ArcadeStagesPage: Filtered to ${_stages.length} arcade stages');
+          print('ArcadeStagesPage: Filtered stages: $_stages');
+        });
+      }
+    } catch (e, stackTrace) {
+      print('ArcadeStagesPage: Error fetching stages: $e');
+      print('ArcadeStagesPage: Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _stages = [];
+        });
+      }
+    }
   }
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {

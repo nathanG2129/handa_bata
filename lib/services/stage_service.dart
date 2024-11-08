@@ -147,12 +147,52 @@ class StageService {
       String? stagesJson = prefs.getString('${STAGES_CACHE_KEY}_$categoryId');
       if (stagesJson != null) {
         List<dynamic> stagesList = jsonDecode(stagesJson);
-        return stagesList.map((stage) => stage as Map<String, dynamic>).toList();
+        return stagesList.map((stage) {
+          Map<String, dynamic> stageMap = Map<String, dynamic>.from(stage);
+          return _restoreTimestamps(stageMap);
+        }).toList();
       }
     } catch (e) {
       print('Error getting stages from local: $e');
     }
     return [];
+  }
+
+  // Helper method to restore timestamps
+  Map<String, dynamic> _restoreTimestamps(Map<String, dynamic> map) {
+    Map<String, dynamic> restored = {};
+    
+    map.forEach((key, value) {
+      if (key.toLowerCase().contains('timestamp') && value is int) {
+        // Convert milliseconds back to Timestamp
+        restored[key] = Timestamp.fromMillisecondsSinceEpoch(value);
+      } else if (value is Map) {
+        // Recursively restore nested maps
+        restored[key] = _restoreTimestamps(value as Map<String, dynamic>);
+      } else if (value is List) {
+        // Restore lists
+        restored[key] = _restoreList(value);
+      } else {
+        // Keep other values as is
+        restored[key] = value;
+      }
+    });
+    
+    return restored;
+  }
+
+  // Helper method to restore lists
+  List _restoreList(List list) {
+    return list.map((item) {
+      if (item is int && item > 946684800000) { // timestamp after 2000-01-01
+        return Timestamp.fromMillisecondsSinceEpoch(item);
+      } else if (item is Map) {
+        return _restoreTimestamps(item as Map<String, dynamic>);
+      } else if (item is List) {
+        return _restoreList(item);
+      }
+      return item;
+    }).toList();
   }
 
   Future<List<Map<String, dynamic>>> _fetchAndUpdateLocal(
@@ -328,21 +368,62 @@ class StageService {
   Future<void> _storeStagesLocally(List<Map<String, dynamic>> stages, String categoryId) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      // Store backup before updating
       String? existingData = prefs.getString('${STAGES_CACHE_KEY}_$categoryId');
       if (existingData != null) {
         await prefs.setString('${STAGES_CACHE_KEY}_${categoryId}_backup', existingData);
       }
       
-      String stagesJson = jsonEncode(stages);
+      // Convert Timestamps to milliseconds since epoch
+      List<Map<String, dynamic>> sanitizedStages = stages.map((stage) {
+        return _sanitizeMap(stage);
+      }).toList();
+      
+      String stagesJson = jsonEncode(sanitizedStages);
       await prefs.setString('${STAGES_CACHE_KEY}_$categoryId', stagesJson);
       
       // Clear backup after successful update
       await prefs.remove('${STAGES_CACHE_KEY}_${categoryId}_backup');
     } catch (e) {
-      await _restoreFromBackup(categoryId);
       print('Error storing stages locally: $e');
+      await _restoreFromBackup(categoryId);
     }
+  }
+
+  // Helper method to sanitize maps for JSON encoding
+  Map<String, dynamic> _sanitizeMap(Map<String, dynamic> map) {
+    Map<String, dynamic> sanitized = {};
+    
+    map.forEach((key, value) {
+      if (value is Timestamp) {
+        // Convert Timestamp to milliseconds since epoch
+        sanitized[key] = value.toDate().millisecondsSinceEpoch;
+      } else if (value is Map) {
+        // Recursively sanitize nested maps
+        sanitized[key] = _sanitizeMap(value as Map<String, dynamic>);
+      } else if (value is List) {
+        // Sanitize lists
+        sanitized[key] = _sanitizeList(value);
+      } else {
+        // Keep other values as is
+        sanitized[key] = value;
+      }
+    });
+    
+    return sanitized;
+  }
+
+  // Helper method to sanitize lists
+  List _sanitizeList(List list) {
+    return list.map((item) {
+      if (item is Timestamp) {
+        return item.toDate().millisecondsSinceEpoch;
+      } else if (item is Map) {
+        return _sanitizeMap(item as Map<String, dynamic>);
+      } else if (item is List) {
+        return _sanitizeList(item);
+      }
+      return item;
+    }).toList();
   }
 
   Future<void> _storeCategoriesLocally(List<Map<String, dynamic>> categories, String language) async {

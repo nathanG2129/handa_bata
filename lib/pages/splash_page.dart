@@ -50,15 +50,32 @@ class SplashPageState extends State<SplashPage> {
 
       print('📥 Fetching all resources...');
       
+      // First fetch categories
+      final enCategories = await stageService.fetchCategories('en');
+      print('✅ EN Categories fetched: ${enCategories.length} categories');
+      
+      final filCategories = await stageService.fetchCategories('fil');
+      print('✅ FIL Categories fetched: ${filCategories.length} categories');
+
+      // Then fetch stages for each category
+      print('📥 Fetching stages for all categories...');
+      
+      // Fetch stages for English categories
+      for (var category in enCategories) {
+        print('📥 Fetching EN stages for category: ${category['id']}');
+        final stages = await stageService.fetchStages('en', category['id']);
+        print('✅ EN Stages fetched for ${category['name']}: ${stages.length} stages');
+      }
+
+      // Fetch stages for Filipino categories
+      for (var category in filCategories) {
+        print('📥 Fetching FIL stages for category: ${category['id']}');
+        final stages = await stageService.fetchStages('fil', category['id']);
+        print('✅ FIL Stages fetched for ${category['name']}: ${stages.length} stages');
+      }
+
+      // Fetch other resources
       final results = await Future.wait([
-        stageService.fetchCategories('en').then((categories) {
-          print('✅ EN Categories fetched: ${categories.length} categories');
-          return categories;
-        }),
-        stageService.fetchCategories('fil').then((categories) {
-          print('✅ FIL Categories fetched: ${categories.length} categories');
-          return categories;
-        }),
         badgeService.fetchBadges().then((badges) {
           print('✅ Badges fetched: ${badges.length} badges');
           return badges;
@@ -75,17 +92,18 @@ class SplashPageState extends State<SplashPage> {
 
       print('🎉 All resources fetched and cached successfully!');
       print('📊 Summary:');
-      print('   - EN Categories: ${results[0].length}');
-      print('   - FIL Categories: ${results[1].length}');
-      print('   - Badges: ${results[2].length}');
-      print('   - Banners: ${results[3].length}');
-      print('   - Avatars: ${results[4].length}');
+      print('   - EN Categories: ${enCategories.length}');
+      print('   - FIL Categories: ${filCategories.length}');
+      print('   - Badges: ${results[0].length}');
+      print('   - Banners: ${results[1].length}');
+      print('   - Avatars: ${results[2].length}');
 
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Error during prefetch: $e');
+      print('❌ Stack trace: $stackTrace');
       if (mounted) {
         setState(() => _isLoading = false);
       }

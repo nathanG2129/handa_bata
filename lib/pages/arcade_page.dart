@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,8 +25,10 @@ class ArcadePage extends StatefulWidget {
 
 class ArcadePageState extends State<ArcadePage> {
   final StageService _stageService = StageService();
-  List<Map<String, dynamic>> _categories = [];
+  late StreamSubscription<List<Map<String, dynamic>>> _categorySubscription;
   bool _isLoading = true;
+  String? _errorMessage;
+  List<Map<String, dynamic>> _categories = [];
   bool _isUserProfileVisible = false;
   late String _selectedLanguage;
 
@@ -32,7 +36,62 @@ class ArcadePageState extends State<ArcadePage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    _fetchCategories();
+    _initializeCategories();
+    
+    // Listen to category updates
+    _categorySubscription = _stageService.categoryUpdates.listen((categories) {
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _sortCategories();
+        });
+      }
+    });
+
+    // Prefetch first category's stages
+    _prefetchFirstCategory();
+  }
+
+  @override
+  void dispose() {
+    _categorySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initializeCategories() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final categories = await _stageService.fetchCategories(_selectedLanguage);
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _sortCategories();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load categories. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _prefetchFirstCategory() async {
+    if (_categories.isNotEmpty) {
+      await _stageService.prefetchCategory(_categories.first['id']);
+    }
+  }
+
+  // Add retry mechanism
+  Future<void> _retryLoading() async {
+    await _initializeCategories();
   }
 
   void _toggleUserProfile() {
@@ -44,25 +103,7 @@ class ArcadePageState extends State<ArcadePage> {
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
-      _fetchCategories();
-    });
-  }
-
-  Future<void> _fetchCategories() async {
-    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage);
-    setState(() {
-      _categories = categories;
-      _sortCategories();
-      _isLoading = false;
-    });
-  }
-
-  void _sortCategories() {
-    const order = ['Quake', 'Storm', 'Volcano', 'Drought', 'Flood', 'Tsunami'];
-    _categories.sort((a, b) {
-      final aIndex = order.indexOf(order.firstWhere((element) => a['name'].contains(element), orElse: () => ''));
-      final bIndex = order.indexOf(order.firstWhere((element) => b['name'].contains(element), orElse: () => ''));
-      return aIndex.compareTo(bIndex);
+      _initializeCategories();
     });
   }
 
@@ -137,6 +178,19 @@ class ArcadePageState extends State<ArcadePage> {
     );
   }
 
+  void _sortCategories() {
+    const order = ['Quake', 'Storm', 'Volcano', 'Drought', 'Flood', 'Tsunami'];
+    _categories.sort((a, b) {
+      final aIndex = order.indexOf(order.firstWhere(
+          (element) => a['name'].contains(element), 
+          orElse: () => ''));
+      final bIndex = order.indexOf(order.firstWhere(
+          (element) => b['name'].contains(element), 
+          orElse: () => ''));
+      return aIndex.compareTo(bIndex);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -207,48 +261,50 @@ class ArcadePageState extends State<ArcadePage> {
                                   const SizedBox(height: 30),
                                   _isLoading
                                       ? const CircularProgressIndicator()
-                                      : Column(
-                                          children: _categories.map((category) {
-                                            final buttonColor = _getButtonColor(category['name']);
-                                            final categoryText = _getCategoryText(category['name']);
-                                            return Padding(
-                                              padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: Button3D(
-                                                  width: 350,
-                                                  height: 150,
-                                                  onPressed: () => _onCategoryPressed(category),
-                                                  backgroundColor: buttonColor,
-                                                  borderColor: _darkenColor(buttonColor),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          categoryText['name']!,
-                                                          style: GoogleFonts.vt323(
-                                                            fontSize: 30, // Larger font size
-                                                            color: Colors.white, // Text color
-                                                          ),
+                                      : _errorMessage != null
+                                          ? _buildErrorState()
+                                          : Column(
+                                              children: _categories.map((category) {
+                                                final buttonColor = _getButtonColor(category['name']);
+                                                final categoryText = _getCategoryText(category['name']);
+                                                return Padding(
+                                                  padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: Button3D(
+                                                      width: 350,
+                                                      height: 150,
+                                                      onPressed: () => _onCategoryPressed(category),
+                                                      backgroundColor: buttonColor,
+                                                      borderColor: _darkenColor(buttonColor),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.all(8.0),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Text(
+                                                              categoryText['name']!,
+                                                              style: GoogleFonts.vt323(
+                                                                fontSize: 30, // Larger font size
+                                                                color: Colors.white, // Text color
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 10),
+                                                            Text(
+                                                              categoryText['description']!,
+                                                              style: GoogleFonts.vt323(
+                                                                fontSize: 22,
+                                                                color: Colors.white, // Text color
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
-                                                        const SizedBox(height: 10),
-                                                        Text(
-                                                          categoryText['description']!,
-                                                          style: GoogleFonts.vt323(
-                                                            fontSize: 22,
-                                                            color: Colors.white, // Text color
-                                                          ),
-                                                        ),
-                                                      ],
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
+                                                );
+                                              }).toList(),
+                                            ),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 0, bottom: 40),
                                     child: Button3D(
@@ -307,6 +363,82 @@ class ArcadePageState extends State<ArcadePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _errorMessage!,
+            style: GoogleFonts.vt323(color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _retryLoading,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: ArcadeButton(
+            onPressed: () {
+              // Define the action for the Arcade button if needed
+            },
+          ),
+        ),
+        const SizedBox(height: 30),
+        ..._categories.map((category) {
+          final buttonColor = _getButtonColor(category['name']);
+          final categoryText = _getCategoryText(category['name']);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 30),
+            child: Align(
+              alignment: Alignment.center,
+              child: Button3D(
+                width: 350,
+                height: 150,
+                onPressed: () => _onCategoryPressed(category),
+                backgroundColor: buttonColor,
+                borderColor: _darkenColor(buttonColor),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        categoryText['name']!,
+                        style: GoogleFonts.vt323(
+                          fontSize: 30,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        categoryText['description']!,
+                        style: GoogleFonts.vt323(
+                          fontSize: 22,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 }

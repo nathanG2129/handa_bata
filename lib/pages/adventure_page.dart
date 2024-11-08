@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,8 +24,10 @@ class AdventurePage extends StatefulWidget {
 
 class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
-  List<Map<String, dynamic>> _categories = [];
+  late StreamSubscription<List<Map<String, dynamic>>> _categorySubscription;
   bool _isLoading = true;
+  String? _errorMessage;
+  List<Map<String, dynamic>> _categories = [];
   late String _selectedLanguage;
   bool _isUserProfileVisible = false;
 
@@ -31,16 +35,62 @@ class AdventurePageState extends State<AdventurePage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    _fetchCategories();
+    _initializeCategories();
+    
+    // Listen to category updates
+    _categorySubscription = _stageService.categoryUpdates.listen((categories) {
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _sortCategories();
+        });
+      }
+    });
+
+    // Prefetch first category's stages
+    _prefetchFirstCategory();
   }
 
-  Future<void> _fetchCategories() async {
-    List<Map<String, dynamic>> categories = await _stageService.fetchCategories(_selectedLanguage);
-    setState(() {
-      _categories = categories;
-      _sortCategories();
-      _isLoading = false;
-    });
+  @override
+  void dispose() {
+    _categorySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initializeCategories() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final categories = await _stageService.fetchCategories(_selectedLanguage);
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _sortCategories();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load categories. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _prefetchFirstCategory() async {
+    if (_categories.isNotEmpty) {
+      await _stageService.prefetchCategory(_categories.first['id']);
+    }
+  }
+
+  // Add retry mechanism
+  Future<void> _retryLoading() async {
+    await _initializeCategories();
   }
 
   void _sortCategories() {
@@ -62,7 +112,7 @@ class AdventurePageState extends State<AdventurePage> {
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
-      _fetchCategories(); // Fetch categories again with the new language
+      _initializeCategories(); // Fetch categories again with the new language
     });
   }
 
@@ -170,58 +220,7 @@ class AdventurePageState extends State<AdventurePage> {
                               hasScrollBody: false,
                               child: Column(
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 20), // Adjust the top padding as needed
-                                    child: AdventureButton(
-                                      onPressed: () {
-                                        // Define the action for the Adventure button if needed
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(height: 30), // Adjust the height to position the first button closer
-                                  _isLoading
-                                      ? const CircularProgressIndicator()
-                                      : Column(
-                                          children: _categories.map((category) {
-                                            final buttonColor = _getButtonColor(category['name']);
-                                            return Padding(
-                                              padding: const EdgeInsets.only(bottom: 40), // Apply margin only to the bottom
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: Button3D(
-                                                  width: 350,
-                                                  height: 215,
-                                                  onPressed: () => _onCategoryPressed(category),
-                                                  backgroundColor: buttonColor,
-                                                  borderColor: _darkenColor(buttonColor),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(12.0),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          '${category['name']}',
-                                                          style: GoogleFonts.vt323(
-                                                            fontSize: 32, // Larger font size
-                                                            color: Colors.white, // Text color
-                                                          ),
-                                                        ),
-                                                        const SizedBox(height: 5),
-                                                        Text(
-                                                          category['description'],
-                                                          style: GoogleFonts.vt323(
-                                                            fontSize: 25,
-                                                            color: Colors.white, // Text color
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
+                                  _buildContent(),
                                   const SizedBox(height: 20),
                                   const Spacer(), // Push the footer to the bottom
                                   const FooterWidget(), // Add the footer here
@@ -241,6 +240,85 @@ class AdventurePageState extends State<AdventurePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _retryLoading,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: AdventureButton(
+            onPressed: () {
+              // Define the action for the Adventure button if needed
+            },
+          ),
+        ),
+        const SizedBox(height: 30),
+        ..._categories.map((category) {
+          final buttonColor = _getButtonColor(category['name']);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 40),
+            child: Align(
+              alignment: Alignment.center,
+              child: Button3D(
+                width: 350,
+                height: 215,
+                onPressed: () => _onCategoryPressed(category),
+                backgroundColor: buttonColor,
+                borderColor: _darkenColor(buttonColor),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category['name'],
+                        style: GoogleFonts.vt323(
+                          fontSize: 32,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        category['description'],
+                        style: GoogleFonts.vt323(
+                          fontSize: 25,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 }

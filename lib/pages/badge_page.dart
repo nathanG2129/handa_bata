@@ -48,14 +48,20 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   final BadgeService _badgeService = BadgeService();
   late StreamSubscription<List<Map<String, dynamic>>> _badgeSubscription;
 
+  // Add loading and error states
+  bool _isLoading = true;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
-    _badgesFuture = _badgeService.fetchBadges();
+    // Initialize animation controller
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
+    
+    // Initialize slide animation
     _slideAnimation = Tween<Offset>(
       begin: const Offset(-1.0, 0.0),
       end: Offset.zero,
@@ -64,20 +70,53 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       curve: Curves.easeInOut,
     ));
 
+    // Initialize badges
+    _initializeBadges();
+    
+    // Set up selected badges if in selection mode
     if (widget.selectionMode && widget.currentBadgeShowcase != null) {
       _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
           .where((id) => id != -1)
           .toList();
     }
-
+    
     // Listen to badge updates
     _badgeSubscription = _badgeService.badgeUpdates.listen((badges) {
       if (mounted) {
         setState(() {
-          // Update UI when badges change
+          _badgesFuture = Future.value(badges);
         });
       }
     });
+  }
+
+  Future<void> _initializeBadges() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final badges = await _badgeService.fetchBadges();
+      if (mounted) {
+        setState(() {
+          _badgesFuture = Future.value(badges);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load badges. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Add retry mechanism
+  Future<void> _retryLoading() async {
+    await _initializeBadges();
   }
 
   @override
@@ -357,98 +396,138 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: FutureBuilder<List<dynamic>>(
-                  future: Future.wait([
-                    _badgesFuture,
-                    _authService.getUserProfile(),
-                  ]),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
-                      return const Center(child: Text('No badges found.'));
-                    } else {
-                      if (!_animationController.isAnimating && !_animationController.isCompleted) {
-                        _animationController.forward();
-                      }
-                      final badges = snapshot.data![0] as List<Map<String, dynamic>>;
-                      final userProfile = snapshot.data![1] as UserProfile;
-                      
-                      return SlideTransition(
-                        position: _slideAnimation,
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: MediaQuery.of(context).size.height * 0.7,
-                              maxHeight: MediaQuery.of(context).size.height * 0.7,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  color: const Color(0xFF3A1A5F),
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                  child: Center(
-                                    child: Text(
-                                      'Badges',
-                                      style: GoogleFonts.vt323(
-                                        color: Colors.white,
-                                        fontSize: 42,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    color: const Color(0xFF241242),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            child: Column(
-                                              children: [
-                                                if (!widget.selectionMode)
-                                                  Padding(
-                                                    padding: const EdgeInsets.all(16.0),
-                                                    child: _buildFilterDropdown(),
-                                                  ),
-                                                _buildBadgeGrid(badges, userProfile.unlockedBadge),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        if (widget.selectionMode)
-                                          Container(
-                                            width: double.infinity,
-                                            color: const Color(0xFF3A1A5F),
-                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                            child: _buildSaveButton(),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                        ? _buildErrorState()
+                        : _buildContent(),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          _errorMessage!,
+          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _retryLoading,
+          child: const Text('Retry'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        _badgesFuture,
+        _authService.getUserProfile(),
+      ]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Error: ${snapshot.error}',
+                  style: GoogleFonts.vt323(color: Colors.white),
+                ),
+                ElevatedButton(
+                  onPressed: _retryLoading,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final badges = snapshot.data![0] as List<Map<String, dynamic>>;
+        final userProfile = snapshot.data![1] as UserProfile;
+        
+        if (!_animationController.isAnimating && !_animationController.isCompleted) {
+          _animationController.forward();
+        }
+        
+        return SlideTransition(
+          position: _slideAnimation,
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
+            shape: const RoundedRectangleBorder(
+              side: BorderSide(color: Colors.black, width: 1),
+              borderRadius: BorderRadius.zero,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height * 0.7,
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: const Color(0xFF3A1A5F),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    child: Center(
+                      child: Text(
+                        'Badges',
+                        style: GoogleFonts.vt323(
+                          color: Colors.white,
+                          fontSize: 42,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: const Color(0xFF241242),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  if (!widget.selectionMode)
+                                    Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: _buildFilterDropdown(),
+                                    ),
+                                  _buildBadgeGrid(badges, userProfile.unlockedBadge),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (widget.selectionMode)
+                            Container(
+                              width: double.infinity,
+                              color: const Color(0xFF3A1A5F),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                              child: _buildSaveButton(),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

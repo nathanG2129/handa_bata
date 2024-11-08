@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
+import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/dialog_boxes/stage_dialog.dart';
@@ -11,6 +13,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 // ignore: must_be_immutable
 class StagesPage extends StatefulWidget {
@@ -56,6 +60,47 @@ class StagesPageState extends State<StagesPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
 
+    // Try to get from local storage first
+    final AuthService authService = AuthService();
+    final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
+    
+    if (localData != null) {
+      final stageKey = '${widget.category['id']}${stageIndex + 1}';
+      
+      // Check for saved game if savedGameDocId matches this stage
+      Map<String, dynamic>? savedGame;
+      if (widget.savedGameDocId != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? savedGameJson = prefs.getString('game_progress_${widget.savedGameDocId}');
+        if (savedGameJson != null) {
+          savedGame = jsonDecode(savedGameJson);
+        }
+      }
+
+      if (_selectedMode == 'Normal') {
+        final personalBest = localData.stageData[stageKey]?['scoreNormal'] ?? 0;
+        final maxScore = localData.stageData[stageKey]?['maxScore'] ?? 0;
+        final stars = localData.normalStageStars[stageIndex];
+        return {
+          'personalBest': personalBest,
+          'stars': stars,
+          'maxScore': maxScore,
+          'savedGame': savedGame,
+        };
+      } else {
+        final personalBest = localData.stageData[stageKey]?['scoreHard'] ?? 0;
+        final maxScore = localData.stageData[stageKey]?['maxScore'] ?? 0;
+        final stars = localData.hardStageStars[stageIndex];
+        return {
+          'personalBest': personalBest,
+          'stars': stars,
+          'maxScore': maxScore,
+          'savedGame': savedGame,
+        };
+      }
+    }
+
+    // Fallback to Firebase if no local data
     final docRef = FirebaseFirestore.instance
         .collection('User')
         .doc(user.uid)

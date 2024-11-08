@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,7 @@ import 'results_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -149,9 +151,14 @@ class ResultsPageState extends State<ResultsPage> {
         _xpGained = widget.score * multiplier;
       }
 
-      // Get user profile and update XP/Level
-      UserProfile? profile = await _authService.getUserProfile();
+      // Try to get user profile from local storage first
+      UserProfile? profile = await _authService.getLocalUserProfile();
+      if (profile == null) {
+        profile = await _authService.getUserProfile();
+      }
+
       if (profile != null) {
+        // Calculate new XP and level
         int newXP = profile.exp + _xpGained;
         int newLevel = profile.level;
         int requiredXP = profile.level * 100;
@@ -163,10 +170,21 @@ class ResultsPageState extends State<ResultsPage> {
           requiredXP = newLevel * 100;
         }
 
-        // Update profile with new XP and level
-        await _authService.updateUserProfile('exp', newXP);
-        await _authService.updateUserProfile('level', newLevel);
-        await _authService.updateUserProfile('expCap', newLevel * 100);
+        // Update profile locally first
+        profile = profile.copyWith(updates: {
+          'exp': newXP,
+          'level': newLevel,
+          'expCap': newLevel * 100,
+        });
+        await _authService.saveUserProfileLocally(profile);
+
+        // Try to update Firebase if online
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          await _authService.updateUserProfile('exp', newXP);
+          await _authService.updateUserProfile('level', newLevel);
+          await _authService.updateUserProfile('expCap', newLevel * 100);
+        }
       }
 
       // Calculate stars
@@ -181,39 +199,37 @@ class ResultsPageState extends State<ResultsPage> {
         stars = calculatedStars;
       });
 
+      // Get local game save data
+      GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
+      
       // Check for badge unlocks
       final badgeUnlockService = BadgeUnlockService(_authService);
       
       if (widget.gamemode == 'arcade') {
-        // Convert record time to seconds
         final recordParts = widget.record.split(':');
         final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
         
         await badgeUnlockService.checkArcadeBadges(
           totalTime: totalSeconds,
-          accuracy: widget.accuracy * 100, // Convert to percentage
+          accuracy: widget.accuracy * 100,
           streak: widget.streak,
           averageTimePerQuestion: widget.averageTimePerQuestion,
         );
-      } else {
-        // Get current stage stars for the category
-        GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
-        if (saveData != null) {
-          List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
-              ? saveData.normalStageStars 
-              : saveData.hardStageStars;
-          
-          await badgeUnlockService.checkAdventureBadges(
-            questName: widget.category['name'],
-            stageName: widget.stageName,
-            difficulty: widget.mode.toLowerCase(),
-            stars: calculatedStars,
-            allStageStars: stageStars,
-          );
-        }
+      } else if (saveData != null) {
+        List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
+            ? saveData.normalStageStars 
+            : saveData.hardStageStars;
+        
+        await badgeUnlockService.checkAdventureBadges(
+          questName: widget.category['name'],
+          stageName: widget.stageName,
+          difficulty: widget.mode.toLowerCase(),
+          stars: calculatedStars,
+          allStageStars: stageStars,
+        );
       }
 
-      // Update game progress
+      // Update game progress locally first, then sync with Firebase if online
       if (widget.gamemode == 'arcade') {
         await _authService.updateGameProgress(
           categoryId: widget.category['id'],
@@ -234,7 +250,18 @@ class ResultsPageState extends State<ResultsPage> {
           isArcade: false,
         );
       }
+
     } catch (e) {
+      print('❌ Error updating score and stars: $e');
+      // Even if there's an error, we should still calculate and show stars
+      setState(() {
+        stars = _calculateStars(
+          widget.accuracy,
+          widget.score,
+          widget.stageData['maxScore'],
+          widget.isGameOver
+        );
+      });
     }
   }
 
@@ -243,16 +270,24 @@ class ResultsPageState extends State<ResultsPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final docId = '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
-        print('🎮 Deleting saved game at: $docId');
+        print('🎮 Deleting saved game...');
         
-        await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(docId)
-            .delete();
-            
-        print('🎮 Saved game deleted');
+        // Delete from local storage first
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('game_progress_$docId');
+        print('🎮 Local saved game deleted');
+
+        // Try to delete from Firebase if online
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          await FirebaseFirestore.instance
+              .collection('User')
+              .doc(user.uid)
+              .collection('GameProgress')
+              .doc(docId)
+              .delete();
+          print('🎮 Firebase saved game deleted');
+        }
       }
     } catch (e) {
       print('❌ Error deleting saved game: $e');

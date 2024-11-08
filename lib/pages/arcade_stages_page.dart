@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/pages/arcade_page.dart';
+import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/dialog_boxes/arcade_stage_dialog.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -10,6 +12,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 // ignore: must_be_immutable
 class ArcadeStagesPage extends StatefulWidget {
@@ -49,17 +53,53 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
-  
+    if (user == null) return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
+
+    // Try to get from local storage first
+    final AuthService authService = AuthService();
+    final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
+    
+    if (localData != null) {
+      // Find the arcade stage key
+      String? arcadeStageKey;
+      localData.stageData.forEach((key, value) {
+        if (key.contains('Arcade')) {
+          arcadeStageKey = key;
+        }
+      });
+
+      if (arcadeStageKey != null) {
+        final bestRecord = localData.stageData[arcadeStageKey]?['bestRecord'] ?? -1;
+        final crntRecord = localData.stageData[arcadeStageKey]?['crntRecord'] ?? -1;
+
+        // Check for saved game if savedGameDocId matches this stage
+        Map<String, dynamic>? savedGame;
+        if (widget.savedGameDocId != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String? savedGameJson = prefs.getString('game_progress_${widget.savedGameDocId}');
+          if (savedGameJson != null) {
+            savedGame = jsonDecode(savedGameJson);
+          }
+        }
+
+        return {
+          'bestRecord': bestRecord,
+          'crntRecord': crntRecord,
+          'savedGame': savedGame,
+        };
+      }
+    }
+
+    // Fallback to Firebase if no local data
     final docRef = FirebaseFirestore.instance
         .collection('User')
         .doc(user.uid)
         .collection('GameSaveData')
         .doc(widget.category['id']);
-  
+
     final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
-  
+    if (!docSnapshot.exists) return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
+
     final data = docSnapshot.data() as Map<String, dynamic>;
     final stageData = data['stageData'] as Map<String, dynamic>;
   
@@ -72,7 +112,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     });
   
     if (arcadeStageKey == null) {
-      return {'personalBest': 0, 'crntRecord': 0, 'savedGame': null};
+      return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
     }
   
     final personalBest = stageData[arcadeStageKey]['bestRecord'] as int? ?? 0;
@@ -94,7 +134,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     }
   
     return {
-      'personalBest': personalBest,
+      'bestRecord': personalBest,
       'crntRecord': crntRecord,
       'savedGame': savedGame,
     };
@@ -266,7 +306,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                             },
                                             stageData,
                                             'normal', // Pass the mode as 'normal'
-                                            stageStats['personalBest'],
+                                            stageStats['bestRecord'],
                                             stageStats['crntRecord'], // Corrected to pass currentRecord
                                             0, // Arcade stages do not have stars
                                             widget.selectedLanguage,

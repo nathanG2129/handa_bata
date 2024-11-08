@@ -215,8 +215,13 @@ class GameplayPageState extends State<GameplayPage> {
       }
     });
 
-    // Only save state for non-arcade modes
-    if (!_isGameOver && widget.gamemode != 'arcade') {
+    // Only save state if:
+    // 1. Not in arcade mode
+    // 2. Game is not over
+    // 3. Not navigating to results page
+    if (!_isGameOver && 
+        widget.gamemode != 'arcade' && 
+        !ModalRoute.of(context)!.settings.name!.contains('ResultsPage')) {
       _saveGameState();
     }
 
@@ -377,38 +382,45 @@ void readCurrentQuestion() {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ResultsPage(
-              score: _correctAnswersCount, // Use the correct answers count as the score
-              accuracy: accuracy,
-              streak: _calculateStreak(),
-              language: widget.language, // Pass the language
-              category: widget.category, // Pass the category
-              stageName: widget.stageName, // Pass the stage name
-              stageData: {
-                ...widget.stageData,
-                'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
-                'maxScore': _questions.fold(0, (sum, question) {
-                  if (question['type'] == 'Multiple Choice') {
-                    return sum + 1;
-                  } else if (question['type'] == 'Fill in the Blanks') {
-                    return sum + (question['answer'] as List).length;
-                  } else if (question['type'] == 'Identification') {
-                    return sum + 1;
-                  } else if (question['type'] == 'Matching Type') {
-                    return sum + (question['answerPairs'] as List).length;
-                  } else {
-                    return sum;
-                  }
-                }),
-              },
-              mode: widget.mode, // Pass the mode
-              gamemode: widget.gamemode,
-              fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
-              answeredQuestions: _answeredQuestions, // Pass the answered questions
-              record: _stopwatchTime, 
-              isGameOver: _isGameOver, // Pass the final stopwatch time as bestRecord
-              averageTimePerQuestion: _averageTimePerQuestion, // Add this parameter
-            ),
+            settings: const RouteSettings(name: 'ResultsPage'),
+            builder: (context) {
+              // Stop any ongoing timers before navigation
+              _timer?.cancel();
+              _stopwatchTimer?.cancel();
+              
+              return ResultsPage(
+                score: _correctAnswersCount,
+                accuracy: accuracy,
+                streak: _calculateStreak(),
+                language: widget.language,
+                category: widget.category,
+                stageName: widget.stageName,
+                stageData: {
+                  ...widget.stageData,
+                  'totalQuestions': _totalQuestions,
+                  'maxScore': _questions.fold(0, (sum, question) {
+                    if (question['type'] == 'Multiple Choice') {
+                      return sum + 1;
+                    } else if (question['type'] == 'Fill in the Blanks') {
+                      return sum + (question['answer'] as List).length;
+                    } else if (question['type'] == 'Identification') {
+                      return sum + 1;
+                    } else if (question['type'] == 'Matching Type') {
+                      return sum + (question['answerPairs'] as List).length;
+                    } else {
+                      return sum;
+                    }
+                  }),
+                },
+                mode: widget.mode,
+                gamemode: widget.gamemode,
+                fullyCorrectAnswersCount: _fullyCorrectAnswersCount,
+                answeredQuestions: _answeredQuestions,
+                record: _stopwatchTime,
+                isGameOver: _isGameOver,
+                averageTimePerQuestion: _averageTimePerQuestion,
+              );
+            },
           ),
         );
       });
@@ -438,38 +450,45 @@ void readCurrentQuestion() {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ResultsPage(
-            score: _correctAnswersCount, // Use the correct answers count as the score
-            accuracy: accuracy,
-            streak: _calculateStreak(),
-            language: widget.language, // Pass the language
-            category: widget.category, // Pass the category
-            stageName: widget.stageName, // Pass the stage name
-            stageData: {
-              ...widget.stageData,
-              'totalQuestions': _totalQuestions, // Add totalQuestions to stageData
-              'maxScore': _questions.fold(0, (sum, question) {
-                if (question['type'] == 'Multiple Choice') {
-                  return sum + 1;
-                } else if (question['type'] == 'Fill in the Blanks') {
-                  return sum + (question['answer'] as List).length;
-                } else if (question['type'] == 'Identification') {
-                  return sum + 1;
-                } else if (question['type'] == 'Matching Type') {
-                  return sum + (question['answerPairs'] as List).length;
-                } else {
-                  return sum;
-                }
-              }),
-            },
-            fullyCorrectAnswersCount: _fullyCorrectAnswersCount, // Pass the fully correct answers count
-            mode: widget.mode, // Pass the mode
-            gamemode: widget.gamemode,
-            answeredQuestions: _answeredQuestions, // Pass the answered questions
-            record: _stopwatchTime, 
-            isGameOver: _isGameOver, // Pass the final stopwatch time as bestRecord
-            averageTimePerQuestion: _averageTimePerQuestion, // Add this parameter
-          ),
+          settings: const RouteSettings(name: 'ResultsPage'),
+          builder: (context) {
+            // Stop any ongoing timers before navigation
+            _timer?.cancel();
+            _stopwatchTimer?.cancel();
+            
+            return ResultsPage(
+              score: _correctAnswersCount,
+              accuracy: accuracy,
+              streak: _calculateStreak(),
+              language: widget.language,
+              category: widget.category,
+              stageName: widget.stageName,
+              stageData: {
+                ...widget.stageData,
+                'totalQuestions': _totalQuestions,
+                'maxScore': _questions.fold(0, (sum, question) {
+                  if (question['type'] == 'Multiple Choice') {
+                    return sum + 1;
+                  } else if (question['type'] == 'Fill in the Blanks') {
+                    return sum + (question['answer'] as List).length;
+                  } else if (question['type'] == 'Identification') {
+                    return sum + 1;
+                  } else if (question['type'] == 'Matching Type') {
+                    return sum + (question['answerPairs'] as List).length;
+                  } else {
+                    return sum;
+                  }
+                }),
+              },
+              mode: widget.mode,
+              gamemode: widget.gamemode,
+              fullyCorrectAnswersCount: _fullyCorrectAnswersCount,
+              answeredQuestions: _answeredQuestions,
+              record: _stopwatchTime,
+              isGameOver: _isGameOver,
+              averageTimePerQuestion: _averageTimePerQuestion,
+            );
+          },
         ),
       );
     }
@@ -775,56 +794,27 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     final savedGame = widget.stageData['savedGame'];
     if (savedGame != null) {
       setState(() {
-        // Load the questions from the saved game
         _questions = List<Map<String, dynamic>>.from(savedGame['questions'] ?? []);
-        
-        // Get the current question index
         _currentQuestionIndex = savedGame['currentQuestionIndex'];
         
-        // Check if the last question was answered by looking at answeredQuestions
+        // Check if the current question was answered
         final answeredQuestions = List<Map<String, dynamic>>.from(savedGame['answeredQuestions']);
-        if (answeredQuestions.isNotEmpty && 
-            answeredQuestions.last['question'] == _questions[_currentQuestionIndex]['question']) {
-          // If the current question was answered, move to the next one
-          _currentQuestionIndex++;
+        if (answeredQuestions.isNotEmpty) {
+          // Compare the current question with the last answered question
+          final lastAnsweredQuestion = answeredQuestions.last;
+          final currentQuestion = _questions[_currentQuestionIndex];
+          
+          // If this question was already answered, move to the next one
+          if (lastAnsweredQuestion['question'] == currentQuestion['question']) {
+            // Only increment if not at the last question
+            if (_currentQuestionIndex < _questions.length - 1) {
+              _currentQuestionIndex++;
+            }
+          }
         }
         
-        // Set total questions from the saved questions list
-        _totalQuestions = savedGame['totalQuestions'];
-        
-        _correctAnswersCount = savedGame['score'];
-        
-        // Load answered questions and other stats
-        final totalAnswers = savedGame['answeredQuestions'].length;
-        _wrongAnswersCount = totalAnswers - savedGame['score'];
-        _currentStreak = 0; // Reset streak on resume
-        _highestStreak = savedGame['streak'];
-        _fullyCorrectAnswersCount = savedGame['fullyCorrectAnswersCount'];
-        _answeredQuestions = List<Map<String, dynamic>>.from(savedGame['answeredQuestions']);
-        
-        if (widget.gamemode == 'arcade') {
-          _stopwatchTime = savedGame['stopwatchTime'];
-          _stopwatchSeconds = _convertTimeToSeconds(savedGame['stopwatchTime']);
-          _averageTimePerQuestion = savedGame['averageTimePerQuestion'].toDouble();
-          _questionsAnswered = totalAnswers;
-        } else {
-          _hp = savedGame['hp'].toDouble();
-        }
-        
-        _isLoading = false;
+        // Rest of the initialization code...
       });
-
-      // If in arcade mode, start the stopwatch with saved time
-      if (widget.gamemode == 'arcade') {
-        _startStopwatch();
-      }
-
-      // Start timer for the next question
-      if (widget.gamemode != 'arcade') {
-        Future.delayed(const Duration(seconds: 5), () {
-          _startTimer();
-        });
-      }
     } else {
       _initializeQuestions();
     }
@@ -840,6 +830,13 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Don't save if this is the last question and it's been answered
+        if (_currentQuestionIndex >= _totalQuestions - 1 && 
+            _answeredQuestions.length >= _totalQuestions) {
+          print('🎮 Last question answered - not saving game state');
+          return;
+        }
+
         Map<String, dynamic> gameState = {
           'completed': false,
           'score': _correctAnswersCount,

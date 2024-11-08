@@ -270,27 +270,32 @@ class ResultsPageState extends State<ResultsPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final docId = '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
-        print('🎮 Deleting saved game...');
         
-        // Delete from local storage first
+        // Use a transaction-like approach
+        final batch = FirebaseFirestore.instance.batch();
         SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        // Delete local first
         await prefs.remove('game_progress_$docId');
         print('🎮 Local saved game deleted');
 
-        // Try to delete from Firebase if online
+        // Try Firebase if online
         var connectivityResult = await (Connectivity().checkConnectivity());
         if (connectivityResult != ConnectivityResult.none) {
-          await FirebaseFirestore.instance
+          final docRef = FirebaseFirestore.instance
               .collection('User')
               .doc(user.uid)
               .collection('GameProgress')
-              .doc(docId)
-              .delete();
+              .doc(docId);
+              
+          batch.delete(docRef);
+          await batch.commit();
           print('🎮 Firebase saved game deleted');
         }
       }
     } catch (e) {
       print('❌ Error deleting saved game: $e');
+      // Even if deletion fails, continue with the results page
     }
   }
 

@@ -11,6 +11,7 @@ import '../services/stage_service.dart'; // Add this import
 import '../services/banner_service.dart'; // Add this import
 import '../services/badge_service.dart'; // Add this import
 import 'package:flutter/material.dart';  // For BuildContext and VoidCallback
+import 'package:synchronized/synchronized.dart';
 
 /// Service for handling authentication and user profile management.
 /// Supports both regular users and guest accounts with offline capabilities.
@@ -27,6 +28,10 @@ class AuthService {
   static const String GUEST_UID_KEY = 'guest_uid';
 
   List<StreamSubscription> _subscriptions = [];
+
+  // Add save lock
+  bool _isSaving = false;
+  final _saveLock = Lock(); // Add this at the top of the class
 
   AuthService({this.defaultLanguage = 'en'}) {
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
@@ -1077,37 +1082,104 @@ class AuthService {
     required String gamemode,
     required Map<String, dynamic> gameState,
   }) async {
-    // Skip saving for arcade mode
-    if (gamemode == 'arcade') return;
-
-    try {
-      // Create document ID in consistent format
-      final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+    // Use the lock to prevent concurrent saves
+    await _saveLock.synchronized(() async {
+      if (_isSaving) return;
+      _isSaving = true;
       
-      // First save locally
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String gameStateJson = jsonEncode({
-        'timestamp': DateTime.now().toIso8601String(),
-        ...gameState
-      });
-      await prefs.setString('game_progress_$docId', gameStateJson);
+      try {
+        final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+        
+        if (!_validateGameState(gameState)) {
+          print('❌ Invalid game state - not saving');
+          return;
+        }
 
-      // Then save to Firebase if online
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        await FirebaseFirestore.instance
-            .collection('User')
-            .doc(userId)
-            .collection('GameProgress')
-            .doc(docId)
-            .set({
-          'timestamp': DateTime.now(),
+        final stateWithMetadata = {
+          'timestamp': DateTime.now().toIso8601String(),
+          'lastSaved': DateTime.now().toIso8601String(),
+          'version': '1.0',
           ...gameState
-        });
+        };
+
+        // Save locally first
+        await _saveLocalState(docId, stateWithMetadata);
+
+        // Then try Firebase if online
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult != ConnectivityResult.none) {
+          await _saveToFirebase(userId, docId, stateWithMetadata);
+        }
+      } finally {
+        _isSaving = false;
       }
+    });
+  }
+
+  Future<void> _saveLocalState(String docId, Map<String, dynamic> state) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('game_progress_$docId', jsonEncode(state));
+    print('🎮 Game saved locally');
+  }
+
+  Future<void> _saveToFirebase(String userId, String docId, Map<String, dynamic> state) async {
+    final batch = FirebaseFirestore.instance.batch();
+    final docRef = FirebaseFirestore.instance
+        .collection('User')
+        .doc(userId)
+        .collection('GameProgress')
+        .doc(docId);
+    
+    batch.set(docRef, state);
+    await batch.commit();
+    print('🎮 Game saved to Firebase');
+  }
+
+  // Helper method to validate game state
+  bool _validateGameState(Map<String, dynamic> gameState) {
+    try {
+      // Check required fields
+      if (!gameState.containsKey('currentQuestionIndex') || 
+          !gameState.containsKey('questions') ||
+          !gameState.containsKey('answeredQuestions')) {
+        return false;
+      }
+
+      // Validate currentQuestionIndex
+      final currentIndex = gameState['currentQuestionIndex'] as int;
+      final questions = gameState['questions'] as List;
+      if (currentIndex < 0 || currentIndex >= questions.length) {
+        return false;
+      }
+
+      // Validate answered questions
+      final answeredQuestions = gameState['answeredQuestions'] as List;
+      if (answeredQuestions.length > questions.length) {
+        return false;
+      }
+
+      return true;
     } catch (e) {
-      print('❌ Error saving game state: $e');
-      rethrow;
+      print('❌ Error validating game state: $e');
+      return false;
+    }
+  }
+
+  // Fallback save method
+  Future<void> _saveLocalOnly(String docId, Map<String, dynamic> gameState) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final stateWithMetadata = {
+        'timestamp': DateTime.now().toIso8601String(),
+        'lastSaved': DateTime.now().toIso8601String(),
+        'version': '1.0',
+        'offlineSave': true,
+        ...gameState
+      };
+      await prefs.setString('game_progress_$docId', jsonEncode(stateWithMetadata));
+      print('🎮 Game saved locally (fallback)');
+    } catch (e) {
+      print('❌ Error in fallback save: $e');
     }
   }
 
@@ -1170,13 +1242,24 @@ class AuthService {
       String? localGameState = prefs.getString('game_progress_$docId');
       
       if (localGameState != null) {
-        return jsonDecode(localGameState);
+        try {
+          Map<String, dynamic> state = jsonDecode(localGameState);
+          if (_validateGameState(state)) {
+            return state;
+          } else {
+            // If local state is invalid, delete it
+            await prefs.remove('game_progress_$docId');
+          }
+        } catch (e) {
+          print('❌ Error parsing local save: $e');
+          await prefs.remove('game_progress_$docId');
+        }
       }
 
       // If not in local storage and online, check Firebase
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot doc = await _firestore
+        DocumentSnapshot doc = await FirebaseFirestore.instance
             .collection('User')
             .doc(userId)
             .collection('GameProgress')
@@ -1184,7 +1267,15 @@ class AuthService {
             .get();
           
         if (doc.exists) {
-          return doc.data() as Map<String, dynamic>;
+          Map<String, dynamic> state = doc.data() as Map<String, dynamic>;
+          if (_validateGameState(state)) {
+            // Cache valid Firebase data locally
+            await prefs.setString('game_progress_$docId', jsonEncode(state));
+            return state;
+          } else {
+            // If Firebase state is invalid, delete it
+            await doc.reference.delete();
+          }
         }
       }
       

@@ -52,6 +52,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   String? _cachedAvatarPath;
 
+  final AvatarService _avatarService = AvatarService();
+
   @override
   void initState() {
     super.initState();
@@ -267,12 +269,11 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Future<String?> _getAvatarImage(int avatarId) async {
     try {
-      final avatars = await AvatarService().fetchAvatars();
-      final avatar = avatars.firstWhere(
-        (avatar) => avatar['id'] == avatarId,
-        orElse: () => {'img': 'Kladis.png'},
-      );
-      return avatar['img'];
+      final avatar = await _avatarService.getAvatarById(avatarId);
+      if (avatar != null) {
+        return avatar['img'];
+      }
+      return 'Kladis.png';
     } catch (e) {
       return 'Kladis.png';
     }
@@ -283,17 +284,18 @@ class HeaderWidgetState extends State<HeaderWidget> {
       future: _authService.getUserProfile(),
       builder: (context, profileSnapshot) {
         if (profileSnapshot.hasData && profileSnapshot.data != null) {
-          if (_currentAvatarId != null && _cachedAvatarPath == null) {
-            _getAvatarImage(_currentAvatarId!).then((path) {
-              if (mounted) {
-                setState(() {
-                  _cachedAvatarPath = path;
-                });
-              }
-            });
+          if (_currentAvatarId != profileSnapshot.data!.avatarId || _cachedAvatarPath == null) {
+            _currentAvatarId = profileSnapshot.data!.avatarId;
+            if (mounted) {
+              _getAvatarImage(_currentAvatarId!).then((path) {
+                if (mounted && path != _cachedAvatarPath) {
+                  setState(() {
+                    _cachedAvatarPath = path;
+                  });
+                }
+              });
+            }
           }
-
-          final avatarPath = _cachedAvatarPath;
 
           return PopupMenuButton<String>(
             color: const Color(0xFF241242),
@@ -383,18 +385,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
             child: CircleAvatar(
               radius: 24,
               backgroundColor: Colors.white,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  image: DecorationImage(
-                    image: AssetImage('assets/avatars/$avatarPath'),
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.none,
-                  ),
-                ),
-              ),
+              child: _cachedAvatarPath != null 
+                ? Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      image: DecorationImage(
+                        image: AssetImage('assets/avatars/$_cachedAvatarPath'),
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                  )
+                : const CircularProgressIndicator(),
             ),
           );
         }
@@ -550,7 +554,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       print('📢 No more badge notifications to show');
       _isShowingBadgeNotification = false;
       if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
-        print('��� Switching to banner notifications');
+        print(' Switching to banner notifications');
         _showNextBannerNotification();
       }
       return;

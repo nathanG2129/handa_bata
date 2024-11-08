@@ -11,7 +11,7 @@ import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 import 'package:handabatamae/services/auth_service.dart';
 
-class UserProfileHeader extends StatelessWidget {
+class UserProfileHeader extends StatefulWidget {
   final String username;
   final String nickname;
   final int avatarId;
@@ -41,16 +41,24 @@ class UserProfileHeader extends StatelessWidget {
     required this.badgeShowcase, // Add badgeShowcase to UserProfileHeader constructor
   });
 
+  @override
+  UserProfileHeaderState createState() => UserProfileHeaderState();
+}
+
+class UserProfileHeaderState extends State<UserProfileHeader> {
+  final AvatarService _avatarService = AvatarService();
+  String? _cachedAvatarPath;
+
   Future<void> _updateNickname(String newNickname, BuildContext dialogContext) async {
     try {
       final AuthService authService = AuthService();
       await authService.updateUserProfile('nickname', newNickname);
       // Call onUpdateProfile to refresh the UI
-      onUpdateProfile?.call(username, selectedLanguage);
+      widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
     } catch (e) {
-      if (onUpdateProfile == null) return;
+      if (widget.onUpdateProfile == null) return;
       ScaffoldMessenger.of(dialogContext).showSnackBar(
-        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', selectedLanguage)} $e')),
+        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', widget.selectedLanguage)} $e')),
       );
     }
   }
@@ -64,10 +72,10 @@ class UserProfileHeader extends StatelessWidget {
           builder: (BuildContext context) {
             return CharacterPage(
               selectionMode: true,
-              currentAvatarId: avatarId,
+              currentAvatarId: widget.avatarId,
               onAvatarSelected: (newAvatarId) async {
                 Navigator.of(context).pop();
-                onUpdateProfile?.call(username, selectedLanguage);
+                widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
               },
               onClose: () {
                 Navigator.of(context).pop();
@@ -82,8 +90,8 @@ class UserProfileHeader extends StatelessWidget {
           context: context,
           builder: (BuildContext dialogContext) {
             return ChangeNicknameDialog(
-              currentNickname: nickname,
-              selectedLanguage: selectedLanguage,
+              currentNickname: widget.nickname,
+              selectedLanguage: widget.selectedLanguage,
               onNicknameChanged: (newNickname) => _updateNickname(newNickname, dialogContext), // Pass context here
               darkenColor: (Color color, [double amount = 0.2]) {
                 final hsl = HSLColor.fromColor(color);
@@ -101,10 +109,10 @@ class UserProfileHeader extends StatelessWidget {
           builder: (BuildContext context) {
             return BannerPage(
               selectionMode: true,
-              currentBannerId: bannerId,
+              currentBannerId: widget.bannerId,
               onBannerSelected: (newBannerId) async {
                 Navigator.of(context).pop();
-                onUpdateProfile?.call(username, selectedLanguage);
+                widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
               },
               onClose: () {
                 Navigator.of(context).pop();
@@ -120,10 +128,10 @@ class UserProfileHeader extends StatelessWidget {
           builder: (BuildContext context) {
             return BadgePage(
               selectionMode: true,
-              currentBadgeShowcase: badgeShowcase,
+              currentBadgeShowcase: widget.badgeShowcase,
               onBadgesSelected: (newBadgeIds) async {
                 Navigator.of(context).pop();
-                onUpdateProfile?.call(username, selectedLanguage);
+                widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
               },
               onClose: () {
                 Navigator.of(context).pop();
@@ -137,14 +145,18 @@ class UserProfileHeader extends StatelessWidget {
 
   Future<String?> _getAvatarImage() async {
     try {
-      final avatars = await AvatarService().fetchAvatars();
-      final avatar = avatars.firstWhere(
-        (avatar) => avatar['id'] == avatarId,
-        orElse: () => {'img': 'Kladis.png'}, // Provide a default avatar
-      );
-      return avatar['img'];
+      final avatar = await _avatarService.getAvatarById(widget.avatarId);
+      if (avatar != null) {
+        if (mounted && avatar['img'] != _cachedAvatarPath) {
+          setState(() {
+            _cachedAvatarPath = avatar['img'];
+          });
+        }
+        return avatar['img'];
+      }
+      return 'Kladis.png';
     } catch (e) {
-      return 'Kladis.png'; // Return default avatar on error
+      return 'Kladis.png';
     }
   }
 
@@ -152,7 +164,7 @@ class UserProfileHeader extends StatelessWidget {
     try {
       final banners = await BannerService().fetchBanners();
       final banner = banners.firstWhere(
-        (banner) => banner['id'] == bannerId,
+        (banner) => banner['id'] == widget.bannerId,
         orElse: () => {'img': 'Level01.svg'}, // Provide a default banner
       );
       return banner['img'];
@@ -162,8 +174,17 @@ class UserProfileHeader extends StatelessWidget {
   }
 
   @override
+  void didUpdateWidget(UserProfileHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if avatar changed
+    if (oldWidget.avatarId != widget.avatarId) {
+      _getAvatarImage();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    double progressPercentage = maxExp > 0 ? currentExp / maxExp : 0;
+    double progressPercentage = widget.maxExp > 0 ? widget.currentExp / widget.maxExp : 0;
 
     return FutureBuilder<String?>(
       future: _getBannerImage(),
@@ -260,8 +281,8 @@ class UserProfileHeader extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              nickname,
-                              style: textStyle.copyWith(
+                              widget.nickname,
+                              style: widget.textStyle.copyWith(
                                 fontSize: ResponsiveValue<double>(
                                   context,
                                   defaultValue: 18, // Scale down font size
@@ -275,8 +296,8 @@ class UserProfileHeader extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '@$username',
-                              style: textStyle.copyWith(
+                              '@${widget.username}',
+                              style: widget.textStyle.copyWith(
                               fontSize: ResponsiveValue<double>(
                                 context,
                                 defaultValue: 12.8, // Scale down font size
@@ -311,8 +332,8 @@ class UserProfileHeader extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    '${PlayLocalization.translate('level', selectedLanguage)}: $level',
-                                    style: textStyle.copyWith(
+                                    '${PlayLocalization.translate('level', widget.selectedLanguage)}: ${widget.level}',
+                                    style: widget.textStyle.copyWith(
                                       fontSize: ResponsiveValue<double>(
                                         context,
                                         defaultValue: 12.8,
@@ -326,8 +347,8 @@ class UserProfileHeader extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    '$currentExp / $maxExp',
-                                    style: textStyle.copyWith(
+                                    '${widget.currentExp} / ${widget.maxExp}',
+                                    style: widget.textStyle.copyWith(
                                       fontSize: ResponsiveValue<double>(
                                         context,
                                         defaultValue: 12.8,
@@ -370,7 +391,7 @@ class UserProfileHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (showMenuIcon)
+                    if (widget.showMenuIcon)
                       Positioned(
                         top: -10,
                         right: 0,
@@ -404,7 +425,7 @@ class UserProfileHeader extends StatelessWidget {
                                 color: Colors.white,
                                 alignment: Alignment.center, // Center the text
                                 child: Text(
-                                  PlayLocalization.translate('changeAvatar', selectedLanguage),
+                                  PlayLocalization.translate('changeAvatar', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
                                 ),
                               ),
@@ -417,7 +438,7 @@ class UserProfileHeader extends StatelessWidget {
                                 color: Colors.white,
                                 alignment: Alignment.center, // Center the text
                                 child: Text(
-                                  PlayLocalization.translate('changeNickname', selectedLanguage),
+                                  PlayLocalization.translate('changeNickname', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
                                 ),
                               ),
@@ -430,7 +451,7 @@ class UserProfileHeader extends StatelessWidget {
                                 color: Colors.white,
                                 alignment: Alignment.center, // Center the text
                                 child: Text(
-                                  PlayLocalization.translate('changeBanner', selectedLanguage),
+                                  PlayLocalization.translate('changeBanner', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
                                 ),
                               ),
@@ -443,7 +464,7 @@ class UserProfileHeader extends StatelessWidget {
                                 color: Colors.white,
                                 alignment: Alignment.center, // Center the text
                                 child: Text(
-                                  PlayLocalization.translate('changeFavoriteBadges', selectedLanguage),
+                                  PlayLocalization.translate('changeFavoriteBadges', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
                                   textAlign: TextAlign.center, // Add textAlign center
                                 ),

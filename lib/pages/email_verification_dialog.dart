@@ -153,6 +153,27 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
     widget.onClose();
   }
 
+  Future<void> _verifyOTPWithRetry() async {
+    int attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        await _verifyOTP();
+        return;
+      } catch (e) {
+        attempts++;
+        if (attempts == maxAttempts) rethrow;
+        await Future.delayed(Duration(seconds: attempts));
+      }
+    }
+  }
+
+  Future<bool> _canResendOTP() async {
+    // Implement rate limiting logic
+    return _canResend;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(

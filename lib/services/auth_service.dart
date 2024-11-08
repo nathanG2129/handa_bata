@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -27,7 +28,13 @@ class AuthService {
   static const String GUEST_PROFILE_KEY = 'guest_profile';
   static const String GUEST_UID_KEY = 'guest_uid';
 
+  static const int MAX_CACHE_SIZE = 100;
+  static const String USER_CACHE_VERSION_KEY = 'user_cache_version';
+
   List<StreamSubscription> _subscriptions = [];
+
+  final Map<String, UserProfile> _userCache = {};
+  int _currentCacheVersion = 0;
 
   AuthService({this.defaultLanguage = 'en'}) {
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
@@ -377,17 +384,21 @@ class AuthService {
   Future<UserProfile?> getUserProfile() async {
     try {
       User? user = _auth.currentUser;
-      if (user == null) {
-        return UserProfile.guestProfile;
+      if (user == null) return UserProfile.guestProfile;
+
+      // Check memory cache first
+      if (_userCache.containsKey(user.uid)) {
+        return _userCache[user.uid];
       }
 
-      // Always check local storage first
+      // Then check local storage
       UserProfile? localProfile = await getLocalUserProfile();
       if (localProfile != null) {
+        _addToCache(user.uid, localProfile);
         return localProfile;
       }
 
-      // Only if no local profile, get from Firebase
+      // Finally check Firestore if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot profileDoc = await _firestore
@@ -397,21 +408,17 @@ class AuthService {
             .doc(user.uid)
             .get();
         
-        if (!profileDoc.exists) {
-          return UserProfile.guestProfile;
+        if (profileDoc.exists) {
+          UserProfile profile = UserProfile.fromMap(profileDoc.data() as Map<String, dynamic>);
+          _addToCache(user.uid, profile);
+          await saveUserProfileLocally(profile);
+          return profile;
         }
-
-        Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
-        UserProfile profile = UserProfile.fromMap(data);
-        
-        // Save to local storage
-        await saveUserProfileLocally(profile);
-        
-        return profile;
       }
       
       return UserProfile.guestProfile;
     } catch (e) {
+      print('Error getting user profile: $e');
       return UserProfile.guestProfile;
     }
   }
@@ -1241,5 +1248,473 @@ class AuthService {
       print('❌ Error retrieving game state: $e');
       return null;
     }
+  }
+
+  Future<void> _initializeCache() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _currentCacheVersion = prefs.getInt(USER_CACHE_VERSION_KEY) ?? 0;
+  }
+
+  void _addToCache(String userId, UserProfile profile) {
+    // Remove oldest entries if cache is full
+    if (_userCache.length >= MAX_CACHE_SIZE) {
+      final keysToRemove = _userCache.keys.take(_userCache.length - MAX_CACHE_SIZE + 1);
+      for (var key in keysToRemove) {
+        _userCache.remove(key);
+      }
+    }
+    _userCache[userId] = profile;
+  }
+
+  Future<void> clearCache() async {
+    _userCache.clear();
+    _currentCacheVersion++;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(USER_CACHE_VERSION_KEY, _currentCacheVersion);
+  }
+
+  Future<void> _verifyUserDataIntegrity() async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      // Get local and server profiles
+      UserProfile? localProfile = await getLocalUserProfile();
+      DocumentSnapshot serverDoc = await _firestore
+          .collection('User')
+          .doc(currentUser.uid)
+          .collection('ProfileData')
+          .doc(currentUser.uid)
+          .get();
+
+      if (!serverDoc.exists || localProfile == null) return;
+
+      Map<String, dynamic> serverData = serverDoc.data() as Map<String, dynamic>;
+      UserProfile serverProfile = UserProfile.fromMap(serverData);
+
+      // Check for data inconsistencies
+      bool needsRepair = false;
+      
+      // Compare critical fields
+      if (localProfile.level != serverProfile.level ||
+          localProfile.exp != serverProfile.exp ||
+          !listEquals(localProfile.unlockedBadge, serverProfile.unlockedBadge) ||
+          !listEquals(localProfile.unlockedBanner, serverProfile.unlockedBanner)) {
+        needsRepair = true;
+      }
+
+      if (needsRepair) {
+        // Use server data as source of truth
+        await saveUserProfileLocally(serverProfile);
+        _addToCache(currentUser.uid, serverProfile);
+      }
+    } catch (e) {
+      print('Error during data integrity check: $e');
+    }
+  }
+
+  Future<void> batchUpdateUserProfiles(List<UserProfile> profiles) async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        throw Exception('No internet connection');
+      }
+
+      WriteBatch batch = _firestore.batch();
+      
+      for (var profile in profiles) {
+        // Update Firestore
+        DocumentReference docRef = _firestore
+            .collection('User')
+            .doc(profile.profileId)
+            .collection('ProfileData')
+            .doc(profile.profileId);
+          
+        batch.set(docRef, profile.toMap());
+        
+        // Update cache
+        _addToCache(profile.profileId, profile);
+        
+        // Update local storage
+        await saveUserProfileLocally(profile);
+      }
+
+      // Commit batch
+      await _executeBatchWithRetry(batch);
+    } catch (e) {
+      print('Error in batch update: $e');
+      rethrow;
+    }
+  }
+
+  Future<UserProfile> createOfflineGuestProfile() async {
+    // Generate temporary local ID
+    final tempId = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    
+    // Get the number of banners and badges from local cache
+    final banners = await _bannerService.getLocalBanners();
+    final badges = await _badgeService.getLocalBadges();
+    
+    // Create guest profile
+    final guestProfile = UserProfile(
+      profileId: tempId,
+      username: 'Guest',
+      nickname: _generateRandomNickname(),
+      avatarId: 0,
+      badgeShowcase: [-1, -1, -1],
+      bannerId: 0,
+      exp: 0,
+      expCap: 100,
+      hasShownCongrats: false,
+      level: 1,
+      totalBadgeUnlocked: 0,
+      totalStageCleared: 0,
+      unlockedBadge: List<int>.filled(badges.length, 0),
+      unlockedBanner: List<int>.filled(banners.length, 0),
+      email: '',
+      birthday: '',
+    );
+
+    // Save locally
+    await saveGuestProfileLocally(guestProfile);
+    
+    // Queue for sync when online
+    await _queueForSync(tempId);
+    
+    return guestProfile;
+  }
+
+  Future<void> _queueForSync(String tempId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> pendingSync = prefs.getStringList('pending_guest_sync') ?? [];
+    pendingSync.add(tempId);
+    await prefs.setStringList('pending_guest_sync', pendingSync);
+  }
+
+  Future<void> syncOfflineGuests() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> pendingSync = prefs.getStringList('pending_guest_sync') ?? [];
+      
+      for (String tempId in pendingSync) {
+        // Create Firebase anonymous auth
+        UserCredential userCredential = await _auth.signInAnonymously();
+        User? user = userCredential.user;
+        
+        if (user != null) {
+          // Get the offline profile using the tempId
+          UserProfile? offlineProfile = await _getProfileByTempId(tempId);
+          if (offlineProfile != null) {
+            // Create new profile with Firebase UID but keep all other data
+            UserProfile newProfile = offlineProfile.copyWith(
+              profileId: user.uid,
+            );
+            
+            // Save to Firestore
+            await _firestore
+                .collection('User')
+                .doc(user.uid)
+                .collection('ProfileData')
+                .doc(user.uid)
+                .set(newProfile.toMap());
+            
+            // Save user document
+            await _firestore.collection('User').doc(user.uid).set({
+              'email': 'guest@example.com',
+              'role': 'guest',
+            });
+            
+            // Update local storage with new profile
+            await saveGuestProfileLocally(newProfile);
+          }
+        }
+      }
+      
+      // Clear pending sync
+      await prefs.setStringList('pending_guest_sync', []);
+    } catch (e) {
+      print('Error syncing offline guests: $e');
+    }
+  }
+
+  // Add helper method to get profile by tempId
+  Future<UserProfile?> _getProfileByTempId(String tempId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? profileJson = prefs.getString('${GUEST_PROFILE_KEY}_$tempId');
+      if (profileJson != null) {
+        Map<String, dynamic> profileMap = jsonDecode(profileJson);
+        return UserProfile.fromMap(profileMap);
+      }
+    } catch (e) {
+      print('Error getting profile by tempId: $e');
+    }
+    return null;
+  }
+
+  Future<void> resolveProfileConflicts(String tempId, String firebaseUid) async {
+    try {
+      // Get both profiles
+      UserProfile? offlineProfile = await _getProfileByTempId(tempId);
+      DocumentSnapshot onlineDoc = await _firestore
+          .collection('User')
+          .doc(firebaseUid)
+          .collection('ProfileData')
+          .doc(firebaseUid)
+          .get();
+
+      if (offlineProfile == null) return;
+
+      // Merge profiles, preferring higher values
+      UserProfile mergedProfile = UserProfile(
+        profileId: firebaseUid,
+        username: offlineProfile.username,
+        nickname: offlineProfile.nickname,
+        avatarId: offlineProfile.avatarId,
+        badgeShowcase: offlineProfile.badgeShowcase,
+        bannerId: offlineProfile.bannerId,
+        exp: onlineDoc.exists ? 
+            max((onlineDoc.data() as Map<String, dynamic>)['exp'] ?? 0, offlineProfile.exp) : 
+            offlineProfile.exp,
+        expCap: offlineProfile.expCap,
+        hasShownCongrats: offlineProfile.hasShownCongrats,
+        level: onlineDoc.exists ? 
+            max((onlineDoc.data() as Map<String, dynamic>)['level'] ?? 1, offlineProfile.level) : 
+            offlineProfile.level,
+        totalBadgeUnlocked: onlineDoc.exists ? 
+            max((onlineDoc.data() as Map<String, dynamic>)['totalBadgeUnlocked'] ?? 0, offlineProfile.totalBadgeUnlocked) : 
+            offlineProfile.totalBadgeUnlocked,
+        totalStageCleared: onlineDoc.exists ? 
+            max((onlineDoc.data() as Map<String, dynamic>)['totalStageCleared'] ?? 0, offlineProfile.totalStageCleared) : 
+            offlineProfile.totalStageCleared,
+        unlockedBadge: _mergeUnlockArrays(
+          offlineProfile.unlockedBadge,
+          onlineDoc.exists ? List<int>.from((onlineDoc.data() as Map<String, dynamic>)['unlockedBadge'] ?? []) : []
+        ),
+        unlockedBanner: _mergeUnlockArrays(
+          offlineProfile.unlockedBanner,
+          onlineDoc.exists ? List<int>.from((onlineDoc.data() as Map<String, dynamic>)['unlockedBanner'] ?? []) : []
+        ),
+        email: 'guest@example.com',
+        birthday: offlineProfile.birthday,
+      );
+
+      // Save merged profile
+      await _firestore
+          .collection('User')
+          .doc(firebaseUid)
+          .collection('ProfileData')
+          .doc(firebaseUid)
+          .set(mergedProfile.toMap());
+
+      await saveUserProfileLocally(mergedProfile);
+    } catch (e) {
+      print('Error resolving profile conflicts: $e');
+      // Keep offline data as backup
+      await _backupOfflineData(tempId);
+    }
+  }
+
+  List<int> _mergeUnlockArrays(List<int> offline, List<int> online) {
+    if (offline.isEmpty) return online;
+    if (online.isEmpty) return offline;
+    return List<int>.generate(
+      max(offline.length, online.length),
+      (i) => i < offline.length && i < online.length ? 
+          (offline[i] | online[i]) : // Bitwise OR to keep unlocks from both
+          (i < offline.length ? offline[i] : online[i])
+    );
+  }
+
+  Future<void> _backupOfflineData(String tempId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String backupKey = 'backup_${tempId}_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Backup profile
+      String? profileJson = prefs.getString('${GUEST_PROFILE_KEY}_$tempId');
+      if (profileJson != null) {
+        await prefs.setString(backupKey, profileJson);
+      }
+
+      // Backup game progress
+      Map<String, dynamic> gameProgress = await _getAllGameProgress(tempId);
+      if (gameProgress.isNotEmpty) {
+        await prefs.setString('${backupKey}_progress', jsonEncode(gameProgress));
+      }
+
+      print('Backup created with key: $backupKey');
+    } catch (e) {
+      print('Error creating backup: $e');
+    }
+  }
+
+  Future<bool> _restoreFromBackup(String backupKey) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Restore profile
+      String? profileBackup = prefs.getString(backupKey);
+      if (profileBackup != null) {
+        UserProfile profile = UserProfile.fromMap(jsonDecode(profileBackup));
+        await saveUserProfileLocally(profile);
+      }
+
+      // Restore game progress
+      String? progressBackup = prefs.getString('${backupKey}_progress');
+      if (progressBackup != null) {
+        Map<String, dynamic> progress = jsonDecode(progressBackup);
+        await _restoreGameProgress(progress);
+      }
+
+      return true;
+    } catch (e) {
+      print('Error restoring from backup: $e');
+      return false;
+    }
+  }
+
+  Future<void> retryFailedSync(String tempId) async {
+    int attempts = 0;
+    const maxAttempts = 3;
+    const baseDelay = Duration(seconds: 2);
+
+    while (attempts < maxAttempts) {
+      try {
+        // Create backup before attempting sync
+        await _backupOfflineData(tempId);
+        
+        // Attempt sync
+        await syncOfflineGuests();
+        return;
+      } catch (e) {
+        attempts++;
+        print('Sync attempt $attempts failed: $e');
+        
+        if (attempts == maxAttempts) {
+          // Final attempt failed, restore from backup
+          final backupKey = 'backup_${tempId}_${DateTime.now().millisecondsSinceEpoch}';
+          await _restoreFromBackup(backupKey);
+          rethrow;
+        }
+        
+        // Exponential backoff
+        await Future.delayed(baseDelay * pow(2, attempts));
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> _getAllGameProgress(String tempId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      Map<String, dynamic> allProgress = {};
+      
+      // Get all keys related to game progress
+      final progressKeys = prefs.getKeys()
+          .where((key) => key.startsWith('game_progress_'));
+      
+      for (String key in progressKeys) {
+        String? progressJson = prefs.getString(key);
+        if (progressJson != null) {
+          allProgress[key] = jsonDecode(progressJson);
+        }
+      }
+      
+      return allProgress;
+    } catch (e) {
+      print('Error getting all game progress: $e');
+      return {};
+    }
+  }
+
+  Future<void> _restoreGameProgress(Map<String, dynamic> progress) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      for (var entry in progress.entries) {
+        await prefs.setString(entry.key, jsonEncode(entry.value));
+      }
+    } catch (e) {
+      print('Error restoring game progress: $e');
+    }
+  }
+}
+
+class SyncManager {
+  static final Map<String, bool> _syncInProgress = {};
+  static final Map<String, DateTime> _lastSyncAttempt = {};
+  static const Duration _minSyncInterval = Duration(minutes: 5);
+  static final AuthService _authService = AuthService();
+
+  static Future<void> handleSync(String tempId, Future<void> Function() syncOperation) async {
+    // Check if sync is already in progress
+    if (_syncInProgress[tempId] == true) {
+      print('Sync already in progress for $tempId');
+      return;
+    }
+
+    // Check if we're respecting the minimum sync interval
+    final lastAttempt = _lastSyncAttempt[tempId];
+    if (lastAttempt != null && 
+        DateTime.now().difference(lastAttempt) < _minSyncInterval) {
+      print('Too soon to retry sync for $tempId');
+      return;
+    }
+
+    try {
+      _syncInProgress[tempId] = true;
+      _lastSyncAttempt[tempId] = DateTime.now();
+
+      // Create backup using AuthService instance
+      await _authService._backupOfflineData(tempId);
+
+      // Perform sync
+      await syncOperation();
+
+      _syncInProgress[tempId] = false;
+    } catch (e) {
+      _syncInProgress[tempId] = false;
+      print('Error during sync: $e');
+      
+      // Attempt recovery using AuthService instance
+      await _authService.retryFailedSync(tempId);
+    }
+  }
+}
+
+class NetworkStateHandler {
+  static final StreamController<ConnectivityResult> _connectivityController = 
+      StreamController<ConnectivityResult>.broadcast();
+  
+  static Future<void> initialize() async {
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      _connectivityController.add(result);
+      _handleConnectivityChange(result);
+    });
+  }
+
+  static Future<void> _handleConnectivityChange(ConnectivityResult result) async {
+    if (result != ConnectivityResult.none) {
+      // Get all pending syncs
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> pendingSync = prefs.getStringList('pending_guest_sync') ?? [];
+
+      // Handle each sync with proper management
+      for (String tempId in pendingSync) {
+        await SyncManager.handleSync(tempId, () async {
+          await AuthService().syncOfflineGuests();
+        });
+      }
+    }
+  }
+
+  static void dispose() {
+    _connectivityController.close();
   }
 }

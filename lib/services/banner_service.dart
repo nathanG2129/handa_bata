@@ -363,4 +363,8 @@ class BannerService {
       return 0; // Start with 0 in case of error
     }
   }
+
+  Future<List<Map<String, dynamic>>> getLocalBanners() async {
+    return _getBannersFromLocal();
+  }
 }

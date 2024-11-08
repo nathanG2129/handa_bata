@@ -97,11 +97,63 @@ class UserProfile {
     birthday: '2000-01-01',
   );
 
-  UserProfile copyWith({Map<String, dynamic>? updates}) {
-    Map<String, dynamic> currentMap = toMap();
+  UserProfile copyWith({
+    String? profileId,
+    String? username,
+    String? nickname,
+    int? avatarId,
+    List<int>? badgeShowcase,
+    int? bannerId,
+    int? exp,
+    int? expCap,
+    bool? hasShownCongrats,
+    int? level,
+    int? totalBadgeUnlocked,
+    int? totalStageCleared,
+    List<int>? unlockedBadge,
+    List<int>? unlockedBanner,
+    String? email,
+    String? birthday,
+    Map<String, dynamic>? updates,
+  }) {
     if (updates != null) {
-      currentMap.addAll(updates);
+      return UserProfile(
+        profileId: updates['profileId'] ?? this.profileId,
+        username: updates['username'] ?? this.username,
+        nickname: updates['nickname'] ?? this.nickname,
+        avatarId: updates['avatarId'] ?? this.avatarId,
+        badgeShowcase: updates['badgeShowcase'] ?? this.badgeShowcase,
+        bannerId: updates['bannerId'] ?? this.bannerId,
+        exp: updates['exp'] ?? this.exp,
+        expCap: updates['expCap'] ?? this.expCap,
+        hasShownCongrats: updates['hasShownCongrats'] ?? this.hasShownCongrats,
+        level: updates['level'] ?? this.level,
+        totalBadgeUnlocked: updates['totalBadgeUnlocked'] ?? this.totalBadgeUnlocked,
+        totalStageCleared: updates['totalStageCleared'] ?? this.totalStageCleared,
+        unlockedBadge: updates['unlockedBadge'] ?? this.unlockedBadge,
+        unlockedBanner: updates['unlockedBanner'] ?? this.unlockedBanner,
+        email: updates['email'] ?? this.email,
+        birthday: updates['birthday'] ?? this.birthday,
+      );
     }
-    return UserProfile.fromMap(currentMap);
+
+    return UserProfile(
+      profileId: profileId ?? this.profileId,
+      username: username ?? this.username,
+      nickname: nickname ?? this.nickname,
+      avatarId: avatarId ?? this.avatarId,
+      badgeShowcase: badgeShowcase ?? this.badgeShowcase,
+      bannerId: bannerId ?? this.bannerId,
+      exp: exp ?? this.exp,
+      expCap: expCap ?? this.expCap,
+      hasShownCongrats: hasShownCongrats ?? this.hasShownCongrats,
+      level: level ?? this.level,
+      totalBadgeUnlocked: totalBadgeUnlocked ?? this.totalBadgeUnlocked,
+      totalStageCleared: totalStageCleared ?? this.totalStageCleared,
+      unlockedBadge: unlockedBadge ?? this.unlockedBadge,
+      unlockedBanner: unlockedBanner ?? this.unlockedBanner,
+      email: email ?? this.email,
+      birthday: birthday ?? this.birthday,
+    );
   }
 }

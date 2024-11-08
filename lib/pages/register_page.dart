@@ -39,6 +39,8 @@ class RegistrationPageState extends State<RegistrationPage> {
 
   String _selectedLanguage = 'en'; // Add language selection
 
+  bool _isRegistering = false; // Add state variable
+
   @override
   void initState() {
     super.initState();
@@ -48,14 +50,15 @@ class RegistrationPageState extends State<RegistrationPage> {
   void _register() async {
     setState(() {
       _showPrivacyPolicyError = !_isPrivacyPolicyAccepted;
+      _isRegistering = true;
     });
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
       try {
-        // Check if username is taken
         bool isUsernameTaken = await AuthService().isUsernameTaken(_usernameController.text);
         
         if (isUsernameTaken) {
+          setState(() => _isRegistering = false);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -73,17 +76,17 @@ class RegistrationPageState extends State<RegistrationPage> {
         String? role = await AuthService().getUserRole(FirebaseAuth.instance.currentUser?.uid ?? '');
         
         if (role == 'guest') {
-          // For guest conversion
           await AuthService().convertGuestToUser(
             _emailController.text,
             _passwordController.text,
             _usernameController.text,
-            '', // Empty nickname will trigger random generation
+            '',
             _birthdayController.text,
           );
         }
 
-        // Show email verification dialog only if username is unique
+        setState(() => _isRegistering = false);
+        
         if (mounted) {
           showDialog(
             context: context,
@@ -99,18 +102,18 @@ class RegistrationPageState extends State<RegistrationPage> {
           );
         }
       } catch (e) {
+        setState(() => _isRegistering = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Error: $e',
-                style: const TextStyle(color: Colors.white),
-              ),
+              content: Text('Error: $e'),
               backgroundColor: Colors.red,
             ),
           );
         }
       }
+    } else {
+      setState(() => _isRegistering = false);
     }
   }
 
@@ -118,6 +121,31 @@ class RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       _selectedLanguage = language;
     });
+  }
+
+  Future<bool> _validateRegistrationData() async {
+    if (!_formKey.currentState!.validate()) return false;
+    if (!_isPrivacyPolicyAccepted) {
+      setState(() => _showPrivacyPolicyError = true);
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> _checkRateLimit() async {
+    // Implement rate limiting logic
+    return true;
+  }
+
+  void _handleRegistrationError(dynamic error) {
+    setState(() => _isRegistering = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Registration error: $error')),
+    );
+  }
+
+  void _cleanupFailedRegistration() {
+    setState(() => _isRegistering = false);
   }
 
   @override
@@ -352,6 +380,13 @@ class RegistrationPageState extends State<RegistrationPage> {
                     },
                   ),
                 ),
+                if (_isRegistering)
+                  Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
               ],
             ),
           ),

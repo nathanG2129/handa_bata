@@ -112,24 +112,43 @@ export const verifyOTP = onCall({
   region: 'asia-southeast1',
   maxInstances: 10
 }, async (request) => {
-  const { email, otp } = request.data;
-  
-  const otpDoc = await db.collection('otps').doc(email).get();
-  if (!otpDoc.exists) {
-    throw new HttpsError('not-found', 'Invalid OTP');
-  }
+  try {
+    // Add rate limiting
+    const rateLimitDoc = await db.collection('rateLimits')
+      .doc(request.data.email).get();
+    
+    if (rateLimitDoc.exists) {
+      const { attempts, lastAttempt } = rateLimitDoc.data()!;
+      if (attempts >= 5 && 
+          Date.now() - lastAttempt < 15 * 60 * 1000) {
+        throw new HttpsError('resource-exhausted', 
+          'Too many attempts. Try again later.');
+      }
+    }
 
-  const otpData = otpDoc.data();
-  if (!otpData) {
-    throw new HttpsError('not-found', 'Invalid OTP');
-  }
+    const { email, otp } = request.data;
+    
+    const otpDoc = await db.collection('otps').doc(email).get();
+    if (!otpDoc.exists) {
+      throw new HttpsError('not-found', 'Invalid OTP');
+    }
 
-  if (otpData.otp !== otp || Date.now() > otpData.expiresAt) {
-    throw new HttpsError('invalid-argument', 'Invalid or expired OTP');
-  }
+    const otpData = otpDoc.data();
+    if (!otpData) {
+      throw new HttpsError('not-found', 'Invalid OTP');
+    }
 
-  // Delete the OTP document after successful verification
-  await otpDoc.ref.delete();
-  
-  return { success: true };
+    if (otpData.otp !== otp || Date.now() > otpData.expiresAt) {
+      throw new HttpsError('invalid-argument', 'Invalid or expired OTP');
+    }
+
+    // Delete the OTP document after successful verification
+    await otpDoc.ref.delete();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    throw new HttpsError('internal', 
+      'Error verifying OTP. Please try again.');
+  }
 });

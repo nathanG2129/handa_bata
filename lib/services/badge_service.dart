@@ -389,4 +389,8 @@ class BadgeService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(BADGES_CACHE_KEY);
   }
+
+  Future<List<Map<String, dynamic>>> getLocalBadges() async {
+    return _getBadgesFromLocal();
+  }
 }

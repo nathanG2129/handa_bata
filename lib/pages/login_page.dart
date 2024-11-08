@@ -25,6 +25,8 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   String _selectedLanguage = 'en'; // Add language selection
+  int _loginAttempts = 0;
+  DateTime? _lastLoginAttempt;
 
     @override
   void initState() {
@@ -33,7 +35,27 @@ class LoginPageState extends State<LoginPage> {
 
   }
 
-  void _login() async {
+  bool _isRateLimited() {
+    if (_loginAttempts >= 5) {
+      final now = DateTime.now();
+      if (_lastLoginAttempt != null && 
+          now.difference(_lastLoginAttempt!) < const Duration(minutes: 15)) {
+        return true;
+      }
+      _loginAttempts = 0;
+    }
+    return false;
+  }
+
+  Future<void> _login() async {
+    if (_isRateLimited()) {
+      _showRateLimitError();
+      return;
+    }
+
+    setState(() => _loginAttempts++);
+    _lastLoginAttempt = DateTime.now();
+    
     if (_formKey.currentState!.validate()) {
       final username = _usernameController.text;
       final password = _passwordController.text;
@@ -77,6 +99,15 @@ class LoginPageState extends State<LoginPage> {
     setState(() {
       _selectedLanguage = language;
     });
+  }
+
+  void _showRateLimitError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Too many login attempts. Please try again in 15 minutes.'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override

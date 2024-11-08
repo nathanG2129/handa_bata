@@ -54,11 +54,24 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   final AvatarService _avatarService = AvatarService();
 
+  // Add mutex for notifications
+  bool _isProcessingNotification = false;
+
+  Timer? _notificationTimer;
+
   @override
   void initState() {
     super.initState();
     _checkForUnlockedBanners();
     _checkForUnlockedBadges();
+    
+    // Check for notifications periodically
+    _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
+        _showNextNotification();
+      }
+    });
+    
     _authService.getUserProfile().then((profile) {
       if (mounted && profile != null) {
         setState(() {
@@ -93,6 +106,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   @override
   void dispose() {
+    _notificationTimer?.cancel();
     _avatarSubscription.cancel();
     _removeOverlay();
     super.dispose();
@@ -164,19 +178,15 @@ class HeaderWidgetState extends State<HeaderWidget> {
           bannerTitle: bannerTitle,
           onDismiss: () {
             _removeOverlay();
-            // Reset the showing state and show next notification
             _isShowingBannerNotification = false;
-            // Show next notification after current one is dismissed
             Future.delayed(const Duration(milliseconds: 300), () {
               _showNextBannerNotification();
             });
           },
           onViewBanner: () {
             _removeOverlay();
-            // Reset the showing state before showing banners
             _isShowingBannerNotification = false;
             _showBanners();
-            // Show next notification after a delay
             Future.delayed(const Duration(milliseconds: 300), () {
               _showNextBannerNotification();
             });
@@ -509,39 +519,54 @@ class HeaderWidgetState extends State<HeaderWidget> {
     }
   }
 
-  void _showBadgeUnlockNotification(int badgeId) async {
-    print('🎯 Showing badge unlock notification for ID: $badgeId');
+  Future<void> _showBadgeUnlockNotification(int badgeId, {int retryCount = 0}) async {
     try {
-      final badges = await _badgeService.fetchBadges();
-      final badge = badges.firstWhere((b) => b['id'] == badgeId);
-      print('🎯 Found badge: ${badge['title']}');
-      
-      _overlayEntry = OverlayEntry(
-        builder: (context) => Positioned(
-          width: MediaQuery.of(context).size.width,
-          child: BadgeUnlockNotification(
-            badgeTitle: badge['title'],
-            onDismiss: () {
-              _overlayEntry?.remove();
-              _overlayEntry = null;
-              _isShowingBadgeNotification = false;
-              _showNextBadgeNotification();
-            },
-            onViewBadge: () {
-              _overlayEntry?.remove();
-              _overlayEntry = null;
-              _showBadges();
-              _isShowingBadgeNotification = false;
-              _showNextBadgeNotification();
-            },
+      final badge = await _badgeService.getBadgeById(badgeId);
+      if (badge != null) {
+        _overlayEntry = OverlayEntry(
+          builder: (context) => Positioned(
+            width: MediaQuery.of(context).size.width,
+            child: BadgeUnlockNotification(
+              badgeTitle: badge['title'],
+              onDismiss: () {
+                _overlayEntry?.remove();
+                _overlayEntry = null;
+                _isShowingBadgeNotification = false;
+                _showNextBadgeNotification();
+              },
+              onViewBadge: () {
+                _overlayEntry?.remove();
+                _overlayEntry = null;
+                _showBadges();
+                _isShowingBadgeNotification = false;
+                _showNextBadgeNotification();
+              },
+              onRetry: retryCount < 3 ? () {
+                _showBadgeUnlockNotification(badgeId, retryCount: retryCount + 1);
+              } : null,
+            ),
           ),
-        ),
-      );
+        );
 
-      Overlay.of(context).insert(_overlayEntry!);
-      _isShowingBadgeNotification = true;
+        Overlay.of(context).insert(_overlayEntry!);
+        _isShowingBadgeNotification = true;
+      } else {
+        // Handle missing badge data
+        print('Badge data not found for ID: $badgeId');
+        _isShowingBadgeNotification = false;
+        _showNextBadgeNotification();
+      }
     } catch (e) {
-      print('🎯 Error showing badge notification: $e');
+      print('Error showing badge notification: $e');
+      if (retryCount < 3) {
+        // Retry after delay
+        await Future.delayed(Duration(seconds: retryCount + 1));
+        _showBadgeUnlockNotification(badgeId, retryCount: retryCount + 1);
+      } else {
+        // Give up after 3 retries
+        _isShowingBadgeNotification = false;
+        _showNextBadgeNotification();
+      }
     }
   }
 
@@ -566,6 +591,26 @@ class HeaderWidgetState extends State<HeaderWidget> {
       _showBadgeUnlockNotification(nextBadgeId);
     } else {
       print('📢 Skipping notification - already showing something');
+    }
+  }
+
+  Future<void> _showNextNotification() async {
+    if (_isProcessingNotification) return;
+    
+    try {
+      _isProcessingNotification = true;
+      
+      if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
+        if (_pendingBadgeNotifications.isNotEmpty) {
+          int nextBadgeId = _pendingBadgeNotifications.removeFirst();
+          await _showBadgeUnlockNotification(nextBadgeId);
+        } else if (_pendingBannerNotifications.isNotEmpty) {
+          String nextBannerTitle = _pendingBannerNotifications.removeFirst();
+          _showBannerUnlockNotification(nextBannerTitle);
+        }
+      }
+    } finally {
+      _isProcessingNotification = false;
     }
   }
 

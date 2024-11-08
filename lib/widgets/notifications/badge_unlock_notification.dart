@@ -5,20 +5,23 @@ class BadgeUnlockNotification extends StatefulWidget {
   final String badgeTitle;
   final VoidCallback onDismiss;
   final VoidCallback onViewBadge;
+  final VoidCallback? onRetry;
 
   const BadgeUnlockNotification({
     super.key,
     required this.badgeTitle,
     required this.onDismiss,
     required this.onViewBadge,
+    this.onRetry,
   });
 
   @override
   State<BadgeUnlockNotification> createState() => _BadgeUnlockNotificationState();
 }
 
-class _BadgeUnlockNotificationState extends State<BadgeUnlockNotification>
-    with SingleTickerProviderStateMixin {
+class _BadgeUnlockNotificationState extends State<BadgeUnlockNotification> with SingleTickerProviderStateMixin {
+  bool _isLoading = true;
+  bool _hasError = false;
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -34,6 +37,7 @@ class _BadgeUnlockNotificationState extends State<BadgeUnlockNotification>
       curve: Curves.easeOut,
     );
     _controller.forward();
+    _loadBadgeData();
 
     // Auto-dismiss after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
@@ -41,6 +45,27 @@ class _BadgeUnlockNotificationState extends State<BadgeUnlockNotification>
         _dismissNotification();
       }
     });
+  }
+
+  Future<void> _loadBadgeData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      // Simulate loading (replace with actual data loading if needed)
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+    }
   }
 
   Future<void> _dismissNotification() async {
@@ -70,59 +95,92 @@ class _BadgeUnlockNotificationState extends State<BadgeUnlockNotification>
                   begin: const Offset(0, -1),
                   end: Offset.zero,
                 ).animate(_animation),
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  constraints: const BoxConstraints(
-                    maxWidth: 400,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3A1A5F),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFF1B33A), width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: widget.onViewBadge,
-                      borderRadius: BorderRadius.circular(0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.military_tech,
-                              color: Color(0xFFF1B33A),
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'New Badge Unlocked: ${widget.badgeTitle}!',
-                                style: GoogleFonts.vt323(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.white),
-                              onPressed: _dismissNotification,
-                            ),
-                          ],
-                        ),
-                      ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _hasError
+                        ? _buildErrorState()
+                        : _buildNotificationContent(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3A1A5F),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red, width: 1),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 8),
+          const Text('Failed to load badge', style: TextStyle(color: Colors.white)),
+          if (widget.onRetry != null)
+            TextButton(
+              onPressed: () {
+                _loadBadgeData();
+                widget.onRetry?.call();
+              },
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationContent() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3A1A5F),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF1B33A), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onViewBadge,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.military_tech,
+                  color: Color(0xFFF1B33A),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'New Badge Unlocked: ${widget.badgeTitle}!',
+                    style: GoogleFonts.vt323(
+                      color: Colors.white,
+                      fontSize: 18,
                     ),
                   ),
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: _dismissNotification,
+                ),
+              ],
             ),
           ),
         ),

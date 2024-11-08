@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/models/user_model.dart';
@@ -45,6 +46,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   final AuthService _authService = AuthService();
   final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
   final BadgeService _badgeService = BadgeService();
+  late StreamSubscription<List<Map<String, dynamic>>> _badgeSubscription;
 
   @override
   void initState() {
@@ -67,6 +69,15 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           .where((id) => id != -1)
           .toList();
     }
+
+    // Listen to badge updates
+    _badgeSubscription = _badgeService.badgeUpdates.listen((badges) {
+      if (mounted) {
+        setState(() {
+          // Update UI when badges change
+        });
+      }
+    });
   }
 
   @override
@@ -74,6 +85,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     _animationController.dispose();
     _filterNotifier.dispose();
     _selectedBadgesNotifier.dispose();
+    _badgeSubscription.cancel();
     super.dispose();
   }
 
@@ -215,105 +227,42 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       builder: (context, currentFilter, _) {
         var filteredBadges = _filterBadges(badges, currentFilter, unlockedBadges);
         
-        final visibleBadges = widget.selectionMode
-            ? filteredBadges.where((badge) {
-                final index = badges.indexOf(badge);
-                return unlockedBadges[index] == 1;
-              }).toList()
-            : filteredBadges;
-
-        return Container(
-          padding: EdgeInsets.all(
-            ResponsiveValue<double>(
+        return GridView.builder(
+          padding: const EdgeInsets.all(2.0),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: ResponsiveValue<int>(
               context,
-              defaultValue: 20.0,
+              defaultValue: 2,
               conditionalValues: [
-                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                const Condition.largerThan(name: MOBILE, value: 24.0),
+                const Condition.largerThan(name: TABLET, value: 4),
               ],
             ).value,
+            crossAxisSpacing: 0.0,
+            mainAxisSpacing: 20.0,
           ),
-          child: GridView.builder(
-            padding: const EdgeInsets.all(2.0),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: ResponsiveValue<int>(
-                context,
-                defaultValue: 2,
-                conditionalValues: [
-                  const Condition.largerThan(name: TABLET, value: 4),
-                ],
-              ).value,
-              crossAxisSpacing: 0.0,
-              mainAxisSpacing: 20.0,
-            ),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: visibleBadges.length,
-            itemBuilder: (context, index) {
-              final badge = visibleBadges[index];
-              final originalIndex = badges.indexOf(badge);
-              final isUnlocked = unlockedBadges[originalIndex] == 1;
-
-              return ValueListenableBuilder<List<int>>(
-                valueListenable: _selectedBadgesNotifier,
-                builder: (context, selectedBadges, _) {
-                  final isSelected = selectedBadges.contains(badge['id']);
-                  
-                  return Opacity(
-                    opacity: widget.selectionMode ? (isUnlocked ? 1.0 : 0.5) : (isUnlocked ? 1.0 : 0.5),
-                    child: GestureDetector(
-                      onTap: () {
-                        if (widget.selectionMode && isUnlocked) {
-                          _handleBadgeSelection(badge['id']);
-                        } else if (!widget.selectionMode && isUnlocked) {
-                          _showBadgeDetails(badge);
-                        }
-                      },
-                      child: Card(
-                        color: Colors.transparent,
-                        elevation: 0,
-                        margin: const EdgeInsets.symmetric(vertical: 0.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: isSelected
-                                ? Border.all(color: const Color(0xFF9474CC), width: 2)
-                                : null,
-                            color: Colors.transparent,
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'assets/badges/${badge['img']}',
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  filterQuality: FilterQuality.none,
-                                ),
-                                const SizedBox(height: 5),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    badge['title'] ?? 'Badge',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: filteredBadges.length,
+          itemBuilder: (context, index) {
+            final badge = filteredBadges[index];
+            return FutureBuilder<Map<String, dynamic>?>(
+              future: _badgeService.getBadgeById(badge['id']),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                final badgeData = snapshot.data ?? badge;
+                // Build badge UI with badgeData
+                return BadgeItem(
+                  badge: badgeData,
+                  isUnlocked: unlockedBadges[badges.indexOf(badge)] == 1,
+                  isSelected: _selectedBadgesNotifier.value.contains(badge['id']),
+                  onTap: () => _handleBadgeTap(badge),
+                );
+              },
+            );
+          },
         );
       },
     );
@@ -335,6 +284,60 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           child: const Text('Save Changes'),
         );
       },
+    );
+  }
+
+  void _handleBadgeTap(Map<String, dynamic> badge) {
+    if (widget.selectionMode) {
+      _handleBadgeSelection(badge['id']);
+    } else {
+      _showBadgeDetails(badge);
+    }
+  }
+
+  Widget BadgeItem({
+    required Map<String, dynamic> badge,
+    required bool isUnlocked,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      color: Colors.transparent,
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 0.0),
+      child: Container(
+        decoration: BoxDecoration(
+          border: isSelected
+              ? Border.all(color: const Color(0xFF9474CC), width: 2)
+              : null,
+          color: Colors.transparent,
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/badges/${badge['img']}',
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.none,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  badge['title'] ?? 'Badge',
+                  style: GoogleFonts.vt323(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

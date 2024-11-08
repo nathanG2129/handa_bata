@@ -34,14 +34,29 @@ class BadgeService {
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot snapshot = await _badgeDoc.get();
         if (snapshot.exists) {
-          int serverRevision = snapshot.get('revision') ?? 0;
+          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+          int serverRevision = data.containsKey('revision') ? data['revision'] : 0;
+          
+          if (!data.containsKey('revision')) {
+            await _badgeDoc.update({
+              'revision': 0,
+              'lastModified': FieldValue.serverTimestamp(),
+            });
+          }
+          
           int localRevision = await _getLocalRevision() ?? -1;
           
-          if (serverRevision > localRevision) {
+          if (serverRevision > localRevision || localBadges.isEmpty) {
             final badges = await _fetchAndUpdateLocal(snapshot);
             _badgeUpdateController.add(badges);
             return badges;
           }
+        } else {
+          await _badgeDoc.set({
+            'badges': [],
+            'revision': 0,
+            'lastModified': FieldValue.serverTimestamp(),
+          });
         }
       }
       return localBadges;

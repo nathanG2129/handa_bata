@@ -25,14 +25,30 @@ class BannerService {
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot snapshot = await _bannerDoc.get();
         if (snapshot.exists) {
-          int serverRevision = snapshot.get('revision') ?? 0;
+          // Check if revision field exists first
+          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+          int serverRevision = data.containsKey('revision') ? data['revision'] : 0;
+          
+          if (!data.containsKey('revision')) {
+            await _bannerDoc.update({
+              'revision': 0,
+              'lastModified': FieldValue.serverTimestamp(),
+            });
+          }
+          
           int localRevision = await _getLocalRevision() ?? -1;
           
-          if (serverRevision > localRevision) {
+          if (serverRevision > localRevision || localBanners.isEmpty) {
             final banners = await _fetchAndUpdateLocal(snapshot);
             _bannerUpdateController.add(banners);
             return banners;
           }
+        } else {
+          await _bannerDoc.set({
+            'banners': [],
+            'revision': 0,
+            'lastModified': FieldValue.serverTimestamp(),
+          });
         }
       }
       return localBanners;

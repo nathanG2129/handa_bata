@@ -50,6 +50,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
   Queue<int> _pendingBadgeNotifications = Queue<int>();
   bool _isShowingBadgeNotification = false;
 
+  String? _cachedAvatarPath;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +61,13 @@ class HeaderWidgetState extends State<HeaderWidget> {
       if (mounted && profile != null) {
         setState(() {
           _currentAvatarId = profile.avatarId;
+          _getAvatarImage(profile.avatarId).then((path) {
+            if (mounted) {
+              setState(() {
+                _cachedAvatarPath = path;
+              });
+            }
+          });
         });
       }
     });
@@ -68,6 +77,13 @@ class HeaderWidgetState extends State<HeaderWidget> {
       if (mounted) {
         setState(() {
           _currentAvatarId = newAvatarId;
+          _getAvatarImage(newAvatarId).then((path) {
+            if (mounted) {
+              setState(() {
+                _cachedAvatarPath = path;
+              });
+            }
+          });
         });
       }
     });
@@ -267,112 +283,119 @@ class HeaderWidgetState extends State<HeaderWidget> {
       future: _authService.getUserProfile(),
       builder: (context, profileSnapshot) {
         if (profileSnapshot.hasData && profileSnapshot.data != null) {
-          return FutureBuilder<String?>(
-            future: _getAvatarImage(profileSnapshot.data!.avatarId),
-            builder: (context, avatarSnapshot) {
-              return PopupMenuButton<String>(
-                color: const Color(0xFF241242),
-                offset: const Offset(0, 64),
-                onSelected: (String result) {
-                  switch (result) {
-                    case 'My Profile':
-                      _showUserProfile();
-                      break;
-                    case 'Account Settings':
-                      _showAccountSettings();
-                      break;
-                    case 'Characters':
-                      _showCharacters();
-                      break;
-                    case 'Banners':
-                      _showBanners();
-                      break;
-                    case 'Badges':
-                      _showBadges();
-                      break;
-                    // Add cases for other menu items if needed
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
-                    value: 'My Profile',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'My Profile',
-                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                        ),
-                      ],
+          if (_currentAvatarId != null && _cachedAvatarPath == null) {
+            _getAvatarImage(_currentAvatarId!).then((path) {
+              if (mounted) {
+                setState(() {
+                  _cachedAvatarPath = path;
+                });
+              }
+            });
+          }
+
+          final avatarPath = _cachedAvatarPath;
+
+          return PopupMenuButton<String>(
+            color: const Color(0xFF241242),
+            offset: const Offset(0, 64),
+            onSelected: (String result) {
+              switch (result) {
+                case 'My Profile':
+                  _showUserProfile();
+                  break;
+                case 'Account Settings':
+                  _showAccountSettings();
+                  break;
+                case 'Characters':
+                  _showCharacters();
+                  break;
+                case 'Banners':
+                  _showBanners();
+                  break;
+                case 'Badges':
+                  _showBadges();
+                  break;
+                // Add cases for other menu items if needed
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'My Profile',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'My Profile',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'Characters',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Characters',
-                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'Characters',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Characters',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'Badges',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Badges',
-                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'Badges',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Badges',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'Banners',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Banners',
-                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'Banners',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Banners',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'Account Settings',
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Account Settings',
-                          style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'Account Settings',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Account Settings',
+                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
                     ),
-                  ),
-                ],
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.white,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      image: DecorationImage(
-                        image: AssetImage('assets/avatars/${avatarSnapshot.data ?? 'default_avatar.png'}'),
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.none,
-                      ),
-                    ),
+                  ],
+                ),
+              ),
+            ],
+            child: CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.white,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  image: DecorationImage(
+                    image: AssetImage('assets/avatars/$avatarPath'),
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.none,
                   ),
                 ),
-              );
-            },
+              ),
+            ),
           );
         }
         return PopupMenuButton<String>(
@@ -527,7 +550,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       print('📢 No more badge notifications to show');
       _isShowingBadgeNotification = false;
       if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
-        print('📢 Switching to banner notifications');
+        print('��� Switching to banner notifications');
         _showNextBannerNotification();
       }
       return;

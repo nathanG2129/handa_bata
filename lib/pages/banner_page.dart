@@ -27,6 +27,7 @@ class BannerPage extends StatefulWidget {
 }
 
 class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateMixin {
+  final BannerService _bannerService = BannerService();
   late Future<List<Map<String, dynamic>>> _bannersFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -38,7 +39,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _bannersFuture = BannerService().fetchBanners();
+    _bannersFuture = _bannerService.fetchBanners();
     _userLevelFuture = _getUserLevel();
     _animationController = AnimationController(
       vsync: this,

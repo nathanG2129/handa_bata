@@ -44,11 +44,12 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
   final AuthService _authService = AuthService();
   final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
+  final BadgeService _badgeService = BadgeService();
 
   @override
   void initState() {
     super.initState();
-    _badgesFuture = BadgeService().fetchBadges();
+    _badgesFuture = _badgeService.fetchBadges();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -446,5 +447,13 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         ),
       ),
     );
+  }
+
+  // Refresh badges (e.g., on pull-to-refresh)
+  Future<void> _refreshBadges() async {
+    setState(() {
+      _badgesFuture = _badgeService.fetchBadges();
+      // Will get fresh data if online, otherwise uses cache
+    });
   }
 }

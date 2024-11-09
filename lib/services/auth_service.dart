@@ -695,22 +695,40 @@ class AuthService {
   Future<void> clearAllLocalData() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get all keys from SharedPreferences
+      Set<String> allKeys = prefs.getKeys();
+      
+      // Create a list of keys to remove
       List<String> keysToRemove = [
         USER_PROFILE_KEY,
         GUEST_PROFILE_KEY,
         GUEST_UID_KEY,
       ];
-      
-      // Add GameSaveData keys
-      List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
-      for (var category in categories) {
-        keysToRemove.add('game_save_data_${category['id']}');
-      }
-      
+
+      // Add game progress keys
+      keysToRemove.addAll(
+        allKeys.where((key) => key.startsWith('game_progress_'))
+      );
+
+      // Add game save data keys
+      keysToRemove.addAll(
+        allKeys.where((key) => key.startsWith('game_save_data_'))
+      );
+
+      // Add pending sync keys
+      keysToRemove.addAll(
+        allKeys.where((key) => key.startsWith('pending_'))
+      );
+
+      // Remove all keys in parallel
       await Future.wait(
         keysToRemove.map((key) => prefs.remove(key))
       );
+
+      print('🧹 Cleared all local data including game saves');
     } catch (e) {
+      print('❌ Error clearing local data: $e');
       rethrow;
     }
   }

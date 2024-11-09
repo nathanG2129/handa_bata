@@ -24,17 +24,23 @@ class CharacterPage extends StatefulWidget {
 }
 
 class CharacterPageState extends State<CharacterPage> with SingleTickerProviderStateMixin {
-  late Future<List<Map<String, dynamic>>> _avatarsFuture;
+  final AvatarService _avatarService = AvatarService();
+  final UserProfileService _userProfileService = UserProfileService();
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  List<Map<String, dynamic>> _avatars = [];
   int? _selectedAvatarId;
-  final UserProfileService _userProfileService = UserProfileService();
-  final AvatarService _avatarService = AvatarService();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _avatarsFuture = AvatarService().fetchAvatars();
+    _selectedAvatarId = widget.currentAvatarId;
+    _initializeAnimation();
+    _loadAvatars();
+  }
+
+  void _initializeAnimation() {
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -46,7 +52,27 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    _selectedAvatarId = widget.currentAvatarId;
+  }
+
+  Future<void> _loadAvatars() async {
+    try {
+      setState(() => _isLoading = true);
+      final avatars = await _avatarService.fetchAvatars();
+      if (mounted) {
+        setState(() {
+          _avatars = avatars;
+          _isLoading = false;
+        });
+        _animationController.forward();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading avatars: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -62,23 +88,17 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   void _handleAvatarTap(int avatarId) {
     if (widget.selectionMode) {
-      setState(() {
-        _selectedAvatarId = avatarId;
-      });
+      setState(() => _selectedAvatarId = avatarId);
     }
   }
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
       final avatar = await _avatarService.getAvatarDetails(avatarId);
-      if (avatar == null) {
-        throw Exception('Avatar not found');
-      }
+      if (avatar == null) throw Exception('Avatar not found');
 
       await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);
-      
       widget.onAvatarSelected?.call(avatarId);
-      
       _closeDialog();
     } catch (e) {
       if (mounted) {
@@ -87,16 +107,6 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
         );
       }
     }
-  }
-
-  void _handleAvatarSelection(int selectedAvatarId) {
-    final avatarService = AvatarService();
-    avatarService.getAvatarDetails(selectedAvatarId).then((avatar) {
-      if (avatar != null) {
-        // Assuming `onAvatarSelected` is a callback that might do additional work
-        widget.onAvatarSelected?.call(selectedAvatarId);
-      }
-    });
   }
 
   @override
@@ -114,156 +124,180 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
             color: Colors.black.withOpacity(0),
             child: Center(
               child: GestureDetector(
-                onTap: () {},
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _avatarsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No avatars found.'));
-                    } else {
-                      if (!_animationController.isAnimating && !_animationController.isCompleted) {
-                        _animationController.forward();
-                      }
-                      final avatars = snapshot.data!;
-                      return SlideTransition(
-                        position: _slideAnimation,
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                color: const Color(0xFF3A1A5F),
-                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                child: Center(
-                                  child: Text(
-                                    'Characters',
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.white,
-                                      fontSize: 42,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Flexible(
-                                child: SingleChildScrollView(
-                                  child: Container(
-                                    color: const Color(0xFF241242),
-                                    padding: EdgeInsets.all(
-                                      ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 20.0,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                          const Condition.largerThan(name: MOBILE, value: 24.0),
-                                        ],
-                                      ).value,
-                                    ),
-                                    child: GridView.builder(
-                                      padding: const EdgeInsets.all(2.0),
-                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: ResponsiveValue<int>(
-                                          context,
-                                          defaultValue: 3,
-                                          conditionalValues: [
-                                            const Condition.largerThan(name: TABLET, value: 4),
-                                          ],
-                                        ).value,
-                                        crossAxisSpacing: 0.0,
-                                        mainAxisSpacing: 5.0,
-                                      ),
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: avatars.length,
-                                      itemBuilder: (context, index) {
-                                        final avatar = avatars[index];
-                                        final bool isSelected = widget.selectionMode 
-                                            ? _selectedAvatarId == avatar['id']
-                                            : widget.currentAvatarId == avatar['id'];
-                                        
-                                        return Card(
-                                          color: Colors.transparent,
-                                          elevation: 0,
-                                          child: GestureDetector(
-                                            onTap: widget.selectionMode 
-                                                ? () => _handleAvatarTap(avatar['id'])
-                                                : null,
-                                            child: Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 30,
-                                                    backgroundColor: isSelected ? const Color(0xFF9474CC) : Colors.white,
-                                                    child: Container(
-                                                      width: 40,
-                                                      height: 40,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.rectangle,
-                                                        image: DecorationImage(
-                                                          image: AssetImage('assets/avatars/${avatar['img']}'),
-                                                          fit: BoxFit.cover,
-                                                          filterQuality: FilterQuality.none,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 0),
-                                                  Text(
-                                                    avatar['title'] ?? 'Avatar',
-                                                    style: GoogleFonts.vt323(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (widget.selectionMode) ...[
-                                Container(
-                                  width: double.infinity,
-                                  color: const Color(0xFF3A1A5F),
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.black,
-                                      textStyle: GoogleFonts.vt323(fontSize: 20),
-                                    ),
-                                    onPressed: _selectedAvatarId != null 
-                                      ? () => _handleAvatarUpdate(_selectedAvatarId!)
-                                      : null,
-                                    child: const Text('Save Changes'),
-                                  ),
-                                ),
+                onTap: () {}, // Prevent tap from closing dialog
+                child: StreamBuilder<bool>(
+                  stream: _avatarService.syncStatus,
+                  builder: (context, syncSnapshot) {
+                    final isSyncing = syncSnapshot.data ?? false;
+                    
+                    return Stack(
+                      children: [
+                        SlideTransition(
+                          position: _slideAnimation,
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
+                            shape: const RoundedRectangleBorder(
+                              side: BorderSide(color: Colors.black, width: 1),
+                              borderRadius: BorderRadius.zero,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildHeader(),
+                                if (_isLoading)
+                                  const Expanded(
+                                    child: Center(child: CircularProgressIndicator()),
+                                  )
+                                else
+                                  _buildAvatarGrid(),
+                                if (widget.selectionMode)
+                                  _buildSaveButton(),
                               ],
-                            ],
+                            ),
                           ),
                         ),
-                      );
-                    }
+                        if (isSyncing)
+                          const Positioned(
+                            top: 120,
+                            right: 30,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
                   },
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF3A1A5F),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      child: Center(
+        child: Text(
+          'Characters',
+          style: GoogleFonts.vt323(
+            color: Colors.white,
+            fontSize: 42,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarGrid() {
+    return Flexible(
+      child: SingleChildScrollView(
+        child: Container(
+          color: const Color(0xFF241242),
+          padding: EdgeInsets.all(
+            ResponsiveValue<double>(
+              context,
+              defaultValue: 20.0,
+              conditionalValues: [
+                const Condition.smallerThan(name: MOBILE, value: 16.0),
+                const Condition.largerThan(name: MOBILE, value: 24.0),
+              ],
+            ).value,
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(2.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: ResponsiveValue<int>(
+                context,
+                defaultValue: 3,
+                conditionalValues: [
+                  const Condition.largerThan(name: TABLET, value: 4),
+                ],
+              ).value,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 5.0,
+            ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _avatars.length,
+            itemBuilder: (context, index) => _buildAvatarItem(_avatars[index]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarItem(Map<String, dynamic> avatar) {
+    final bool isSelected = widget.selectionMode 
+        ? _selectedAvatarId == avatar['id']
+        : widget.currentAvatarId == avatar['id'];
+    
+    return Card(
+      color: Colors.transparent,
+      elevation: 0,
+      child: GestureDetector(
+        onTap: widget.selectionMode 
+            ? () => _handleAvatarTap(avatar['id'])
+            : null,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: isSelected ? const Color(0xFF9474CC) : Colors.white,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                      image: AssetImage('assets/avatars/${avatar['img']}'),
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 0),
+              Text(
+                avatar['title'] ?? 'Avatar',
+                style: GoogleFonts.vt323(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF3A1A5F),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          textStyle: GoogleFonts.vt323(fontSize: 20),
+        ),
+        onPressed: _selectedAvatarId != null 
+          ? () => _handleAvatarUpdate(_selectedAvatarId!)
+          : null,
+        child: const Text('Save Changes'),
       ),
     );
   }

@@ -11,6 +11,12 @@ class AvatarService {
   static const String AVATAR_REVISION_KEY = 'avatar_revision';
   static const int MAX_STORED_VERSIONS = 5;
   static const int MAX_CACHE_SIZE = 100;
+  static const Duration SYNC_DEBOUNCE = Duration(milliseconds: 500);
+  static const Duration SYNC_TIMEOUT = Duration(seconds: 5);
+  Timer? _syncDebounceTimer;
+  bool _isSyncing = false;
+  final StreamController<bool> _syncStatusController = StreamController<bool>.broadcast();
+  Stream<bool> get syncStatus => _syncStatusController.stream;
 
   // Add stream controller for real-time updates
   final _avatarUpdateController = StreamController<Map<int, String>>.broadcast();
@@ -33,31 +39,23 @@ class AvatarService {
 
   // Enhanced fetch with version check
   Future<List<Map<String, dynamic>>> fetchAvatars() async {
-    // Initialize empty list as fallback
-    List<Map<String, dynamic>> localAvatars = [];
-    
     try {
-      localAvatars = await _getAvatarsFromLocal();
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      
-      if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot snapshot = await _avatarDoc.get();
-        if (snapshot.exists) {
-          int serverRevision = snapshot.get('revision') ?? 0;
-          int localRevision = await _getLocalRevision() ?? -1;
-          
-          if (serverRevision > localRevision) {
-            final avatars = await _fetchAndUpdateLocal(snapshot);
-            _avatarUpdateController.add({avatars.first['id']: avatars.first['img']}); // Notify listeners
-            return avatars;
-          }
-        }
+      // Return cached data immediately if available
+      if (_avatarCache.isNotEmpty) {
+        return _avatarCache.values.toList();
       }
+
+      // Get local data
+      List<Map<String, dynamic>> localAvatars = await _getAvatarsFromLocal();
+      
+      // Start sync process if online, but don't wait for it
+      _debouncedSync();
+      
+      // Return local data immediately
       return localAvatars;
     } catch (e) {
       print('Error in fetchAvatars: $e');
-      await _logAvatarOperation('fetch_error', -1, e.toString());
-      return localAvatars;
+      return [];
     }
   }
 
@@ -351,6 +349,8 @@ class AvatarService {
   void dispose() {
     _avatarUpdateController.close();
     _avatarImageController.close();
+    _syncDebounceTimer?.cancel();
+    _syncStatusController.close();
   }
 
   // Add better caching mechanism
@@ -358,38 +358,46 @@ class AvatarService {
   
   Future<Map<String, dynamic>?> getAvatarDetails(int id) async {
     try {
+      // Check memory cache first
       if (_avatarCache.containsKey(id)) {
-        var avatar = _avatarCache[id]!;
-        _avatarImageController.add({id: avatar['img']});
-        return avatar;
+        return _avatarCache[id];
       }
-      
-      List<Map<String, dynamic>> avatars = await _getAvatarsFromLocal();
-      var avatar = avatars.firstWhere((a) => a['id'] == id, orElse: () => {});
-      
+
+      // Check local storage
+      List<Map<String, dynamic>> localAvatars = await _getAvatarsFromLocal();
+      var avatar = localAvatars.firstWhere(
+        (a) => a['id'] == id,
+        orElse: () => {},
+      );
+
       if (avatar.isNotEmpty) {
         _avatarCache[id] = avatar;
-        _manageCacheSize();
-        _avatarImageController.add({id: avatar['img']});
         return avatar;
       }
 
-      // Fetch from server if not found locally
+      // Only fetch from server if not found locally
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot snapshot = await _avatarDoc.get();
-        if (snapshot.exists) {
-          List<Map<String, dynamic>> serverAvatars = List<Map<String, dynamic>>.from(
-              (snapshot.data() as Map<String, dynamic>)['avatars'] ?? []);
-          var serverAvatar = serverAvatars.firstWhere((a) => a['id'] == id, orElse: () => {});
+        DocumentSnapshot doc = await _avatarDoc.get()
+            .timeout(SYNC_TIMEOUT);
+            
+        if (doc.exists) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          List<Map<String, dynamic>> avatars = 
+              List<Map<String, dynamic>>.from(data['avatars'] ?? []);
+              
+          var serverAvatar = avatars.firstWhere(
+            (a) => a['id'] == id,
+            orElse: () => {},
+          );
+          
           if (serverAvatar.isNotEmpty) {
             _avatarCache[id] = serverAvatar;
-            _avatarImageController.add({id: serverAvatar['img']});
             return serverAvatar;
           }
         }
       }
-      
+
       return null;
     } catch (e) {
       print('Error in getAvatarDetails: $e');
@@ -527,6 +535,62 @@ class AvatarService {
       for (var key in keysToRemove) {
         _avatarCache.remove(key);
       }
+    }
+  }
+
+  // Add this method to handle sync state
+  void _setSyncState(bool syncing) {
+    _isSyncing = syncing;
+    _syncStatusController.add(syncing);
+  }
+
+  // Add new debounced sync method
+  void _debouncedSync() {
+    _syncDebounceTimer?.cancel();
+    _syncDebounceTimer = Timer(SYNC_DEBOUNCE, () {
+      _syncWithServer();
+    });
+  }
+
+  // Add new sync method
+  Future<void> _syncWithServer() async {
+    if (_isSyncing) return;
+
+    try {
+      _setSyncState(true);
+
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        return;
+      }
+
+      // Add timeout to prevent hanging
+      DocumentSnapshot snapshot = await _avatarDoc.get()
+          .timeout(SYNC_TIMEOUT);
+
+      if (!snapshot.exists) return;
+
+      int serverRevision = snapshot.get('revision') ?? 0;
+      int? localRevision = await _getLocalRevision();
+
+      // Only sync if server has newer data
+      if (localRevision == null || serverRevision > localRevision) {
+        List<Map<String, dynamic>> serverAvatars = 
+            await _fetchAndUpdateLocal(snapshot);
+        
+        // Update memory cache
+        for (var avatar in serverAvatars) {
+          _avatarCache[avatar['id']] = avatar;
+        }
+
+        // Notify listeners of new data
+        _avatarUpdateController.add({serverAvatars.first['id']: serverAvatars.first['img']});
+      }
+
+    } catch (e) {
+      print('Error in sync: $e');
+    } finally {
+      _setSyncState(false);
     }
   }
 }

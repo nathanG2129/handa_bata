@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/badge_details_dialog.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 
 enum BadgeFilter {
@@ -40,32 +38,36 @@ class BadgePage extends StatefulWidget {
 }
 
 class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMixin {
-  late Future<List<Map<String, dynamic>>> _badgesFuture;
+  final BadgeService _badgeService = BadgeService();
+  final UserProfileService _userProfileService = UserProfileService();
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
-  final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
-  final AuthService _authService = AuthService();
-  final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
-  final BadgeService _badgeService = BadgeService();
-  late StreamSubscription<List<Map<String, dynamic>>> _badgeSubscription;
-  final UserProfileService _userProfileService = UserProfileService();
-  late StreamSubscription<UserProfile> _profileSubscription;
+  List<Map<String, dynamic>> _badges = [];
   List<int> _unlockedBadges = [];
-
-  // Add loading and error states
   bool _isLoading = true;
   String? _errorMessage;
+  
+  final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
+  final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
 
   @override
   void initState() {
     super.initState();
-    // Initialize animation controller
+    _initializeAnimation();
+    _initializeData();
+    
+    if (widget.selectionMode && widget.currentBadgeShowcase != null) {
+      _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
+          .where((id) => id != -1)
+          .toList();
+    }
+  }
+
+  void _initializeAnimation() {
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
-    
-    // Initialize slide animation
     _slideAnimation = Tween<Offset>(
       begin: const Offset(-1.0, 0.0),
       end: Offset.zero,
@@ -73,58 +75,28 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-
-    // Initialize badges
-    _initializeBadges();
-    
-    // Set up selected badges if in selection mode
-    if (widget.selectionMode && widget.currentBadgeShowcase != null) {
-      _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
-          .where((id) => id != -1)
-          .toList();
-    }
-    
-    // Listen to badge updates
-    _badgeSubscription = _badgeService.badgeUpdates.listen((badges) {
-      if (mounted) {
-        setState(() {
-          _badgesFuture = Future.value(badges);
-        });
-      }
-    });
-
-    // Add profile subscription to get unlocked badges updates
-    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
-      if (mounted) {
-        setState(() {
-          _unlockedBadges = profile.unlockedBadge;
-        });
-      }
-    });
-
-    // Initialize unlocked badges
-    _userProfileService.fetchUserProfile().then((profile) {
-      if (profile != null && mounted) {
-        setState(() {
-          _unlockedBadges = profile.unlockedBadge;
-        });
-      }
-    });
   }
 
-  Future<void> _initializeBadges() async {
+  Future<void> _initializeData() async {
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
+      // Load badges
       final badges = await _badgeService.fetchBadges();
+      
+      // Load user profile for unlocked badges
+      final profile = await _userProfileService.fetchUserProfile();
+      
       if (mounted) {
         setState(() {
-          _badgesFuture = Future.value(badges);
+          _badges = badges;
+          _unlockedBadges = profile?.unlockedBadge ?? [];
           _isLoading = false;
         });
+        _animationController.forward();
       }
     } catch (e) {
       if (mounted) {
@@ -136,62 +108,130 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     }
   }
 
-  // Add retry mechanism
-  Future<void> _retryLoading() async {
-    await _initializeBadges();
-  }
-
+  // Update the build method to use StreamBuilder for sync status
   @override
-  void dispose() {
-    _animationController.dispose();
-    _filterNotifier.dispose();
-    _selectedBadgesNotifier.dispose();
-    _badgeSubscription.cancel();
-    _profileSubscription.cancel();
-    super.dispose();
-  }
-
-  Future<void> _closeDialog() async {
-    await _animationController.reverse();
-    widget.onClose();
-  }
-
-  void _showBadgeDetails(Map<String, dynamic> badge) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BadgeDetailsDialog(badge: badge);
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        await _closeDialog();
+        return false;
       },
+      child: GestureDetector(
+        onTap: _closeDialog,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+          child: Container(
+            color: Colors.black.withOpacity(0),
+            child: Center(
+              child: GestureDetector(
+                onTap: () {}, // Prevent tap from closing dialog
+                child: StreamBuilder<bool>(
+                  stream: _badgeService.syncStatus,
+                  builder: (context, syncSnapshot) {
+                    final isSyncing = syncSnapshot.data ?? false;
+                    
+                    return Stack(
+                      children: [
+                        _buildMainContent(),
+                        if (isSyncing)
+                          const Positioned(
+                            top: 120,
+                            right: 30,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  void _handleFilterChange(BadgeFilter? newValue) {
-    if (newValue != null) {
-      _filterNotifier.value = newValue;
+  Widget _buildMainContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
-  }
 
-  String _getFilterName(BadgeFilter filter) {
-    switch (filter) {
-      case BadgeFilter.myCollection:
-        return 'My Collection';
-      case BadgeFilter.allBadges:
-        return 'All Badges';
-      case BadgeFilter.quakeBadges:
-        return 'Quake Badges';
-      case BadgeFilter.stormBadges:
-        return 'Storm Badges';
-      case BadgeFilter.volcanoBadges:
-        return 'Volcano Badges';
-      case BadgeFilter.droughtBadges:
-        return 'Drought Badges';
-      case BadgeFilter.tsunamiBadges:
-        return 'Tsunami Badges';
-      case BadgeFilter.floodBadges:
-        return 'Flood Badges';
-      case BadgeFilter.arcadeBadges:
-        return 'Arcade Badges';
+    if (_errorMessage != null) {
+      return _buildErrorState();
     }
+
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
+        shape: const RoundedRectangleBorder(
+          side: BorderSide(color: Colors.black, width: 1),
+          borderRadius: BorderRadius.zero,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height * 0.7,
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Container(
+                width: double.infinity,
+                color: const Color(0xFF3A1A5F),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                child: Center(
+                  child: Text(
+                    'Badges',
+                    style: GoogleFonts.vt323(
+                      color: Colors.white,
+                      fontSize: 42,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  color: const Color(0xFF241242),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              if (!widget.selectionMode)
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: _buildFilterDropdown(),
+                                ),
+                              _buildBadgeGrid(_badges),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (widget.selectionMode)
+                        Container(
+                          width: double.infinity,
+                          color: const Color(0xFF3A1A5F),
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                          child: _buildSaveButton(),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFilterDropdown() {
@@ -413,35 +453,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        await _closeDialog();
-        return false;
-      },
-      child: GestureDetector(
-        onTap: _closeDialog,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-          child: Container(
-            color: Colors.black.withOpacity(0),
-            child: Center(
-              child: GestureDetector(
-                onTap: () {},
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
-                        ? _buildErrorState()
-                        : _buildContent(),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildErrorState() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -459,116 +470,61 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildContent() {
-    return FutureBuilder<List<dynamic>>(
-      future: Future.wait([
-        _badgesFuture,
-        _authService.getUserProfile(),
-      ]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Error: ${snapshot.error}',
-                  style: GoogleFonts.vt323(color: Colors.white),
-                ),
-                ElevatedButton(
-                  onPressed: _retryLoading,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
+  String _getFilterName(BadgeFilter filter) {
+    switch (filter) {
+      case BadgeFilter.myCollection:
+        return 'My Collection';
+      case BadgeFilter.allBadges:
+        return 'All Badges';
+      case BadgeFilter.quakeBadges:
+        return 'Quake Badges';
+      case BadgeFilter.stormBadges:
+        return 'Storm Badges';
+      case BadgeFilter.volcanoBadges:
+        return 'Volcano Badges';
+      case BadgeFilter.droughtBadges:
+        return 'Drought Badges';
+      case BadgeFilter.tsunamiBadges:
+        return 'Tsunami Badges';
+      case BadgeFilter.floodBadges:
+        return 'Flood Badges';
+      case BadgeFilter.arcadeBadges:
+        return 'Arcade Badges';
+    }
+  }
 
-        final badges = snapshot.data![0] as List<Map<String, dynamic>>;
-        final userProfile = snapshot.data![1] as UserProfile;
-        
-        if (!_animationController.isAnimating && !_animationController.isCompleted) {
-          _animationController.forward();
-        }
-        
-        return SlideTransition(
-          position: _slideAnimation,
-          child: Card(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-            shape: const RoundedRectangleBorder(
-              side: BorderSide(color: Colors.black, width: 1),
-              borderRadius: BorderRadius.zero,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height * 0.7,
-                maxHeight: MediaQuery.of(context).size.height * 0.7,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    color: const Color(0xFF3A1A5F),
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    child: Center(
-                      child: Text(
-                        'Badges',
-                        style: GoogleFonts.vt323(
-                          color: Colors.white,
-                          fontSize: 42,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      color: const Color(0xFF241242),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  if (!widget.selectionMode)
-                                    Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: _buildFilterDropdown(),
-                                    ),
-                                  _buildBadgeGrid(badges),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (widget.selectionMode)
-                            Container(
-                              width: double.infinity,
-                              color: const Color(0xFF3A1A5F),
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                              child: _buildSaveButton(),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+  void _handleFilterChange(BadgeFilter? newValue) {
+    if (newValue != null) {
+      _filterNotifier.value = newValue;
+    }
+  }
+
+  Future<void> _closeDialog() async {
+    await _animationController.reverse();
+    widget.onClose();
+  }
+
+  void _showBadgeDetails(Map<String, dynamic> badge) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BadgeDetailsDialog(badge: badge);
       },
     );
   }
 
-  // Refresh badges (e.g., on pull-to-refresh)
+  // Fix the refresh badges method
   Future<void> _refreshBadges() async {
-    setState(() {
-      _badgesFuture = _badgeService.fetchBadges();
-      // Will get fresh data if online, otherwise uses cache
-    });
+    final badges = await _badgeService.fetchBadges();
+    if (mounted) {
+      setState(() {
+        _badges = badges;
+      });
+    }
+  }
+
+  // Add retry mechanism
+  Future<void> _retryLoading() async {
+    await _initializeData();
   }
 }

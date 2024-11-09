@@ -10,6 +10,7 @@ class AvatarService {
   static const String AVATAR_VERSION_KEY = 'avatar_version';
   static const String AVATAR_REVISION_KEY = 'avatar_revision';
   static const int MAX_STORED_VERSIONS = 5;
+  static const int MAX_CACHE_SIZE = 100;
 
   // Add stream controller for real-time updates
   final _avatarUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
@@ -350,25 +351,23 @@ class AvatarService {
   // Add better caching mechanism
   final Map<int, Map<String, dynamic>> _avatarCache = {};
   
-  Future<Map<String, dynamic>?> getAvatarById(int id) async {
+  Future<Map<String, dynamic>?> getAvatarDetails(int id) async {
     try {
-      // Check memory cache first
       if (_avatarCache.containsKey(id)) {
         return _avatarCache[id];
       }
       
-      // Then check local storage
       List<Map<String, dynamic>> avatars = await _getAvatarsFromLocal();
       var avatar = avatars.firstWhere((a) => a['id'] == id, orElse: () => {});
       
       if (avatar.isNotEmpty) {
-        // Cache the result
         _avatarCache[id] = avatar;
+        _manageCacheSize();
         return avatar;
       }
-      
-      // Only fetch from server if online and not found locally
-      var connectivityResult = await (Connectivity().checkConnectivity());
+
+      // Fetch from server if not found locally
+      var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot snapshot = await _avatarDoc.get();
         if (snapshot.exists) {
@@ -384,7 +383,7 @@ class AvatarService {
       
       return null;
     } catch (e) {
-      print('Error in getAvatarById: $e');
+      print('Error in getAvatarDetails: $e');
       return null;
     }
   }
@@ -504,6 +503,21 @@ class AvatarService {
     } catch (e) {
       print('Error verifying data integrity: $e');
       await _logAvatarOperation('integrity_check_error', -1, e.toString());
+    }
+  }
+
+  Future<bool> getAvatarById(int id) async {
+    final avatar = await getAvatarDetails(id);
+    return avatar != null;
+  }
+
+  void _manageCacheSize() {
+    if (_avatarCache.length > MAX_CACHE_SIZE) {
+      // Remove oldest entries if cache is too large
+      final keysToRemove = _avatarCache.keys.take(_avatarCache.length - MAX_CACHE_SIZE + 1);
+      for (var key in keysToRemove) {
+        _avatarCache.remove(key);
+      }
     }
   }
 }

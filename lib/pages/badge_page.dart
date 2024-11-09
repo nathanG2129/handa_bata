@@ -7,6 +7,7 @@ import 'package:handabatamae/services/badge_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 enum BadgeFilter {
   myCollection,
@@ -47,6 +48,9 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
   final BadgeService _badgeService = BadgeService();
   late StreamSubscription<List<Map<String, dynamic>>> _badgeSubscription;
+  final UserProfileService _userProfileService = UserProfileService();
+  late StreamSubscription<UserProfile> _profileSubscription;
+  List<int> _unlockedBadges = [];
 
   // Add loading and error states
   bool _isLoading = true;
@@ -88,6 +92,24 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         });
       }
     });
+
+    // Add profile subscription to get unlocked badges updates
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _unlockedBadges = profile.unlockedBadge;
+        });
+      }
+    });
+
+    // Initialize unlocked badges
+    _userProfileService.fetchUserProfile().then((profile) {
+      if (profile != null && mounted) {
+        setState(() {
+          _unlockedBadges = profile.unlockedBadge;
+        });
+      }
+    });
   }
 
   Future<void> _initializeBadges() async {
@@ -125,6 +147,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     _filterNotifier.dispose();
     _selectedBadgesNotifier.dispose();
     _badgeSubscription.cancel();
+    _profileSubscription.cancel();
     super.dispose();
   }
 
@@ -205,21 +228,40 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  List<Map<String, dynamic>> _filterBadges(List<Map<String, dynamic>> badges, BadgeFilter filter, List<int> unlockedBadges) {
+  List<Map<String, dynamic>> _filterBadges(List<Map<String, dynamic>> badges, BadgeFilter filter) {
+    print('🔍 Filtering badges:');
+    print('Total badges: ${badges.length}');
+    print('Unlocked badges array: $_unlockedBadges');
+
     if (filter == BadgeFilter.myCollection) {
-      return badges.where((badge) => 
-        unlockedBadges[badges.indexOf(badge)] == 1).toList();
+      print('🎯 Filtering My Collection');
+      var filteredBadges = badges.where((badge) {
+        int badgeId = badge['id'] as int;
+        bool isUnlocked = badgeId < _unlockedBadges.length && _unlockedBadges[badgeId] == 1;
+        print('Badge ID: $badgeId, Value in unlockedBadges: ${badgeId < _unlockedBadges.length ? _unlockedBadges[badgeId] : "out of range"}');
+        return isUnlocked;
+      }).toList();
+      print('Found ${filteredBadges.length} unlocked badges');
+      return filteredBadges;
     }
     
-    if (filter == BadgeFilter.allBadges) return badges;
+    if (filter == BadgeFilter.allBadges) {
+      print('📋 Showing all badges');
+      return badges;
+    }
     
     String prefix = filter.toString().split('.').last.replaceAll('Badges', '').toLowerCase();
+    print('🏷️ Filtering by prefix: $prefix');
     if (prefix == 'arcade') {
-      return badges.where((badge) => 
+      var filteredBadges = badges.where((badge) => 
         (badge['img'] as String).startsWith('arcade')).toList();
+      print('Filtered arcade badges count: ${filteredBadges.length}');
+      return filteredBadges;
     } else {
-      return badges.where((badge) => 
+      var filteredBadges = badges.where((badge) => 
         (badge['img'] as String).startsWith('$prefix-quest')).toList();
+      print('Filtered quest badges count: ${filteredBadges.length}');
+      return filteredBadges;
     }
   }
 
@@ -240,31 +282,22 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
 
   Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
     try {
-      List<int> paddedBadgeIds = List.from(badgeIds);
-      while (paddedBadgeIds.length < 3) {
-        paddedBadgeIds.add(-1);
-      }
-      
-      final AuthService authService = AuthService();
-      await authService.updateUserProfile('badgeShowcase', paddedBadgeIds);
-      widget.onBadgesSelected?.call(paddedBadgeIds);
+      await _userProfileService.updateProfileWithIntegration('badgeShowcase', badgeIds);
+      widget.onBadgesSelected?.call(badgeIds);
       _closeDialog();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update favorite badges. Please try again.'),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating badges: $e')),
+      );
     }
   }
 
-  Widget _buildBadgeGrid(List<Map<String, dynamic>> badges, List<int> unlockedBadges) {
+  Widget _buildBadgeGrid(List<Map<String, dynamic>> badges) {
     return ValueListenableBuilder<BadgeFilter>(
       valueListenable: _filterNotifier,
       builder: (context, currentFilter, _) {
-        var filteredBadges = _filterBadges(badges, currentFilter, unlockedBadges);
+        var filteredBadges = _filterBadges(badges, currentFilter);
         
         return GridView.builder(
           padding: const EdgeInsets.all(2.0),
@@ -285,7 +318,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           itemBuilder: (context, index) {
             final badge = filteredBadges[index];
             return FutureBuilder<Map<String, dynamic>?>(
-              future: _badgeService.getBadgeById(badge['id']),
+              future: _badgeService.getBadgeDetails(badge['id']),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -295,7 +328,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                 // Build badge UI with badgeData
                 return BadgeItem(
                   badge: badgeData,
-                  isUnlocked: unlockedBadges[badges.indexOf(badge)] == 1,
+                  isUnlocked: _unlockedBadges[badges.indexOf(badge)] == 1,
                   isSelected: _selectedBadgesNotifier.value.contains(badge['id']),
                   onTap: () => _handleBadgeTap(badge),
                 );
@@ -506,7 +539,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                       padding: const EdgeInsets.all(16.0),
                                       child: _buildFilterDropdown(),
                                     ),
-                                  _buildBadgeGrid(badges, userProfile.unlockedBadge),
+                                  _buildBadgeGrid(badges),
                                 ],
                               ),
                             ),

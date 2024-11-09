@@ -59,6 +59,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Timer? _notificationTimer;
 
+  late StreamSubscription<UserProfile> _profileSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +104,15 @@ class HeaderWidgetState extends State<HeaderWidget> {
         });
       }
     });
+
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _currentAvatarId = profile.avatarId;
+          _getAvatarImage(_currentAvatarId!);
+        });
+      }
+    });
   }
 
   @override
@@ -109,6 +120,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
     _notificationTimer?.cancel();
     _avatarSubscription.cancel();
     _removeOverlay();
+    _profileSubscription.cancel();
     super.dispose();
   }
 
@@ -279,7 +291,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Future<String?> _getAvatarImage(int avatarId) async {
     try {
-      final avatar = await _avatarService.getAvatarById(avatarId);
+      final avatar = await _avatarService.getAvatarDetails(avatarId);
       if (avatar != null) {
         return avatar['img'];
       }
@@ -521,7 +533,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Future<void> _showBadgeUnlockNotification(int badgeId, {int retryCount = 0}) async {
     try {
-      final badge = await _badgeService.getBadgeById(badgeId);
+      final badge = await _badgeService.getBadgeDetails(badgeId);
       if (badge != null) {
         _overlayEntry = OverlayEntry(
           builder: (context) => Positioned(

@@ -1,23 +1,59 @@
+import 'dart:async'; // Add this for StreamSubscription
 import 'package:flutter/material.dart';
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
-import '../../localization/play/localization.dart'; // Import the localization file
+import 'package:responsive_framework/responsive_framework.dart';
+import '../../localization/play/localization.dart';
+import '../../services/user_profile_service.dart'; // Fix path
+import '../../models/user_model.dart'; // Fix path
 
-class UserProfileStats extends StatelessWidget {
+class UserProfileStats extends StatefulWidget {
+  final String selectedLanguage;
   final int totalBadges;
   final int totalStagesCleared;
-  final String selectedLanguage;
 
   const UserProfileStats({
     super.key,
+    required this.selectedLanguage,
     required this.totalBadges,
     required this.totalStagesCleared,
-    required this.selectedLanguage,
   });
+
+  @override
+  UserProfileStatsState createState() => UserProfileStatsState();
+}
+
+class UserProfileStatsState extends State<UserProfileStats> {
+  final UserProfileService _userProfileService = UserProfileService();
+  late StreamSubscription<UserProfile> _profileSubscription;
+
+  int _totalBadges = 0;
+  int _totalStages = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _totalBadges = widget.totalBadges;
+    _totalStages = widget.totalStagesCleared;
+
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _totalBadges = profile.totalBadgeUnlocked;
+          _totalStages = profile.totalStageCleared;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     // Calculate the maximum height for the text containers when the language is 'fil'
-    final double maxHeight = selectedLanguage == 'fil' ? .0 : 32.0;
+    final double maxHeight = widget.selectedLanguage == 'fil' ? .0 : 32.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -50,7 +86,7 @@ class UserProfileStats extends StatelessWidget {
                           minHeight: maxHeight,
                         ),
                         child: Text(
-                          PlayLocalization.translate('totalBadges', selectedLanguage),
+                          PlayLocalization.translate('totalBadges', widget.selectedLanguage),
                           style: const TextStyle(fontSize: 12.8, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                         ),
                       ),
@@ -77,7 +113,7 @@ class UserProfileStats extends StatelessWidget {
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
-                      '$totalBadges',
+                      '${_totalBadges}',
                       style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),
@@ -116,7 +152,7 @@ class UserProfileStats extends StatelessWidget {
                           minHeight: maxHeight,
                         ),
                         child: Text(
-                          PlayLocalization.translate('stagesCleared', selectedLanguage),
+                          PlayLocalization.translate('stagesCleared', widget.selectedLanguage),
                           style: const TextStyle(fontSize: 12.8, fontWeight: FontWeight.bold, color: Colors.white), // Smaller font size
                         ),
                       ),
@@ -143,7 +179,7 @@ class UserProfileStats extends StatelessWidget {
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
-                      '$totalStagesCleared',
+                      '${_totalStages}',
                       style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),

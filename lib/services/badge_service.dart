@@ -21,55 +21,43 @@ class BadgeService {
   Timer? _fetchDebounce;
 
   Future<List<Map<String, dynamic>>> fetchBadges() async {
-    if (_fetchDebounce?.isActive ?? false) {
-      return _getBadgesFromLocal();
-    }
-    
-    _fetchDebounce = Timer(const Duration(milliseconds: 500), () {});
-    
     try {
+      print('🎯 Fetching badges...');
       List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      print('📱 Local badges count: ${localBadges.length}');
       
+      var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
+        print('🌐 Online, checking Firestore...');
         DocumentSnapshot snapshot = await _badgeDoc.get();
         if (snapshot.exists) {
+          print('📄 Firestore document exists');
           Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-          int serverRevision = data.containsKey('revision') ? data['revision'] : 0;
+          List<Map<String, dynamic>> serverBadges = 
+              data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+          print('🌐 Server badges count: ${serverBadges.length}');
           
-          if (!data.containsKey('revision')) {
-            await _badgeDoc.update({
-              'revision': 0,
-              'lastModified': FieldValue.serverTimestamp(),
-            });
+          // Compare with local data
+          if (serverBadges.length != localBadges.length) {
+            print('⚠️ Badge count mismatch - Local: ${localBadges.length}, Server: ${serverBadges.length}');
           }
-          
-          int localRevision = await _getLocalRevision() ?? -1;
-          
-          if (serverRevision > localRevision || localBadges.isEmpty) {
-            final badges = await _fetchAndUpdateLocal(snapshot);
-            _badgeUpdateController.add(badges);
-            return badges;
-          }
-        } else {
-          await _badgeDoc.set({
-            'badges': [],
-            'revision': 0,
-            'lastModified': FieldValue.serverTimestamp(),
-          });
+          return serverBadges;
         }
       }
+      print('📱 Returning local badges');
       return localBadges;
     } catch (e) {
-      print('Error in fetchBadges: $e');
-      await _logBadgeOperation('fetch_error', -1, e.toString());
-      return await _getBadgesFromLocal();
-    } finally {
-      _fetchDebounce?.cancel();
+      print('❌ Error in fetchBadges: $e');
+      return [];
     }
   }
 
-  Future<Map<String, dynamic>?> getBadgeById(int id) async {
+  Future<bool> getBadgeById(int id) async {
+    final badge = await getBadgeDetails(id);
+    return badge != null;
+  }
+
+  Future<Map<String, dynamic>?> getBadgeDetails(int id) async {
     try {
       if (_badgeCache.containsKey(id)) {
         return _badgeCache[id];

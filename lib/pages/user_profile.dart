@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:handabatamae/services/user_profile_service.dart';
@@ -19,14 +20,14 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
+  final UserProfileService _userProfileService = UserProfileService();
+  late StreamSubscription<UserProfile> _profileSubscription;
   bool _isLoading = true;
   UserProfile? _userProfile;
   late String _selectedLanguage; // Add this line
 
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
-
-  final UserProfileService _userProfileService = UserProfileService();
 
   @override
   void initState() {
@@ -43,38 +44,41 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+    // Listen to real-time profile updates
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+          _isLoading = false;
+        });
+      }
+    });
     _fetchUserProfile();
   }
 
   @override
   void dispose() {
+    _profileSubscription.cancel();
     _animationController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchUserProfile() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      UserProfile? userProfile = await _userProfileService.fetchUserProfile();
-
+      UserProfile? profile = await _userProfileService.fetchUserProfile();
       if (!mounted) return;
-
       setState(() {
-        _userProfile = userProfile ?? UserProfile.guestProfile;
+        _userProfile = profile ?? UserProfile.guestProfile;
         _isLoading = false;
-        _animationController.forward(); // Start the animation after loading
+        _animationController.forward();
       });
     } catch (e) {
-      // Handle error
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 

@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:collection/collection.dart';
 import '../../localization/play/localization.dart';
 import '../../services/badge_service.dart';
+import '../../services/user_profile_service.dart';
+import '../../models/user_model.dart';
 
-class FavoriteBadges extends StatelessWidget {
+class FavoriteBadges extends StatefulWidget {
   final String selectedLanguage;
   final List<int> badgeShowcase;
 
@@ -14,12 +18,58 @@ class FavoriteBadges extends StatelessWidget {
     required this.badgeShowcase,
   });
 
+  @override
+  FavoriteBadgesState createState() => FavoriteBadgesState();
+}
+
+class FavoriteBadgesState extends State<FavoriteBadges> {
+  final UserProfileService _userProfileService = UserProfileService();
+  final BadgeService _badgeService = BadgeService();
+  late StreamSubscription<UserProfile> _profileSubscription;
+  late StreamSubscription<List<Map<String, dynamic>>> _badgeSubscription;
+  late List<int> _badgeShowcase;
+
+  @override
+  void initState() {
+    super.initState();
+    _badgeShowcase = List<int>.from(widget.badgeShowcase);
+    
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _badgeShowcase = profile.badgeShowcase;
+        });
+      }
+    });
+    _badgeSubscription = _badgeService.badgeUpdates.listen((badges) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(FavoriteBadges oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!const ListEquality().equals(oldWidget.badgeShowcase, widget.badgeShowcase)) {
+      setState(() {
+        _badgeShowcase = List<int>.from(widget.badgeShowcase);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription.cancel();
+    _badgeSubscription.cancel();
+    super.dispose();
+  }
+
   Future<List<Map<String, dynamic>>> _getBadgeDetails() async {
     try {
-      final BadgeService badgeService = BadgeService();
-      final List<Map<String, dynamic>> allBadges = await badgeService.fetchBadges();
+      final List<Map<String, dynamic>> allBadges = await _badgeService.fetchBadges();
       
-      return badgeShowcase.map((badgeId) {
+      return _badgeShowcase.map((badgeId) {
         if (badgeId == -1) {
           return {'img': '', 'title': ''};
         }
@@ -45,7 +95,7 @@ class FavoriteBadges extends StatelessWidget {
               child: Transform.translate(
                 offset: const Offset(3, 0), // Adjust the offset as needed
                 child: Text(
-                  PlayLocalization.translate('favoriteBadges', selectedLanguage),
+                  PlayLocalization.translate('favoriteBadges', widget.selectedLanguage),
                   style: GoogleFonts.rubik(
                     fontSize: ResponsiveValue<double>(
                       context,

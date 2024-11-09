@@ -59,7 +59,12 @@ class BannerService {
     }
   }
 
-  Future<Map<String, dynamic>?> getBannerById(int id) async {
+  Future<bool> getBannerById(int id) async {
+    final banner = await getBannerDetails(id);
+    return banner != null;
+  }
+
+  Future<Map<String, dynamic>?> getBannerDetails(int id) async {
     try {
       if (_bannerCache.containsKey(id)) {
         return _bannerCache[id];

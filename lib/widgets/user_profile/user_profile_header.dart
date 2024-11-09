@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
-import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 class UserProfileHeader extends StatefulWidget {
   final String username;
@@ -46,20 +46,46 @@ class UserProfileHeader extends StatefulWidget {
 }
 
 class UserProfileHeaderState extends State<UserProfileHeader> {
+  final UserProfileService _userProfileService = UserProfileService();
   final AvatarService _avatarService = AvatarService();
   String? _cachedAvatarPath;
 
-  Future<void> _updateNickname(String newNickname, BuildContext dialogContext) async {
+  Future<void> _updateNickname(String newNickname) async {
     try {
-      final AuthService authService = AuthService();
-      await authService.updateUserProfile('nickname', newNickname);
-      // Call onUpdateProfile to refresh the UI
-      widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
+      await _userProfileService.updateProfileWithIntegration('nickname', newNickname);
     } catch (e) {
-      if (widget.onUpdateProfile == null) return;
-      ScaffoldMessenger.of(dialogContext).showSnackBar(
-        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', widget.selectedLanguage)} $e')),
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating nickname: $e')),
       );
+    }
+  }
+
+  Future<void> _handleAvatarUpdate(int avatarId) async {
+    try {
+      await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating avatar: $e')),
+      );
+    }
+  }
+
+  Future<String?> _getAvatarImage() async {
+    try {
+      final avatar = await _avatarService.getAvatarDetails(widget.avatarId);
+      if (avatar != null) {
+        if (mounted && avatar['img'] != _cachedAvatarPath) {
+          setState(() {
+            _cachedAvatarPath = avatar['img'];
+          });
+        }
+        return avatar['img'];
+      }
+      return 'Kladis.png';
+    } catch (e) {
+      return 'Kladis.png';
     }
   }
 
@@ -92,7 +118,7 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
             return ChangeNicknameDialog(
               currentNickname: widget.nickname,
               selectedLanguage: widget.selectedLanguage,
-              onNicknameChanged: (newNickname) => _updateNickname(newNickname, dialogContext), // Pass context here
+              onNicknameChanged: (newNickname) => _updateNickname(newNickname),
               darkenColor: (Color color, [double amount = 0.2]) {
                 final hsl = HSLColor.fromColor(color);
                 final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
@@ -140,23 +166,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
           },
         );
         break;
-    }
-  }
-
-  Future<String?> _getAvatarImage() async {
-    try {
-      final avatar = await _avatarService.getAvatarById(widget.avatarId);
-      if (avatar != null) {
-        if (mounted && avatar['img'] != _cachedAvatarPath) {
-          setState(() {
-            _cachedAvatarPath = avatar['img'];
-          });
-        }
-        return avatar['img'];
-      }
-      return 'Kladis.png';
-    } catch (e) {
-      return 'Kladis.png';
     }
   }
 

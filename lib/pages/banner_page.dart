@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,6 +6,7 @@ import 'package:handabatamae/pages/banner_details_dialog.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 enum BannerFilter { all, myCollection }
 
@@ -27,7 +29,9 @@ class BannerPage extends StatefulWidget {
 }
 
 class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateMixin {
+  final UserProfileService _userProfileService = UserProfileService();
   final BannerService _bannerService = BannerService();
+  late StreamSubscription<List<Map<String, dynamic>>> _bannerSubscription;
   late Future<List<Map<String, dynamic>>> _bannersFuture;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -40,6 +44,13 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _bannersFuture = _bannerService.fetchBanners();
+    _bannerSubscription = _bannerService.bannerUpdates.listen((banners) {
+      if (mounted) {
+        setState(() {
+          _bannersFuture = Future.value(banners);
+        });
+      }
+    });
     _userLevelFuture = _getUserLevel();
     _animationController = AnimationController(
       vsync: this,
@@ -65,6 +76,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
     _selectedBannerNotifier.dispose();
     _filterNotifier.dispose();
     _animationController.dispose();
+    _bannerSubscription.cancel();
     super.dispose();
   }
 
@@ -98,17 +110,14 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
 
   Future<void> _handleBannerUpdate(int bannerId) async {
     try {
-      await _authService.updateBannerId(bannerId);
+      await _userProfileService.updateProfileWithIntegration('bannerId', bannerId);
       widget.onBannerSelected?.call(bannerId);
       _closeDialog();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update banner. Please try again.'),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating banner: $e')),
+      );
     }
   }
 

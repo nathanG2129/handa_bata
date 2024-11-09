@@ -18,7 +18,6 @@ class BadgeService {
   final _badgeUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
   Stream<List<Map<String, dynamic>>> get badgeUpdates => _badgeUpdateController.stream;
 
-  Timer? _fetchDebounce;
 
   Future<List<Map<String, dynamic>>> fetchBadges() async {
     try {
@@ -40,6 +39,7 @@ class BadgeService {
           // Compare with local data
           if (serverBadges.length != localBadges.length) {
             print('⚠️ Badge count mismatch - Local: ${localBadges.length}, Server: ${serverBadges.length}');
+            await _storeBadgesLocally(serverBadges);
           }
           return serverBadges;
         }

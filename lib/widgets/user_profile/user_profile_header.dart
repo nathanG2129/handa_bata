@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/character_page.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
@@ -49,6 +52,25 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   final UserProfileService _userProfileService = UserProfileService();
   final AvatarService _avatarService = AvatarService();
   String? _cachedAvatarPath;
+  late StreamSubscription<UserProfile> _profileSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Listen to profile updates
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted && profile.avatarId != widget.avatarId) {
+        _getAvatarImage();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription.cancel();
+    super.dispose();
+  }
 
   Future<void> _updateNickname(String newNickname) async {
     try {

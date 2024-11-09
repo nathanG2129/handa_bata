@@ -10,12 +10,12 @@ import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/badge_unlock_service.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/notifications/banner_unlock_notification.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/widgets/notifications/badge_unlock_notification.dart';
-import 'package:handabatamae/services/badge_unlock_service.dart';
 import 'package:handabatamae/services/badge_service.dart';
 
 class HeaderWidget extends StatefulWidget {
@@ -42,7 +42,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
   OverlayEntry? _overlayEntry;
   int? _currentAvatarId;
 
-  late StreamSubscription<int> _avatarSubscription;
 
   Queue<String> _pendingBannerNotifications = Queue<String>();
   bool _isShowingBannerNotification = false;
@@ -61,66 +60,79 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   late StreamSubscription<UserProfile> _profileSubscription;
 
+  late StreamSubscription<Map<int, String>> _avatarSubscription;
+
   @override
   void initState() {
     super.initState();
     _checkForUnlockedBanners();
     _checkForUnlockedBadges();
     
-    // Check for notifications periodically
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
         _showNextNotification();
       }
     });
-    
-    _authService.getUserProfile().then((profile) {
+
+    // Initial profile fetch
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final profile = await _userProfileService.fetchUserProfile();
       if (mounted && profile != null) {
-        setState(() {
-          _currentAvatarId = profile.avatarId;
-          _getAvatarImage(profile.avatarId).then((path) {
-            if (mounted) {
-              setState(() {
-                _cachedAvatarPath = path;
-              });
-            }
-          });
-        });
+        _currentAvatarId = profile.avatarId;
+        if (_currentAvatarId != null) {
+          final avatar = await _avatarService.getAvatarDetails(_currentAvatarId!);
+          if (mounted && avatar != null) {
+            setState(() {
+              _cachedAvatarPath = avatar['img'];
+            });
+          }
+        }
       }
     });
 
-    // Listen to avatar updates
-    _avatarSubscription = _userProfileService.avatarStream.listen((newAvatarId) {
-      if (mounted) {
-        setState(() {
-          _currentAvatarId = newAvatarId;
-          _getAvatarImage(newAvatarId).then((path) {
-            if (mounted) {
-              setState(() {
-                _cachedAvatarPath = path;
-              });
-            }
-          });
-        });
-      }
-    });
-
+    // Listen to profile updates
     _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
-      if (mounted) {
+      if (mounted && profile.avatarId != _currentAvatarId) {
+        _currentAvatarId = profile.avatarId;
+        _avatarService.getAvatarDetails(profile.avatarId).then((avatar) {
+          if (mounted && avatar != null) {
+            setState(() {
+              _cachedAvatarPath = avatar['img'];
+            });
+          }
+        });
+      }
+    });
+
+    final avatarService = AvatarService();
+    _avatarSubscription = avatarService.avatarUpdates.listen((avatarUpdate) {
+      if (avatarUpdate.containsKey(_currentAvatarId)) {
         setState(() {
-          _currentAvatarId = profile.avatarId;
-          _getAvatarImage(_currentAvatarId!);
         });
       }
     });
   }
 
+  Future<void> _updateAvatar(int avatarId) async {
+    if (!mounted) return;
+    setState(() => _currentAvatarId = avatarId);
+    
+    try {
+      final avatar = await _avatarService.getAvatarDetails(avatarId);
+      if (mounted && avatar != null) {
+        setState(() => _cachedAvatarPath = avatar['img']);
+      }
+    } catch (e) {
+      print('Error updating avatar: $e');
+    }
+  }
+
   @override
   void dispose() {
     _notificationTimer?.cancel();
-    _avatarSubscription.cancel();
-    _removeOverlay();
     _profileSubscription.cancel();
+    _removeOverlay();
+    _avatarSubscription.cancel();
     super.dispose();
   }
 
@@ -247,12 +259,16 @@ class HeaderWidgetState extends State<HeaderWidget> {
           selectionMode: false,
           currentAvatarId: _currentAvatarId,
           onAvatarSelected: (newAvatarId) async {
-            await _authService.updateAvatarId(newAvatarId);
-            Navigator.of(context).pop();
-            if (mounted) {
-              setState(() {
-                _currentAvatarId = newAvatarId;
-              });
+            try {
+              // Use UserProfileService for consistent updates
+              await _userProfileService.updateProfileWithIntegration('avatarId', newAvatarId);
+              Navigator.of(context).pop();
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update avatar: $e')),
+                );
+              }
             }
           },
           onClose: () {
@@ -293,6 +309,11 @@ class HeaderWidgetState extends State<HeaderWidget> {
     try {
       final avatar = await _avatarService.getAvatarDetails(avatarId);
       if (avatar != null) {
+        if (mounted && avatar['img'] != _cachedAvatarPath) {
+          setState(() {
+            _cachedAvatarPath = avatar['img'];
+          });
+        }
         return avatar['img'];
       }
       return 'Kladis.png';
@@ -302,216 +323,109 @@ class HeaderWidgetState extends State<HeaderWidget> {
   }
 
   Widget _buildAvatarButton() {
-    return FutureBuilder<UserProfile?>(
-      future: _authService.getUserProfile(),
-      builder: (context, profileSnapshot) {
-        if (profileSnapshot.hasData && profileSnapshot.data != null) {
-          if (_currentAvatarId != profileSnapshot.data!.avatarId || _cachedAvatarPath == null) {
-            _currentAvatarId = profileSnapshot.data!.avatarId;
-            if (mounted) {
-              _getAvatarImage(_currentAvatarId!).then((path) {
-                if (mounted && path != _cachedAvatarPath) {
-                  setState(() {
-                    _cachedAvatarPath = path;
-                  });
-                }
-              });
-            }
-          }
-
-          return PopupMenuButton<String>(
-            color: const Color(0xFF241242),
-            offset: const Offset(0, 64),
-            onSelected: (String result) {
-              switch (result) {
-                case 'My Profile':
-                  _showUserProfile();
-                  break;
-                case 'Account Settings':
-                  _showAccountSettings();
-                  break;
-                case 'Characters':
-                  _showCharacters();
-                  break;
-                case 'Banners':
-                  _showBanners();
-                  break;
-                case 'Badges':
-                  _showBadges();
-                  break;
-                // Add cases for other menu items if needed
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'My Profile',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'My Profile',
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Characters',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Characters',
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Badges',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Badges',
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Banners',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Banners',
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Account Settings',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Account Settings',
-                      style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                    ),
-                  ],
-                ),
+    return PopupMenuButton<String>(
+      color: const Color(0xFF241242),
+      offset: const Offset(0, 64),
+      onSelected: (String result) {
+        switch (result) {
+          case 'My Profile':
+            _showUserProfile();
+            break;
+          case 'Account Settings':
+            _showAccountSettings();
+            break;
+          case 'Characters':
+            _showCharacters();
+            break;
+          case 'Banners':
+            _showBanners();
+            break;
+          case 'Badges':
+            _showBadges();
+            break;
+          // Add cases for other menu items if needed
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
+          value: 'My Profile',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'My Profile',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
               ),
             ],
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.white,
-              child: _cachedAvatarPath != null 
-                ? Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      image: DecorationImage(
-                        image: AssetImage('assets/avatars/$_cachedAvatarPath'),
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.none,
-                      ),
-                    ),
-                  )
-                : const CircularProgressIndicator(),
-            ),
-          );
-        }
-        return PopupMenuButton<String>(
-          icon: const Icon(Icons.person, size: 33, color: Colors.white),
-          color: const Color(0xFF241242),
-          offset: const Offset(0, 64),
-          onSelected: (String result) {
-            switch (result) {
-              case 'My Profile':
-                _showUserProfile();
-                break;
-              case 'Account Settings':
-                _showAccountSettings();
-                break;
-              case 'Characters':
-                _showCharacters();
-                break;
-              case 'Banners':
-                _showBanners();
-                break;
-              case 'Badges':
-                _showBadges();
-                break;
-              // Add cases for other menu items if needed
-            }
-          },
-          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-            PopupMenuItem<String>(
-              value: 'My Profile',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'My Profile',
-                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                  ),
-                ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'Characters',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Characters',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
               ),
-            ),
-            PopupMenuItem<String>(
-              value: 'Characters',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Characters',
-                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                  ),
-                ],
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'Badges',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Badges',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
               ),
-            ),
-            PopupMenuItem<String>(
-              value: 'Badges',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Badges',
-                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                  ),
-                ],
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'Banners',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Banners',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
               ),
-            ),
-            PopupMenuItem<String>(
-              value: 'Banners',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Banners',
-                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                  ),
-                ],
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'Account Settings',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Account Settings',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
               ),
-            ),
-            PopupMenuItem<String>(
-              value: 'Account Settings',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Account Settings',
-                    style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
-                  ),
-                ],
+            ],
+          ),
+        ),
+      ],
+      child: CircleAvatar(
+        radius: 24,
+        backgroundColor: Colors.white,
+        child: _cachedAvatarPath != null 
+          ? Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                image: DecorationImage(
+                  image: AssetImage('assets/avatars/$_cachedAvatarPath'),
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.none,
+                ),
               ),
-            ),
-          ],
-        );
-      },
+            )
+          : const CircularProgressIndicator(),
+      ),
     );
   }
 
@@ -602,7 +516,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       print('📢 Showing notification for badge ID: $nextBadgeId');
       _showBadgeUnlockNotification(nextBadgeId);
     } else {
-      print('📢 Skipping notification - already showing something');
+      print(' Skipping notification - already showing something');
     }
   }
 

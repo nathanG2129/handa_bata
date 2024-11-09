@@ -788,51 +788,30 @@ class UserProfileService {
       if (!await _avatarService.getAvatarById(profile.avatarId)) {
         await updateProfile('avatarId', 0); // Reset to default avatar
       }
-    });
+    }) as StreamSubscription<List<Map<String, dynamic>>>;
   }
 
   // Override updateProfile to handle integrated updates
   Future<void> updateProfileWithIntegration(String field, dynamic value) async {
     try {
-      // Validate updates against other services
-      switch (field) {
-        case 'badgeShowcase':
-          if (value is List) {
-            for (var badgeId in value) {
-              if (badgeId != -1 && !await _badgeService.getBadgeById(badgeId)) {
-                throw Exception('Invalid badge ID: $badgeId');
-              }
-            }
-          }
-          break;
-
-        case 'bannerId':
-          if (!await _bannerService.getBannerById(value)) {
-            throw Exception('Invalid banner ID: $value');
-          }
-          break;
-
-        case 'avatarId':
-          if (!await _avatarService.getAvatarById(value)) {
-            throw Exception('Invalid avatar ID: $value');
-          }
-          break;
+      if (field == 'avatarId') {
+        // Validate avatar exists
+        final avatar = await _avatarService.getAvatarDetails(value);
+        if (avatar == null) {
+          throw Exception('Invalid avatar ID');
+        }
       }
-
-      // Proceed with update
+      
+      // Update profile
       await updateProfile(field, value);
-
-      // Handle post-update integrations
-      switch (field) {
-        case 'level':
-          await _handleLevelUpdate(value);
-          break;
-        case 'totalBadgeUnlocked':
-          await _handleBadgeUnlockUpdate(value);
-          break;
+      
+      // Broadcast update
+      final updatedProfile = await fetchUserProfile();
+      if (updatedProfile != null) {
+        _profileUpdateController.add(updatedProfile);
       }
     } catch (e) {
-      await _logOperation('update_error', e.toString());
+      print('Error in updateProfileWithIntegration: $e');
       rethrow;
     }
   }

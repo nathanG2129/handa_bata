@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/avatar_service.dart';
-import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,7 +28,8 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   int? _selectedAvatarId;
-  final AuthService _authService = AuthService();
+  final UserProfileService _userProfileService = UserProfileService();
+  final AvatarService _avatarService = AvatarService();
 
   @override
   void initState() {
@@ -70,19 +70,33 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
-      await _authService.updateAvatarId(avatarId);
-      UserProfileService().updateAvatar(avatarId);
+      final avatar = await _avatarService.getAvatarDetails(avatarId);
+      if (avatar == null) {
+        throw Exception('Avatar not found');
+      }
+
+      await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);
+      
       widget.onAvatarSelected?.call(avatarId);
+      
       _closeDialog();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update avatar. Please try again.'),
-          ),
+          SnackBar(content: Text('Failed to update avatar: $e')),
         );
       }
     }
+  }
+
+  void _handleAvatarSelection(int selectedAvatarId) {
+    final avatarService = AvatarService();
+    avatarService.getAvatarDetails(selectedAvatarId).then((avatar) {
+      if (avatar != null) {
+        // Assuming `onAvatarSelected` is a callback that might do additional work
+        widget.onAvatarSelected?.call(selectedAvatarId);
+      }
+    });
   }
 
   @override

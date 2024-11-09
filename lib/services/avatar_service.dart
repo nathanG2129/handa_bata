@@ -13,8 +13,12 @@ class AvatarService {
   static const int MAX_CACHE_SIZE = 100;
 
   // Add stream controller for real-time updates
-  final _avatarUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
-  Stream<List<Map<String, dynamic>>> get avatarUpdates => _avatarUpdateController.stream;
+  final _avatarUpdateController = StreamController<Map<int, String>>.broadcast();
+  Stream<Map<int, String>> get avatarUpdates => _avatarUpdateController.stream;
+
+  // Add stream for avatar image updates
+  final _avatarImageController = StreamController<Map<int, String>>.broadcast();
+  Stream<Map<int, String>> get avatarImageUpdates => _avatarImageController.stream;
 
   // Add version tracking
   Future<void> _updateVersion() async {
@@ -44,7 +48,7 @@ class AvatarService {
           
           if (serverRevision > localRevision) {
             final avatars = await _fetchAndUpdateLocal(snapshot);
-            _avatarUpdateController.add(avatars); // Notify listeners
+            _avatarUpdateController.add({avatars.first['id']: avatars.first['img']}); // Notify listeners
             return avatars;
           }
         }
@@ -346,6 +350,7 @@ class AvatarService {
   // Add dispose method
   void dispose() {
     _avatarUpdateController.close();
+    _avatarImageController.close();
   }
 
   // Add better caching mechanism
@@ -354,7 +359,9 @@ class AvatarService {
   Future<Map<String, dynamic>?> getAvatarDetails(int id) async {
     try {
       if (_avatarCache.containsKey(id)) {
-        return _avatarCache[id];
+        var avatar = _avatarCache[id]!;
+        _avatarImageController.add({id: avatar['img']});
+        return avatar;
       }
       
       List<Map<String, dynamic>> avatars = await _getAvatarsFromLocal();
@@ -363,6 +370,7 @@ class AvatarService {
       if (avatar.isNotEmpty) {
         _avatarCache[id] = avatar;
         _manageCacheSize();
+        _avatarImageController.add({id: avatar['img']});
         return avatar;
       }
 
@@ -376,6 +384,7 @@ class AvatarService {
           var serverAvatar = serverAvatars.firstWhere((a) => a['id'] == id, orElse: () => {});
           if (serverAvatar.isNotEmpty) {
             _avatarCache[id] = serverAvatar;
+            _avatarImageController.add({id: serverAvatar['img']});
             return serverAvatar;
           }
         }

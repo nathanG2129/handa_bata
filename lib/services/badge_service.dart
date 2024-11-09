@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -31,20 +32,32 @@ class BadgeService {
     _syncStatusController.add(syncing);
   }
 
-  Future<List<Map<String, dynamic>>> fetchBadges() async {
+  Future<List<Map<String, dynamic>>> fetchBadges({bool isAdmin = false}) async {
     try {
-      // Return cached data immediately if available
+      if (isAdmin) {
+        // For admin, always fetch from server
+        DocumentSnapshot snapshot = await _badgeDoc.get();
+        if (!snapshot.exists) return [];
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> badges = 
+            data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+            
+        // Update cache after fetching
+        for (var badge in badges) {
+          _badgeCache[badge['id']] = badge;
+        }
+        
+        return badges;
+      }
+
+      // Existing logic for non-admin fetch
       if (_badgeCache.isNotEmpty) {
         return _badgeCache.values.toList();
       }
 
-      // Get local data
       List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
-      
-      // Start sync process if online, but don't wait for it
       _debouncedSync();
-      
-      // Return local data immediately
       return localBadges;
     } catch (e) {
       print('Error in fetchBadges: $e');
@@ -78,7 +91,11 @@ class BadgeService {
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
+      // Get local badges
+      List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
+
       if (localRevision == null || serverRevision > localRevision) {
+        // Server has newer data, update local
         List<Map<String, dynamic>> serverBadges = 
             await _fetchAndUpdateLocal(snapshot);
         
@@ -89,10 +106,19 @@ class BadgeService {
 
         // Notify listeners of new data
         _badgeUpdateController.add(serverBadges);
+      } else if (localRevision > serverRevision) {
+        // Local has newer data, update server
+        await _updateServerBadges(localBadges);
+        
+        // Update memory cache
+        for (var badge in localBadges) {
+          _badgeCache[badge['id']] = badge;
+        }
       }
 
     } catch (e) {
       print('Error in sync: $e');
+      await _logBadgeOperation('sync_error', -1, e.toString());
     } finally {
       _setSyncState(false);
     }
@@ -149,74 +175,116 @@ class BadgeService {
 
   Future<void> addBadge(Map<String, dynamic> badge) async {
     try {
-      int nextId = await getNextId();
-      badge['id'] = nextId;
+      // Get current badges
+      DocumentSnapshot snapshot = await _badgeDoc.get();
+      List<Map<String, dynamic>> badges = [];
       
-      List<Map<String, dynamic>> badges = await fetchBadges();
-      badges.add(badge);
-      
-      // Update local first
-      await _storeBadgesLocally(badges);
-      _badgeCache[nextId] = badge;
-      
-      // Then update server if online
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        await _updateServerBadges(badges);
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        badges = data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
       }
+
+      // Generate new ID
+      int newId = 1;
+      if (badges.isNotEmpty) {
+        newId = badges.map((b) => b['id'] as int).reduce(max) + 1;
+      }
+
+      // Add new badge with ID
+      badge['id'] = newId;
+      badges.add(badge);
+
+      // Update Firestore
+      await _badgeDoc.set({
+        'badges': badges,
+        'revision': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+
+      // Update cache
+      _badgeCache[newId] = badge;
+      
+      // Log the operation
+      await _logBadgeOperation('add', newId, 'Added new badge: ${badge['title']}');
+
     } catch (e) {
       print('Error adding badge: $e');
       await _logBadgeOperation('add_error', -1, e.toString());
-      rethrow;
+      throw Exception('Failed to add badge');
     }
   }
 
   Future<void> updateBadge(int id, Map<String, dynamic> updatedBadge) async {
     try {
-      List<Map<String, dynamic>> badges = await fetchBadges();
-      int index = badges.indexWhere((b) => b['id'] == id);
+      // Get current badges
+      DocumentSnapshot snapshot = await _badgeDoc.get();
+      if (!snapshot.exists) throw Exception('Badge document not found');
+
+      Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+      List<Map<String, dynamic>> badges = 
+          data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+
+      // Find and update badge
+      int index = badges.indexWhere((badge) => badge['id'] == id);
+      if (index == -1) throw Exception('Badge not found');
+
+      // Store old data for logging
+      Map<String, dynamic> oldBadge = Map<String, dynamic>.from(badges[index]);
       
-      if (index != -1) {
-        badges[index] = updatedBadge;
-        
-        // Update local first
-        await _storeBadgesLocally(badges);
-        _badgeCache[id] = updatedBadge;
-        
-        // Then update server if online
-        var connectivityResult = await Connectivity().checkConnectivity();
-        if (connectivityResult != ConnectivityResult.none) {
-          await _updateServerBadges(badges);
-        }
-      }
+      // Update badge
+      badges[index] = updatedBadge;
+
+      // Use _updateServerBadges for the update
+      await _updateServerBadges(badges);
+
+      // Update cache
+      _badgeCache[id] = updatedBadge;
+
+      // Log the operation with details of what changed
+      String changeDetails = 'Changed: ${_getChangedFields(oldBadge, updatedBadge)}';
+      await _logBadgeOperation('update', id, changeDetails);
+
     } catch (e) {
       print('Error updating badge: $e');
       await _logBadgeOperation('update_error', id, e.toString());
-      rethrow;
+      throw Exception('Failed to update badge');
     }
   }
 
   Future<void> deleteBadge(int id) async {
     try {
-      List<Map<String, dynamic>> badges = await fetchBadges();
-      badges.removeWhere((b) => b['id'] == id);
-      
-      // Update local first
-      await _storeBadgesLocally(badges);
-      _badgeCache.remove(id);
-      
-      // Then update server if online
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        await _updateServerBadges(badges);
-      }
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot snapshot = await transaction.get(_badgeDoc);
+        if (!snapshot.exists) throw Exception('Badge document not found');
 
-      // Log the operation
-      await _logBadgeOperation('delete', id, 'Badge deleted successfully');
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> badges = 
+            data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+
+        // Store badge info for logging before removal
+        Map<String, dynamic>? deletedBadge = 
+            badges.firstWhere((badge) => badge['id'] == id, orElse: () => {});
+
+        // Remove badge
+        badges.removeWhere((badge) => badge['id'] == id);
+
+        // Update document
+        transaction.update(_badgeDoc, {
+          'badges': badges,
+          'revision': FieldValue.increment(1),
+        });
+
+        // Remove from cache
+        _badgeCache.remove(id);
+
+        // Log the deletion
+        await _logBadgeOperation('delete', id, 
+            'Deleted badge: ${deletedBadge['title'] ?? 'Unknown'}');
+      });
+
     } catch (e) {
       print('Error deleting badge: $e');
       await _logBadgeOperation('delete_error', id, e.toString());
-      rethrow;
+      throw Exception('Failed to delete badge');
     }
   }
 
@@ -382,5 +450,18 @@ class BadgeService {
     } catch (e) {
       print('Error cleaning up versions: $e');
     }
+  }
+
+  // Helper method to compare old and new badge data
+  String _getChangedFields(Map<String, dynamic> oldBadge, Map<String, dynamic> newBadge) {
+    List<String> changes = [];
+    
+    newBadge.forEach((key, value) {
+      if (oldBadge[key] != value) {
+        changes.add('$key: ${oldBadge[key]} → $value');
+      }
+    });
+    
+    return changes.join(', ');
   }
 }

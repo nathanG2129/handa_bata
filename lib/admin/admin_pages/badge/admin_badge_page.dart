@@ -25,7 +25,7 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
   }
 
   void _fetchBadges() async {
-    List<Map<String, dynamic>> badges = await _badgeService.fetchBadges();
+    List<Map<String, dynamic>> badges = await _badgeService.fetchBadges(isAdmin: true);
     setState(() {
       _badges = badges;
     });

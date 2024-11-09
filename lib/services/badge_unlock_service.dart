@@ -1,6 +1,7 @@
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'dart:collection';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class QuestBadgeRange {
   final int stageStart;     // First badge ID for normal stages
@@ -25,56 +26,76 @@ class BadgeUnlockService {
     'Flood Quest': QuestBadgeRange(94, 108, 110),
   };
 
-  static const int MAX_RETRY_ATTEMPTS = 3;
-
   BadgeUnlockService(this._authService);
 
-  // Helper method to unlock badges
   Future<void> _unlockBadges(List<int> badgeIds) async {
+    if (badgeIds.isEmpty) return;
+    print('🏅 Attempting to unlock badges: $badgeIds');
+
     try {
-      print('🎯 Attempting to unlock badges: $badgeIds');
-      UserProfile? profile = await _authService.getUserProfile();
+      // Try local profile first
+      UserProfile? profile = await _authService.getLocalUserProfile();
+      
+      // If no local profile, try to get from Firestore
       if (profile == null) {
-        print('❌ No user profile found');
+        profile = await _authService.getUserProfile();
+      }
+      
+      if (profile == null) {
+        print('❌ No user profile found locally or on server');
         return;
       }
 
-      print('📊 Current unlocked badges array: ${profile.unlockedBadge}');
-      List<int> unlockedBadge = List<int>.from(profile.unlockedBadge);
-      bool needsUpdate = false;
+      // Create a new array with existing unlocks
+      List<int> unlockedBadges = List<int>.from(profile.unlockedBadge);
+      bool hasNewUnlocks = false;
 
-      // Unlock new badges
+      // Ensure array is large enough
+      int maxBadgeId = badgeIds.reduce((a, b) => a > b ? a : b);
+      while (unlockedBadges.length <= maxBadgeId) {
+        unlockedBadges.add(0);
+      }
+
+      // Process new unlocks
       for (int badgeId in badgeIds) {
-        if (badgeId < unlockedBadge.length && unlockedBadge[badgeId] == 0) {
-          print('🔓 Unlocking badge ID: $badgeId');
-          unlockedBadge[badgeId] = 1;
-          needsUpdate = true;
+        if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
+          print('🏅 New badge unlocked: $badgeId');
+          unlockedBadges[badgeId] = 1;
+          hasNewUnlocks = true;
           _pendingBadgeNotifications.add(badgeId);
+          print('🏅 Current pending notifications queue: ${_pendingBadgeNotifications.toList()}');
         }
       }
 
-      if (needsUpdate) {
-        print('💾 Updated unlocked badges array: $unlockedBadge');
-        int totalUnlocked = unlockedBadge.where((badge) => badge == 1).length;
-        print('📈 Total unlocked badges: $totalUnlocked');
+      if (hasNewUnlocks) {
+        int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
+        print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
         
         // Create updated profile
         UserProfile updatedProfile = profile.copyWith(
-          unlockedBadge: unlockedBadge,
+          unlockedBadge: unlockedBadges,
           totalBadgeUnlocked: totalUnlocked
         );
 
-        // Save to local storage first
+        // Always update local storage first
         await _authService.saveUserProfileLocally(updatedProfile);
         print('💾 Saved to local storage');
 
-        // Then update Firestore
-        await _authService.updateUserProfile('unlockedBadge', unlockedBadge);
-        await _authService.updateUserProfile('totalBadgeUnlocked', totalUnlocked);
-        print('🌐 Updated Firestore');
+        // Try to update Firestore if online
+        final connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult != ConnectivityResult.none) {
+          await Future.wait([
+            _authService.updateUserProfile('unlockedBadge', unlockedBadges),
+            _authService.updateUserProfile('totalBadgeUnlocked', totalUnlocked)
+          ]);
+          print('🌐 Updated Firestore');
+        } else {
+          print('📴 Offline - changes saved locally');
+        }
       }
     } catch (e) {
-      print('❌ Error unlocking badges: $e');
+      print('❌ Error in _unlockBadges: $e');
+      // Even if there's an error updating Firestore, the local changes are preserved
     }
   }
 

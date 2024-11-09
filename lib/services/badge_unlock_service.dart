@@ -71,11 +71,11 @@ class BadgeUnlockService {
         int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
         print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
         
-        // Create updated profile
-        UserProfile updatedProfile = profile.copyWith(
-          unlockedBadge: unlockedBadges,
-          totalBadgeUnlocked: totalUnlocked
-        );
+        // Create updated profile using Map format
+        UserProfile updatedProfile = profile.copyWith(updates: {
+          'unlockedBadge': unlockedBadges,
+          'totalBadgeUnlocked': totalUnlocked,
+        });
 
         // Always update local storage first
         await _authService.saveUserProfileLocally(updatedProfile);
@@ -95,7 +95,6 @@ class BadgeUnlockService {
       }
     } catch (e) {
       print('❌ Error in _unlockBadges: $e');
-      // Even if there's an error updating Firestore, the local changes are preserved
     }
   }
 

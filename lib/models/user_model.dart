@@ -122,7 +122,7 @@ class UserProfile {
         username: updates['username'] ?? this.username,
         nickname: updates['nickname'] ?? this.nickname,
         avatarId: updates['avatarId'] ?? this.avatarId,
-        badgeShowcase: updates['badgeShowcase'] ?? this.badgeShowcase,
+        badgeShowcase: (updates['badgeShowcase'] as List<dynamic>?)?.map((e) => e as int).toList() ?? this.badgeShowcase,
         bannerId: updates['bannerId'] ?? this.bannerId,
         exp: updates['exp'] ?? this.exp,
         expCap: updates['expCap'] ?? this.expCap,

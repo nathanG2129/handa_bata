@@ -322,10 +322,26 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
 
   Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
     try {
-      await _userProfileService.updateProfileWithIntegration('badgeShowcase', badgeIds);
-      widget.onBadgesSelected?.call(badgeIds);
+      print('💾 Saving badge selection: $badgeIds');
+      
+      // Create a fixed-size List<int> with explicit typing
+      final List<int> badgeShowcase = List<int>.filled(3, -1);
+      
+      // Copy selected badges (up to 3)
+      for (var i = 0; i < badgeIds.length && i < 3; i++) {
+        badgeShowcase[i] = badgeIds[i];
+      }
+
+      print('📝 Final badge showcase: $badgeShowcase');
+      print('📝 Badge showcase type: ${badgeShowcase.runtimeType}');
+
+      // Use UserProfileService instead of AuthService
+      await _userProfileService.updateProfileWithIntegration('badgeShowcase', badgeShowcase);
+      
+      widget.onBadgesSelected?.call(badgeShowcase);
       _closeDialog();
     } catch (e) {
+      print('❌ Error saving badge showcase: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating badges: $e')),

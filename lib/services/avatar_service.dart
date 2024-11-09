@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -37,9 +38,27 @@ class AvatarService {
     }
   }
 
-  // Enhanced fetch with version check
-  Future<List<Map<String, dynamic>>> fetchAvatars() async {
+  // Modified fetch method for admin
+  Future<List<Map<String, dynamic>>> fetchAvatars({bool isAdmin = false}) async {
     try {
+      if (isAdmin) {
+        // For admin, always fetch from server
+        DocumentSnapshot snapshot = await _avatarDoc.get();
+        if (!snapshot.exists) return [];
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> avatars = 
+            data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
+            
+        // Update cache after fetching
+        for (var avatar in avatars) {
+          _avatarCache[avatar['id']] = avatar;
+        }
+        
+        return avatars;
+      }
+
+      // Existing logic for non-admin fetch
       // Return cached data immediately if available
       if (_avatarCache.isNotEmpty) {
         return _avatarCache.values.toList();
@@ -71,48 +90,6 @@ class AvatarService {
     return avatars;
   }
 
-  // Enhanced delete with user profile updates
-  Future<void> deleteAvatar(int id) async {
-    try {
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        // Get current state
-        DocumentSnapshot avatarDoc = await transaction.get(_avatarDoc);
-        QuerySnapshot userProfiles = await FirebaseFirestore.instance
-            .collectionGroup('ProfileData')
-            .where('avatarId', isEqualTo: id)
-            .get();
-
-        // Prepare updates
-        List<Map<String, dynamic>> avatars = List<Map<String, dynamic>>.from(
-            (avatarDoc.data() as Map<String, dynamic>)['avatars'] ?? []);
-        avatars.removeWhere((avatar) => avatar['id'] == id);
-
-        // Update avatar document
-        transaction.update(_avatarDoc, {
-          'avatars': avatars,
-          'revision': FieldValue.increment(1),
-          'lastModified': FieldValue.serverTimestamp(),
-        });
-
-        // Update affected user profiles
-        for (var doc in userProfiles.docs) {
-          transaction.update(doc.reference, {
-            'avatarId': 0,
-            'lastUpdated': FieldValue.serverTimestamp()
-          });
-        }
-
-        // Update local cache after successful transaction
-        await _storeAvatarsLocally(avatars);
-        await _logAvatarOperation('delete', id, 'Success');
-      });
-    } catch (e) {
-      print('Error in deleteAvatar: $e');
-      await _logAvatarOperation('delete_error', id, e.toString());
-      rethrow;
-    }
-  }
-
   // Version control helpers
   Future<Timestamp?> _getLocalVersion() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -128,45 +105,7 @@ class AvatarService {
     await prefs.setString(AVATAR_VERSION_KEY, version.millisecondsSinceEpoch.toString());
   }
 
-  // Enhanced update with validation
-  Future<void> updateAvatar(int id, Map<String, dynamic> updatedAvatar, {int maxRetries = 3}) async {
-    int attempts = 0;
-    while (attempts < maxRetries) {
-      try {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          if (!_validateAvatarData(updatedAvatar)) {
-            throw Exception('Invalid avatar data');
-          }
 
-          DocumentSnapshot snapshot = await transaction.get(_avatarDoc);
-          List<Map<String, dynamic>> avatars = List<Map<String, dynamic>>.from(
-              (snapshot.data() as Map<String, dynamic>)['avatars'] ?? []);
-          
-          int index = avatars.indexWhere((avatar) => avatar['id'] == id);
-          if (index == -1) throw Exception('Avatar not found');
-          
-          avatars[index] = updatedAvatar;
-          
-          transaction.update(_avatarDoc, {
-            'avatars': avatars,
-            'revision': FieldValue.increment(1),
-            'lastModified': FieldValue.serverTimestamp(),
-          });
-
-          await _storeAvatarsLocally(avatars);
-          await _logAvatarOperation('update', id, 'Success');
-        });
-        return; // Success
-      } catch (e) {
-        attempts++;
-        if (attempts == maxRetries) {
-          await _logAvatarOperation('update_error', id, e.toString());
-          rethrow;
-        }
-        await Future.delayed(Duration(seconds: attempts));
-      }
-    }
-  }
 
   bool _validateAvatarData(Map<String, dynamic> avatar) {
     return avatar.containsKey('id') &&
@@ -251,26 +190,131 @@ class AvatarService {
     }
   }
 
+  // Add avatar method
   Future<void> addAvatar(Map<String, dynamic> avatar) async {
     try {
-      // 1. Get next available ID
-      int nextId = await getNextId();
-      avatar['id'] = nextId;
+      // Get current avatars
+      DocumentSnapshot snapshot = await _avatarDoc.get();
+      List<Map<String, dynamic>> avatars = [];
       
-      // 2. Get current avatars list
-      List<Map<String, dynamic>> avatars = await fetchAvatars();
-      avatars.add(avatar);
-      
-      // 3. Save locally first
-      await _storeAvatarsLocally(avatars);
-      
-      // 4. Then update Firebase if online
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        await _avatarDoc.update({'avatars': avatars});
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        avatars = data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
       }
+
+      // Generate new ID
+      int newId = 1;
+      if (avatars.isNotEmpty) {
+        newId = avatars.map((a) => a['id'] as int).reduce(max) + 1;
+      }
+
+      // Add new avatar with ID
+      avatar['id'] = newId;
+      avatars.add(avatar);
+
+      // Update Firestore
+      await _avatarDoc.set({
+        'avatars': avatars,
+        'revision': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+
+      // Update cache
+      _avatarCache[newId] = avatar;
+      
+      // Update version
+      await _updateVersion();
     } catch (e) {
-      // If Firebase update fails, at least we have local storage
+      print('Error adding avatar: $e');
+      throw Exception('Failed to add avatar');
+    }
+  }
+
+  // Update avatar method
+  Future<void> updateAvatar(int id, Map<String, dynamic> updatedAvatar) async {
+    try {
+      // Get current avatars
+      DocumentSnapshot snapshot = await _avatarDoc.get();
+      if (!snapshot.exists) throw Exception('Avatar document not found');
+
+      Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+      List<Map<String, dynamic>> avatars = 
+          data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
+
+      // Find and update avatar
+      int index = avatars.indexWhere((avatar) => avatar['id'] == id);
+      if (index == -1) throw Exception('Avatar not found');
+
+      // Store old data for logging
+      Map<String, dynamic> oldAvatar = Map<String, dynamic>.from(avatars[index]);
+      
+      // Update avatar
+      avatars[index] = updatedAvatar;
+
+      // Update Firestore
+      await _avatarDoc.update({
+        'avatars': avatars,
+        'revision': FieldValue.increment(1),
+      });
+
+      // Update cache
+      _avatarCache[id] = updatedAvatar;
+      
+      // Update version
+      await _updateVersion();
+
+      // Log the operation with details of what changed
+      String changeDetails = 'Changed: ${_getChangedFields(oldAvatar, updatedAvatar)}';
+      await _logAvatarOperation('update', id, changeDetails);
+
+    } catch (e) {
+      print('Error updating avatar: $e');
+      await _logAvatarOperation('update_error', id, e.toString());
+      throw Exception('Failed to update avatar');
+    }
+  }
+
+  // Helper method to compare old and new avatar data
+  String _getChangedFields(Map<String, dynamic> oldAvatar, Map<String, dynamic> newAvatar) {
+    List<String> changes = [];
+    
+    newAvatar.forEach((key, value) {
+      if (oldAvatar[key] != value) {
+        changes.add('$key: ${oldAvatar[key]} → $value');
+      }
+    });
+    
+    return changes.join(', ');
+  }
+
+  // Delete avatar method
+  Future<void> deleteAvatar(int id) async {
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot snapshot = await transaction.get(_avatarDoc);
+        if (!snapshot.exists) throw Exception('Avatar document not found');
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> avatars = 
+            data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
+
+        // Remove avatar
+        avatars.removeWhere((avatar) => avatar['id'] == id);
+
+        // Update document
+        transaction.update(_avatarDoc, {
+          'avatars': avatars,
+          'revision': FieldValue.increment(1),
+        });
+
+        // Remove from cache
+        _avatarCache.remove(id);
+      });
+
+      // Update version after successful deletion
+      await _updateVersion();
+    } catch (e) {
+      print('Error deleting avatar: $e');
+      throw Exception('Failed to delete avatar');
     }
   }
 

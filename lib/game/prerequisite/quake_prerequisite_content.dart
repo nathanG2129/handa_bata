@@ -47,6 +47,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           ],
           description: 'Read the question carefully and choose the correct answer. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
           onNext: _nextTutorial,
+          isFirstPage: true,
         ),
         TutorialPage(
           title: 'Identification',
@@ -58,6 +59,8 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           ],
           description: 'Select a letter one at a time to form an answer. Your answer will be checked instantly once you fill in the last tile. Answer carefully to prevent Kladis and Kloud\'s health bar from going down.',
           onNext: _nextTutorial,
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
         ),
         TutorialPage(
           title: 'Fill in the Blanks',
@@ -71,6 +74,8 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           ],
           description: 'Fill in the blanks with the correct letters to complete the word. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
           onNext: _nextTutorial,
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
         ),
         TutorialPage(
           title: 'Matching Type',
@@ -96,6 +101,8 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
         ),
       ];

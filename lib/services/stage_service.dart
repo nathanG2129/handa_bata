@@ -655,35 +655,42 @@ class StageService {
 
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          DocumentSnapshot snapshot = await transaction.get(_stageDoc);
-          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-          
-          // Get current stages
-          List<Map<String, dynamic>> stages = 
-              data['stages'] != null ? List<Map<String, dynamic>>.from(data['stages']) : [];
-          
-          // Add new stage
+        // Add stage to Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .set({
+          ...stageData,
+          'lastModified': FieldValue.serverTimestamp(),
+        });
+
+        // Update local cache
+        String cacheKey = '${language}_${categoryId}_stages';
+        if (_stageCache.containsKey(cacheKey)) {
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
           stages.add({
-            'categoryId': categoryId,
             'stageName': stageName,
-            'language': language,
             ...stageData,
           });
-
-          // Update Firestore
-          transaction.update(_stageDoc, {
+          _stageCache[cacheKey] = {
             'stages': stages,
-            'revision': FieldValue.increment(1),
-            'lastModified': FieldValue.serverTimestamp(),
-          });
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          };
+        }
 
-          // Update local storage
-          await _storeStagesLocally(stages, categoryId);
-          await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
-        });
+        await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
       } else {
-        throw Exception('No internet connection');
+        // Queue for offline sync
+        await addOfflineChange('add', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+          'data': stageData,
+        });
       }
     } catch (e) {
       print('Error adding stage: $e');
@@ -705,54 +712,47 @@ class StageService {
 
   Future<void> updateStage(String language, String categoryId, String stageName, Map<String, dynamic> updatedData) async {
     try {
-      // Debug print to see what we're trying to update
-      print('Attempting to update stage with data: $updatedData');
-
-      if (!_validateStageData(updatedData)) {
-        print('Stage data validation failed for: $updatedData');
-        throw Exception('Invalid stage data');
-      }
-
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          // Get the stage document
-          DocumentSnapshot stageDoc = await transaction.get(
-            _firestore
-                .collection('Game')
-                .doc('Stage')
-                .collection(language)
-                .doc(categoryId)
-                .collection('stages')
-                .doc(stageName)
-          );
-
-          // Merge existing data with updates
-          Map<String, dynamic> existingData = stageDoc.data() as Map<String, dynamic>;
-          Map<String, dynamic> mergedData = {
-            ...existingData,
-            ...updatedData,
-            'lastModified': FieldValue.serverTimestamp(),
-          };
-
-          // Update the document
-          transaction.update(stageDoc.reference, mergedData);
-
-          // Update local storage
-          List<Map<String, dynamic>> stages = await _getStagesFromLocal(categoryId);
-          int index = stages.indexWhere((s) => 
-              s['stageName'] == stageName &&
-              s['language'] == language);
-
-          if (index != -1) {
-            stages[index] = mergedData;
-            await _storeStagesLocally(stages, categoryId);
-          }
-
-          await _logStageOperation('update_stage', categoryId, 'Updated stage: $stageName');
+        // Update in Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .update({
+          ...updatedData,
+          'lastModified': FieldValue.serverTimestamp(),
         });
+
+        // Update local cache
+        String cacheKey = '${language}_${categoryId}_stages';
+        if (_stageCache.containsKey(cacheKey)) {
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+          int index = stages.indexWhere((s) => s['stageName'] == stageName);
+          if (index != -1) {
+            stages[index] = {
+              ...stages[index],
+              ...updatedData,
+            };
+            _stageCache[cacheKey] = {
+              'stages': stages,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            };
+          }
+        }
+
+        await _logStageOperation('update_stage', categoryId, 'Updated stage: $stageName');
       } else {
-        throw Exception('No internet connection');
+        // Queue for offline sync
+        await addOfflineChange('update', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+          'data': updatedData,
+        });
       }
     } catch (e) {
       print('Error updating stage: $e');
@@ -765,29 +765,35 @@ class StageService {
     try {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          DocumentSnapshot snapshot = await transaction.get(_stageDoc);
-          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-          
-          List<Map<String, dynamic>> stages = 
-              data['stages'] != null ? List<Map<String, dynamic>>.from(data['stages']) : [];
-          
-          stages.removeWhere((stage) => 
-              stage['categoryId'] == categoryId && 
-              stage['stageName'] == stageName &&
-              stage['language'] == language);
+        // Delete from Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .delete();
 
-          transaction.update(_stageDoc, {
+        // Update local cache
+        String cacheKey = '${language}_${categoryId}_stages';
+        if (_stageCache.containsKey(cacheKey)) {
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+          stages.removeWhere((s) => s['stageName'] == stageName);
+          _stageCache[cacheKey] = {
             'stages': stages,
-            'revision': FieldValue.increment(1),
-            'lastModified': FieldValue.serverTimestamp(),
-          });
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          };
+        }
 
-          await _storeStagesLocally(stages, categoryId);
-          await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
-        });
+        await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
       } else {
-        throw Exception('No internet connection');
+        // Queue for offline sync
+        await addOfflineChange('delete', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+        });
       }
     } catch (e) {
       print('Error deleting stage: $e');
@@ -798,41 +804,40 @@ class StageService {
 
   Future<void> updateCategory(String language, String categoryId, Map<String, dynamic> updatedData) async {
     try {
-      if (!_validateCategoryData(updatedData)) {
-        throw Exception('Invalid category data');
-      }
-
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          DocumentSnapshot snapshot = await transaction.get(_stageDoc);
-          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-          
-          List<Map<String, dynamic>> categories = 
-              data['categories'] != null ? List<Map<String, dynamic>>.from(data['categories']) : [];
-          
-          int index = categories.indexWhere((cat) => 
-              cat['id'] == categoryId && cat['language'] == language);
+        // Update category in Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .update({
+          ...updatedData,
+          'lastModified': FieldValue.serverTimestamp(),
+        });
 
+        // Update local cache
+        if (_categoryCache.containsKey(language)) {
+          List<Map<String, dynamic>> categories = List<Map<String, dynamic>>.from(_categoryCache[language]!);
+          int index = categories.indexWhere((c) => c['id'] == categoryId);
           if (index != -1) {
             categories[index] = {
-              'id': categoryId,
-              'language': language,
+              ...categories[index],
               ...updatedData,
             };
-
-            transaction.update(_stageDoc, {
-              'categories': categories,
-              'revision': FieldValue.increment(1),
-              'lastModified': FieldValue.serverTimestamp(),
-            });
-
-            await _storeCategoriesLocally(categories, language);
-            await _logStageOperation('update_category', categoryId, 'Updated category');
+            _categoryCache[language] = categories;
           }
-        });
+        }
+
+        await _logStageOperation('update_category', categoryId, 'Updated category');
       } else {
-        throw Exception('No internet connection');
+        // Queue for offline sync
+        await addOfflineChange('update_category', {
+          'language': language,
+          'categoryId': categoryId,
+          'data': updatedData,
+        });
       }
     } catch (e) {
       print('Error updating category: $e');

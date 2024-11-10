@@ -278,7 +278,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       var filteredBadges = badges.where((badge) {
         int badgeId = badge['id'] as int;
         bool isUnlocked = badgeId < _unlockedBadges.length && _unlockedBadges[badgeId] == 1;
-        print('Badge ID: $badgeId, Value in unlockedBadges: ${badgeId < _unlockedBadges.length ? _unlockedBadges[badgeId] : "out of range"}');
         return isUnlocked;
       }).toList();
       print('Found ${filteredBadges.length} unlocked badges');

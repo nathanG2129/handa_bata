@@ -56,18 +56,18 @@ class BadgeUnlockService {
         unlockedBadges.add(0);
       }
 
-      // Process new unlocks
+      // Process new unlocks - FIXED: Now properly preserves existing unlocks
       for (int badgeId in badgeIds) {
         if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
           print('🏅 New badge unlocked: $badgeId');
           unlockedBadges[badgeId] = 1;
           hasNewUnlocks = true;
           _pendingBadgeNotifications.add(badgeId);
-          print('🏅 Current pending notifications queue: ${_pendingBadgeNotifications.toList()}');
         }
       }
 
       if (hasNewUnlocks) {
+        // Calculate total unlocked correctly by counting all 1s
         int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
         print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
         

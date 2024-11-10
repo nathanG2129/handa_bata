@@ -354,40 +354,44 @@ void _showAnswerVisually() async {
     questionText.split(' ').forEach((word) {
       if (word.startsWith('<input>')) {
         String suffix = word.substring(7); // Get the suffix after <input>
-        Color boxColor = selectedOptions[inputIndex] == null ? const Color(0xFF241242) : Colors.white; // Always white border
-        Color textColor = Colors.white; // Default text color
         
         if (correctness[inputIndex] != null) {
           if (_isVisualDisplayComplete) {
-            boxColor = Colors.green;
-            textColor = Colors.white;
           } else {
-            boxColor = correctness[inputIndex]! ? Colors.green : Colors.red;
-            textColor = Colors.white;
           }
         } else if (selectedOptions[inputIndex] != null) {
-          textColor = Colors.black; // Black text for selected options
+// Black text for selected options
         }
 
         questionWidgets.add(
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
-            curve: Curves.easeInOut, // Use a smooth curve for the transition
+          Container(
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             decoration: BoxDecoration(
-              color: boxColor,
               border: Border.all(
-                color: Colors.white, // Always white border
-                width: 2, // Make border more visible
+                color: Colors.white,
+                width: 2,
               ),
               borderRadius: BorderRadius.circular(0),
             ),
-            child: Text(
-              selectedOptions[inputIndex] ?? '____',
-              style: (selectedOptions[inputIndex] == null)
-                ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
-                : GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+            child: AnimatedContainer( // Wrap the content in AnimatedContainer
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              color: selectedOptions[inputIndex] == null 
+                  ? const Color(0xFF241242) 
+                  : (correctness[inputIndex] != null
+                      ? (correctness[inputIndex]! ? Colors.green : Colors.red)
+                      : Colors.white),
+              child: Text(
+                selectedOptions[inputIndex] ?? '____',
+                style: (selectedOptions[inputIndex] == null)
+                  ? GoogleFonts.vt323(fontSize: 24, color: Colors.white)
+                  : GoogleFonts.rubik(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold, 
+                      color: correctness[inputIndex] != null ? Colors.white : Colors.black,
+                    ),
+              ),
             ),
           ),
         );

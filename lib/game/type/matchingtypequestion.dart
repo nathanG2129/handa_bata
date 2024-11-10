@@ -271,7 +271,9 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                     left: 2,
                     top: 2,
                     bottom: 2,
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
                       width: 16,
                       decoration: BoxDecoration(
                         color: pair['section1']!.isEmpty ? Colors.transparent : color,
@@ -599,7 +601,9 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                 left: 1,
                                 top: 1,
                                 bottom: 1,
-                                child: Container(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
                                   width: 16,
                                   decoration: BoxDecoration(
                                     color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242),

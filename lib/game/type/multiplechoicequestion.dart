@@ -249,7 +249,6 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
                   // If an option is selected but not showing all answers yet
                   if (widget.selectedOptionIndex != null && !showAllAnswers) {
-                    // Selected option stays at full opacity, others are dimmed
                     opacity = (index == widget.selectedOptionIndex) ? 1.0 : 0.5;
                   }
 
@@ -257,14 +256,12 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                     buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
                     textColor = Colors.white;
                   } else if (showAllAnswers) {
-                    opacity = 1.0; // Restore full opacity when showing all answers
-                    if (index == widget.selectedOptionIndex) {
-                      buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
-                      textColor = Colors.white;
-                    } else {
-                      buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
-                      textColor = Colors.white;
-                    }
+                    opacity = 1.0;
+                    buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
+                    textColor = Colors.white;
+                  } else if (showAllRed) {
+                    buttonColor = Colors.red;
+                    textColor = Colors.white;
                   }
 
                   return Padding(
@@ -305,7 +302,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                                     options[index],
                                     style: GoogleFonts.rubik(
                                       fontSize: 20,
-                                      color: buttonColor == Colors.white ? Colors.black : Colors.white,
+                                      color: textColor,
                                     ),
                                   ),
                                 ),

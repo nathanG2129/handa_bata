@@ -28,10 +28,27 @@ class BannerService {
 
   Future<List<Map<String, dynamic>>> fetchBanners() async {
     try {
+      // Try local storage first
       List<Map<String, dynamic>> localBanners = await _getBannersFromLocal();
       
-      // Trigger debounced sync
-      _debouncedSync();
+      // If local storage is empty, try fetching from server
+      if (localBanners.isEmpty) {
+        var connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult != ConnectivityResult.none) {
+          DocumentSnapshot snapshot = await _bannerDoc.get();
+          if (snapshot.exists) {
+            Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+            localBanners = data['banners'] != null ? List<Map<String, dynamic>>.from(data['banners']) : [];
+            // Store in local
+            await _storeBannersLocally(localBanners);
+          }
+        }
+      }
+      
+      // Update memory cache
+      for (var banner in localBanners) {
+        _bannerCache[banner['id']] = banner;
+      }
       
       return localBanners;
     } catch (e) {

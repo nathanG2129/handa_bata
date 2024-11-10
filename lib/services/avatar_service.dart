@@ -58,19 +58,23 @@ class AvatarService {
         return avatars;
       }
 
-      // Existing logic for non-admin fetch
-      // Return cached data immediately if available
-      if (_avatarCache.isNotEmpty) {
-        return _avatarCache.values.toList();
-      }
-
-      // Get local data
+      // Get from local storage first
       List<Map<String, dynamic>> localAvatars = await _getAvatarsFromLocal();
       
-      // Start sync process if online, but don't wait for it
-      _debouncedSync();
+      // If local storage is empty, try fetching from server
+      if (localAvatars.isEmpty) {
+        var connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult != ConnectivityResult.none) {
+          DocumentSnapshot snapshot = await _avatarDoc.get();
+          if (snapshot.exists) {
+            Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+            localAvatars = data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
+            // Store in local
+            await _storeAvatarsLocally(localAvatars);
+          }
+        }
+      }
       
-      // Return local data immediately
       return localAvatars;
     } catch (e) {
       print('Error in fetchAvatars: $e');

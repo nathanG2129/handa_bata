@@ -30,7 +30,11 @@ class BadgeService {
   Stream<List<Map<String, dynamic>>> get badgeUpdates => _badgeUpdateController.stream;
 
   // Add UserProfileService
-  final UserProfileService _userProfileService = UserProfileService();
+  static final BadgeService _instance = BadgeService._internal();
+  factory BadgeService() => _instance;
+  BadgeService._internal();
+
+  UserProfileService get _userProfileService => UserProfileService();
 
   void _setSyncState(bool syncing) {
     _isSyncing = syncing;
@@ -56,14 +60,21 @@ class BadgeService {
         return badges;
       }
 
-      // Get badge details from local storage
+      // Get badge details from local storage first
       List<Map<String, dynamic>> badges = await _getBadgesFromLocal();
       
-      // Get unlock states from UserProfile
-      UserProfile? profile = await _userProfileService.fetchUserProfile();
-      if (profile != null) {
-        // Merge unlock states with badge details
-        badges = _mergeBadgeStates(badges, profile.unlockedBadge);
+      // If local storage is empty, try fetching from server
+      if (badges.isEmpty) {
+        var connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult != ConnectivityResult.none) {
+          DocumentSnapshot snapshot = await _badgeDoc.get();
+          if (snapshot.exists) {
+            Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+            badges = data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+            // Store in local
+            await _storeBadgesLocally(badges);
+          }
+        }
       }
 
       // Update memory cache
@@ -71,13 +82,6 @@ class BadgeService {
         _badgeCache[badge['id']] = badge;
       }
 
-      // If online, sync in background
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        _debouncedSync();
-      }
-
-      _badgeUpdateController.add(badges);
       return badges;
     } catch (e) {
       print('Error in fetchBadges: $e');

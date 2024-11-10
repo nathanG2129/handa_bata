@@ -710,7 +710,7 @@ class UserProfileService {
   }
 
   // Add service instances
-  final BadgeService _badgeService = BadgeService();
+  BadgeService get _badgeService => BadgeService();
   final BannerService _bannerService = BannerService();
   final AvatarService _avatarService = AvatarService();
 

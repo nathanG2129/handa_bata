@@ -9,6 +9,7 @@ class BannerService {
   static const String BANNERS_CACHE_KEY = 'banners_cache';
   static const String BANNER_REVISION_KEY = 'banner_revision';
   static const int MAX_STORED_VERSIONS = 5;
+  static const int MAX_CACHE_SIZE = 100;
 
   // Memory cache
   final Map<int, Map<String, dynamic>> _bannerCache = {};
@@ -17,45 +18,26 @@ class BannerService {
   final _bannerUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
   Stream<List<Map<String, dynamic>>> get bannerUpdates => _bannerUpdateController.stream;
 
+  // Sync-related constants and controllers
+  static const Duration SYNC_DEBOUNCE = Duration(milliseconds: 500);
+  static const Duration SYNC_TIMEOUT = Duration(seconds: 5);
+  Timer? _syncDebounceTimer;
+  bool _isSyncing = false;
+  final StreamController<bool> _syncStatusController = StreamController<bool>.broadcast();
+  Stream<bool> get syncStatus => _syncStatusController.stream;
+
   Future<List<Map<String, dynamic>>> fetchBanners() async {
     try {
       List<Map<String, dynamic>> localBanners = await _getBannersFromLocal();
-      var connectivityResult = await (Connectivity().checkConnectivity());
       
-      if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot snapshot = await _bannerDoc.get();
-        if (snapshot.exists) {
-          // Check if revision field exists first
-          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-          int serverRevision = data.containsKey('revision') ? data['revision'] : 0;
-          
-          if (!data.containsKey('revision')) {
-            await _bannerDoc.update({
-              'revision': 0,
-              'lastModified': FieldValue.serverTimestamp(),
-            });
-          }
-          
-          int localRevision = await _getLocalRevision() ?? -1;
-          
-          if (serverRevision > localRevision || localBanners.isEmpty) {
-            final banners = await _fetchAndUpdateLocal(snapshot);
-            _bannerUpdateController.add(banners);
-            return banners;
-          }
-        } else {
-          await _bannerDoc.set({
-            'banners': [],
-            'revision': 0,
-            'lastModified': FieldValue.serverTimestamp(),
-          });
-        }
-      }
+      // Trigger debounced sync
+      _debouncedSync();
+      
       return localBanners;
     } catch (e) {
       print('Error in fetchBanners: $e');
       await _logBannerOperation('fetch_error', -1, e.toString());
-      return await _getBannersFromLocal();
+      return [];
     }
   }
 
@@ -205,6 +187,7 @@ class BannerService {
 
   void dispose() {
     _bannerUpdateController.close();
+    _syncStatusController.close();
   }
 
   Future<void> _verifyDataIntegrity() async {
@@ -234,6 +217,16 @@ class BannerService {
         seenIds.add(id);
       }
 
+      // Check for required fields
+      for (var banner in localBanners) {
+        if (!banner.containsKey('id') || 
+            !banner.containsKey('img') || 
+            !banner.containsKey('title')) {
+          needsRepair = true;
+          break;
+        }
+      }
+
       // Compare with server data if available
       if (serverBanners.isNotEmpty && serverBanners.length != localBanners.length) {
         needsRepair = true;
@@ -244,7 +237,10 @@ class BannerService {
         await _logBannerOperation('integrity_repair', -1, 'Data repaired');
       }
 
-      _bannerCache.clear();
+      // Clear memory cache if repair was needed
+      if (needsRepair) {
+        _bannerCache.clear();
+      }
     } catch (e) {
       print('Error verifying data integrity: $e');
       await _logBannerOperation('integrity_check_error', -1, e.toString());
@@ -255,11 +251,17 @@ class BannerService {
     try {
       Map<int, Map<String, dynamic>> mergedBanners = {};
       
+      // First add all server banners
       for (var banner in serverBanners) {
-        mergedBanners[banner['id']] = banner;
+        if (banner.containsKey('id')) {
+          mergedBanners[banner['id']] = banner;
+        }
       }
       
+      // Then merge local banners, keeping newer versions
       for (var localBanner in localBanners) {
+        if (!localBanner.containsKey('id')) continue;
+        
         int id = localBanner['id'];
         if (!mergedBanners.containsKey(id) || 
             (localBanner['lastModified'] ?? 0) > (mergedBanners[id]!['lastModified'] ?? 0)) {
@@ -267,9 +269,29 @@ class BannerService {
         }
       }
       
-      List<Map<String, dynamic>> resolvedBanners = mergedBanners.values.toList();
+      // Convert back to list and ensure all required fields exist
+      List<Map<String, dynamic>> resolvedBanners = mergedBanners.values
+          .where((banner) => 
+              banner.containsKey('id') && 
+              banner.containsKey('img') && 
+              banner.containsKey('title'))
+          .toList();
+      
+      // Sort by ID to maintain consistent order
+      resolvedBanners.sort((a, b) => a['id'].compareTo(b['id']));
+      
+      // Update both local and server
       await _storeBannersLocally(resolvedBanners);
       await _updateServerBanners(resolvedBanners);
+      
+      // Update memory cache
+      _bannerCache.clear();
+      for (var banner in resolvedBanners) {
+        _bannerCache[banner['id']] = banner;
+      }
+      
+      // Notify listeners of the changes
+      _bannerUpdateController.add(resolvedBanners);
     } catch (e) {
       print('Error resolving conflicts: $e');
       await _logBannerOperation('conflict_resolution_error', -1, e.toString());
@@ -371,5 +393,106 @@ class BannerService {
 
   Future<List<Map<String, dynamic>>> getLocalBanners() async {
     return _getBannersFromLocal();
+  }
+
+  void _setSyncStatus(bool syncing) {
+    if (_isSyncing != syncing) {
+      _isSyncing = syncing;
+      _syncStatusController.add(_isSyncing);
+    }
+  }
+
+  // Add new debounced sync method
+  void _debouncedSync() {
+    _syncDebounceTimer?.cancel();
+    _syncDebounceTimer = Timer(SYNC_DEBOUNCE, () {
+      _syncWithServer();
+    });
+  }
+
+  // Add new sync method
+  Future<void> _syncWithServer() async {
+    if (_isSyncing) return;
+
+    try {
+      _setSyncStatus(true);
+
+      // First verify data integrity
+      await _verifyDataIntegrity();
+
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        return;
+      }
+
+      // Add timeout to prevent hanging
+      DocumentSnapshot snapshot = await _bannerDoc.get()
+          .timeout(SYNC_TIMEOUT);
+
+      if (!snapshot.exists) return;
+
+      int serverRevision = snapshot.get('revision') ?? 0;
+      int? localRevision = await _getLocalRevision();
+
+      // Only sync if server has newer data
+      if (localRevision == null || serverRevision > localRevision) {
+        List<Map<String, dynamic>> serverBanners = 
+            await _fetchAndUpdateLocal(snapshot);
+        
+        // Update memory cache
+        for (var banner in serverBanners) {
+          _bannerCache[banner['id']] = banner;
+        }
+
+        // Notify listeners
+        _bannerUpdateController.add(serverBanners);
+      }
+    } catch (e) {
+      print('Error in _syncWithServer: $e');
+      await _logBannerOperation('sync_error', -1, e.toString());
+    } finally {
+      _setSyncStatus(false);
+    }
+  }
+
+  void _manageCacheSize() {
+    if (_bannerCache.length > MAX_CACHE_SIZE) {
+      // Remove oldest entries if cache gets too large
+      final entriesToRemove = _bannerCache.length - MAX_CACHE_SIZE;
+      final sortedKeys = _bannerCache.keys.toList()..sort();
+      for (var i = 0; i < entriesToRemove; i++) {
+        _bannerCache.remove(sortedKeys[i]);
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _recoverFromError() async {
+    try {
+      // Try to restore from backup first
+      await _restoreFromBackup();
+      
+      // Clear corrupted cache
+      _bannerCache.clear();
+      
+      // Try to get from local storage
+      List<Map<String, dynamic>> localBanners = await _getBannersFromLocal();
+      if (localBanners.isNotEmpty) {
+        return localBanners;
+      }
+      
+      // If all else fails, try server
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        DocumentSnapshot snapshot = await _bannerDoc.get();
+        if (snapshot.exists) {
+          return await _fetchAndUpdateLocal(snapshot);
+        }
+      }
+      
+      return [];
+    } catch (e) {
+      print('Error in recovery attempt: $e');
+      return [];
+    }
   }
 }

@@ -277,91 +277,29 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
             child: Center(
               child: GestureDetector(
                 onTap: () {},
-                child: FutureBuilder<List<dynamic>>(
-                  future: Future.wait([_bannersFuture, _userLevelFuture]),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
-                      return const Center(child: Text('No banners found.'));
-                    } else {
-                      if (!_animationController.isAnimating && !_animationController.isCompleted) {
-                        _animationController.forward();
-                      }
-                      final banners = snapshot.data![0] as List<Map<String, dynamic>>;
-                      final userLevel = snapshot.data![1] as int;
-
-                      return SlideTransition(
-                        position: _slideAnimation,
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: MediaQuery.of(context).size.height * 0.7,
-                              maxHeight: MediaQuery.of(context).size.height * 0.7,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  color: const Color(0xFF3A1A5F),
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                  child: Center(
-                                    child: Text(
-                                      'Banners',
-                                      style: GoogleFonts.vt323(
-                                        color: Colors.white,
-                                        fontSize: 42,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    color: const Color(0xFF241242),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            child: Column(
-                                              children: [
-                                                if (!widget.selectionMode)
-                                                  Padding(
-                                                    padding: const EdgeInsets.all(16.0),
-                                                    child: Align(
-                                                      alignment: Alignment.centerRight,
-                                                      child: _buildFilterDropdown(),
-                                                    ),
-                                                  ),
-                                                _buildBannerGrid(banners, userLevel),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        if (widget.selectionMode)
-                                          Container(
-                                            width: double.infinity,
-                                            color: const Color(0xFF3A1A5F),
-                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                            child: _buildSaveButton(),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                child: StreamBuilder<bool>(
+                  stream: _bannerService.syncStatus,
+                  builder: (context, syncSnapshot) {
+                    final isSyncing = syncSnapshot.data ?? false;
+                    
+                    return Stack(
+                      children: [
+                        _buildMainContent(),
+                        if (isSyncing)
+                          const Positioned(
+                            top: 120,
+                            right: 30,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }
+                      ],
+                    );
                   },
                 ),
               ),
@@ -369,6 +307,96 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([_bannersFuture, _userLevelFuture]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
+          return const Center(child: Text('No banners found.'));
+        } else {
+          if (!_animationController.isAnimating && !_animationController.isCompleted) {
+            _animationController.forward();
+          }
+          final banners = snapshot.data![0] as List<Map<String, dynamic>>;
+          final userLevel = snapshot.data![1] as int;
+
+          return SlideTransition(
+            position: _slideAnimation,
+            child: Card(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: Colors.black, width: 1),
+                borderRadius: BorderRadius.zero,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height * 0.7,
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      color: const Color(0xFF3A1A5F),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      child: Center(
+                        child: Text(
+                          'Banners',
+                          style: GoogleFonts.vt323(
+                            color: Colors.white,
+                            fontSize: 42,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        color: const Color(0xFF241242),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    if (!widget.selectionMode)
+                                      Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: _buildFilterDropdown(),
+                                        ),
+                                      ),
+                                    _buildBannerGrid(banners, userLevel),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (widget.selectionMode)
+                              Container(
+                                width: double.infinity,
+                                color: const Color(0xFF3A1A5F),
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                child: _buildSaveButton(),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 }

@@ -602,42 +602,59 @@ class AvatarService {
 
   // Add new sync method
   Future<void> _syncWithServer() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      print('🔄 Avatar sync already in progress, skipping...');
+      return;
+    }
 
     try {
+      print('🔄 Starting avatar sync process');
       _setSyncState(true);
 
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
+        print('📡 No internet connection, aborting avatar sync');
         return;
       }
 
+      print('📥 Fetching avatar data from server');
       // Add timeout to prevent hanging
       DocumentSnapshot snapshot = await _avatarDoc.get()
           .timeout(SYNC_TIMEOUT);
 
-      if (!snapshot.exists) return;
+      if (!snapshot.exists) {
+        print('❌ Avatar document not found on server');
+        return;
+      }
 
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
+      print('📊 Server revision: $serverRevision, Local revision: $localRevision');
+
       // Only sync if server has newer data
       if (localRevision == null || serverRevision > localRevision) {
+        print('🔄 Server has newer data, updating local cache');
         List<Map<String, dynamic>> serverAvatars = 
             await _fetchAndUpdateLocal(snapshot);
         
+        print('💾 Updating memory cache with ${serverAvatars.length} avatars');
         // Update memory cache
         for (var avatar in serverAvatars) {
           _avatarCache[avatar['id']] = avatar;
         }
 
+        print('📢 Notifying listeners of avatar updates');
         // Notify listeners of new data
         _avatarUpdateController.add({serverAvatars.first['id']: serverAvatars.first['img']});
+      } else {
+        print('✅ Local avatar data is up to date');
       }
 
     } catch (e) {
-      print('Error in sync: $e');
+      print('❌ Error in avatar sync: $e');
     } finally {
+      print('🏁 Avatar sync process completed');
       _setSyncState(false);
     }
   }

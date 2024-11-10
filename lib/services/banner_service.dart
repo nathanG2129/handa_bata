@@ -429,45 +429,64 @@ class BannerService {
 
   // Add new sync method
   Future<void> _syncWithServer() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      print('🔄 Banner sync already in progress, skipping...');
+      return;
+    }
 
     try {
+      print('🔄 Starting banner sync process');
       _setSyncStatus(true);
 
       // First verify data integrity
+      print('🔍 Verifying banner data integrity');
       await _verifyDataIntegrity();
 
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
+        print('📡 No internet connection, aborting banner sync');
         return;
       }
 
+      print('📥 Fetching banner data from server');
       // Add timeout to prevent hanging
       DocumentSnapshot snapshot = await _bannerDoc.get()
           .timeout(SYNC_TIMEOUT);
 
-      if (!snapshot.exists) return;
+      if (!snapshot.exists) {
+        print('❌ Banner document not found on server');
+        return;
+      }
 
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
+      print('📊 Server revision: $serverRevision, Local revision: $localRevision');
+
       // Only sync if server has newer data
       if (localRevision == null || serverRevision > localRevision) {
+        print('🔄 Server has newer data, updating local cache');
         List<Map<String, dynamic>> serverBanners = 
             await _fetchAndUpdateLocal(snapshot);
         
         // Update memory cache
+        print('💾 Updating memory cache with ${serverBanners.length} banners');
         for (var banner in serverBanners) {
           _bannerCache[banner['id']] = banner;
         }
 
         // Notify listeners
+        print('📢 Notifying listeners of banner updates');
         _bannerUpdateController.add(serverBanners);
+      } else {
+        print('✅ Local banner data is up to date');
       }
+
     } catch (e) {
-      print('Error in _syncWithServer: $e');
+      print('❌ Error in banner sync: $e');
       await _logBannerOperation('sync_error', -1, e.toString());
     } finally {
+      print('🏁 Banner sync process completed');
       _setSyncStatus(false);
     }
   }

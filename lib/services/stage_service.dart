@@ -58,47 +58,64 @@ class StageService {
 
   // Add new synchronization method
   Future<void> synchronizeData() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      print('🔄 Stage sync already in progress, skipping...');
+      return;
+    }
     _isSyncing = true;
 
     try {
+      print('🔄 Starting stage sync process');
       await _updateSyncStatus('syncing');
       
       // Process offline queue first
+      print('📤 Processing offline queue');
       await _processSyncQueue();
 
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
+        print('📥 Fetching latest stage data from server');
         // Fetch latest data from server
         final serverData = await _fetchServerData();
         
+        print('🔄 Resolving data conflicts');
         // Compare with local data and resolve conflicts
         await _resolveDataConflicts(serverData);
         
+        print('💾 Updating local storage with resolved data');
         // Update local storage with resolved data
         await _updateLocalStorage(serverData);
         
+        print('✅ Stage sync completed successfully');
         await _updateSyncStatus('completed');
       } else {
+        print('📡 No internet connection, marking sync as offline');
         await _updateSyncStatus('offline');
       }
     } catch (e) {
+      print('❌ Error during stage sync: $e');
       await _updateSyncStatus('error');
-      print('Error during synchronization: $e');
     } finally {
+      print('🏁 Stage sync process completed');
       _isSyncing = false;
     }
   }
 
   // Add method to process sync queue
   Future<void> _processSyncQueue() async {
-    if (_syncQueue.isEmpty) return;
+    if (_syncQueue.isEmpty) {
+      print('✅ No pending changes in sync queue');
+      return;
+    }
 
-    var connectivityResult = await (Connectivity().checkConnectivity());
+    print('🔄 Processing ${_syncQueue.length} queued changes');
+    var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult != ConnectivityResult.none) {
+      print('📤 Sending queued changes to server');
       final batch = FirebaseFirestore.instance.batch();
       
       for (var change in _syncQueue) {
+        print('📝 Processing change: ${change['type']}');
         switch (change['type']) {
           case 'update':
             batch.update(_stageDoc, change['data']);
@@ -109,12 +126,17 @@ class StageService {
         }
       }
 
+      print('💾 Committing batch updates');
       await batch.commit();
       _syncQueue.clear();
       
-      // Update local sync status
+      print('🔄 Updating local sync status');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('pending_stage_changes', []);
+      
+      print('✅ Sync queue processed successfully');
+    } else {
+      print('📡 No internet connection, keeping changes in queue');
     }
   }
 
@@ -511,7 +533,6 @@ class StageService {
       
       // Filter out null values and sanitize the data
       List<Map<String, dynamic>> sanitizedStages = stages
-        .where((stage) => stage != null)
         .map((stage) => _sanitizeMap(stage))
         .toList();
       

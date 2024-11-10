@@ -4,8 +4,9 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 class BadgeService {
   final DocumentReference _badgeDoc = FirebaseFirestore.instance.collection('Game').doc('Badge');
@@ -34,6 +35,7 @@ class BadgeService {
   factory BadgeService() => _instance;
   BadgeService._internal();
 
+  AuthService get _authService => AuthService();
   UserProfileService get _userProfileService => UserProfileService();
 
   void _setSyncState(bool syncing) {
@@ -63,6 +65,9 @@ class BadgeService {
       // Get badge details from local storage first
       List<Map<String, dynamic>> badges = await _getBadgesFromLocal();
       
+      // Get local profile for unlock states
+      UserProfile? profile = await _authService.getLocalUserProfile();
+      
       // If local storage is empty, try fetching from server
       if (badges.isEmpty) {
         var connectivityResult = await Connectivity().checkConnectivity();
@@ -80,6 +85,11 @@ class BadgeService {
       // Update memory cache
       for (var badge in badges) {
         _badgeCache[badge['id']] = badge;
+      }
+
+      // Merge with profile unlock states if available
+      if (profile != null) {
+        badges = _mergeBadgeStates(badges, profile.unlockedBadge);
       }
 
       return badges;
@@ -110,35 +120,50 @@ class BadgeService {
   }
 
   Future<void> _syncWithServer() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      print('🔄 Badge sync already in progress, skipping...');
+      return;
+    }
 
     try {
+      print('🔄 Starting badge sync process');
       _setSyncState(true);
 
       // Get server badges
+      print('📥 Fetching badges from server');
       List<Map<String, dynamic>> serverBadges = await _fetchFromServer();
       
       // Get current profile for unlock states
-      UserProfile? profile = await _userProfileService.fetchUserProfile();
+      print('👤 Fetching user profile for badge states');
+      // Use AuthService for local profile first
+      UserProfile? profile = await _authService.getLocalUserProfile();
+
       if (profile != null) {
+        print('🔄 Merging server badges with profile unlock states');
         // Merge server badges with profile unlock states
         serverBadges = _mergeBadgeStates(serverBadges, profile.unlockedBadge);
         
+        print('💾 Updating local storage with merged badge data');
         // Update local storage with merged data
         await _storeBadgesLocally(serverBadges);
         
+        print('🔄 Updating memory cache');
         // Update memory cache
         for (var badge in serverBadges) {
           _badgeCache[badge['id']] = badge;
         }
 
+        print('📢 Notifying listeners of badge updates');
         // Notify listeners
         _badgeUpdateController.add(serverBadges);
+      } else {
+        print('⚠️ No user profile found for badge sync');
       }
     } catch (e) {
-      print('Error in sync: $e');
+      print('❌ Error in badge sync: $e');
       await _logBadgeOperation('sync_error', -1, e.toString());
     } finally {
+      print('🏁 Badge sync process completed');
       _setSyncState(false);
     }
   }

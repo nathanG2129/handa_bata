@@ -46,8 +46,7 @@ class BadgeUnlockService {
         return;
       }
 
-      // Pre-check which badges actually need unlocking
-      List<int> badgesToUnlock = [];
+      // Get the current unlocked badges array
       List<int> unlockedBadges = List<int>.from(profile.unlockedBadge);
       
       // Ensure array is large enough
@@ -56,30 +55,17 @@ class BadgeUnlockService {
         unlockedBadges.add(0);
       }
 
-      // Get current online state if available
-      var connectivityResult = await Connectivity().checkConnectivity();
-      List<int>? onlineBadges;
-      if (connectivityResult != ConnectivityResult.none) {
-        UserProfile? onlineProfile = await _authService.getUserProfile();
-        if (onlineProfile != null) {
-          onlineBadges = List<int>.from(onlineProfile.unlockedBadge);
-          // Merge online unlocks into local array
-          for (int i = 0; i < onlineBadges.length && i < unlockedBadges.length; i++) {
-            if (onlineBadges[i] == 1) {
-              unlockedBadges[i] = 1;
-            }
-          }
-        }
-      }
+      // Track which badges need unlocking
+      List<int> badgesToUnlock = [];
 
-      // Check which badges need unlocking
+      // Check which badges need unlocking and update array
       for (int badgeId in badgeIds) {
-        bool isAlreadyUnlocked = badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 1;
-        if (!isAlreadyUnlocked) {
+        if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] != 1) {
           print('🔍 Badge $badgeId needs unlocking');
           badgesToUnlock.add(badgeId);
+          unlockedBadges[badgeId] = 1;
         } else {
-          print('✅ Badge $badgeId is already unlocked, skipping');
+          print('✅ Badge $badgeId is already unlocked or invalid');
         }
       }
 
@@ -89,41 +75,37 @@ class BadgeUnlockService {
         return;
       }
 
-      // Process new unlocks
-      bool hasNewUnlocks = false;
+      // Calculate total unlocked
+      int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
+      print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
+
+      // Create updated profile
+      UserProfile updatedProfile = profile.copyWith(updates: {
+        'unlockedBadge': unlockedBadges,
+        'totalBadgeUnlocked': totalUnlocked,
+      });
+
+      // Always update local storage first
+      await _authService.saveUserProfileLocally(updatedProfile);
+      print('💾 Saved to local storage');
+
+      // Try to update Firestore if online
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        await Future.wait([
+          _authService.updateUserProfile('unlockedBadge', unlockedBadges),
+          _authService.updateUserProfile('totalBadgeUnlocked', totalUnlocked)
+        ]);
+        print('🌐 Updated Firestore');
+      } else {
+        print('📴 Offline - changes saved locally');
+      }
+
+      // Add to notification queue
       for (int badgeId in badgesToUnlock) {
-        print('🏅 New badge unlocked: $badgeId');
-        unlockedBadges[badgeId] = 1;
-        hasNewUnlocks = true;
         _pendingBadgeNotifications.add(badgeId);
       }
 
-      if (hasNewUnlocks) {
-        // Calculate total unlocked by counting all 1s
-        int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
-        print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
-        
-        // Create updated profile
-        UserProfile updatedProfile = profile.copyWith(updates: {
-          'unlockedBadge': unlockedBadges,
-          'totalBadgeUnlocked': totalUnlocked,
-        });
-
-        // Always update local storage first
-        await _authService.saveUserProfileLocally(updatedProfile);
-        print('💾 Saved to local storage');
-
-        // Try to update Firestore if online
-        if (connectivityResult != ConnectivityResult.none) {
-          await Future.wait([
-            _authService.updateUserProfile('unlockedBadge', unlockedBadges),
-            _authService.updateUserProfile('totalBadgeUnlocked', totalUnlocked)
-          ]);
-          print('🌐 Updated Firestore');
-        } else {
-          print('📴 Offline - changes saved locally');
-        }
-      }
     } catch (e) {
       print('❌ Error in _unlockBadges: $e');
     }
@@ -138,6 +120,18 @@ class BadgeUnlockService {
     required List<int> allStageStars,
   }) async {
     try {
+      print('🎮 Checking adventure badges for $questName, $stageName');
+      print('Difficulty: $difficulty, Stars earned: $stars');
+      print('All stage stars before update: $allStageStars');
+
+      // Get stage number and update the stars array with current result
+      int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+      List<int> updatedStageStars = List<int>.from(allStageStars);
+      if (stageNumber < updatedStageStars.length) {
+        updatedStageStars[stageNumber] = stars;
+      }
+      print('All stage stars after update: $updatedStageStars');
+
       UserProfile? profile = await _authService.getUserProfile();
       if (profile == null) return;
 
@@ -146,37 +140,40 @@ class BadgeUnlockService {
 
       List<int> badgesToUnlock = [];
       
-      // Extract stage number from stageName (e.g., "Stage 1" -> 1)
-      int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
-      
       // 1. Stage badge (any stars)
       int stageBadgeId = questRange.stageStart + (stageNumber * 2) + (difficulty == 'hard' ? 1 : 0);
       if (stars > 0) {
+        print('🏅 Adding stage badge: $stageBadgeId');
         badgesToUnlock.add(stageBadgeId);
       }
       
-      // 2. Complete badge (all stages with stars)
-      if (_hasAllStagesCleared(allStageStars)) {
+      // 2. Complete badge (all stages with at least 1 star)
+      if (_hasAllStagesCleared(updatedStageStars)) {  // Use updated stars
         int completeBadgeId = difficulty == 'hard' 
             ? questRange.completeStart + 1
             : questRange.completeStart;
+        print('🏆 Adding complete badge: $completeBadgeId');
         badgesToUnlock.add(completeBadgeId);
       }
       
       // 3. Full clear badge (all stages with 3 stars)
-      if (_hasAllStagesFullyCleared(allStageStars)) {
+      if (_hasAllStagesFullyCleared(updatedStageStars)) {  // Use updated stars
         int fullClearBadgeId = difficulty == 'hard'
             ? questRange.fullClearStart + 1
             : questRange.fullClearStart;
+        print('👑 Adding full clear badge: $fullClearBadgeId');
         badgesToUnlock.add(fullClearBadgeId);
       }
 
       // Use the helper method to unlock badges
       if (badgesToUnlock.isNotEmpty) {
+        print('🎯 Unlocking badges: $badgesToUnlock');
         await _unlockBadges(badgesToUnlock);
+      } else {
+        print('ℹ️ No new badges to unlock');
       }
     } catch (e) {
-      print('Error checking adventure badges: $e');
+      print('❌ Error checking adventure badges: $e');
     }
   }
 
@@ -220,11 +217,27 @@ class BadgeUnlockService {
   }
 
   bool _hasAllStagesCleared(List<int> stageStars) {
-    return !stageStars.contains(0);
+    // Check if all stages have at least 1 star (excluding last arcade stage)
+    print('🌟 Checking all stages cleared');
+    print('Stage stars: $stageStars');
+    // Get all stages except the last one
+    List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
+    print('Checking normal stages (excluding arcade): $normalStages');
+    bool allCleared = !normalStages.contains(0);
+    print('All stages cleared: $allCleared');
+    return allCleared;
   }
 
   bool _hasAllStagesFullyCleared(List<int> stageStars) {
-    return stageStars.every((stars) => stars == 3);
+    // Check if all stages have 3 stars (excluding last arcade stage)
+    print('⭐ Checking all stages fully cleared');
+    print('Stage stars: $stageStars');
+    // Get all stages except the last one
+    List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
+    print('Checking normal stages (excluding arcade): $normalStages');
+    bool allFullyCleared = normalStages.every((stars) => stars == 3);
+    print('All stages fully cleared: $allFullyCleared');
+    return allFullyCleared;
   }
 
   // Add this method to get pending notifications

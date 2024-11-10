@@ -21,6 +21,7 @@ class SettingsDialog extends StatefulWidget {
   final double sfxVolume; // Add this line
   final ValueChanged<double> onSfxVolumeChanged; // Add this line
   final Future<void> Function() onQuitGame;
+  final bool isLastQuestion;
 
   const SettingsDialog({
     super.key,
@@ -39,6 +40,7 @@ class SettingsDialog extends StatefulWidget {
     required this.sfxVolume, // Add this line
     required this.onSfxVolumeChanged, // Add this line
     required this.onQuitGame,
+    required this.isLastQuestion,
   });
 
   @override
@@ -346,27 +348,31 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                               ),
                             ),
                             const SizedBox(height: 16), // Add larger top margin
-                            Center(
-                              child: Button3D(
-                                backgroundColor: const Color(0xFFF1B33A),
-                                borderColor: const Color(0xFF8B5A00),
-                                width: 200, // Set a fixed width for the button
-                                onPressed: () async {
-                                  print('🎮 Quit Game button pressed');
-                                  Navigator.of(context).pop();
-                                  print('🎮 Dialog closed, calling onQuitGame');
-                                  try {
-                                    await widget.onQuitGame();
-                                    print('🎮 onQuitGame completed successfully');
-                                  } catch (e) {
-                                    print('❌ Error in onQuitGame: $e');
-                                  }
-                                },
-                                child: Text(
-                                  'Quit Game',
-                                  style: GoogleFonts.rubik(
-                                    color: Colors.black,
-                                    fontSize: 16,
+                            Opacity(
+                              opacity: widget.isLastQuestion ? 0.5 : 1.0,
+                              child: Center(
+                                child: Button3D(
+                                  backgroundColor: const Color(0xFFF1B33A),
+                                  borderColor: const Color(0xFF8B5A00),
+                                  width: 200,
+                                  onPressed: widget.isLastQuestion 
+                                    ? () {}
+                                    : () {
+                                        print('🎮 Quit Game button pressed');
+                                        Navigator.of(context).pop();
+                                        print('🎮 Dialog closed, calling onQuitGame');
+                                        widget.onQuitGame().then((_) {
+                                          print('🎮 onQuitGame completed successfully');
+                                        }).catchError((e) {
+                                          print('❌ Error in onQuitGame: $e');
+                                        });
+                                      },
+                                  child: Text(
+                                    'Quit Game',
+                                    style: GoogleFonts.rubik(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ),

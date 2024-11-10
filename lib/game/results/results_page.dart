@@ -143,6 +143,49 @@ class ResultsPageState extends State<ResultsPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
+      // Get local game save data first
+      GameSaveData? localSaveData = await _authService.getLocalGameSaveData(widget.category['id']);
+      
+      // Find the stage key
+      final stageKey = '${widget.category['id']}${widget.stageName}';
+
+      if (widget.gamemode == 'arcade') {
+        // For arcade mode: Store if it's the first record (-1) or if new record is better
+        final currentRecord = _convertRecordToSeconds(widget.record);
+        final existingRecord = localSaveData?.stageData[stageKey]?['bestRecord'] ?? -1;
+
+        if (existingRecord == -1 || currentRecord < existingRecord) {
+          await _authService.updateGameProgress(
+            categoryId: widget.category['id'],
+            stageName: widget.stageName,
+            score: widget.score,
+            stars: stars,
+            mode: widget.mode.toLowerCase(),
+            record: currentRecord,
+            isArcade: true,
+          );
+        }
+      } else {
+        // For adventure mode: Store only if score is higher
+        int existingScore;
+        if (widget.mode == 'Hard') {
+          existingScore = localSaveData?.stageData[stageKey]?['scoreHard'] ?? 0;
+        } else {
+          existingScore = localSaveData?.stageData[stageKey]?['scoreNormal'] ?? 0;
+        }
+
+        if (widget.score > existingScore) {
+          await _authService.updateGameProgress(
+            categoryId: widget.category['id'],
+            stageName: widget.stageName,
+            score: widget.score,
+            stars: stars,
+            mode: widget.mode.toLowerCase(),
+            isArcade: false,
+          );
+        }
+      }
+
       // Calculate XP based on gamemode and difficulty
       if (widget.gamemode == 'arcade') {
         _xpGained = widget.isGameOver ? 0 : 500;
@@ -153,9 +196,7 @@ class ResultsPageState extends State<ResultsPage> {
 
       // Try to get user profile from local storage first
       UserProfile? profile = await _authService.getLocalUserProfile();
-      if (profile == null) {
-        profile = await _authService.getUserProfile();
-      }
+      profile ??= await _authService.getUserProfile();
 
       if (profile != null) {
         // Calculate new XP and level
@@ -226,28 +267,6 @@ class ResultsPageState extends State<ResultsPage> {
           difficulty: widget.mode.toLowerCase(),
           stars: calculatedStars,
           allStageStars: stageStars,
-        );
-      }
-
-      // Update game progress locally first, then sync with Firebase if online
-      if (widget.gamemode == 'arcade') {
-        await _authService.updateGameProgress(
-          categoryId: widget.category['id'],
-          stageName: widget.stageName,
-          score: widget.score,
-          stars: calculatedStars,
-          mode: widget.mode.toLowerCase(),
-          record: _convertRecordToSeconds(widget.record),
-          isArcade: true,
-        );
-      } else {
-        await _authService.updateGameProgress(
-          categoryId: widget.category['id'],
-          stageName: widget.stageName,
-          score: widget.score,
-          stars: calculatedStars,
-          mode: widget.mode.toLowerCase(),
-          isArcade: false,
         );
       }
 

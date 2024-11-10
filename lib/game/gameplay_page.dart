@@ -219,9 +219,11 @@ class GameplayPageState extends State<GameplayPage> {
     // 1. Not in arcade mode
     // 2. Game is not over
     // 3. Not navigating to results page
+    // 4. Not first unanswered question
     if (!_isGameOver && 
         widget.gamemode != 'arcade' && 
-        !ModalRoute.of(context)!.settings.name!.contains('ResultsPage')) {
+        !ModalRoute.of(context)!.settings.name!.contains('ResultsPage') &&
+        !_isFirstUnansweredQuestion()) {
       _saveGameState();
     }
 
@@ -712,10 +714,63 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     // Store context in local variable to ensure type safety
     final BuildContext currentContext = context;
 
+    // Skip saving if it's the first question and hasn't been answered yet
+    if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
+      print('🎮 Skipping save - first unanswered question');
+      // Just do cleanup and navigation
+      _timer?.cancel();
+      _timer = null;
+      _stopwatchTimer?.cancel();
+      _stopwatchTimer = null;
+      flutterTts.stop();
+      flutterTts.pause();
+      _audioPlayer.pause();
+      _audioPlayer.stop();
+      _audioPlayer.dispose();
+
+      if (widget.gamemode == 'arcade') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ArcadeStagesPage(
+              category: {
+                'id': widget.category['id'],
+                'name': widget.category['name'],
+              },
+              selectedLanguage: widget.language,
+              questName: widget.category['name'],
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StagesPage(
+              questName: widget.category['name'],
+              category: {
+                'id': widget.category['id'],
+                'name': widget.category['name'],
+              },
+              selectedLanguage: widget.language,
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Calculate accuracy safely
+    double accuracy = 0.0;
+    int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+    if (totalAnswers > 0) {
+      accuracy = _correctAnswersCount / totalAnswers;
+    }
+
     Map<String, dynamic> gameState = {
       'completed': false,
       'score': _correctAnswersCount,
-      'accuracy': _correctAnswersCount / (_correctAnswersCount + _wrongAnswersCount),
+      'accuracy': accuracy, // Use the safely calculated accuracy
       'streak': _calculateStreak(),
       'answeredQuestions': _answeredQuestions,
       'currentQuestionIndex': _currentQuestionIndex,
@@ -765,7 +820,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                 },
                 selectedLanguage: widget.language,
                 questName: widget.category['name'],
-                savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
               ),
             ),
           );
@@ -780,7 +834,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                   'name': widget.category['name'],
                 },
                 selectedLanguage: widget.language,
-                savedGameDocId: '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}',
               ),
             ),
           );
@@ -837,10 +890,17 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           return;
         }
 
+        // Calculate accuracy safely
+        double accuracy = 0.0;
+        int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+        if (totalAnswers > 0) {
+          accuracy = _correctAnswersCount / totalAnswers;
+        }
+
         Map<String, dynamic> gameState = {
           'completed': false,
           'score': _correctAnswersCount,
-          'accuracy': _correctAnswersCount / (_correctAnswersCount + _wrongAnswersCount),
+          'accuracy': accuracy, // Use the safely calculated accuracy
           'streak': _calculateStreak(),
           'answeredQuestions': _answeredQuestions,
           'currentQuestionIndex': _currentQuestionIndex,
@@ -1091,6 +1151,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         });
                                       },
                                       onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
+                                      isLastQuestion: _isLastAnsweredQuestion(),
                                     );
                                   },
                                 );
@@ -1126,6 +1187,20 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         ),
       ),
     );
+  }
+
+  // Move the helper methods inside the class
+  bool _hasAnsweredQuestions() {
+    return _answeredQuestions.isNotEmpty;
+  }
+
+  bool _isFirstUnansweredQuestion() {
+    return _currentQuestionIndex == 0 && !_hasAnsweredQuestions();
+  }
+
+  bool _isLastAnsweredQuestion() {
+    return _currentQuestionIndex >= _totalQuestions - 1 && 
+           _answeredQuestions.length >= _totalQuestions;
   }
 }
 

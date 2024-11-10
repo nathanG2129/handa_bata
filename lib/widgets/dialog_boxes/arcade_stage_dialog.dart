@@ -6,6 +6,7 @@ import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/services/stage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -19,6 +20,7 @@ void showArcadeStageDialog(
   int currentRecord,
   int stars,
   String selectedLanguage,
+  StageService stageService,
 ) {
   String formatTime(int seconds) {
     final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -107,7 +109,13 @@ void showArcadeStageDialog(
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await _handleOfflineArcadeStart(
+                          category['id']!, 
+                          stageData['stageName'],
+                          mode,
+                          stageService
+                        );
                         Navigator.of(context).pop();
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -189,5 +197,23 @@ Future<Map<String, dynamic>?> _getSavedGameData(String categoryId, String stageN
   } catch (e) {
     print('Error getting saved game data: $e');
     return null;
+  }
+}
+
+// Update the _handleOfflineArcadeStart function to accept stageService parameter
+Future<void> _handleOfflineArcadeStart(
+  String categoryId, 
+  String stageName, 
+  String mode,
+  StageService stageService
+) async {
+  final connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult == ConnectivityResult.none) {
+    await stageService.addOfflineChange('arcade_start', {
+      'categoryId': categoryId,
+      'stageName': stageName,
+      'mode': mode,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 }

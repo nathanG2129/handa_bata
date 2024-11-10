@@ -51,32 +51,31 @@ class StagesPageState extends State<StagesPage> {
     try {
       print('StagesPage: Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
+      if (mounted) {
+        setState(() => _stages = []);
+      }
+
+      await _stageService.synchronizeData();
+      
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
         widget.selectedLanguage, 
         widget.category['id']!
       );
       
-      print('StagesPage: Received ${stages.length} stages from service');
-      print('StagesPage: Raw stages: $stages');
-      
       if (mounted) {
         setState(() {
-          // Filter out arcade stages for adventure mode
           _stages = stages.where((stage) => 
             !stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
-          
-          print('StagesPage: Filtered to ${_stages.length} non-arcade stages');
-          print('StagesPage: Filtered stages: $_stages');
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('StagesPage: Error fetching stages: $e');
-      print('StagesPage: Stack trace: $stackTrace');
       if (mounted) {
-        setState(() {
-          _stages = [];
-        });
+        setState(() => _stages = []);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading stages: $e'))
+        );
       }
     }
   }
@@ -432,6 +431,7 @@ class StagesPageState extends State<StagesPage> {
                                                     stageStats['personalBest'],
                                                     stars,
                                                     widget.selectedLanguage, // Pass selectedLanguage
+                                                    _stageService, // Pass the StageService instance
                                                   );
                                                 },
                                                 child: Stack(

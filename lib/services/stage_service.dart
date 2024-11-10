@@ -32,6 +32,135 @@ class StageService {
   // Add defaultLanguage field
   static const String defaultLanguage = 'en';
 
+  // Add these new fields at the top of the StageService class
+  static const String SYNC_STATUS_KEY = 'stage_sync_status';
+  static const String LAST_SYNC_KEY = 'stage_last_sync';
+  static const Duration SYNC_INTERVAL = Duration(hours: 1);
+  
+  // Add a sync queue for offline changes
+  final List<Map<String, dynamic>> _syncQueue = [];
+  bool _isSyncing = false;
+
+  // Add sync status tracking
+  Future<void> _updateSyncStatus(String status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(SYNC_STATUS_KEY, status);
+    await prefs.setInt(LAST_SYNC_KEY, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  // Add method to check if sync is needed
+  Future<bool> _shouldSync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastSync = prefs.getInt(LAST_SYNC_KEY) ?? 0;
+    final lastSyncTime = DateTime.fromMillisecondsSinceEpoch(lastSync);
+    return DateTime.now().difference(lastSyncTime) > SYNC_INTERVAL;
+  }
+
+  // Add new synchronization method
+  Future<void> synchronizeData() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      await _updateSyncStatus('syncing');
+      
+      // Process offline queue first
+      await _processSyncQueue();
+
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        // Fetch latest data from server
+        final serverData = await _fetchServerData();
+        
+        // Compare with local data and resolve conflicts
+        await _resolveDataConflicts(serverData);
+        
+        // Update local storage with resolved data
+        await _updateLocalStorage(serverData);
+        
+        await _updateSyncStatus('completed');
+      } else {
+        await _updateSyncStatus('offline');
+      }
+    } catch (e) {
+      await _updateSyncStatus('error');
+      print('Error during synchronization: $e');
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  // Add method to process sync queue
+  Future<void> _processSyncQueue() async {
+    if (_syncQueue.isEmpty) return;
+
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult != ConnectivityResult.none) {
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (var change in _syncQueue) {
+        switch (change['type']) {
+          case 'update':
+            batch.update(_stageDoc, change['data']);
+            break;
+          case 'delete':
+            batch.delete(_stageDoc.collection(change['collection']).doc(change['id']));
+            break;
+        }
+      }
+
+      await batch.commit();
+      _syncQueue.clear();
+      
+      // Update local sync status
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('pending_stage_changes', []);
+    }
+  }
+
+  // Add method to fetch server data
+  Future<Map<String, dynamic>> _fetchServerData() async {
+    final snapshot = await _stageDoc.get();
+    return snapshot.data() as Map<String, dynamic>;
+  }
+
+  // Add method to resolve data conflicts
+  Future<void> _resolveDataConflicts(Map<String, dynamic> serverData) async {
+    try {
+      final localData = await _getLocalData();
+      final resolvedData = await _mergeData(serverData, localData);
+      await _updateLocalStorage(resolvedData);
+    } catch (e) {
+      print('Error resolving conflicts: $e');
+      await _logStageOperation('conflict_resolution_error', 'all', e.toString());
+    }
+  }
+
+  // Add method to merge data
+  Future<Map<String, dynamic>> _mergeData(
+    Map<String, dynamic> serverData, 
+    Map<String, dynamic> localData
+  ) async {
+    final mergedData = Map<String, dynamic>.from(serverData);
+    
+    // Compare timestamps and take the newer version
+    if (localData.containsKey('lastModified') && 
+        serverData.containsKey('lastModified') &&
+        localData['lastModified'] != null &&
+        serverData['lastModified'] != null) {
+      final localTimestamp = localData['lastModified'] as Timestamp;
+      final serverTimestamp = serverData['lastModified'] as Timestamp;
+      
+      if (localTimestamp.compareTo(serverTimestamp) > 0) {
+        // Local data is newer, merge with null checks
+        mergedData.addAll(Map<String, dynamic>.from(localData)
+          ..removeWhere((key, value) => value == null));
+      }
+    }
+    
+    return mergedData;
+  }
+
   void _manageCacheExpiry() {
     final now = DateTime.now();
     _cacheTimes.removeWhere((key, time) {
@@ -85,16 +214,23 @@ class StageService {
 
   Future<List<Map<String, dynamic>>> fetchStages(String language, String categoryId) async {
     try {
+      // Check if sync is needed
+      if (await _shouldSync()) {
+        await synchronizeData();
+      }
+
+      // Check memory cache first
       String cacheKey = '${language}_${categoryId}_stages';
       if (_stageCache.containsKey(cacheKey)) {
         return List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
       }
 
+      // Then check local storage
       List<Map<String, dynamic>> localStages = await _getStagesFromLocal(categoryId);
       
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        // Get all stage documents in the stages subcollection
+        // Get stages from server
         QuerySnapshot snapshot = await FirebaseFirestore.instance
             .collection('Game')
             .doc('Stage')
@@ -373,16 +509,17 @@ class StageService {
         await prefs.setString('${STAGES_CACHE_KEY}_${categoryId}_backup', existingData);
       }
       
-      // Convert Timestamps to milliseconds since epoch
-      List<Map<String, dynamic>> sanitizedStages = stages.map((stage) {
-        return _sanitizeMap(stage);
-      }).toList();
+      // Filter out null values and sanitize the data
+      List<Map<String, dynamic>> sanitizedStages = stages
+        .where((stage) => stage != null)
+        .map((stage) => _sanitizeMap(stage))
+        .toList();
       
-      String stagesJson = jsonEncode(sanitizedStages);
-      await prefs.setString('${STAGES_CACHE_KEY}_$categoryId', stagesJson);
-      
-      // Clear backup after successful update
-      await prefs.remove('${STAGES_CACHE_KEY}_${categoryId}_backup');
+      if (sanitizedStages.isNotEmpty) {
+        String stagesJson = jsonEncode(sanitizedStages);
+        await prefs.setString('${STAGES_CACHE_KEY}_$categoryId', stagesJson);
+        await prefs.remove('${STAGES_CACHE_KEY}_${categoryId}_backup');
+      }
     } catch (e) {
       print('Error storing stages locally: $e');
       await _restoreFromBackup(categoryId);
@@ -394,18 +531,16 @@ class StageService {
     Map<String, dynamic> sanitized = {};
     
     map.forEach((key, value) {
-      if (value is Timestamp) {
-        // Convert Timestamp to milliseconds since epoch
-        sanitized[key] = value.toDate().millisecondsSinceEpoch;
-      } else if (value is Map) {
-        // Recursively sanitize nested maps
-        sanitized[key] = _sanitizeMap(value as Map<String, dynamic>);
-      } else if (value is List) {
-        // Sanitize lists
-        sanitized[key] = _sanitizeList(value);
-      } else {
-        // Keep other values as is
-        sanitized[key] = value;
+      if (value != null) {
+        if (value is Timestamp) {
+          sanitized[key] = value.toDate().millisecondsSinceEpoch;
+        } else if (value is Map) {
+          sanitized[key] = _sanitizeMap(value as Map<String, dynamic>);
+        } else if (value is List) {
+          sanitized[key] = _sanitizeList(value);
+        } else {
+          sanitized[key] = value;
+        }
       }
     });
     
@@ -414,7 +549,7 @@ class StageService {
 
   // Helper method to sanitize lists
   List _sanitizeList(List list) {
-    return list.map((item) {
+    return list.where((item) => item != null).map((item) {
       if (item is Timestamp) {
         return item.toDate().millisecondsSinceEpoch;
       } else if (item is Map) {
@@ -1071,6 +1206,118 @@ class StageService {
       }
     } catch (e) {
       print('Error syncing data: $e');
+    }
+  }
+
+  // Add method to handle offline changes
+  Future<void> addOfflineChange(String type, Map<String, dynamic> data) async {
+    _syncQueue.add({
+      'type': type,
+      'data': data,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    // Store in SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    List<String> pendingChanges = prefs.getStringList('pending_stage_changes') ?? [];
+    pendingChanges.add(jsonEncode({
+      'type': type,
+      'data': data,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    }));
+    await prefs.setStringList('pending_stage_changes', pendingChanges);
+  }
+
+  // Add these methods to the StageService class
+
+  // Method to get local data
+  Future<Map<String, dynamic>> _getLocalData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get all stage-related data from local storage
+      Map<String, dynamic> localData = {};
+      
+      // Get stages
+      for (String key in prefs.getKeys()) {
+        if (key.startsWith(STAGES_CACHE_KEY_PREFIX)) {
+          String? data = prefs.getString(key);
+          if (data != null) {
+            localData[key] = jsonDecode(data);
+          }
+        }
+      }
+      
+      // Get categories
+      String? categoriesData = prefs.getString(CATEGORIES_CACHE_KEY);
+      if (categoriesData != null) {
+        localData['categories'] = jsonDecode(categoriesData);
+      }
+      
+      // Get revision
+      int? revision = prefs.getInt(STAGE_REVISION_KEY);
+      if (revision != null) {
+        localData['revision'] = revision;
+      }
+      
+      // Add timestamp
+      localData['lastModified'] = Timestamp.now();
+      
+      return localData;
+    } catch (e) {
+      print('Error getting local data: $e');
+      return {};
+    }
+  }
+
+  // Method to update local storage
+  Future<void> _updateLocalStorage(Map<String, dynamic> data) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Store stages
+      if (data.containsKey('stages')) {
+        List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(data['stages'] ?? []);
+        for (var stage in stages) {
+          String categoryId = stage['categoryId'] ?? '';
+          if (categoryId.isNotEmpty) {
+            await _storeStagesLocally(stages, categoryId);
+          }
+        }
+      }
+      
+      // Store categories
+      if (data.containsKey('categories')) {
+        List<Map<String, dynamic>> categories = List<Map<String, dynamic>>.from(data['categories'] ?? []);
+        for (var category in categories) {
+          String language = category['language'] ?? defaultLanguage;
+          if (category.isNotEmpty) {
+            await _storeCategoriesLocally(categories, language);
+          }
+        }
+      }
+      
+      // Store revision with null check
+      if (data.containsKey('revision') && data['revision'] != null) {
+        await prefs.setInt(STAGE_REVISION_KEY, data['revision']);
+      }
+      
+      // Update cache times with null check
+      if (data.containsKey('id') && data['id'] != null) {
+        _cacheTimes[data['id']] = DateTime.now();
+      }
+      
+      // Manage cache size
+      _manageCacheSize();
+      
+      // Update sync status
+      await _updateSyncStatus('completed');
+    } catch (e) {
+      print('Error updating local storage: $e');
+      await _logStageOperation('local_storage_error', 'all', e.toString());
+      
+      // Try to recover
+      await _recoverFromError('local_storage_update', 'all', e);
     }
   }
 }

@@ -65,6 +65,9 @@ class ArcadePageState extends State<ArcadePage> {
         _errorMessage = null;
       });
 
+      // Wait for sync to complete if needed
+      await _stageService.synchronizeData();
+
       final categories = await _stageService.fetchCategories(_selectedLanguage);
       if (mounted) {
         setState(() {

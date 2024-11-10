@@ -8,6 +8,7 @@ import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/services/stage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -21,6 +22,7 @@ void showStageDialog(
   int personalBest,
   int stars,
   String selectedLanguage,
+  StageService stageService,
 ) {
   showGeneralDialog(
     context: context,
@@ -108,7 +110,13 @@ void showStageDialog(
                       const SizedBox(height: 20),
                       if (!(snapshot.data!['completed'] ?? false)) ...[
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            await _handleOfflineStageStart(
+                              category['id']!, 
+                              'Stage $stageNumber',
+                              mode,
+                              stageService
+                            );
                             Navigator.of(context).pop();
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -146,7 +154,13 @@ void showStageDialog(
                     ],
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await _handleOfflineStageStart(
+                          category['id']!, 
+                          'Stage $stageNumber',
+                          mode,
+                          stageService
+                        );
                         Navigator.of(context).pop();
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -228,5 +242,23 @@ Future<Map<String, dynamic>?> _getSavedGameData(String categoryId, int stageNumb
   } catch (e) {
     print('Error getting saved game data: $e');
     return null;
+  }
+}
+
+// Add offline change handling
+Future<void> _handleOfflineStageStart(
+  String categoryId, 
+  String stageName, 
+  String mode,
+  StageService stageService
+) async {
+  final connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult == ConnectivityResult.none) {
+    await stageService.addOfflineChange('stage_start', {
+      'categoryId': categoryId,
+      'stageName': stageName,
+      'mode': mode,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 }

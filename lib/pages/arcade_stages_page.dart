@@ -47,32 +47,33 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     try {
       print('ArcadeStagesPage: Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
+      // Add loading state
+      if (mounted) {
+        setState(() => _stages = []);
+      }
+
+      // Wait for sync to complete if needed
+      await _stageService.synchronizeData();
+      
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
         widget.selectedLanguage, 
         widget.category['id']!
       );
       
-      print('ArcadeStagesPage: Received ${stages.length} stages from service');
-      print('ArcadeStagesPage: Raw stages: $stages');
-      
       if (mounted) {
         setState(() {
-          // Only include arcade stages
           _stages = stages.where((stage) => 
             stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
-          
-          print('ArcadeStagesPage: Filtered to ${_stages.length} arcade stages');
-          print('ArcadeStagesPage: Filtered stages: $_stages');
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('ArcadeStagesPage: Error fetching stages: $e');
-      print('ArcadeStagesPage: Stack trace: $stackTrace');
       if (mounted) {
-        setState(() {
-          _stages = [];
-        });
+        setState(() => _stages = []);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading stages: $e'))
+        );
       }
     }
   }
@@ -331,11 +332,12 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                               'name': widget.category['name']!,
                                             },
                                             stageData,
-                                            'normal', // Pass the mode as 'normal'
+                                            'normal',
                                             stageStats['bestRecord'],
-                                            stageStats['crntRecord'], // Corrected to pass currentRecord
-                                            0, // Arcade stages do not have stars
+                                            stageStats['crntRecord'],
+                                            0,
                                             widget.selectedLanguage,
+                                            _stageService,
                                           );
                                         },
                                         child: Padding(

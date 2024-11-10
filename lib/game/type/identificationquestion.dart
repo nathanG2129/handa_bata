@@ -174,7 +174,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
     userAnswer = userAnswer.trim();
 
     // Add a delay before showing the correctness of the answer
-    Future.delayed(const Duration(seconds: 0, milliseconds: 500), () {
+    Future.delayed(const Duration(seconds: 1, milliseconds: 0), () {
       setState(() {
         isCorrect = userAnswer == widget.questionData['answer'] ? 2 : 1;
         _playSound(isCorrect == 2 ? _soundId2 : _soundId1); // Play correct or wrong answer sound
@@ -291,26 +291,17 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
               const SizedBox(height: 16),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: showCorrectAnswer
-                      ? Colors.green
-                      : (isCheckingAnswer
-                          ? (isCorrect == 0
-                              ? Colors.white
-                              : (isCorrect == 2
-                                  ? Colors.green
-                                  : Colors.red))
-                          : Colors.white), // Change color based on correctness
                   border: Border.all(
-                    color: Colors.black,
+                    color: Colors.white,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(0),
                 ),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 500), // Set the duration for the fade-in effect
-                  curve: Curves.easeInOut, // Use a smooth curve for the transition
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                   color: showCorrectAnswer
                       ? Colors.green
                       : (isCheckingAnswer
@@ -322,7 +313,13 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                           : Colors.white),
                   child: Text(
                     answerText,
-                    style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black), // Updated font style
+                    style: GoogleFonts.rubik(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.bold,
+                      color: showCorrectAnswer || isCorrect != 0 
+                          ? Colors.white 
+                          : Colors.black,
+                    ),
                   ),
                 ),
               ),

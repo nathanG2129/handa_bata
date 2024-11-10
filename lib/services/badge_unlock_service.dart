@@ -56,7 +56,26 @@ class BadgeUnlockService {
         unlockedBadges.add(0);
       }
 
-      // Process new unlocks - FIXED: Now properly preserves existing unlocks
+      // Get current online state if available
+      var connectivityResult = await Connectivity().checkConnectivity();
+      List<int>? onlineBadges;
+      if (connectivityResult != ConnectivityResult.none) {
+        UserProfile? onlineProfile = await _authService.getUserProfile();
+        if (onlineProfile != null) {
+          onlineBadges = List<int>.from(onlineProfile.unlockedBadge);
+        }
+      }
+
+      // Merge online state with local state
+      if (onlineBadges != null) {
+        for (int i = 0; i < onlineBadges.length && i < unlockedBadges.length; i++) {
+          if (onlineBadges[i] == 1) {
+            unlockedBadges[i] = 1;
+          }
+        }
+      }
+
+      // Process new unlocks
       for (int badgeId in badgeIds) {
         if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
           print('🏅 New badge unlocked: $badgeId');
@@ -67,11 +86,11 @@ class BadgeUnlockService {
       }
 
       if (hasNewUnlocks) {
-        // Calculate total unlocked correctly by counting all 1s
+        // Calculate total unlocked by counting all 1s
         int totalUnlocked = unlockedBadges.where((badge) => badge == 1).length;
         print('🏅 Updating user profile with new unlocks. Total unlocked: $totalUnlocked');
         
-        // Create updated profile using Map format
+        // Create updated profile
         UserProfile updatedProfile = profile.copyWith(updates: {
           'unlockedBadge': unlockedBadges,
           'totalBadgeUnlocked': totalUnlocked,
@@ -82,7 +101,6 @@ class BadgeUnlockService {
         print('💾 Saved to local storage');
 
         // Try to update Firestore if online
-        final connectivityResult = await Connectivity().checkConnectivity();
         if (connectivityResult != ConnectivityResult.none) {
           await Future.wait([
             _authService.updateUserProfile('unlockedBadge', unlockedBadges),

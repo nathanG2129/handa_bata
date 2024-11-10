@@ -6,6 +6,7 @@ import 'package:handabatamae/services/badge_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/models/user_model.dart';
 
 enum BadgeFilter {
   myCollection,
@@ -49,12 +50,14 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   
   final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
   final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
+  StreamSubscription<UserProfile>? _profileSubscription;
 
   @override
   void initState() {
     super.initState();
     _initializeAnimation();
     _initializeData();
+    _setupSubscriptions();
     
     if (widget.selectionMode && widget.currentBadgeShowcase != null) {
       _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
@@ -77,34 +80,49 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     ));
   }
 
+  void _setupSubscriptions() {
+    // Listen to both profile updates and badge updates
+    _profileSubscription = _userProfileService.profileUpdates.listen((updatedProfile) {
+      if (mounted) {
+        setState(() {
+          _unlockedBadges = updatedProfile.unlockedBadge;
+          // Force refresh badges when profile updates
+          _refreshBadges();
+        });
+      }
+    });
+  }
+
   Future<void> _initializeData() async {
+    if (!mounted) return;
+
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      // Load badges
-      final badges = await _badgeService.fetchBadges();
-      
-      // Load user profile for unlocked badges
-      final profile = await _userProfileService.fetchUserProfile();
-      
-      if (mounted) {
-        setState(() {
-          _badges = badges;
-          _unlockedBadges = profile?.unlockedBadge ?? [];
-          _isLoading = false;
-        });
-        _animationController.forward();
-      }
+      // Load badges and profile in parallel
+      final results = await Future.wait([
+        _badgeService.fetchBadges(),
+        _userProfileService.fetchUserProfile(),
+      ]);
+
+      if (!mounted) return;
+
+      setState(() {
+        _badges = results[0] as List<Map<String, dynamic>>;
+        _unlockedBadges = (results[1] as UserProfile?)?.unlockedBadge ?? [];
+        _isLoading = false;
+      });
+      _animationController.forward();
+
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Failed to load badges. Please try again.';
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Failed to load badges. Please try again.';
+        _isLoading = false;
+      });
     }
   }
 
@@ -125,28 +143,37 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
             child: Center(
               child: GestureDetector(
                 onTap: () {}, // Prevent tap from closing dialog
-                child: StreamBuilder<bool>(
-                  stream: _badgeService.syncStatus,
-                  builder: (context, syncSnapshot) {
-                    final isSyncing = syncSnapshot.data ?? false;
+                child: StreamBuilder<UserProfile>(
+                  stream: _userProfileService.profileUpdates,
+                  builder: (context, profileSnapshot) {
+                    if (profileSnapshot.hasData) {
+                      _unlockedBadges = profileSnapshot.data!.unlockedBadge;
+                    }
                     
-                    return Stack(
-                      children: [
-                        _buildMainContent(),
-                        if (isSyncing)
-                          const Positioned(
-                            top: 120,
-                            right: 30,
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    return StreamBuilder<bool>(
+                      stream: _badgeService.syncStatus,
+                      builder: (context, syncSnapshot) {
+                        final isSyncing = syncSnapshot.data ?? false;
+                        
+                        return Stack(
+                          children: [
+                            _buildMainContent(),
+                            if (isSyncing)
+                              const Positioned(
+                                top: 120,
+                                right: 30,
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        );
+                      },
                     );
                   },
                 ),
@@ -530,16 +557,27 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
 
   // Fix the refresh badges method
   Future<void> _refreshBadges() async {
-    final badges = await _badgeService.fetchBadges();
-    if (mounted) {
+    if (!mounted) return;
+    
+    try {
+      final badges = await _badgeService.fetchBadges();
       setState(() {
         _badges = badges;
       });
+    } catch (e) {
+      print('Error refreshing badges: $e');
     }
   }
 
   // Add retry mechanism
   Future<void> _retryLoading() async {
     await _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    _animationController.dispose();
+    super.dispose();
   }
 }

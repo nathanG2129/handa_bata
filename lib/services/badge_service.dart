@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/models/user_model.dart';
 
 class BadgeService {
   final DocumentReference _badgeDoc = FirebaseFirestore.instance.collection('Game').doc('Badge');
@@ -26,6 +28,9 @@ class BadgeService {
   // Stream controller for real-time updates
   final _badgeUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
   Stream<List<Map<String, dynamic>>> get badgeUpdates => _badgeUpdateController.stream;
+
+  // Add UserProfileService
+  final UserProfileService _userProfileService = UserProfileService();
 
   void _setSyncState(bool syncing) {
     _isSyncing = syncing;
@@ -51,18 +56,46 @@ class BadgeService {
         return badges;
       }
 
-      // Existing logic for non-admin fetch
-      if (_badgeCache.isNotEmpty) {
-        return _badgeCache.values.toList();
+      // Get badge details from local storage
+      List<Map<String, dynamic>> badges = await _getBadgesFromLocal();
+      
+      // Get unlock states from UserProfile
+      UserProfile? profile = await _userProfileService.fetchUserProfile();
+      if (profile != null) {
+        // Merge unlock states with badge details
+        badges = _mergeBadgeStates(badges, profile.unlockedBadge);
       }
 
-      List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
-      _debouncedSync();
-      return localBadges;
+      // Update memory cache
+      for (var badge in badges) {
+        _badgeCache[badge['id']] = badge;
+      }
+
+      // If online, sync in background
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        _debouncedSync();
+      }
+
+      _badgeUpdateController.add(badges);
+      return badges;
     } catch (e) {
       print('Error in fetchBadges: $e');
-      return [];
+      return _badgeCache.values.toList();
     }
+  }
+
+  List<Map<String, dynamic>> _mergeBadgeStates(
+    List<Map<String, dynamic>> badges, 
+    List<int> unlockedStates
+  ) {
+    return badges.map((badge) {
+      final id = badge['id'] as int;
+      return {
+        ...badge,
+        'unlocked': id < unlockedStates.length ? unlockedStates[id] == 1 : false,
+      };
+    }).toList();
   }
 
   void _debouncedSync() {
@@ -78,50 +111,42 @@ class BadgeService {
     try {
       _setSyncState(true);
 
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        return;
-      }
-
-      DocumentSnapshot snapshot = await _badgeDoc.get()
-          .timeout(SYNC_TIMEOUT);
-
-      if (!snapshot.exists) return;
-
-      int serverRevision = snapshot.get('revision') ?? 0;
-      int? localRevision = await _getLocalRevision();
-
-      // Get local badges
-      List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
-
-      if (localRevision == null || serverRevision > localRevision) {
-        // Server has newer data, update local
-        List<Map<String, dynamic>> serverBadges = 
-            await _fetchAndUpdateLocal(snapshot);
+      // Get server badges
+      List<Map<String, dynamic>> serverBadges = await _fetchFromServer();
+      
+      // Get current profile for unlock states
+      UserProfile? profile = await _userProfileService.fetchUserProfile();
+      if (profile != null) {
+        // Merge server badges with profile unlock states
+        serverBadges = _mergeBadgeStates(serverBadges, profile.unlockedBadge);
+        
+        // Update local storage with merged data
+        await _storeBadgesLocally(serverBadges);
         
         // Update memory cache
         for (var badge in serverBadges) {
           _badgeCache[badge['id']] = badge;
         }
 
-        // Notify listeners of new data
+        // Notify listeners
         _badgeUpdateController.add(serverBadges);
-      } else if (localRevision > serverRevision) {
-        // Local has newer data, update server
-        await _updateServerBadges(localBadges);
-        
-        // Update memory cache
-        for (var badge in localBadges) {
-          _badgeCache[badge['id']] = badge;
-        }
       }
-
     } catch (e) {
       print('Error in sync: $e');
       await _logBadgeOperation('sync_error', -1, e.toString());
     } finally {
       _setSyncState(false);
     }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchFromServer() async {
+    DocumentSnapshot snapshot = await _badgeDoc.get().timeout(SYNC_TIMEOUT);
+    if (!snapshot.exists) return [];
+
+    Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+    return data['badges'] != null 
+        ? List<Map<String, dynamic>>.from(data['badges']) 
+        : [];
   }
 
   Future<Map<String, dynamic>?> getBadgeDetails(int id) async {
@@ -330,18 +355,19 @@ class BadgeService {
   Future<void> _storeBadgesLocally(List<Map<String, dynamic>> badges) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? existingData = prefs.getString(BADGES_CACHE_KEY);
-      if (existingData != null) {
-        await prefs.setString('${BADGES_CACHE_KEY}_backup', existingData);
-      }
-      
       String badgesJson = jsonEncode(badges);
       await prefs.setString(BADGES_CACHE_KEY, badgesJson);
       
-      await prefs.remove('${BADGES_CACHE_KEY}_backup');
+      // Update memory cache
+      for (var badge in badges) {
+        _badgeCache[badge['id']] = badge;
+      }
+
+      // Notify listeners of updates
+      _badgeUpdateController.add(badges);
     } catch (e) {
-      await _restoreFromBackup();
       print('Error storing badges locally: $e');
+      await _restoreFromBackup();
     }
   }
 

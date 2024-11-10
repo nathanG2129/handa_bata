@@ -46,10 +46,10 @@ class BadgeUnlockService {
         return;
       }
 
-      // Create a new array with existing unlocks
+      // Pre-check which badges actually need unlocking
+      List<int> badgesToUnlock = [];
       List<int> unlockedBadges = List<int>.from(profile.unlockedBadge);
-      bool hasNewUnlocks = false;
-
+      
       // Ensure array is large enough
       int maxBadgeId = badgeIds.reduce((a, b) => a > b ? a : b);
       while (unlockedBadges.length <= maxBadgeId) {
@@ -63,26 +63,39 @@ class BadgeUnlockService {
         UserProfile? onlineProfile = await _authService.getUserProfile();
         if (onlineProfile != null) {
           onlineBadges = List<int>.from(onlineProfile.unlockedBadge);
-        }
-      }
-
-      // Merge online state with local state
-      if (onlineBadges != null) {
-        for (int i = 0; i < onlineBadges.length && i < unlockedBadges.length; i++) {
-          if (onlineBadges[i] == 1) {
-            unlockedBadges[i] = 1;
+          // Merge online unlocks into local array
+          for (int i = 0; i < onlineBadges.length && i < unlockedBadges.length; i++) {
+            if (onlineBadges[i] == 1) {
+              unlockedBadges[i] = 1;
+            }
           }
         }
       }
 
-      // Process new unlocks
+      // Check which badges need unlocking
       for (int badgeId in badgeIds) {
-        if (badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 0) {
-          print('🏅 New badge unlocked: $badgeId');
-          unlockedBadges[badgeId] = 1;
-          hasNewUnlocks = true;
-          _pendingBadgeNotifications.add(badgeId);
+        bool isAlreadyUnlocked = badgeId < unlockedBadges.length && unlockedBadges[badgeId] == 1;
+        if (!isAlreadyUnlocked) {
+          print('🔍 Badge $badgeId needs unlocking');
+          badgesToUnlock.add(badgeId);
+        } else {
+          print('✅ Badge $badgeId is already unlocked, skipping');
         }
+      }
+
+      // If no new badges to unlock, return early
+      if (badgesToUnlock.isEmpty) {
+        print('✨ No new badges to unlock');
+        return;
+      }
+
+      // Process new unlocks
+      bool hasNewUnlocks = false;
+      for (int badgeId in badgesToUnlock) {
+        print('🏅 New badge unlocked: $badgeId');
+        unlockedBadges[badgeId] = 1;
+        hasNewUnlocks = true;
+        _pendingBadgeNotifications.add(badgeId);
       }
 
       if (hasNewUnlocks) {

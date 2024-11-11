@@ -17,6 +17,7 @@ import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/widgets/notifications/badge_unlock_notification.dart';
 import 'package:handabatamae/services/badge_service.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;

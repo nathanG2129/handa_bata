@@ -5,19 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:collection';
+import 'package:handabatamae/shared/connection_quality.dart';
 
 enum LoadPriority {
   CRITICAL,  // Current user's avatar
   HIGH,      // Visible avatars
   MEDIUM,    // Next likely needed
   LOW        // Background loading
-}
-
-enum ConnectionQuality {
-  OFFLINE,
-  POOR,      // High latency/low bandwidth
-  GOOD,
-  EXCELLENT
 }
 
 class LoadRequest {
@@ -48,7 +42,9 @@ class AvatarService {
   static final AvatarService _instance = AvatarService._internal();
   factory AvatarService() => _instance;
   AvatarService._internal() {
-    _monitorConnectionQuality();
+    _connectionManager.connectionQuality.listen((quality) {
+      _connectionQualityController.add(quality);
+    });
     _startQueueProcessing();
   }
 
@@ -84,34 +80,10 @@ class AvatarService {
     LoadPriority.LOW: Queue<LoadRequest>(),
   };
 
-  ConnectionQuality _connectionQuality = ConnectionQuality.GOOD;
+  final ConnectionManager _connectionManager = ConnectionManager();
   final StreamController<ConnectionQuality> _connectionQualityController = 
       StreamController<ConnectionQuality>.broadcast();
   Stream<ConnectionQuality> get connectionQuality => _connectionQualityController.stream;
-
-  Future<void> _monitorConnectionQuality() async {
-    while (true) {
-      try {
-        final start = DateTime.now();
-        await _avatarDoc.get();
-        final latency = DateTime.now().difference(start);
-
-        _connectionQuality = _determineConnectionQuality(latency);
-        _connectionQualityController.add(_connectionQuality);
-      } catch (e) {
-        _connectionQuality = ConnectionQuality.OFFLINE;
-        _connectionQualityController.add(_connectionQuality);
-      }
-      await Future.delayed(const Duration(seconds: 30));
-    }
-  }
-
-  ConnectionQuality _determineConnectionQuality(Duration latency) {
-    if (latency.inMilliseconds < 100) return ConnectionQuality.EXCELLENT;
-    if (latency.inMilliseconds < 300) return ConnectionQuality.GOOD;
-    if (latency.inMilliseconds < 1000) return ConnectionQuality.POOR;
-    return ConnectionQuality.OFFLINE;
-  }
 
   Future<void> _startQueueProcessing() async {
     while (true) {
@@ -120,7 +92,7 @@ class AvatarService {
         await _processQueue(LoadPriority.CRITICAL);
 
         // Process other queues based on connection quality
-        switch (_connectionQuality) {
+        switch (await _connectionManager.checkConnectionQuality()) {
           case ConnectionQuality.EXCELLENT:
             await _processQueue(LoadPriority.HIGH);
             await _processQueue(LoadPriority.MEDIUM);
@@ -135,6 +107,7 @@ class AvatarService {
             break;
           case ConnectionQuality.OFFLINE:
             // Only process from cache
+            print('📡 Offline - Only processing from cache');
             break;
         }
       } catch (e) {
@@ -580,7 +553,7 @@ class AvatarService {
       }
 
       // Only fetch from server for HIGH or CRITICAL priority when offline
-      if (_connectionQuality == ConnectionQuality.OFFLINE && 
+      if (await _connectionManager.checkConnectionQuality() == ConnectionQuality.OFFLINE && 
           priority != LoadPriority.CRITICAL &&
           priority != LoadPriority.HIGH) {
         return null;

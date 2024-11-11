@@ -52,10 +52,13 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   final AvatarService _avatarService = AvatarService();
   String? _cachedAvatarPath;
   late StreamSubscription<Map<int, String>> _avatarSubscription;
+  late StreamSubscription<ConnectionQuality> _connectionSubscription;
+  ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
 
   @override
   void initState() {
     super.initState();
+    // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
       if (mounted && updates.containsKey(widget.avatarId)) {
         setState(() {
@@ -63,12 +66,21 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
         });
       }
     });
+
+    // Add connection quality listener
+    _connectionSubscription = _avatarService.connectionQuality.listen((quality) {
+      if (mounted) {
+        setState(() => _currentQuality = quality);
+      }
+    });
+
     _getAvatarImage();
   }
 
   @override
   void dispose() {
     _avatarSubscription.cancel();
+    _connectionSubscription.cancel();
     super.dispose();
   }
 
@@ -96,14 +108,41 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
 
   Future<String?> _getAvatarImage() async {
     try {
-      final avatar = await _avatarService.getAvatarDetails(widget.avatarId);
-      if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
-        setState(() => _cachedAvatarPath = avatar['img']);
+      // Adapt behavior based on connection quality
+      switch (_currentQuality) {
+        case ConnectionQuality.OFFLINE:
+          // Only use cache in offline mode
+          if (_cachedAvatarPath != null) {
+            return _cachedAvatarPath;
+          }
+          break;
+          
+        case ConnectionQuality.POOR:
+          // Use longer timeout, prioritize cache
+          if (_cachedAvatarPath != null) {
+            // Fetch in background but return cached immediately
+            _avatarService.getAvatarDetails(
+              widget.avatarId,
+              priority: LoadPriority.CRITICAL
+            );
+            return _cachedAvatarPath;
+          }
+          break;
+          
+        default:
+          // Normal behavior for GOOD and EXCELLENT
+          final avatar = await _avatarService.getAvatarDetails(
+            widget.avatarId,
+            priority: LoadPriority.CRITICAL
+          );
+          if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
+            setState(() => _cachedAvatarPath = avatar['img']);
+          }
       }
-      return avatar?['img'] ?? 'Kladis.png';
+      return _cachedAvatarPath ?? 'Kladis.png';
     } catch (e) {
       print('Error getting avatar image: $e');
-      return 'Kladis.png';
+      return _cachedAvatarPath ?? 'Kladis.png';
     }
   }
 

@@ -4,6 +4,35 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:collection';
+
+enum LoadPriority {
+  CRITICAL,  // Current user's avatar
+  HIGH,      // Visible avatars
+  MEDIUM,    // Next likely needed
+  LOW        // Background loading
+}
+
+enum ConnectionQuality {
+  OFFLINE,
+  POOR,      // High latency/low bandwidth
+  GOOD,
+  EXCELLENT
+}
+
+class LoadRequest {
+  final int avatarId;
+  final LoadPriority priority;
+  final DateTime timestamp;
+  final Completer<Map<String, dynamic>> completer;
+  
+  LoadRequest({
+    required this.avatarId,
+    required this.priority,
+    required this.timestamp,
+    required this.completer,
+  });
+}
 
 class CachedAvatar {
   final Map<String, dynamic> data;
@@ -18,7 +47,10 @@ class CachedAvatar {
 class AvatarService {
   static final AvatarService _instance = AvatarService._internal();
   factory AvatarService() => _instance;
-  AvatarService._internal();
+  AvatarService._internal() {
+    _monitorConnectionQuality();
+    _startQueueProcessing();
+  }
 
   final DocumentReference _avatarDoc = FirebaseFirestore.instance.collection('Game').doc('Avatar');
   
@@ -44,6 +76,89 @@ class AvatarService {
 
   final _avatarImageController = StreamController<Map<int, String>>.broadcast();
   Stream<Map<int, String>> get avatarImageUpdates => _avatarImageController.stream;
+
+  final Map<LoadPriority, Queue<LoadRequest>> _loadQueues = {
+    LoadPriority.CRITICAL: Queue<LoadRequest>(),
+    LoadPriority.HIGH: Queue<LoadRequest>(),
+    LoadPriority.MEDIUM: Queue<LoadRequest>(),
+    LoadPriority.LOW: Queue<LoadRequest>(),
+  };
+
+  ConnectionQuality _connectionQuality = ConnectionQuality.GOOD;
+  final StreamController<ConnectionQuality> _connectionQualityController = 
+      StreamController<ConnectionQuality>.broadcast();
+  Stream<ConnectionQuality> get connectionQuality => _connectionQualityController.stream;
+
+  Future<void> _monitorConnectionQuality() async {
+    while (true) {
+      try {
+        final start = DateTime.now();
+        await _avatarDoc.get();
+        final latency = DateTime.now().difference(start);
+
+        _connectionQuality = _determineConnectionQuality(latency);
+        _connectionQualityController.add(_connectionQuality);
+      } catch (e) {
+        _connectionQuality = ConnectionQuality.OFFLINE;
+        _connectionQualityController.add(_connectionQuality);
+      }
+      await Future.delayed(const Duration(seconds: 30));
+    }
+  }
+
+  ConnectionQuality _determineConnectionQuality(Duration latency) {
+    if (latency.inMilliseconds < 100) return ConnectionQuality.EXCELLENT;
+    if (latency.inMilliseconds < 300) return ConnectionQuality.GOOD;
+    if (latency.inMilliseconds < 1000) return ConnectionQuality.POOR;
+    return ConnectionQuality.OFFLINE;
+  }
+
+  Future<void> _startQueueProcessing() async {
+    while (true) {
+      try {
+        // Process CRITICAL queue immediately
+        await _processQueue(LoadPriority.CRITICAL);
+
+        // Process other queues based on connection quality
+        switch (_connectionQuality) {
+          case ConnectionQuality.EXCELLENT:
+            await _processQueue(LoadPriority.HIGH);
+            await _processQueue(LoadPriority.MEDIUM);
+            await _processQueue(LoadPriority.LOW);
+            break;
+          case ConnectionQuality.GOOD:
+            await _processQueue(LoadPriority.HIGH);
+            await _processQueue(LoadPriority.MEDIUM);
+            break;
+          case ConnectionQuality.POOR:
+            await _processQueue(LoadPriority.HIGH);
+            break;
+          case ConnectionQuality.OFFLINE:
+            // Only process from cache
+            break;
+        }
+      } catch (e) {
+        print('Error processing load queue: $e');
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  Future<void> _processQueue(LoadPriority priority) async {
+    final queue = _loadQueues[priority]!;
+    while (queue.isNotEmpty) {
+      final request = queue.removeFirst();
+      try {
+        final result = await _fetchAvatarWithPriority(
+          request.avatarId, 
+          request.priority
+        );
+        request.completer.complete(result);
+      } catch (e) {
+        request.completer.completeError(e);
+      }
+    }
+  }
 
   Future<void> _updateVersion() async {
     try {
@@ -421,16 +536,38 @@ class AvatarService {
     _avatarImageController.close();
     _syncDebounceTimer?.cancel();
     _syncStatusController.close();
+    _connectionQualityController.close();
   }
 
-  Future<Map<String, dynamic>?> getAvatarDetails(int id) async {
-    try {
-      // Check memory cache first
-      if (_avatarCache.containsKey(id) && _avatarCache[id]!.isValid) {
-        return _avatarCache[id]!.data;
-      }
+  Future<Map<String, dynamic>?> getAvatarDetails(
+    int id, {
+    LoadPriority priority = LoadPriority.HIGH
+  }) async {
+    // Check memory cache first
+    if (_avatarCache.containsKey(id) && _avatarCache[id]!.isValid) {
+      return _avatarCache[id]!.data;
+    }
 
-      // Check local storage
+    // Create load request
+    final completer = Completer<Map<String, dynamic>>();
+    final request = LoadRequest(
+      avatarId: id,
+      priority: priority,
+      timestamp: DateTime.now(),
+      completer: completer,
+    );
+
+    _loadQueues[priority]!.add(request);
+
+    return completer.future;
+  }
+
+  Future<Map<String, dynamic>?> _fetchAvatarWithPriority(
+    int id,
+    LoadPriority priority
+  ) async {
+    try {
+      // Check local storage first
       List<Map<String, dynamic>> localAvatars = await _getAvatarsFromLocal();
       var avatar = localAvatars.firstWhere(
         (a) => a['id'] == id,
@@ -442,33 +579,50 @@ class AvatarService {
         return avatar;
       }
 
-      // Only fetch from server if not found locally
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot doc = await _avatarDoc.get()
-            .timeout(SYNC_TIMEOUT);
+      // Only fetch from server for HIGH or CRITICAL priority when offline
+      if (_connectionQuality == ConnectionQuality.OFFLINE && 
+          priority != LoadPriority.CRITICAL &&
+          priority != LoadPriority.HIGH) {
+        return null;
+      }
+
+      // Fetch from server with timeout based on priority
+      final timeout = _getTimeoutForPriority(priority);
+      DocumentSnapshot doc = await _avatarDoc.get().timeout(timeout);
             
-        if (doc.exists) {
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          List<Map<String, dynamic>> avatars = 
-              List<Map<String, dynamic>>.from(data['avatars'] ?? []);
+      if (doc.exists) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> avatars = 
+            List<Map<String, dynamic>>.from(data['avatars'] ?? []);
               
-          var serverAvatar = avatars.firstWhere(
-            (a) => a['id'] == id,
-            orElse: () => {},
-          );
+        var serverAvatar = avatars.firstWhere(
+          (a) => a['id'] == id,
+          orElse: () => {},
+        );
           
-          if (serverAvatar.isNotEmpty) {
-            _addToCache(id, serverAvatar);
-            return serverAvatar;
-          }
+        if (serverAvatar.isNotEmpty) {
+          _addToCache(id, serverAvatar);
+          return serverAvatar;
         }
       }
 
-      return _avatarCache[id]?.data; // Return cached data even if expired
+      return null;
     } catch (e) {
-      print('Error in getAvatarDetails: $e');
-      return _avatarCache[id]?.data; // Return cached data on error
+      print('Error in _fetchAvatarWithPriority: $e');
+      return null;
+    }
+  }
+
+  Duration _getTimeoutForPriority(LoadPriority priority) {
+    switch (priority) {
+      case LoadPriority.CRITICAL:
+        return const Duration(seconds: 10);
+      case LoadPriority.HIGH:
+        return const Duration(seconds: 5);
+      case LoadPriority.MEDIUM:
+        return const Duration(seconds: 3);
+      case LoadPriority.LOW:
+        return const Duration(seconds: 2);
     }
   }
 
@@ -699,5 +853,10 @@ class AvatarService {
       print('🏁 Avatar sync process completed');
       _setSyncState(false);
     }
+  }
+
+  // Add this public method
+  void triggerBackgroundSync() {
+    _debouncedSync();
   }
 }

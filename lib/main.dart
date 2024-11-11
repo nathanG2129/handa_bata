@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_options.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'web_mobile_bridge.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
@@ -14,7 +13,6 @@ void main() async {
   );
   
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
-  SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(const MyApp());
 }
 

@@ -62,6 +62,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   late StreamSubscription<Map<int, String>> _avatarSubscription;
 
+  late StreamSubscription<ConnectionQuality> _connectionSubscription;
+  ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
+
   @override
   void initState() {
     super.initState();
@@ -112,6 +115,13 @@ class HeaderWidgetState extends State<HeaderWidget> {
         });
       }
     });
+
+    // Add connection quality listener
+    _connectionSubscription = _avatarService.connectionQuality.listen((quality) {
+      if (mounted) {
+        setState(() => _currentQuality = quality);
+      }
+    });
   }
 
   Future<void> _updateAvatar(int avatarId) async {
@@ -134,6 +144,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
     _profileSubscription.cancel();
     _removeOverlay();
     _avatarSubscription.cancel();
+    _connectionSubscription.cancel();
     super.dispose();
   }
 
@@ -308,14 +319,39 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Future<String?> _getAvatarImage(int avatarId) async {
     try {
-      final avatar = await _avatarService.getAvatarDetails(avatarId);
-      if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
-        setState(() => _cachedAvatarPath = avatar['img']);
+      switch (_currentQuality) {
+        case ConnectionQuality.OFFLINE:
+          // Use cached data only
+          if (_cachedAvatarPath != null) {
+            return _cachedAvatarPath;
+          }
+          break;
+          
+        case ConnectionQuality.POOR:
+          // Use cached first, update in background
+          if (_cachedAvatarPath != null) {
+            _avatarService.getAvatarDetails(
+              avatarId,
+              priority: LoadPriority.HIGH
+            );
+            return _cachedAvatarPath;
+          }
+          break;
+          
+        default:
+          // Normal behavior for GOOD and EXCELLENT
+          final avatar = await _avatarService.getAvatarDetails(
+            avatarId,
+            priority: LoadPriority.HIGH
+          );
+          if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
+            setState(() => _cachedAvatarPath = avatar['img']);
+          }
       }
-      return avatar?['img'] ?? 'Kladis.png';
+      return _cachedAvatarPath ?? 'Kladis.png';
     } catch (e) {
       print('Error getting avatar image: $e');
-      return 'Kladis.png';
+      return _cachedAvatarPath ?? 'Kladis.png';
     }
   }
 

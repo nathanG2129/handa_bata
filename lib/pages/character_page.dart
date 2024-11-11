@@ -33,17 +33,29 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
   int? _selectedAvatarId;
   bool _isLoading = true;
   late StreamSubscription<Map<int, String>> _avatarSubscription;
+  late StreamSubscription<ConnectionQuality> _connectionSubscription;
+  ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
 
   @override
   void initState() {
     super.initState();
     _selectedAvatarId = widget.currentAvatarId;
     _initializeAnimation();
+    
+    // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
       if (mounted) {
         _loadAvatars();
       }
     });
+
+    // Add connection quality listener
+    _connectionSubscription = _avatarService.connectionQuality.listen((quality) {
+      if (mounted) {
+        setState(() => _currentQuality = quality);
+      }
+    });
+
     _loadAvatars();
   }
 
@@ -64,14 +76,41 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
   Future<void> _loadAvatars() async {
     try {
       setState(() => _isLoading = true);
-      final avatars = await _avatarService.fetchAvatars();
-      if (mounted) {
-        setState(() {
-          _avatars = avatars;
-          _isLoading = false;
-        });
-        _animationController.forward();
+
+      switch (_currentQuality) {
+        case ConnectionQuality.OFFLINE:
+          // Load only cached avatars
+          final avatars = await _avatarService.fetchAvatars();
+          if (mounted) {
+            setState(() {
+              _avatars = avatars;
+              _isLoading = false;
+            });
+          }
+          break;
+
+        case ConnectionQuality.POOR:
+          // Load visible avatars first, then others in background
+          final visibleAvatars = await _avatarService.fetchAvatars();
+          if (mounted) {
+            setState(() {
+              _avatars = visibleAvatars;
+              _isLoading = false;
+            });
+          }
+          break;
+
+        default:
+          // Load all avatars for good connections
+          final avatars = await _avatarService.fetchAvatars();
+          if (mounted) {
+            setState(() {
+              _avatars = avatars;
+              _isLoading = false;
+            });
+          }
       }
+      _animationController.forward();
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -85,6 +124,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
   @override
   void dispose() {
     _avatarSubscription.cancel();
+    _connectionSubscription.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -102,7 +142,11 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
-      final avatar = await _avatarService.getAvatarDetails(avatarId);
+      // Use CRITICAL priority for selected avatar
+      final avatar = await _avatarService.getAvatarDetails(
+        avatarId,
+        priority: LoadPriority.CRITICAL
+      );
       if (avatar == null) throw Exception('Avatar not found');
 
       await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);

@@ -49,50 +49,58 @@ class SplashPageState extends State<SplashPage> {
       final avatarService = AvatarService();
       final authService = AuthService();
 
+      // Check connection quality first
+      print('📡 Checking connection quality...');
+      await avatarService.connectionQuality.first;  // Wait for first connection check
+
+      // Priority load current user's avatar
       print('👤 Checking user profile...');
-      // First, try to get current user's avatar for priority loading
       final userProfile = await authService.getUserProfile();
       if (userProfile != null) {
         print('🎯 Prefetching current user avatar...');
-        await avatarService.getAvatarDetails(userProfile.avatarId);
+        await avatarService.getAvatarDetails(
+          userProfile.avatarId,
+          priority: LoadPriority.CRITICAL
+        );
       }
 
       print('📥 Fetching all resources...');
       
-      // First fetch categories
+      // Keep existing stage prefetches
       final enCategories = await stageService.fetchCategories('en');
       print('✅ EN Categories fetched: ${enCategories.length} categories');
       
       final filCategories = await stageService.fetchCategories('fil');
       print('✅ FIL Categories fetched: ${filCategories.length} categories');
 
-      // Then fetch stages for each category
+      // Keep stage fetches for categories
       print('📥 Fetching stages for all categories...');
-      
-      // Fetch stages for English categories
       for (var category in enCategories) {
         print('📥 Fetching EN stages for category: ${category['id']}');
         final stages = await stageService.fetchStages('en', category['id']);
         print('✅ EN Stages fetched for ${category['name']}: ${stages.length} stages');
       }
 
-      // Fetch stages for Filipino categories
       for (var category in filCategories) {
         print('📥 Fetching FIL stages for category: ${category['id']}');
         final stages = await stageService.fetchStages('fil', category['id']);
         print('✅ FIL Stages fetched for ${category['name']}: ${stages.length} stages');
       }
 
-      // Then fetch all avatars in batch
-      print('📥 Fetching all avatars...');
+      // Load visible avatars first with HIGH priority
+      print('📥 Fetching initial avatars...');
       final avatars = await avatarService.fetchAvatars();
       print('✅ Avatars fetched and cached: ${avatars.length} avatars');
 
-      // Verify avatar cache integrity
+      // Then trigger background sync for remaining avatars
+      print('📥 Background loading remaining avatars...');
+      avatarService.triggerBackgroundSync();
+
+      // Verify cache integrity
       print('🔍 Verifying avatar cache integrity...');
       await avatarService.performMaintenance();
 
-      // Fetch other resources
+      // Keep existing badge and banner prefetches
       final results = await Future.wait([
         badgeService.fetchBadges().then((badges) {
           print('✅ Badges fetched: ${badges.length} badges');

@@ -333,6 +333,12 @@ class UserProfileService {
       
       await _logOperation('recovery_attempt', 'Attempting recovery from $operation');
       
+      // Clear avatar cache for current profile
+      UserProfile? profile = await _getProfileFromLocal(userId);
+      if (profile != null) {
+        _avatarService.clearAvatarCache(profile.avatarId);
+      }
+      
       // Try to restore from backup
       await _restoreFromBackup(userId);
       
@@ -558,6 +564,14 @@ class UserProfileService {
   // Add batch update method
   Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
     try {
+      // Validate avatar if included in updates
+      if (updates.containsKey('avatarId')) {
+        final avatar = await _avatarService.getAvatarDetails(updates['avatarId']);
+        if (avatar == null) {
+          throw Exception('Invalid avatar ID in batch update');
+        }
+      }
+
       User? user = _auth.currentUser;
       if (user == null) return;
 
@@ -795,7 +809,7 @@ class UserProfileService {
   Future<void> updateProfileWithIntegration(String field, dynamic value) async {
     try {
       if (field == 'avatarId') {
-        // Validate avatar exists
+        // Validate avatar exists using shared cache
         final avatar = await _avatarService.getAvatarDetails(value);
         if (avatar == null) {
           throw Exception('Invalid avatar ID');
@@ -831,6 +845,15 @@ class UserProfileService {
 
       UserProfile? profile = await fetchUserProfile();
       if (profile == null) return;
+
+      // Add avatar sync check
+      if (profile.avatarId != 0) {  // 0 is default avatar
+        final avatar = await _avatarService.getAvatarDetails(profile.avatarId);
+        if (avatar == null) {
+          // Avatar no longer exists, reset to default
+          await updateProfile('avatarId', 0);
+        }
+      }
 
       // Sync with badge service
       List<Map<String, dynamic>> badges = await _badgeService.fetchBadges();

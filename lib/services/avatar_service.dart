@@ -5,8 +5,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+class CachedAvatar {
+  final Map<String, dynamic> data;
+  final DateTime timestamp;
+  
+  CachedAvatar(this.data, this.timestamp);
+  
+  bool get isValid => 
+    DateTime.now().difference(timestamp) < const Duration(hours: 1);
+}
+
 class AvatarService {
+  static final AvatarService _instance = AvatarService._internal();
+  factory AvatarService() => _instance;
+  AvatarService._internal();
+
   final DocumentReference _avatarDoc = FirebaseFirestore.instance.collection('Game').doc('Avatar');
+  
   static const String AVATARS_CACHE_KEY = 'avatars_cache';
   static const String AVATAR_VERSION_KEY = 'avatar_version';
   static const String AVATAR_REVISION_KEY = 'avatar_revision';
@@ -14,20 +29,22 @@ class AvatarService {
   static const int MAX_CACHE_SIZE = 100;
   static const Duration SYNC_DEBOUNCE = Duration(milliseconds: 500);
   static const Duration SYNC_TIMEOUT = Duration(seconds: 5);
+  static const Duration CACHE_DURATION = Duration(hours: 1);
+
+  static final Map<int, CachedAvatar> _avatarCache = {};
+  static final Map<String, CachedAvatar> _batchCache = {};
+
   Timer? _syncDebounceTimer;
   bool _isSyncing = false;
   final StreamController<bool> _syncStatusController = StreamController<bool>.broadcast();
   Stream<bool> get syncStatus => _syncStatusController.stream;
 
-  // Add stream controller for real-time updates
   final _avatarUpdateController = StreamController<Map<int, String>>.broadcast();
   Stream<Map<int, String>> get avatarUpdates => _avatarUpdateController.stream;
 
-  // Add stream for avatar image updates
   final _avatarImageController = StreamController<Map<int, String>>.broadcast();
   Stream<Map<int, String>> get avatarImageUpdates => _avatarImageController.stream;
 
-  // Add version tracking
   Future<void> _updateVersion() async {
     try {
       await _avatarDoc.update({
@@ -38,9 +55,10 @@ class AvatarService {
     }
   }
 
-  // Modified fetch method for admin
   Future<List<Map<String, dynamic>>> fetchAvatars({bool isAdmin = false}) async {
     try {
+      final cacheKey = 'all_avatars${isAdmin ? '_admin' : ''}';
+      
       if (isAdmin) {
         // For admin, always fetch from server
         DocumentSnapshot snapshot = await _avatarDoc.get();
@@ -50,12 +68,18 @@ class AvatarService {
         List<Map<String, dynamic>> avatars = 
             data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
             
-        // Update cache after fetching
+        // Update both caches
+        _batchCache[cacheKey] = CachedAvatar({'avatars': avatars}, DateTime.now());
         for (var avatar in avatars) {
-          _avatarCache[avatar['id']] = avatar;
+          _addToCache(avatar['id'], avatar);
         }
         
         return avatars;
+      }
+
+      // Check batch cache first
+      if (_batchCache.containsKey(cacheKey) && _batchCache[cacheKey]!.isValid) {
+        return List<Map<String, dynamic>>.from(_batchCache[cacheKey]!.data['avatars']);
       }
 
       // Get from local storage first
@@ -68,8 +92,14 @@ class AvatarService {
           DocumentSnapshot snapshot = await _avatarDoc.get();
           if (snapshot.exists) {
             Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-            localAvatars = data['avatars'] != null ? List<Map<String, dynamic>>.from(data['avatars']) : [];
-            // Store in local
+            localAvatars = data['avatars'] != null ? 
+                List<Map<String, dynamic>>.from(data['avatars']) : [];
+            
+            // Update caches and local storage
+            _batchCache[cacheKey] = CachedAvatar({'avatars': localAvatars}, DateTime.now());
+            for (var avatar in localAvatars) {
+              _addToCache(avatar['id'], avatar);
+            }
             await _storeAvatarsLocally(localAvatars);
           }
         }
@@ -94,7 +124,6 @@ class AvatarService {
     return avatars;
   }
 
-  // Version control helpers
   Future<Timestamp?> _getLocalVersion() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? versionStr = prefs.getString(AVATAR_VERSION_KEY);
@@ -108,8 +137,6 @@ class AvatarService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(AVATAR_VERSION_KEY, version.millisecondsSinceEpoch.toString());
   }
-
-
 
   bool _validateAvatarData(Map<String, dynamic> avatar) {
     return avatar.containsKey('id') &&
@@ -194,7 +221,6 @@ class AvatarService {
     }
   }
 
-  // Add avatar method
   Future<void> addAvatar(Map<String, dynamic> avatar) async {
     try {
       // Get current avatars
@@ -223,7 +249,7 @@ class AvatarService {
       }, SetOptions(merge: true));
 
       // Update cache
-      _avatarCache[newId] = avatar;
+      _addToCache(newId, avatar);
       
       // Update version
       await _updateVersion();
@@ -233,7 +259,6 @@ class AvatarService {
     }
   }
 
-  // Update avatar method
   Future<void> updateAvatar(int id, Map<String, dynamic> updatedAvatar) async {
     try {
       // Get current avatars
@@ -261,7 +286,7 @@ class AvatarService {
       });
 
       // Update cache
-      _avatarCache[id] = updatedAvatar;
+      _addToCache(id, updatedAvatar);
       
       // Update version
       await _updateVersion();
@@ -277,7 +302,6 @@ class AvatarService {
     }
   }
 
-  // Helper method to compare old and new avatar data
   String _getChangedFields(Map<String, dynamic> oldAvatar, Map<String, dynamic> newAvatar) {
     List<String> changes = [];
     
@@ -290,7 +314,6 @@ class AvatarService {
     return changes.join(', ');
   }
 
-  // Delete avatar method
   Future<void> deleteAvatar(int id) async {
     try {
       await FirebaseFirestore.instance.runTransaction((transaction) async {
@@ -393,7 +416,6 @@ class AvatarService {
     }
   }
 
-  // Add dispose method
   void dispose() {
     _avatarUpdateController.close();
     _avatarImageController.close();
@@ -401,14 +423,11 @@ class AvatarService {
     _syncStatusController.close();
   }
 
-  // Add better caching mechanism
-  final Map<int, Map<String, dynamic>> _avatarCache = {};
-  
   Future<Map<String, dynamic>?> getAvatarDetails(int id) async {
     try {
       // Check memory cache first
-      if (_avatarCache.containsKey(id)) {
-        return _avatarCache[id];
+      if (_avatarCache.containsKey(id) && _avatarCache[id]!.isValid) {
+        return _avatarCache[id]!.data;
       }
 
       // Check local storage
@@ -419,7 +438,7 @@ class AvatarService {
       );
 
       if (avatar.isNotEmpty) {
-        _avatarCache[id] = avatar;
+        _addToCache(id, avatar);
         return avatar;
       }
 
@@ -440,22 +459,55 @@ class AvatarService {
           );
           
           if (serverAvatar.isNotEmpty) {
-            _avatarCache[id] = serverAvatar;
+            _addToCache(id, serverAvatar);
             return serverAvatar;
           }
         }
       }
 
-      return null;
+      return _avatarCache[id]?.data; // Return cached data even if expired
     } catch (e) {
       print('Error in getAvatarDetails: $e');
-      return null;
+      return _avatarCache[id]?.data; // Return cached data on error
     }
   }
 
-  // Add method to clear specific avatar from cache
+  void _addToCache(int id, Map<String, dynamic> data) {
+    _avatarCache[id] = CachedAvatar(data, DateTime.now());
+    _manageCacheSize();
+  }
+
+  void _manageCacheSize() {
+    if (_avatarCache.length > MAX_CACHE_SIZE) {
+      // Remove oldest or invalid entries first
+      var entriesByAge = _avatarCache.entries.toList()
+        ..sort((a, b) => a.value.timestamp.compareTo(b.value.timestamp));
+      
+      for (var entry in entriesByAge) {
+        if (_avatarCache.length <= MAX_CACHE_SIZE) break;
+        if (!entry.value.isValid) {
+          _avatarCache.remove(entry.key);
+        }
+      }
+      
+      // If still too large, remove oldest entries
+      while (_avatarCache.length > MAX_CACHE_SIZE) {
+        var oldest = entriesByAge.removeAt(0);
+        _avatarCache.remove(oldest.key);
+      }
+    }
+  }
+
   void clearAvatarCache(int id) {
     _avatarCache.remove(id);
+    _batchCache.clear(); // Clear batch cache as it might contain outdated data
+  }
+
+  Future<void> clearAllCaches() async {
+    _avatarCache.clear();
+    _batchCache.clear();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AVATARS_CACHE_KEY);
   }
 
   Future<void> performMaintenance() async {
@@ -576,16 +628,6 @@ class AvatarService {
     return avatar != null;
   }
 
-  void _manageCacheSize() {
-    if (_avatarCache.length > MAX_CACHE_SIZE) {
-      // Remove oldest entries if cache is too large
-      final keysToRemove = _avatarCache.keys.take(_avatarCache.length - MAX_CACHE_SIZE + 1);
-      for (var key in keysToRemove) {
-        _avatarCache.remove(key);
-      }
-    }
-  }
-
   // Add this method to handle sync state
   void _setSyncState(bool syncing) {
     _isSyncing = syncing;
@@ -641,7 +683,7 @@ class AvatarService {
         print('💾 Updating memory cache with ${serverAvatars.length} avatars');
         // Update memory cache
         for (var avatar in serverAvatars) {
-          _avatarCache[avatar['id']] = avatar;
+          _addToCache(avatar['id'], avatar);
         }
 
         print('📢 Notifying listeners of avatar updates');

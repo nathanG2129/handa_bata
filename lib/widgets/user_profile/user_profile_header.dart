@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/character_page.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
@@ -52,23 +51,24 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   final UserProfileService _userProfileService = UserProfileService();
   final AvatarService _avatarService = AvatarService();
   String? _cachedAvatarPath;
-  late StreamSubscription<UserProfile> _profileSubscription;
+  late StreamSubscription<Map<int, String>> _avatarSubscription;
 
   @override
   void initState() {
     super.initState();
-    
-    // Listen to profile updates
-    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
-      if (mounted && profile.avatarId != widget.avatarId) {
-        _getAvatarImage();
+    _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
+      if (mounted && updates.containsKey(widget.avatarId)) {
+        setState(() {
+          _cachedAvatarPath = updates[widget.avatarId];
+        });
       }
     });
+    _getAvatarImage();
   }
 
   @override
   void dispose() {
-    _profileSubscription.cancel();
+    _avatarSubscription.cancel();
     super.dispose();
   }
 
@@ -97,16 +97,12 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   Future<String?> _getAvatarImage() async {
     try {
       final avatar = await _avatarService.getAvatarDetails(widget.avatarId);
-      if (avatar != null) {
-        if (mounted && avatar['img'] != _cachedAvatarPath) {
-          setState(() {
-            _cachedAvatarPath = avatar['img'];
-          });
-        }
-        return avatar['img'];
+      if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
+        setState(() => _cachedAvatarPath = avatar['img']);
       }
-      return 'Kladis.png';
+      return avatar?['img'] ?? 'Kladis.png';
     } catch (e) {
+      print('Error getting avatar image: $e');
       return 'Kladis.png';
     }
   }

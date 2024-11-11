@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
@@ -31,12 +32,18 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
   List<Map<String, dynamic>> _avatars = [];
   int? _selectedAvatarId;
   bool _isLoading = true;
+  late StreamSubscription<Map<int, String>> _avatarSubscription;
 
   @override
   void initState() {
     super.initState();
     _selectedAvatarId = widget.currentAvatarId;
     _initializeAnimation();
+    _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
+      if (mounted) {
+        _loadAvatars();
+      }
+    });
     _loadAvatars();
   }
 
@@ -77,6 +84,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   @override
   void dispose() {
+    _avatarSubscription.cancel();
     _animationController.dispose();
     super.dispose();
   }

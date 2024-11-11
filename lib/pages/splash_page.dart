@@ -47,6 +47,15 @@ class SplashPageState extends State<SplashPage> {
       final badgeService = BadgeService();
       final bannerService = BannerService();
       final avatarService = AvatarService();
+      final authService = AuthService();
+
+      print('👤 Checking user profile...');
+      // First, try to get current user's avatar for priority loading
+      final userProfile = await authService.getUserProfile();
+      if (userProfile != null) {
+        print('🎯 Prefetching current user avatar...');
+        await avatarService.getAvatarDetails(userProfile.avatarId);
+      }
 
       print('📥 Fetching all resources...');
       
@@ -74,6 +83,15 @@ class SplashPageState extends State<SplashPage> {
         print('✅ FIL Stages fetched for ${category['name']}: ${stages.length} stages');
       }
 
+      // Then fetch all avatars in batch
+      print('📥 Fetching all avatars...');
+      final avatars = await avatarService.fetchAvatars();
+      print('✅ Avatars fetched and cached: ${avatars.length} avatars');
+
+      // Verify avatar cache integrity
+      print('🔍 Verifying avatar cache integrity...');
+      await avatarService.performMaintenance();
+
       // Fetch other resources
       final results = await Future.wait([
         badgeService.fetchBadges().then((badges) {
@@ -84,19 +102,16 @@ class SplashPageState extends State<SplashPage> {
           print('✅ Banners fetched: ${banners.length} banners');
           return banners;
         }),
-        avatarService.fetchAvatars().then((avatars) {
-          print('✅ Avatars fetched: ${avatars.length} avatars');
-          return avatars;
-        }),
       ]);
 
-      print('🎉 All resources fetched and cached successfully!');
+      print('🎉 All resources prefetched and cached successfully!');
       print('📊 Summary:');
       print('   - EN Categories: ${enCategories.length}');
       print('   - FIL Categories: ${filCategories.length}');
+      print('   - Avatars: ${avatars.length}');
+      print('   - Current user avatar cached: ${userProfile != null}');
       print('   - Badges: ${results[0].length}');
       print('   - Banners: ${results[1].length}');
-      print('   - Avatars: ${results[2].length}');
 
       if (mounted) {
         setState(() => _isLoading = false);

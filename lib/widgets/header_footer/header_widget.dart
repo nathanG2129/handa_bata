@@ -104,10 +104,11 @@ class HeaderWidgetState extends State<HeaderWidget> {
       }
     });
 
-    final avatarService = AvatarService();
-    _avatarSubscription = avatarService.avatarUpdates.listen((avatarUpdate) {
-      if (avatarUpdate.containsKey(_currentAvatarId)) {
+    // Listen to avatar updates
+    _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
+      if (mounted && _currentAvatarId != null && updates.containsKey(_currentAvatarId)) {
         setState(() {
+          _cachedAvatarPath = updates[_currentAvatarId];
         });
       }
     });
@@ -308,16 +309,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
   Future<String?> _getAvatarImage(int avatarId) async {
     try {
       final avatar = await _avatarService.getAvatarDetails(avatarId);
-      if (avatar != null) {
-        if (mounted && avatar['img'] != _cachedAvatarPath) {
-          setState(() {
-            _cachedAvatarPath = avatar['img'];
-          });
-        }
-        return avatar['img'];
+      if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
+        setState(() => _cachedAvatarPath = avatar['img']);
       }
-      return 'Kladis.png';
+      return avatar?['img'] ?? 'Kladis.png';
     } catch (e) {
+      print('Error getting avatar image: $e');
       return 'Kladis.png';
     }
   }

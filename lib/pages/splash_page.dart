@@ -101,6 +101,35 @@ class SplashPageState extends State<SplashPage> {
       await avatarService.performMaintenance();
 
       // Keep existing badge and banner prefetches
+      print('📥 Fetching badges...');
+      // Use existing badgeService instance
+      
+      // First fetch user profile to get current quest and showcase
+      // Use existing userProfile instance
+      if (userProfile != null) {
+        // 1. Load current quest badges with CRITICAL priority
+        print('🎯 Prefetching current quest badges...');
+        await badgeService.fetchBadgesWithPriority(
+          'Quake Quest', // Default to first quest since currentQuest isn't available
+          userProfile.badgeShowcase,
+          priority: BadgePriority.CURRENT_QUEST
+        );
+
+        // 2. Load showcase badges with HIGH priority
+        print('🎯 Prefetching showcase badges...');
+        await badgeService.fetchBadgesWithPriority(
+          'Quake Quest',
+          userProfile.badgeShowcase,
+          priority: BadgePriority.SHOWCASE
+        );
+
+        // 3. Trigger background loading for other badges
+        print('📥 Background loading remaining badges...');
+        badgeService.triggerBackgroundSync();
+      }
+
+      print('✅ Badge prefetch complete');
+
       final results = await Future.wait([
         badgeService.fetchBadges().then((badges) {
           print('✅ Badges fetched: ${badges.length} badges');

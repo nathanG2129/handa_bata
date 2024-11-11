@@ -12,6 +12,7 @@ import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Ser
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
 
 class UserProfileHeader extends StatefulWidget {
   final String username;

@@ -5,6 +5,7 @@ import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
 
 class CharacterPage extends StatefulWidget {
   final VoidCallback onClose;

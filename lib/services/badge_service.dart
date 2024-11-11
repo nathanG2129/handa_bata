@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:collection';
+import 'package:handabatamae/shared/connection_quality.dart';
 
 // Move these classes before BadgeService class
 class BadgeVersion {
@@ -341,9 +342,10 @@ class BadgeService {
 
   final ProgressiveLoadManager _progressiveLoader;
 
+  final ConnectionManager _connectionManager = ConnectionManager();
+
   BadgeService._internal() 
       : _progressiveLoader = ProgressiveLoadManager(_instance) {
-    _monitorConnectionQuality();
     _startQueueProcessing();
   }
 
@@ -391,21 +393,24 @@ class BadgeService {
         return _badgeCache[id]!.data;
       }
 
-      // Check local storage
-      List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
-      var badge = localBadges.firstWhere(
-        (b) => b['id'] == id,
-        orElse: () => {},
-      );
+      final quality = await _connectionManager.checkConnectionQuality();
+      
+      // Check local storage if offline or poor connection
+      if (quality == ConnectionQuality.OFFLINE || quality == ConnectionQuality.POOR) {
+        List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
+        var badge = localBadges.firstWhere(
+          (b) => b['id'] == id,
+          orElse: () => {},
+        );
 
-      if (badge.isNotEmpty) {
-        _addToCache(id, badge);
-        return badge;
+        if (badge.isNotEmpty) {
+          _addToCache(id, badge);
+          return badge;
+        }
       }
 
-      // Fetch from server if online
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
+      // Only fetch from server if connection is good
+      if (quality != ConnectionQuality.OFFLINE) {
         DocumentSnapshot doc = await _badgeDoc.get()
             .timeout(SYNC_TIMEOUT);
             
@@ -511,25 +516,6 @@ class BadgeService {
       await prefs.setString(BADGES_CACHE_KEY, jsonEncode(badges));
     } catch (e) {
       print('Error storing badges locally: $e');
-    }
-  }
-
-  // Add _monitorConnectionQuality method
-  Future<void> _monitorConnectionQuality() async {
-    while (true) {
-      try {
-        final start = DateTime.now();
-        await _badgeDoc.get();
-        final latency = DateTime.now().difference(start);
-        
-        // Update sync status based on latency
-        if (latency.inMilliseconds < 500) {
-          _setSyncState(false);
-        }
-      } catch (e) {
-        print('Error monitoring connection: $e');
-      }
-      await Future.delayed(const Duration(seconds: 30));
     }
   }
 
@@ -694,7 +680,7 @@ class BadgeService {
   // Add these methods to BadgeService class
 
   // Add sync methods
-  Future<void> _syncWithServerDiff() async {
+  Future<void> _syncWithServer() async {
     if (_isSyncing) {
       print('🔄 Badge sync already in progress, skipping...');
       return;
@@ -704,8 +690,8 @@ class BadgeService {
       print('🔄 Starting badge sync process');
       _setSyncState(true);
 
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
+      final quality = await _connectionManager.checkConnectionQuality();
+      if (quality == ConnectionQuality.OFFLINE) {
         print('📡 No internet connection, aborting badge sync');
         return;
       }
@@ -751,7 +737,7 @@ class BadgeService {
   void _debouncedSync() {
     _syncDebounceTimer?.cancel();
     _syncDebounceTimer = Timer(SYNC_DEBOUNCE, () {
-      _syncWithServerDiff();
+      _syncWithServer();
     });
   }
 

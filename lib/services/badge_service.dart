@@ -1056,4 +1056,25 @@ class BadgeService {
       _setSyncState(false);
     }
   }
+
+  // Add to BadgeService class
+  Future<BadgeVersion?> getCurrentVersion() async {
+    try {
+      DocumentSnapshot doc = await _badgeDoc.get();
+      if (!doc.exists) return null;
+
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      int revision = data['revision'] ?? 0;
+      String hash = _computeHash(data);
+      
+      return BadgeVersion(
+        revision: revision,
+        hash: hash,
+        timestamp: DateTime.now(),
+      );
+    } catch (e) {
+      print('Error getting current version: $e');
+      return null;
+    }
+  }
 }

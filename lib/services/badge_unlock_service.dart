@@ -115,6 +115,62 @@ class NotificationQueue {
     _queue.isNotEmpty || _pendingBatches.values.any((batch) => batch.isNotEmpty);
 }
 
+// Add CacheCoordinator class
+class CacheCoordinator {
+  final BadgeService _badgeService;
+  final Map<String, UnlockCache> _unlockCache;
+  
+  CacheCoordinator(this._badgeService, this._unlockCache);
+
+  void invalidateSharedCaches(String questName) {
+    // Clear unlock cache for quest
+    _unlockCache.remove(questName);
+    
+    // Trigger badge service sync
+    _badgeService.triggerBackgroundSync();
+  }
+
+  Future<void> syncCacheVersions() async {
+    try {
+      // Get badge service version
+      
+      // Compare and sync if needed
+      for (var entry in _unlockCache.entries) {
+        if (!entry.value.isValid) {
+          _unlockCache.remove(entry.key);
+          continue;
+        }
+        
+        // Check if quest badges need update
+        final questBadges = entry.value.unlockedBadges[entry.key] ?? [];
+        for (var badgeId in questBadges) {
+          final badge = await _badgeService.getBadgeDetails(badgeId);
+          if (badge == null) {
+            // Badge no longer exists, remove from cache
+            _unlockCache.remove(entry.key);
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error syncing cache versions: $e');
+    }
+  }
+
+  void handleOfflineChanges() {
+    // Process any pending offline unlocks
+    for (var entry in _unlockCache.entries) {
+      final questName = entry.key;
+      final unlockedBadges = entry.value.unlockedBadges[questName] ?? [];
+      
+      // Queue for processing when back online
+      for (var badgeId in unlockedBadges) {
+        _badgeService.queueBadgeLoad(badgeId, BadgePriority.HIGH);
+      }
+    }
+  }
+}
+
 class BadgeUnlockService {
   static final NotificationQueue _notificationQueue = NotificationQueue();
   static bool _isShowingNotification = false;
@@ -145,13 +201,18 @@ class BadgeUnlockService {
   final ConnectionManager _connectionManager = ConnectionManager();
   final BadgeService _badgeService = BadgeService();
 
+  // Add CacheCoordinator
+  late final CacheCoordinator _cacheCoordinator;
+
   BadgeUnlockService._internal() : _authService = AuthService() {
+    _cacheCoordinator = CacheCoordinator(_badgeService, _unlockCache);
     _startCacheManagement();
   }
 
   void _startCacheManagement() {
     Timer.periodic(const Duration(minutes: 30), (_) {
       _manageCacheSize();
+      _cacheCoordinator.syncCacheVersions();
     });
   }
 
@@ -447,9 +508,90 @@ class BadgeUnlockService {
     return Queue<int>();
   }
 
-  // Add method for cache coordination
+  // Update cache invalidation to use coordinator
   void _invalidateCache(String questName) {
-    _unlockCache.remove(questName);
-    _badgeService.triggerBackgroundSync();
+    _cacheCoordinator.invalidateSharedCaches(questName);
+  }
+
+  // Add to existing fields
+  static const String OFFLINE_QUEUE_KEY = 'offline_unlock_queue';
+  static const int MAX_RETRY_ATTEMPTS = 5;
+  static final Map<String, OfflineUnlockQueue> _offlineQueues = {};
+
+  // Add new method for offline queue management
+  Future<void> _processOfflineQueues() async {
+    final quality = await _connectionManager.checkConnectionQuality();
+    if (quality == ConnectionQuality.OFFLINE) return;
+
+    for (var queue in _offlineQueues.values) {
+      if (queue.retryCount >= MAX_RETRY_ATTEMPTS) {
+        // Log failed attempts and remove from queue
+        print('❌ Max retries reached for quest ${queue.questName}');
+        continue;
+      }
+
+      try {
+        for (var request in queue.pendingUnlocks) {
+          await _unlockBadges(
+            [request.badgeId],
+            priority: request.priority,
+            questName: request.questName,
+          );
+        }
+        // Remove successful queue
+        _offlineQueues.remove(queue.questName);
+      } catch (e) {
+        print('❌ Error processing offline queue: $e');
+        // Increment retry count
+        _offlineQueues[queue.questName] = OfflineUnlockQueue(
+          questName: queue.questName,
+          pendingUnlocks: queue.pendingUnlocks,
+          queuedAt: queue.queuedAt,
+          retryCount: queue.retryCount + 1,
+        );
+      }
+    }
+  }
+}
+
+// Add new class for offline persistence
+class OfflineUnlockQueue {
+  final String questName;
+  final List<UnlockRequest> pendingUnlocks;
+  final DateTime queuedAt;
+  final int retryCount;
+  
+  OfflineUnlockQueue({
+    required this.questName,
+    required this.pendingUnlocks,
+    required this.queuedAt,
+    required this.retryCount,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'questName': questName,
+    'pendingUnlocks': pendingUnlocks.map((r) => {
+      'badgeId': r.badgeId,
+      'priority': r.priority.toString(),
+      'timestamp': r.timestamp.toIso8601String(),
+    }).toList(),
+    'queuedAt': queuedAt.toIso8601String(),
+    'retryCount': retryCount,
+  };
+
+  static OfflineUnlockQueue fromJson(Map<String, dynamic> json) {
+    return OfflineUnlockQueue(
+      questName: json['questName'],
+      pendingUnlocks: (json['pendingUnlocks'] as List).map((u) => UnlockRequest(
+        badgeId: u['badgeId'],
+        priority: UnlockPriority.values.firstWhere(
+          (p) => p.toString() == u['priority']
+        ),
+        questName: json['questName'],
+        timestamp: DateTime.parse(u['timestamp']),
+      )).toList(),
+      queuedAt: DateTime.parse(json['queuedAt']),
+      retryCount: json['retryCount'],
+    );
   }
 } 

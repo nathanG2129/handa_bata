@@ -948,29 +948,4 @@ class UserProfileService {
       rethrow;
     }
   }
-
-  Future<void> _handleLevelUpdate(int newLevel) async {
-    UserProfile? profile = await fetchUserProfile();
-    if (profile == null) return;
-
-    // Update unlocked banners based on level
-    List<int> unlockedBanner = List<int>.from(profile.unlockedBanner);
-    bool needsUpdate = false;
-
-    for (int i = 0; i < unlockedBanner.length && i < newLevel; i++) {
-      if (unlockedBanner[i] == 0) {
-        unlockedBanner[i] = 1;
-        needsUpdate = true;
-      }
-    }
-
-    if (needsUpdate) {
-      await updateProfile('unlockedBanner', unlockedBanner);
-    }
-  }
-
-  Future<void> _handleBadgeUnlockUpdate(int totalUnlocked) async {
-    // Add any special handling for badge unlock milestones
-    // For example, unlocking special avatars or banners
-  }
 }

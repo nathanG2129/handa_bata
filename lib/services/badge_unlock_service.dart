@@ -1,7 +1,5 @@
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/services/auth_service.dart';
-import 'dart:collection';
-import 'dart:async';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/services/badge_service.dart';
 
@@ -13,21 +11,6 @@ class QuestBadgeRange {
   const QuestBadgeRange(this.stageStart, this.completeStart, this.fullClearStart);
 }
 
-class UnlockCache {
-  final Map<String, List<int>> unlockedBadges;
-  final DateTime timestamp;
-  final String questName;
-  
-  UnlockCache({
-    required this.unlockedBadges,
-    required this.timestamp,
-    required this.questName,
-  });
-  
-  bool get isValid => 
-    DateTime.now().difference(timestamp) < const Duration(hours: 1);
-}
-
 enum UnlockPriority {
   ACHIEVEMENT,     // Important achievements (100% completion)
   QUEST_COMPLETE,  // Quest completion badges
@@ -35,160 +18,15 @@ enum UnlockPriority {
   REGULAR         // Regular gameplay unlocks
 }
 
-class UnlockRequest {
-  final int badgeId;
-  final UnlockPriority priority;
-  final String questName;
-  final DateTime timestamp;
-  
-  UnlockRequest({
-    required this.badgeId,
-    required this.priority,
-    required this.questName,
-    required this.timestamp,
-  });
-}
-
-class NotificationBatch {
-  final List<int> badgeIds;
-  final UnlockPriority priority;
-  final String questContext;
-  final DateTime timestamp;
-  
-  NotificationBatch({
-    required this.badgeIds,
-    required this.priority,
-    required this.questContext,
-    required this.timestamp,
-  });
-}
-
-class NotificationQueue {
-  static const Duration BATCH_WINDOW = Duration(milliseconds: 500);
-  static const int MAX_BATCH_SIZE = 3;
-  
-  final Queue<NotificationBatch> _queue = Queue<NotificationBatch>();
-  Timer? _batchTimer;
-  Map<String, List<int>> _pendingBatches = {};
-
-  void addNotification(int badgeId, UnlockPriority priority, String questContext) {
-    // Cancel existing timer
-    _batchTimer?.cancel();
-
-    // Add to pending batch
-    _pendingBatches.putIfAbsent(questContext, () => []).add(badgeId);
-
-    // Create new batch after window or when max size reached
-    if (_shouldCreateBatch(questContext)) {
-      _createBatch(questContext, priority);
-    } else {
-      // Set timer for remaining badges
-      _batchTimer = Timer(BATCH_WINDOW, () {
-        if (_pendingBatches.isNotEmpty) {
-          _createBatch(questContext, priority);
-        }
-      });
-    }
-  }
-
-  bool _shouldCreateBatch(String questContext) {
-    return _pendingBatches[questContext]?.length == MAX_BATCH_SIZE;
-  }
-
-  void _createBatch(String questContext, UnlockPriority priority) {
-    if (_pendingBatches[questContext]?.isNotEmpty ?? false) {
-      _queue.add(NotificationBatch(
-        badgeIds: List.from(_pendingBatches[questContext]!),
-        priority: priority,
-        questContext: questContext,
-        timestamp: DateTime.now(),
-      ));
-      _pendingBatches[questContext]?.clear();
-    }
-  }
-
-  NotificationBatch? getNextBatch() {
-    return _queue.isNotEmpty ? _queue.removeFirst() : null;
-  }
-
-  bool get hasPendingNotifications => 
-    _queue.isNotEmpty || _pendingBatches.values.any((batch) => batch.isNotEmpty);
-}
-
-// Add CacheCoordinator class
-class CacheCoordinator {
-  final BadgeService _badgeService;
-  final Map<String, UnlockCache> _unlockCache;
-  
-  CacheCoordinator(this._badgeService, this._unlockCache);
-
-  void invalidateSharedCaches(String questName) {
-    // Clear unlock cache for quest
-    _unlockCache.remove(questName);
-    
-    // Trigger badge service sync
-    _badgeService.triggerBackgroundSync();
-  }
-
-  Future<void> syncCacheVersions() async {
-    try {
-      // Get badge service version
-      
-      // Compare and sync if needed
-      for (var entry in _unlockCache.entries) {
-        if (!entry.value.isValid) {
-          _unlockCache.remove(entry.key);
-          continue;
-        }
-        
-        // Check if quest badges need update
-        final questBadges = entry.value.unlockedBadges[entry.key] ?? [];
-        for (var badgeId in questBadges) {
-          final badge = await _badgeService.getBadgeDetails(badgeId);
-          if (badge == null) {
-            // Badge no longer exists, remove from cache
-            _unlockCache.remove(entry.key);
-            break;
-          }
-        }
-      }
-    } catch (e) {
-      print('Error syncing cache versions: $e');
-    }
-  }
-
-  void handleOfflineChanges() {
-    // Process any pending offline unlocks
-    for (var entry in _unlockCache.entries) {
-      final questName = entry.key;
-      final unlockedBadges = entry.value.unlockedBadges[questName] ?? [];
-      
-      // Queue for processing when back online
-      for (var badgeId in unlockedBadges) {
-        _badgeService.queueBadgeLoad(badgeId, BadgePriority.HIGH);
-      }
-    }
-  }
-}
-
 class BadgeUnlockService {
-  static final NotificationQueue _notificationQueue = NotificationQueue();
-  static bool _isShowingNotification = false;
-
+  // Singleton pattern
   static final BadgeUnlockService _instance = BadgeUnlockService._internal();
   factory BadgeUnlockService() => _instance;
 
-  static final Map<String, UnlockCache> _unlockCache = {};
-  static const int MAX_CACHE_SIZE = 50;
-
-  static final Map<UnlockPriority, Queue<UnlockRequest>> _unlockQueues = {
-    UnlockPriority.ACHIEVEMENT: Queue<UnlockRequest>(),
-    UnlockPriority.QUEST_COMPLETE: Queue<UnlockRequest>(),
-    UnlockPriority.MILESTONE: Queue<UnlockRequest>(),
-    UnlockPriority.REGULAR: Queue<UnlockRequest>(),
-  };
-
   final AuthService _authService;
+  final ConnectionManager _connectionManager = ConnectionManager();
+  final BadgeService _badgeService = BadgeService();
+
   static const Map<String, QuestBadgeRange> questBadgeRanges = {
     'Quake Quest': QuestBadgeRange(0, 14, 16),
     'Storm Quest': QuestBadgeRange(18, 32, 34),
@@ -198,188 +36,56 @@ class BadgeUnlockService {
     'Flood Quest': QuestBadgeRange(94, 108, 110),
   };
 
-  final ConnectionManager _connectionManager = ConnectionManager();
-  final BadgeService _badgeService = BadgeService();
+  BadgeUnlockService._internal() : _authService = AuthService();
 
-  // Add CacheCoordinator
-  late final CacheCoordinator _cacheCoordinator;
-
-  BadgeUnlockService._internal() : _authService = AuthService() {
-    _cacheCoordinator = CacheCoordinator(_badgeService, _unlockCache);
-    _startCacheManagement();
-  }
-
-  void _startCacheManagement() {
-    Timer.periodic(const Duration(minutes: 30), (_) {
-      _manageCacheSize();
-      _cacheCoordinator.syncCacheVersions();
-    });
-  }
-
-  void _manageCacheSize() {
-    if (_unlockCache.length > MAX_CACHE_SIZE) {
-      var entriesByAge = _unlockCache.entries.toList()
-        ..sort((a, b) => a.value.timestamp.compareTo(b.value.timestamp));
-      
-      // Remove invalid entries first
-      entriesByAge.removeWhere((entry) => !entry.value.isValid);
-      
-      // Then remove oldest entries until we're under the limit
-      while (_unlockCache.length > MAX_CACHE_SIZE) {
-        var oldest = entriesByAge.removeAt(0);
-        _unlockCache.remove(oldest.key);
-      }
-    }
-  }
-
-  void _addToCache(String questName, List<int> badges) {
-    _unlockCache[questName] = UnlockCache(
-      unlockedBadges: {questName: badges},
-      timestamp: DateTime.now(),
-      questName: questName,
-    );
-    _manageCacheSize();
-  }
-
-  List<int>? _getFromCache(String questName) {
-    final cached = _unlockCache[questName];
-    if (cached != null && cached.isValid) {
-      return cached.unlockedBadges[questName];
-    }
-    return null;
-  }
-
-  Future<void> _unlockBadges(List<int> badgeIds, {
-    required UnlockPriority priority,
-    required String questName,
-  }) async {
+  Future<void> unlockBadges(List<int> badgeIds) async {
     if (badgeIds.isEmpty) return;
-    print('🏅 Attempting to unlock badges: $badgeIds with priority: $priority');
+    print('🏅 Attempting to unlock badges: $badgeIds');
 
     try {
-      // Get user profile
+      // Check connection quality
+      final quality = await _connectionManager.checkConnectionQuality();
+      print('📡 Connection quality: $quality');
+
       UserProfile? profile = await _authService.getUserProfile();
       if (profile == null) return;
 
-      // Log current state
-      print('🔍 Current unlocked badges: ${profile.unlockedBadge}');
-
-      // Create updated unlocked badges list
       List<int> updatedUnlockedBadges = List<int>.from(profile.unlockedBadge);
-      
-      // Find the highest badge ID to ensure list is long enough
       int maxBadgeId = badgeIds.reduce((max, id) => id > max ? id : max);
       
-      // Log before extension
-      print('📊 Before extension: $updatedUnlockedBadges');
-      
-      // Extend list if needed while preserving existing values
       if (maxBadgeId >= updatedUnlockedBadges.length) {
         updatedUnlockedBadges.addAll(
           List<int>.filled(maxBadgeId - updatedUnlockedBadges.length + 1, 0)
         );
       }
       
-      // Log after extension
-      print('📊 After extension: $updatedUnlockedBadges');
+      // Pre-fetch badge data if online
+      if (quality != ConnectionQuality.OFFLINE) {
+        for (var id in badgeIds) {
+          await _badgeService.getBadgeDetails(id);
+        }
+      }
       
-      // Update badges to unlocked state (1) while preserving existing unlocks
       for (var id in badgeIds) {
         updatedUnlockedBadges[id] = 1;
       }
 
-      // Log final state
-      print('📊 Final state: $updatedUnlockedBadges');
-
-      // Update profile
-      await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
-
-      // Queue notifications
-      for (var badgeId in badgeIds) {
-        _unlockQueues[priority]!.add(UnlockRequest(
-          badgeId: badgeId,
-          priority: priority,
-          questName: questName,
-          timestamp: DateTime.now(),
+      if (quality == ConnectionQuality.OFFLINE) {
+        // Store locally only
+        print('📱 Offline mode: Saving unlocks locally');
+        await _authService.saveUserProfileLocally(profile.copyWith(
+          updates: {'unlockedBadge': updatedUnlockedBadges}
         ));
+      } else {
+        // Update both local and server
+        print('🌐 Online mode: Updating profile');
+        await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
       }
-
-      // Process queues
-      await _processUnlockQueues();
     } catch (e) {
       print('❌ Error unlocking badges: $e');
     }
   }
 
-  Future<void> _processUnlockQueues() async {
-    try {
-      // Process ACHIEVEMENT first
-      await _processQueue(UnlockPriority.ACHIEVEMENT);
-      // Then QUEST_COMPLETE
-      await _processQueue(UnlockPriority.QUEST_COMPLETE);
-      // Then MILESTONE
-      await _processQueue(UnlockPriority.MILESTONE);
-      // Finally REGULAR
-      await _processQueue(UnlockPriority.REGULAR);
-    } catch (e) {
-      print('❌ Error processing unlock queues: $e');
-    }
-  }
-
-  Future<void> _processQueue(UnlockPriority priority) async {
-    final quality = await _connectionManager.checkConnectionQuality();
-    final queue = _unlockQueues[priority]!;
-    
-    while (queue.isNotEmpty) {
-      final request = queue.removeFirst();
-      try {
-        // Get user profile from local storage when offline
-        UserProfile? profile = await _authService.getLocalUserProfile();
-        if (profile == null) continue;
-
-        // Get current unlocked badges
-        List<int> updatedUnlockedBadges = List<int>.from(profile.unlockedBadge);
-        
-        // Process locally regardless of connection
-        if (request.badgeId >= updatedUnlockedBadges.length) {
-          updatedUnlockedBadges.addAll(
-            List<int>.filled(request.badgeId - updatedUnlockedBadges.length + 1, 0)
-          );
-        }
-        updatedUnlockedBadges[request.badgeId] = 1;
-
-        // Update local storage
-        await _authService.saveUserProfileLocally(
-          profile.copyWith(updates: {'unlockedBadge': updatedUnlockedBadges})
-        );
-
-        // Add to cache
-        _addToCache(request.questName, [request.badgeId]);
-
-        // If online, sync with server
-        if (quality != ConnectionQuality.OFFLINE) {
-          await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
-        }
-
-        // Add notification regardless of connection
-        _notificationQueue.addNotification(
-          request.badgeId,
-          request.priority,
-          request.questName
-        );
-
-        print('🎉 Successfully unlocked badge ${request.badgeId} ${quality == ConnectionQuality.OFFLINE ? "(offline)" : ""}');
-      } catch (e) {
-        print('❌ Error processing unlock request: $e');
-        if (quality != ConnectionQuality.EXCELLENT) {
-          queue.addFirst(request);
-          break;
-        }
-      }
-    }
-  }
-
-  // Check Adventure Mode badges
   Future<void> checkAdventureBadges({
     required String questName,
     required String stageName,
@@ -390,65 +96,47 @@ class BadgeUnlockService {
     try {
       print('🎮 Checking adventure badges for $questName, $stageName');
       
-      // Get stage number and update stars array
       int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
       List<int> updatedStageStars = List<int>.from(allStageStars);
       if (stageNumber < updatedStageStars.length) {
         updatedStageStars[stageNumber] = stars;
       }
 
-      UserProfile? profile = await _authService.getUserProfile();
-      if (profile == null) return;
-
       final questRange = questBadgeRanges[questName];
       if (questRange == null) return;
 
-      // Group badges by priority
-      Map<UnlockPriority, List<int>> prioritizedBadges = {
-        UnlockPriority.ACHIEVEMENT: [],
-        UnlockPriority.QUEST_COMPLETE: [],
-        UnlockPriority.MILESTONE: [],
-        UnlockPriority.REGULAR: [],
-      };
+      List<int> badgesToUnlock = [];
       
-      // 1. Stage badge (REGULAR priority)
+      // Stage badge
       int stageBadgeId = questRange.stageStart + (stageNumber * 2) + (difficulty == 'hard' ? 1 : 0);
       if (stars > 0) {
-        prioritizedBadges[UnlockPriority.REGULAR]!.add(stageBadgeId);
+        badgesToUnlock.add(stageBadgeId);
       }
       
-      // 2. Complete badge (QUEST_COMPLETE priority)
+      // Complete badge
       if (_hasAllStagesCleared(updatedStageStars)) {
         int completeBadgeId = difficulty == 'hard' 
             ? questRange.completeStart + 1
             : questRange.completeStart;
-        prioritizedBadges[UnlockPriority.QUEST_COMPLETE]!.add(completeBadgeId);
+        badgesToUnlock.add(completeBadgeId);
       }
       
-      // 3. Full clear badge (ACHIEVEMENT priority)
+      // Full clear badge
       if (_hasAllStagesFullyCleared(updatedStageStars)) {
         int fullClearBadgeId = difficulty == 'hard'
             ? questRange.fullClearStart + 1
             : questRange.fullClearStart;
-        prioritizedBadges[UnlockPriority.ACHIEVEMENT]!.add(fullClearBadgeId);
+        badgesToUnlock.add(fullClearBadgeId);
       }
 
-      // Unlock badges by priority
-      for (var priority in UnlockPriority.values) {
-        if (prioritizedBadges[priority]!.isNotEmpty) {
-          await _unlockBadges(
-            prioritizedBadges[priority]!,
-            priority: priority,
-            questName: questName
-          );
-        }
+      if (badgesToUnlock.isNotEmpty) {
+        await unlockBadges(badgesToUnlock);
       }
     } catch (e) {
       print('❌ Error checking adventure badges: $e');
     }
   }
 
-  // Check Arcade Mode badges
   Future<void> checkArcadeBadges({
     required int totalTime,
     required double accuracy,
@@ -456,39 +144,26 @@ class BadgeUnlockService {
     required double averageTimePerQuestion,
   }) async {
     try {
-      Map<UnlockPriority, List<int>> prioritizedBadges = {
-        UnlockPriority.ACHIEVEMENT: [],
-        UnlockPriority.MILESTONE: [],
-        UnlockPriority.REGULAR: [],
-      };
+      List<int> badgesToUnlock = [];
 
-      // Perfect Accuracy - ACHIEVEMENT priority
       if (accuracy >= 100) {
-        prioritizedBadges[UnlockPriority.ACHIEVEMENT]!.add(37);
+        badgesToUnlock.add(37);  // Perfect Accuracy
       }
       
-      // Speed Demon and Quick Thinker - MILESTONE priority
       if (totalTime <= 120) {
-        prioritizedBadges[UnlockPriority.MILESTONE]!.add(36);
-      }
-      if (averageTimePerQuestion <= 15) {
-        prioritizedBadges[UnlockPriority.MILESTONE]!.add(39);
+        badgesToUnlock.add(36);  // Speed Demon
       }
       
-      // Streak Master - REGULAR priority
+      if (averageTimePerQuestion <= 15) {
+        badgesToUnlock.add(39);  // Quick Thinker
+      }
+      
       if (streak >= 15) {
-        prioritizedBadges[UnlockPriority.REGULAR]!.add(38);
+        badgesToUnlock.add(38);  // Streak Master
       }
 
-      // Unlock badges by priority
-      for (var priority in UnlockPriority.values) {
-        if (prioritizedBadges[priority]!.isNotEmpty) {
-          await _unlockBadges(
-            prioritizedBadges[priority]!,
-            priority: priority,
-            questName: 'Arcade Quest'
-          );
-        }
+      if (badgesToUnlock.isNotEmpty) {
+        await unlockBadges(badgesToUnlock);
       }
     } catch (e) {
       print('Error checking arcade badges: $e');
@@ -496,135 +171,16 @@ class BadgeUnlockService {
   }
 
   bool _hasAllStagesCleared(List<int> stageStars) {
-    // Check if all stages have at least 1 star (excluding last arcade stage)
-    print('🌟 Checking all stages cleared');
-    print('Stage stars: $stageStars');
-    // Get all stages except the last one
     List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
-    print('Checking normal stages (excluding arcade): $normalStages');
-    bool allCleared = !normalStages.contains(0);
-    print('All stages cleared: $allCleared');
-    return allCleared;
+    return !normalStages.contains(0);
   }
 
   bool _hasAllStagesFullyCleared(List<int> stageStars) {
-    // Check if all stages have 3 stars (excluding last arcade stage)
-    print('⭐ Checking all stages fully cleared');
-    print('Stage stars: $stageStars');
-    // Get all stages except the last one
     List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
-    print('Checking normal stages (excluding arcade): $normalStages');
-    bool allFullyCleared = normalStages.every((stars) => stars == 3);
-    print('All stages fully cleared: $allFullyCleared');
-    return allFullyCleared;
+    return normalStages.every((stars) => stars == 3);
   }
 
-  // Getters and setters for notification handling
-  static NotificationBatch? getNextNotificationBatch() {
-    return _notificationQueue.getNextBatch();
-  }
-  
-  static bool get hasNotifications => 
-    _notificationQueue.hasPendingNotifications;
-  
-  static bool get isShowingNotification => _isShowingNotification;
-  
-  static set isShowingNotification(bool value) {
-    _isShowingNotification = value;
-  }
-
-  static Queue<int> get pendingNotifications {
-    final currentBatch = _notificationQueue.getNextBatch();
-    if (currentBatch != null) {
-      return Queue<int>.from(currentBatch.badgeIds);
-    }
-    return Queue<int>();
-  }
-
-  // Update cache invalidation to use coordinator
-  void _invalidateCache(String questName) {
-    _cacheCoordinator.invalidateSharedCaches(questName);
-  }
-
-  // Add to existing fields
-  static const String OFFLINE_QUEUE_KEY = 'offline_unlock_queue';
-  static const int MAX_RETRY_ATTEMPTS = 5;
-  static final Map<String, OfflineUnlockQueue> _offlineQueues = {};
-
-  // Add new method for offline queue management
-  Future<void> _processOfflineQueues() async {
-    final quality = await _connectionManager.checkConnectionQuality();
-    if (quality == ConnectionQuality.OFFLINE) return;
-
-    for (var queue in _offlineQueues.values) {
-      if (queue.retryCount >= MAX_RETRY_ATTEMPTS) {
-        // Log failed attempts and remove from queue
-        print('❌ Max retries reached for quest ${queue.questName}');
-        continue;
-      }
-
-      try {
-        for (var request in queue.pendingUnlocks) {
-          await _unlockBadges(
-            [request.badgeId],
-            priority: request.priority,
-            questName: request.questName,
-          );
-        }
-        // Remove successful queue
-        _offlineQueues.remove(queue.questName);
-      } catch (e) {
-        print('❌ Error processing offline queue: $e');
-        // Increment retry count
-        _offlineQueues[queue.questName] = OfflineUnlockQueue(
-          questName: queue.questName,
-          pendingUnlocks: queue.pendingUnlocks,
-          queuedAt: queue.queuedAt,
-          retryCount: queue.retryCount + 1,
-        );
-      }
-    }
-  }
-}
-
-// Add new class for offline persistence
-class OfflineUnlockQueue {
-  final String questName;
-  final List<UnlockRequest> pendingUnlocks;
-  final DateTime queuedAt;
-  final int retryCount;
-  
-  OfflineUnlockQueue({
-    required this.questName,
-    required this.pendingUnlocks,
-    required this.queuedAt,
-    required this.retryCount,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'questName': questName,
-    'pendingUnlocks': pendingUnlocks.map((r) => {
-      'badgeId': r.badgeId,
-      'priority': r.priority.toString(),
-      'timestamp': r.timestamp.toIso8601String(),
-    }).toList(),
-    'queuedAt': queuedAt.toIso8601String(),
-    'retryCount': retryCount,
-  };
-
-  static OfflineUnlockQueue fromJson(Map<String, dynamic> json) {
-    return OfflineUnlockQueue(
-      questName: json['questName'],
-      pendingUnlocks: (json['pendingUnlocks'] as List).map((u) => UnlockRequest(
-        badgeId: u['badgeId'],
-        priority: UnlockPriority.values.firstWhere(
-          (p) => p.toString() == u['priority']
-        ),
-        questName: json['questName'],
-        timestamp: DateTime.parse(u['timestamp']),
-      )).toList(),
-      queuedAt: DateTime.parse(json['queuedAt']),
-      retryCount: json['retryCount'],
-    );
+  void dispose() {
+    // Implement dispose logic if needed
   }
 } 

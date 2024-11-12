@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,14 +8,8 @@ import 'package:handabatamae/pages/account_settings.dart';
 import 'package:handabatamae/pages/character_page.dart'; // Import CharacterPage
 import 'package:handabatamae/pages/banner_page.dart'; // Import BannerPage
 import 'package:handabatamae/pages/badge_page.dart'; // Import BadgePage
-import 'package:handabatamae/services/auth_service.dart';
-import 'package:handabatamae/services/badge_unlock_service.dart';
-import 'package:handabatamae/services/banner_service.dart';
-import 'package:handabatamae/widgets/notifications/banner_unlock_notification.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
-import 'package:handabatamae/widgets/notifications/badge_unlock_notification.dart';
-import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 
 class HeaderWidget extends StatefulWidget {
@@ -36,28 +29,12 @@ class HeaderWidget extends StatefulWidget {
 }
 
 class HeaderWidgetState extends State<HeaderWidget> {
-  final AuthService _authService = AuthService();
-  final BannerService _bannerService = BannerService();
-  final BadgeService _badgeService = BadgeService();
   final UserProfileService _userProfileService = UserProfileService();
-  OverlayEntry? _overlayEntry;
   int? _currentAvatarId;
-
-
-  Queue<String> _pendingBannerNotifications = Queue<String>();
-  bool _isShowingBannerNotification = false;
-
-  Queue<int> _pendingBadgeNotifications = Queue<int>();
-  bool _isShowingBadgeNotification = false;
 
   String? _cachedAvatarPath;
 
   final AvatarService _avatarService = AvatarService();
-
-  // Add mutex for notifications
-  bool _isProcessingNotification = false;
-
-  Timer? _notificationTimer;
 
   late StreamSubscription<UserProfile> _profileSubscription;
 
@@ -69,14 +46,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
   @override
   void initState() {
     super.initState();
-    _checkForUnlockedBanners();
-    _checkForUnlockedBadges();
     
-    _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
-        _showNextNotification();
-      }
-    });
 
     // Initial profile fetch
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -125,115 +95,19 @@ class HeaderWidgetState extends State<HeaderWidget> {
     });
   }
 
-  Future<void> _updateAvatar(int avatarId) async {
-    if (!mounted) return;
-    setState(() => _currentAvatarId = avatarId);
-    
-    try {
-      final avatar = await _avatarService.getAvatarDetails(avatarId);
-      if (mounted && avatar != null) {
-        setState(() => _cachedAvatarPath = avatar['img']);
-      }
-    } catch (e) {
-      print('Error updating avatar: $e');
-    }
-  }
+
 
   @override
   void dispose() {
-    _notificationTimer?.cancel();
     _profileSubscription.cancel();
-    _removeOverlay();
     _avatarSubscription.cancel();
     _connectionSubscription.cancel();
     super.dispose();
   }
 
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-    _isShowingBannerNotification = false;
-  }
 
-  Future<void> _checkForUnlockedBanners() async {
-    try {
-      final userProfile = await _authService.getUserProfile();
-      if (userProfile == null) return;
 
-      final int currentLevel = userProfile.level;
-      final List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
-      final List<int> unlockedBanners = userProfile.unlockedBanner;
-      
-      // Get all newly unlocked banners
-      List<Map<String, dynamic>> newlyUnlockedBanners = [];
-      for (int level = 1; level <= currentLevel; level++) {
-        if (level <= banners.length && unlockedBanners[level - 1] != 1) {
-          newlyUnlockedBanners.add(banners[level - 1]);
-          unlockedBanners[level - 1] = 1;
-        }
-      }
 
-      // Update unlocked banners in one go if there are any changes
-      if (newlyUnlockedBanners.isNotEmpty) {
-        await _authService.updateUserProfile('unlockedBanner', unlockedBanners);
-        
-        // Queue up notifications instead of showing them immediately
-        for (var banner in newlyUnlockedBanners) {
-          _pendingBannerNotifications.add(banner['title']);
-        }
-        
-        // Start showing notifications if not already showing
-        if (!_isShowingBannerNotification) {
-          _showNextBannerNotification();
-        }
-      }
-    } catch (e) {
-    }
-  }
-
-  void _showNextBannerNotification() {
-    if (_pendingBannerNotifications.isEmpty) {
-      _isShowingBannerNotification = false;
-      if (!_isShowingBadgeNotification && _pendingBadgeNotifications.isNotEmpty) {
-        _showNextBadgeNotification();
-      }
-      return;
-    }
-
-    if (!_isShowingBannerNotification && !_isShowingBadgeNotification) {
-      _isShowingBannerNotification = true;
-      String nextBanner = _pendingBannerNotifications.removeFirst();
-      _showBannerUnlockNotification(nextBanner);
-    }
-  }
-
-  void _showBannerUnlockNotification(String bannerTitle) {
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        width: MediaQuery.of(context).size.width,
-        child: BannerUnlockNotification(
-          bannerTitle: bannerTitle,
-          onDismiss: () {
-            _removeOverlay();
-            _isShowingBannerNotification = false;
-            Future.delayed(const Duration(milliseconds: 300), () {
-              _showNextBannerNotification();
-            });
-          },
-          onViewBanner: () {
-            _removeOverlay();
-            _isShowingBannerNotification = false;
-            _showBanners();
-            Future.delayed(const Duration(milliseconds: 300), () {
-              _showNextBannerNotification();
-            });
-          },
-        ),
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-  }
 
   void _showUserProfile() {
     showDialog(
@@ -463,115 +337,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
-  void _checkForUnlockedBadges() {
-    print('🔍 Checking for unlocked badges...');
-    print('🔍 Current showing state - Badge: $_isShowingBadgeNotification, Banner: $_isShowingBannerNotification');
-    print('🔍 Pending notifications in service: ${BadgeUnlockService.pendingNotifications.toList()}');
-    
-    if (!_isShowingBadgeNotification && BadgeUnlockService.hasNotifications) {
-      print('🔍 Adding pending notifications to local queue');
-      _pendingBadgeNotifications.addAll(BadgeUnlockService.pendingNotifications);
-      // Clear the service's queue after adding to local queue
-      BadgeUnlockService.pendingNotifications.clear();
-      print('🔍 Local queue after adding: ${_pendingBadgeNotifications.toList()}');
-      _showNextBadgeNotification();
-    }
-  }
 
-  Future<void> _showBadgeUnlockNotification(int badgeId, {int retryCount = 0}) async {
-    try {
-      final badge = await _badgeService.getBadgeDetails(badgeId);
-      if (badge != null) {
-        _overlayEntry = OverlayEntry(
-          builder: (context) => Positioned(
-            width: MediaQuery.of(context).size.width,
-            child: BadgeUnlockNotification(
-              badgeTitle: badge['title'],
-              onDismiss: () {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
-                _isShowingBadgeNotification = false;
-                _showNextBadgeNotification();
-              },
-              onViewBadge: () {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
-                _showBadges();
-                _isShowingBadgeNotification = false;
-                _showNextBadgeNotification();
-              },
-              onRetry: retryCount < 3 ? () {
-                _showBadgeUnlockNotification(badgeId, retryCount: retryCount + 1);
-              } : null,
-            ),
-          ),
-        );
 
-        Overlay.of(context).insert(_overlayEntry!);
-        _isShowingBadgeNotification = true;
-      } else {
-        // Handle missing badge data
-        print('Badge data not found for ID: $badgeId');
-        _isShowingBadgeNotification = false;
-        _showNextBadgeNotification();
-      }
-    } catch (e) {
-      print('Error showing badge notification: $e');
-      if (retryCount < 3) {
-        // Retry after delay
-        await Future.delayed(Duration(seconds: retryCount + 1));
-        _showBadgeUnlockNotification(badgeId, retryCount: retryCount + 1);
-      } else {
-        // Give up after 3 retries
-        _isShowingBadgeNotification = false;
-        _showNextBadgeNotification();
-      }
-    }
-  }
-
-  void _showNextBadgeNotification() {
-    print('📢 Attempting to show next badge notification');
-    print('📢 Current queues - Badge: ${_pendingBadgeNotifications.toList()}, Banner: ${_pendingBannerNotifications.toList()}');
-    print('📢 Current showing state - Badge: $_isShowingBadgeNotification, Banner: $_isShowingBannerNotification');
-
-    if (_pendingBadgeNotifications.isEmpty) {
-      print('📢 No more badge notifications to show');
-      _isShowingBadgeNotification = false;
-      if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
-        print('📢 Switching to banner notifications');
-        _showNextBannerNotification();
-      }
-      return;
-    }
-
-    if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
-      int nextBadgeId = _pendingBadgeNotifications.removeFirst();
-      print('📢 Showing notification for badge ID: $nextBadgeId');
-      _showBadgeUnlockNotification(nextBadgeId);
-    } else {
-      print('📢 Skipping notification - already showing something');
-    }
-  }
-
-  Future<void> _showNextNotification() async {
-    if (_isProcessingNotification) return;
-    
-    try {
-      _isProcessingNotification = true;
-      
-      if (!_isShowingBadgeNotification && !_isShowingBannerNotification) {
-        if (_pendingBadgeNotifications.isNotEmpty) {
-          int nextBadgeId = _pendingBadgeNotifications.removeFirst();
-          await _showBadgeUnlockNotification(nextBadgeId);
-        } else if (_pendingBannerNotifications.isNotEmpty) {
-          String nextBannerTitle = _pendingBannerNotifications.removeFirst();
-          _showBannerUnlockNotification(nextBannerTitle);
-        }
-      }
-    } finally {
-      _isProcessingNotification = false;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

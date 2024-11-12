@@ -537,25 +537,24 @@ class UserProfileService {
 
     // For array validations
     if (rules['type'] == List && value is List) {
-      // Ensure proper type casting for arrays
-      final typedList = List<int>.from(value);  // Cast to List<int>
-      
-      // Check element type
-      if (!typedList.every((item) => item is int)) {
+      try {
+        // Cast to List<int> - this will throw if any element isn't an int
+        final typedList = List<int>.from(value);
+        
+        // Check allowed values if specified
+        if (rules['allowedValues'] != null) {
+          if (!typedList.every((item) => rules['allowedValues'].contains(item))) {
+            return const ValidationResult(
+              isValid: false,
+              error: 'Invalid values in array'
+            );
+          }
+        }
+      } catch (e) {
         return const ValidationResult(
-          isValid: false, 
+          isValid: false,
           error: 'All elements must be integers'
         );
-      }
-
-      // Check allowed values if specified
-      if (rules['allowedValues'] != null) {
-        if (!typedList.every((item) => rules['allowedValues'].contains(item))) {
-          return const ValidationResult(
-            isValid: false,
-            error: 'Invalid values in array'
-          );
-        }
       }
     }
 

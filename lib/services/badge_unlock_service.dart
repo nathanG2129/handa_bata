@@ -58,7 +58,13 @@ class BadgeUnlockService {
     });
   }
 
-  Future<void> unlockBadges(List<int> badgeIds) async {
+  Future<void> unlockBadges(List<int> badgeIds, {
+    String? questName,
+    String? stageName,
+    String? difficulty,
+    int? stars,
+    List<int>? allStageStars,
+  }) async {
     if (badgeIds.isEmpty) return;
     print('🏅 Attempting to unlock badges: $badgeIds');
 
@@ -105,11 +111,11 @@ class BadgeUnlockService {
           badgeIds: badgeIds,
           unlockType: 'adventure',
           unlockContext: {
-            'questName': 'Quake Quest',
-            'stageName': 'Quake Quest',
-            'difficulty': 'hard',
-            'stars': 0,
-            'allStageStars': List<int>.filled(16, 0),
+            'questName': questName,
+            'stageName': stageName,
+            'difficulty': difficulty,
+            'stars': stars,
+            'allStageStars': allStageStars ?? List<int>.filled(16, 0),
           },
           timestamp: DateTime.now(),
         ));

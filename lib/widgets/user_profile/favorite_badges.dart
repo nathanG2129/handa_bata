@@ -186,7 +186,7 @@ class FavoriteBadgesState extends State<FavoriteBadges> {
                             fit: BoxFit.contain,
                             filterQuality: FilterQuality.none,
                           )
-                        : const SizedBox.shrink(), // Empty box when no badge
+                        : const SizedBox.shrink(),
                     ),
                   ),
                 ),

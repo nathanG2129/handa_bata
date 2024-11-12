@@ -302,12 +302,13 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     if (filter == BadgeFilter.myCollection) {
       // Queue unlocked badges with HIGH priority
       for (var badge in badges) {
-        if (_unlockedBadges.contains(badge['id'])) {
+        if (_unlockedBadges.length > badge['id'] && _unlockedBadges[badge['id']] == 1) {
           _badgeService.queueBadgeLoad(badge['id'], BadgePriority.HIGH);
         }
       }
       return badges.where((badge) => 
-        _unlockedBadges.contains(badge['id'])).toList();
+        _unlockedBadges.length > badge['id'] && _unlockedBadges[badge['id']] == 1
+      ).toList();
     }
     
     // Handle other filters with appropriate priorities
@@ -414,10 +415,13 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                 }
                 
                 final badgeData = snapshot.data ?? badge;
-                // Build badge UI with badgeData
+                // Change how we check for unlocked status
+                final isUnlocked = _unlockedBadges.length > badge['id'] && 
+                                 _unlockedBadges[badge['id']] == 1;
+                
                 return BadgeItem(
                   badge: badgeData,
-                  isUnlocked: _unlockedBadges[badges.indexOf(badge)] == 1,
+                  isUnlocked: isUnlocked,
                   isSelected: _selectedBadgesNotifier.value.contains(badge['id']),
                   onTap: () => _handleBadgeTap(badge),
                 );

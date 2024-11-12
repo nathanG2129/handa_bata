@@ -256,18 +256,59 @@ class BadgeUnlockService {
     if (badgeIds.isEmpty) return;
     print('🏅 Attempting to unlock badges: $badgeIds with priority: $priority');
 
-    // Queue unlock requests
-    for (var badgeId in badgeIds) {
-      _unlockQueues[priority]!.add(UnlockRequest(
-        badgeId: badgeId,
-        priority: priority,
-        questName: questName,
-        timestamp: DateTime.now(),
-      ));
-    }
+    try {
+      // Get user profile
+      UserProfile? profile = await _authService.getUserProfile();
+      if (profile == null) return;
 
-    // Process queues based on priority
-    await _processUnlockQueues();
+      // Log current state
+      print('🔍 Current unlocked badges: ${profile.unlockedBadge}');
+
+      // Create updated unlocked badges list
+      List<int> updatedUnlockedBadges = List<int>.from(profile.unlockedBadge);
+      
+      // Find the highest badge ID to ensure list is long enough
+      int maxBadgeId = badgeIds.reduce((max, id) => id > max ? id : max);
+      
+      // Log before extension
+      print('📊 Before extension: $updatedUnlockedBadges');
+      
+      // Extend list if needed while preserving existing values
+      if (maxBadgeId >= updatedUnlockedBadges.length) {
+        updatedUnlockedBadges.addAll(
+          List<int>.filled(maxBadgeId - updatedUnlockedBadges.length + 1, 0)
+        );
+      }
+      
+      // Log after extension
+      print('📊 After extension: $updatedUnlockedBadges');
+      
+      // Update badges to unlocked state (1) while preserving existing unlocks
+      for (var id in badgeIds) {
+        updatedUnlockedBadges[id] = 1;
+      }
+
+      // Log final state
+      print('📊 Final state: $updatedUnlockedBadges');
+
+      // Update profile
+      await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
+
+      // Queue notifications
+      for (var badgeId in badgeIds) {
+        _unlockQueues[priority]!.add(UnlockRequest(
+          badgeId: badgeId,
+          priority: priority,
+          questName: questName,
+          timestamp: DateTime.now(),
+        ));
+      }
+
+      // Process queues
+      await _processUnlockQueues();
+    } catch (e) {
+      print('❌ Error unlocking badges: $e');
+    }
   }
 
   Future<void> _processUnlockQueues() async {
@@ -289,56 +330,48 @@ class BadgeUnlockService {
     final quality = await _connectionManager.checkConnectionQuality();
     final queue = _unlockQueues[priority]!;
     
-    if (quality == ConnectionQuality.OFFLINE) {
-      print('📡 Offline - Queuing unlock requests for later');
-      return; // Keep requests in queue for later
-    }
-
     while (queue.isNotEmpty) {
       final request = queue.removeFirst();
       try {
-        // Get user profile with connection awareness
-        UserProfile? profile;
-        if (quality == ConnectionQuality.POOR) {
-          // Try local first in poor connection
-          profile = await _authService.getLocalUserProfile();
-        }
-        profile ??= await _authService.getUserProfile();
+        // Get user profile from local storage when offline
+        UserProfile? profile = await _authService.getLocalUserProfile();
         if (profile == null) continue;
 
-        // Check if badge is already unlocked
-        if (profile.unlockedBadge.contains(request.badgeId)) {
-          print('🏅 Badge ${request.badgeId} already unlocked');
-          continue;
-        }
-
-        // Update unlocked badges
+        // Get current unlocked badges
         List<int> updatedUnlockedBadges = List<int>.from(profile.unlockedBadge);
-        updatedUnlockedBadges.add(request.badgeId);
+        
+        // Process locally regardless of connection
+        if (request.badgeId >= updatedUnlockedBadges.length) {
+          updatedUnlockedBadges.addAll(
+            List<int>.filled(request.badgeId - updatedUnlockedBadges.length + 1, 0)
+          );
+        }
+        updatedUnlockedBadges[request.badgeId] = 1;
 
-        // Update profile
-        await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
+        // Update local storage
+        await _authService.saveUserProfileLocally(
+          profile.copyWith(updates: {'unlockedBadge': updatedUnlockedBadges})
+        );
 
         // Add to cache
         _addToCache(request.questName, [request.badgeId]);
 
-        // Coordinate cache with BadgeService
-        _badgeService.triggerBackgroundSync();
-        
-        // Add notification with connection awareness
-        if (quality != ConnectionQuality.POOR) {
-          _notificationQueue.addNotification(
-            request.badgeId,
-            request.priority,
-            request.questName
-          );
+        // If online, sync with server
+        if (quality != ConnectionQuality.OFFLINE) {
+          await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
         }
 
-        print('🎉 Successfully unlocked badge ${request.badgeId}');
+        // Add notification regardless of connection
+        _notificationQueue.addNotification(
+          request.badgeId,
+          request.priority,
+          request.questName
+        );
+
+        print('🎉 Successfully unlocked badge ${request.badgeId} ${quality == ConnectionQuality.OFFLINE ? "(offline)" : ""}');
       } catch (e) {
         print('❌ Error processing unlock request: $e');
         if (quality != ConnectionQuality.EXCELLENT) {
-          // Re-queue on poor connection
           queue.addFirst(request);
           break;
         }

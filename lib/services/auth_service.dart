@@ -307,40 +307,50 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        // If updating level, check for banner unlocks
-        if (field == 'level') {
-          UserProfile? currentProfile = await getUserProfile();
-          if (currentProfile != null && value > currentProfile.level) {
-            // Level increased, update unlockedBanner array if needed
-            List<int> unlockedBanners = currentProfile.unlockedBanner;
-            if (value <= unlockedBanners.length && unlockedBanners[value - 1] != 1) {
-              unlockedBanners[value - 1] = 1;
-              await _firestore
-                  .collection('User')
-                  .doc(user.uid)
-                  .collection('ProfileData')
-                  .doc(user.uid)
-                  .update({'unlockedBanner': unlockedBanners});
+        print('🔄 Updating user profile - Field: $field');
+        print('📊 Previous value in cache: ${_userCache[user.uid]?.toMap()[field]}');
+
+        // Get current profile first
+        UserProfile? currentProfile = await getUserProfile();
+        if (currentProfile != null) {
+          // Create updated profile preserving all existing values
+          Map<String, dynamic> updatedData = currentProfile.toMap();
+          updatedData[field] = value;
+          
+          // For unlocked badges, preserve existing unlocks
+          if (field == 'unlockedBadge') {
+            List<int> currentUnlocks = currentProfile.unlockedBadge;
+            List<int> newUnlocks = value as List<int>;
+            
+            // Ensure we don't lose unlocks
+            for (int i = 0; i < currentUnlocks.length && i < newUnlocks.length; i++) {
+              if (currentUnlocks[i] == 1) {
+                newUnlocks[i] = 1;
+              }
             }
+            updatedData[field] = newUnlocks;
           }
-        }
 
-        // Update the specified field
-        await _firestore
-            .collection('User')
-            .doc(user.uid)
-            .collection('ProfileData')
-            .doc(user.uid)
-            .update({field: value});
+          // Create new profile with updated data
+          UserProfile updatedProfile = UserProfile.fromMap(updatedData);
 
-        // Update local cache if needed
-        UserProfile? profile = await getUserProfile();
-        if (profile != null) {
-          profile = profile.copyWith(updates: {field: value});
-          await saveUserProfileLocally(profile);
+          // Update Firestore
+          await _firestore
+              .collection('User')
+              .doc(user.uid)
+              .collection('ProfileData')
+              .doc(user.uid)
+              .update({field: updatedData[field]});
+
+          // Update local storage and cache
+          await saveUserProfileLocally(updatedProfile);
+          _addToCache(user.uid, updatedProfile);
+
+          print('📊 Updated value in cache: ${_userCache[user.uid]?.toMap()[field]}');
         }
       }
     } catch (e) {
+      print('❌ Error updating user profile: $e');
       rethrow;
     }
   }

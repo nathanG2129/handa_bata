@@ -89,7 +89,7 @@ class UserProfileService {
       String userId = user.uid;
       print('🔍 Fetching profile for user: $userId');
 
-      // Check memory cache
+      // Check memory cache first
       if (_profileCache.containsKey(userId) && _isCacheValid(userId)) {
         print('💾 Returning from memory cache');
         return _profileCache[userId];
@@ -125,15 +125,55 @@ class UserProfileService {
         }
       }
 
-      return null;
+      // If we get here, create a new profile with default values
+      print('📝 Creating new profile with default values');
+      UserProfile newProfile = await _createDefaultProfile(userId);
+      await _saveProfileLocally(userId, newProfile);
+      _updateCache(userId, newProfile);
+      return newProfile;
+
     } catch (e) {
       print('❌ Error in fetchUserProfile: $e');
       return null;
     }
   }
 
+  Future<UserProfile> _createDefaultProfile(String userId) async {
+    // Get badge count for proper array initialization
+    final badges = await BadgeService().fetchBadges();
+    final banners = await BannerService().fetchBanners();
+    
+    return UserProfile(
+      profileId: userId,
+      username: 'Guest',
+      nickname: 'Guest',
+      avatarId: 0,
+      badgeShowcase: [-1, -1, -1],
+      bannerId: 0,
+      exp: 0,
+      expCap: 100,
+      hasShownCongrats: false,
+      level: 1,
+      totalBadgeUnlocked: 0,
+      totalStageCleared: 0,
+      unlockedBadge: List<int>.filled(badges.length, 0),
+      unlockedBanner: List<int>.filled(banners.length, 0),
+      email: '',
+      birthday: '',
+    );
+  }
+
   Future<void> updateProfile(String field, dynamic value) async {
     try {
+      if (field == 'unlockedBadge') {
+        print('🔄 Updating unlocked badges');
+        print('📊 Previous value: ${(await fetchUserProfile())?.unlockedBadge}');
+        print('📊 New value: $value');
+        
+        // Verify the update
+        await _verifyBadgeUpdate(value as List<int>);
+      }
+      
       User? user = _auth.currentUser;
       if (user == null) return;
 
@@ -198,9 +238,28 @@ class UserProfileService {
       // Update rate limit tracking
       _lastUpdateTime[userId] = DateTime.now();
 
+      // Verify after update
+      if (field == 'unlockedBadge') {
+        UserProfile? updated = await fetchUserProfile();
+        print('📊 After update: ${updated?.unlockedBadge}');
+      }
     } catch (e) {
       await _logOperation('update_error', e.toString());
       throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  Future<void> _verifyBadgeUpdate(List<int> newBadges) async {
+    UserProfile? current = await fetchUserProfile();
+    if (current == null) return;
+    
+    // Ensure we don't lose any unlocked badges
+    List<int> currentUnlocks = current.unlockedBadge;
+    for (int i = 0; i < currentUnlocks.length && i < newBadges.length; i++) {
+      if (currentUnlocks[i] == 1 && newBadges[i] != 1) {
+        print('⚠️ Warning: Badge $i would be unlocked->locked');
+        newBadges[i] = 1;
+      }
     }
   }
 

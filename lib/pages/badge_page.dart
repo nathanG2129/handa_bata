@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/pages/badge_details_dialog.dart';
 import 'package:handabatamae/services/badge_service.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
@@ -64,9 +65,9 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     _setupSubscriptions();
     
     if (widget.selectionMode && widget.currentBadgeShowcase != null) {
-      _selectedBadgesNotifier.value = widget.currentBadgeShowcase!
-          .where((id) => id != -1)
-          .toList();
+      _selectedBadgesNotifier.value = List<int>.from(
+        widget.currentBadgeShowcase!.where((id) => id != -1)
+      );
     }
   }
 
@@ -349,7 +350,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   }
 
   void _handleBadgeSelection(int badgeId) {
-    List<int> currentSelection = List.from(_selectedBadgesNotifier.value);
+    List<int> currentSelection = List<int>.from(_selectedBadgesNotifier.value);
     
     if (currentSelection.contains(badgeId)) {
       currentSelection.remove(badgeId);
@@ -360,7 +361,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       currentSelection.add(badgeId);
     }
     
-    _selectedBadgesNotifier.value = List.from(currentSelection);
+    _selectedBadgesNotifier.value = currentSelection;
   }
 
   Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
@@ -416,23 +417,20 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           itemCount: filteredBadges.length,
           itemBuilder: (context, index) {
             final badge = filteredBadges[index];
-            return FutureBuilder<Map<String, dynamic>?>(
-              future: _badgeService.getBadgeDetails(badge['id']),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                final badgeData = snapshot.data ?? badge;
-                // Change how we check for unlocked status
+            return ValueListenableBuilder<List<int>>(
+              valueListenable: _selectedBadgesNotifier,
+              builder: (context, selectedBadges, _) {
+                final isSelected = selectedBadges.contains(badge['id']);
                 final isUnlocked = _unlockedBadges.length > badge['id'] && 
                                  _unlockedBadges[badge['id']] == 1;
                 
                 return BadgeItem(
-                  badge: badgeData,
+                  badge: badge,
                   isUnlocked: isUnlocked,
-                  isSelected: _selectedBadgesNotifier.value.contains(badge['id']),
-                  onTap: () => _handleBadgeTap(badge),
+                  isSelected: isSelected,
+                  onTap: () => widget.selectionMode 
+                      ? _handleBadgeSelection(badge['id'])
+                      : _showBadgeDetails(badge),
                 );
               },
             );
@@ -446,27 +444,34 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     return ValueListenableBuilder<List<int>>(
       valueListenable: _selectedBadgesNotifier,
       builder: (context, selectedBadges, _) {
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            textStyle: GoogleFonts.vt323(fontSize: 20),
+        final bool isEnabled = selectedBadges.isNotEmpty;
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Opacity(
+            opacity: isEnabled ? 1.0 : 0.5,  // Lower opacity when disabled
+            child: Button3D(
+              width: 200,
+              height: 45,
+              backgroundColor: const Color(0xFFF1B33A),
+              borderColor: const Color(0xFF8B5A00),
+              onPressed: () {
+                if (isEnabled) {
+                  _handleBadgeUpdate(selectedBadges);
+                }
+              },  // Always provide a function, but only do something if enabled
+              child: Text(
+                'Save Changes',
+                style: GoogleFonts.vt323(
+                  fontSize: 20,
+                  color: Colors.black,  // Always black, no grey
+                ),
+              ),
+            ),
           ),
-          onPressed: selectedBadges.isNotEmpty 
-              ? () => _handleBadgeUpdate(selectedBadges)
-              : null,
-          child: const Text('Save Changes'),
-        );
+        );    
       },
     );
-  }
-
-  void _handleBadgeTap(Map<String, dynamic> badge) {
-    if (widget.selectionMode) {
-      _handleBadgeSelection(badge['id']);
-    } else {
-      _showBadgeDetails(badge);
-    }
   }
 
   Widget BadgeItem({
@@ -475,6 +480,10 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    // Define opacity values
+    const double lockedOpacity = 0.5;  // Dimmed for locked badges
+    const double unlockedOpacity = 1.0; // Full opacity for unlocked badges
+
     return Card(
       color: Colors.transparent,
       elevation: 0,
@@ -486,28 +495,33 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
               : null,
           color: Colors.transparent,
         ),
-        child: InkWell(
-          onTap: onTap,
+        child: GestureDetector(
+          onTap: isUnlocked ? onTap : null,  // Only allow tap if unlocked
+          behavior: HitTestBehavior.opaque,
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/badges/${badge['img']}',
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.none,
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  badge['title'] ?? 'Badge',
-                  style: GoogleFonts.vt323(
-                    color: Colors.white,
-                    fontSize: 16,
+            child: Opacity(
+              opacity: isUnlocked ? unlockedOpacity : lockedOpacity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,  // Added to match banner page
+                children: [
+                  Image.asset(
+                    'assets/badges/${badge['img']}',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.none,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 5),
+                  Text(
+                    badge['title'] ?? 'Badge',
+                    style: GoogleFonts.vt323(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -599,6 +613,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     _profileSubscription?.cancel();
     _syncSubscription?.cancel();  // Cancel sync subscription
     _animationController.dispose();
+    _selectedBadgesNotifier.dispose();
     super.dispose();
   }
 }

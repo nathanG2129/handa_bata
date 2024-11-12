@@ -101,6 +101,15 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         _syncNotifier.value = isSyncing;
       }
     });
+
+    // Listen to badge updates
+    _badgeService.badgeUpdates.listen((badges) {
+      if (mounted) {
+        setState(() {
+          _badges = badges;
+        });
+      }
+    });
   }
 
   Future<void> _initializeData() async {

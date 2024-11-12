@@ -491,6 +491,16 @@ class UserProfileService {
       'type': int,
       'min': 0,
     },
+    ProfileField.unlockedBadge: {
+      'type': List,
+      'elementType': int,
+      'allowedValues': [0, 1],
+    },
+    ProfileField.unlockedBanner: {
+      'type': List,
+      'elementType': int,
+      'allowedValues': [0, 1],
+    },
   };
 
   // Add rate limiting
@@ -517,7 +527,36 @@ class UserProfileService {
   ValidationResult _validateField(ProfileField field, dynamic value) {
     final rules = _validationRules[field];
     if (rules == null) {
-      return const ValidationResult(isValid: false, error: 'No validation rules found');
+      return const ValidationResult(isValid: true);
+    }
+
+    // Type checking
+    if (rules['type'] == List && value is! List) {
+      return const ValidationResult(isValid: false, error: 'Value must be a list');
+    }
+
+    // For array validations
+    if (rules['type'] == List && value is List) {
+      // Ensure proper type casting for arrays
+      final typedList = List<int>.from(value);  // Cast to List<int>
+      
+      // Check element type
+      if (!typedList.every((item) => item is int)) {
+        return const ValidationResult(
+          isValid: false, 
+          error: 'All elements must be integers'
+        );
+      }
+
+      // Check allowed values if specified
+      if (rules['allowedValues'] != null) {
+        if (!typedList.every((item) => rules['allowedValues'].contains(item))) {
+          return const ValidationResult(
+            isValid: false,
+            error: 'Invalid values in array'
+          );
+        }
+      }
     }
 
     // Type checking
@@ -526,9 +565,6 @@ class UserProfileService {
     }
     if (rules['type'] == int && value is! int) {
       return const ValidationResult(isValid: false, error: 'Value must be a number');
-    }
-    if (rules['type'] == List && value is! List) {
-      return const ValidationResult(isValid: false, error: 'Value must be a list');
     }
 
     // Specific validations based on field type
@@ -867,11 +903,15 @@ class UserProfileService {
   // Override updateProfile to handle integrated updates
   Future<void> updateProfileWithIntegration(String field, dynamic value) async {
     try {
-      if (field == 'avatarId') {
-        // Validate avatar exists using shared cache
-        final avatar = await _avatarService.getAvatarDetails(value);
-        if (avatar == null) {
-          throw Exception('Invalid avatar ID');
+      // Handle array fields specifically
+      if (field == 'unlockedBadge' || field == 'unlockedBanner') {
+        if (value is String) {
+          // Decode the string back to a proper List<int>
+          final decoded = jsonDecode(value) as Map<String, dynamic>;
+          if (decoded['type'] == 'badge_array') {
+            // Explicitly construct List<int> from the decoded data
+            value = (decoded['data'] as List).map((e) => e as int).toList();
+          }
         }
       }
       

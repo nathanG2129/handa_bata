@@ -130,8 +130,12 @@ class UserProfile {
         level: updates['level'] ?? this.level,
         totalBadgeUnlocked: updates['totalBadgeUnlocked'] ?? this.totalBadgeUnlocked,
         totalStageCleared: updates['totalStageCleared'] ?? this.totalStageCleared,
-        unlockedBadge: updates['unlockedBadge'] ?? this.unlockedBadge,
-        unlockedBanner: updates['unlockedBanner'] ?? this.unlockedBanner,
+        unlockedBadge: updates['unlockedBadge'] != null 
+            ? List<int>.from(updates['unlockedBadge'])
+            : this.unlockedBadge,
+        unlockedBanner: updates['unlockedBanner'] != null
+            ? List<int>.from(updates['unlockedBanner'])
+            : this.unlockedBanner,
         email: updates['email'] ?? this.email,
         birthday: updates['birthday'] ?? this.birthday,
       );

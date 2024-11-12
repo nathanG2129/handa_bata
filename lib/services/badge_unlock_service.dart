@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/models/pending_badge_unlock.dart';
@@ -85,10 +86,32 @@ class BadgeUnlockService {
         updatedUnlockedBadges[id] = 1;
       }
 
+      // Convert to string representation before passing
+      final String encodedList = jsonEncode({
+        'type': 'badge_array',
+        'data': updatedUnlockedBadges,  // This will be serialized as a JSON array
+      });
+
+      // Pass as string to UserProfileService
+      final userProfileService = UserProfileService();
+      await userProfileService.updateProfileWithIntegration(
+        'unlockedBadge',
+        encodedList  // Pass as string instead of List
+      );
+
       if (quality == ConnectionQuality.OFFLINE) {
-        print('📱 Offline mode: Saving unlocks locally');
-        await _authService.saveUserProfileLocally(profile.copyWith(
-          updates: {'unlockedBadge': updatedUnlockedBadges}
+        print('📱 Offline mode: Badge unlocked and saved locally');
+        await _queueUnlock(PendingBadgeUnlock(
+          badgeIds: badgeIds,
+          unlockType: 'adventure',
+          unlockContext: {
+            'questName': 'Quake Quest',
+            'stageName': 'Quake Quest',
+            'difficulty': 'hard',
+            'stars': 0,
+            'allStageStars': List<int>.filled(16, 0),
+          },
+          timestamp: DateTime.now(),
         ));
       } else {
         print('🌐 Online mode: Updating profile');
@@ -268,6 +291,10 @@ class BadgeUnlockService {
 
       await prefs.setStringList(PENDING_UNLOCKS_KEY, []);
       print('✅ All pending unlocks processed');
+
+      // Trigger a refresh of badge data
+      await BadgeService().fetchBadges(); // Ensure this refreshes the cache
+
     } catch (e) {
       print('❌ Error processing pending unlocks: $e');
     }

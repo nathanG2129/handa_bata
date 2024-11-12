@@ -340,12 +340,14 @@ class BadgeService {
     BadgePriority.LOW: Queue<int>(),
   };
 
-  final ProgressiveLoadManager _progressiveLoader;
+  // Change to late
+  late final ProgressiveLoadManager _progressiveLoader;
 
   final ConnectionManager _connectionManager = ConnectionManager();
 
-  BadgeService._internal() 
-      : _progressiveLoader = ProgressiveLoadManager(_instance) {
+  BadgeService._internal() {
+    // Initialize after constructor
+    _progressiveLoader = ProgressiveLoadManager(this);
     _startQueueProcessing();
   }
 

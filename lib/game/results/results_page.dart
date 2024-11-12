@@ -240,39 +240,11 @@ class ResultsPageState extends State<ResultsPage> {
         stars = calculatedStars;
       });
 
-      // Get local game save data
-      GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
-      
-      // Check for badge unlocks
-      final badgeUnlockService = BadgeUnlockService(_authService);
-      
-      if (widget.gamemode == 'arcade') {
-        final recordParts = widget.record.split(':');
-        final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
-        
-        await badgeUnlockService.checkArcadeBadges(
-          totalTime: totalSeconds,
-          accuracy: widget.accuracy * 100,
-          streak: widget.streak,
-          averageTimePerQuestion: widget.averageTimePerQuestion,
-        );
-      } else if (saveData != null) {
-        List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
-            ? saveData.normalStageStars 
-            : saveData.hardStageStars;
-        
-        await badgeUnlockService.checkAdventureBadges(
-          questName: widget.category['name'],
-          stageName: widget.stageName,
-          difficulty: widget.mode.toLowerCase(),
-          stars: calculatedStars,
-          allStageStars: stageStars,
-        );
-      }
+      // Check for badge unlocks after score and stars are updated
+      await _checkBadgeUnlocks();
 
     } catch (e) {
       print('❌ Error updating score and stars: $e');
-      // Even if there's an error, we should still calculate and show stars
       setState(() {
         stars = _calculateStars(
           widget.accuracy,
@@ -515,5 +487,40 @@ class ResultsPageState extends State<ResultsPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _checkBadgeUnlocks() async {
+    try {
+      final badgeUnlockService = BadgeUnlockService();
+      
+      // Get local game save data first
+      GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
+      
+      if (widget.gamemode == 'arcade') {
+        final recordParts = widget.record.split(':');
+        final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
+        
+        await badgeUnlockService.checkArcadeBadges(
+          totalTime: totalSeconds,
+          accuracy: widget.accuracy * 100,
+          streak: widget.streak,
+          averageTimePerQuestion: widget.averageTimePerQuestion,
+        );
+      } else if (saveData != null) {
+        List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
+            ? saveData.normalStageStars 
+            : saveData.hardStageStars;
+        
+        await badgeUnlockService.checkAdventureBadges(
+          questName: widget.category['name'],
+          stageName: widget.stageName,
+          difficulty: widget.mode.toLowerCase(),
+          stars: stars,
+          allStageStars: stageStars,
+        );
+      }
+    } catch (e) {
+      print('❌ Error checking badge unlocks: $e');
+    }
   }
 }

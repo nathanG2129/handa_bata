@@ -25,6 +25,7 @@ class BadgePage extends StatefulWidget {
   final bool selectionMode;
   final List<int>? currentBadgeShowcase;
   final Function(List<int>)? onBadgesSelected;
+  final String? currentQuest;
 
   const BadgePage({
     super.key, 
@@ -32,6 +33,7 @@ class BadgePage extends StatefulWidget {
     this.selectionMode = false,
     this.currentBadgeShowcase,
     this.onBadgesSelected,
+    this.currentQuest,
   });
 
   @override
@@ -51,6 +53,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   final ValueNotifier<BadgeFilter> _filterNotifier = ValueNotifier(BadgeFilter.myCollection);
   final ValueNotifier<List<int>> _selectedBadgesNotifier = ValueNotifier<List<int>>([]);
   StreamSubscription<UserProfile>? _profileSubscription;
+  final ValueNotifier<bool> _syncNotifier = ValueNotifier(false);
+  StreamSubscription<bool>? _syncSubscription;
 
   @override
   void initState() {
@@ -81,14 +85,20 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   }
 
   void _setupSubscriptions() {
-    // Listen to both profile updates and badge updates
+    // Listen to profile updates
     _profileSubscription = _userProfileService.profileUpdates.listen((updatedProfile) {
       if (mounted) {
         setState(() {
           _unlockedBadges = updatedProfile.unlockedBadge;
-          // Force refresh badges when profile updates
           _refreshBadges();
         });
+      }
+    });
+
+    // Add sync status subscription
+    _syncSubscription = _badgeService.syncStatus.listen((isSyncing) {
+      if (mounted) {
+        _syncNotifier.value = isSyncing;
       }
     });
   }
@@ -115,7 +125,11 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         _unlockedBadges = (results[1] as UserProfile?)?.unlockedBadge ?? [];
         _isLoading = false;
       });
-      _animationController.forward();
+
+      // Ensure animation starts after state update
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _animationController.forward();
+      });
 
     } catch (e) {
       if (!mounted) return;
@@ -140,121 +154,106 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
           child: Container(
             color: Colors.black.withOpacity(0),
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
             child: Center(
-              child: GestureDetector(
-                onTap: () {}, // Prevent tap from closing dialog
-                child: StreamBuilder<UserProfile>(
-                  stream: _userProfileService.profileUpdates,
-                  builder: (context, profileSnapshot) {
-                    if (profileSnapshot.hasData) {
-                      _unlockedBadges = profileSnapshot.data!.unlockedBadge;
-                    }
-                    
-                    return StreamBuilder<bool>(
-                      stream: _badgeService.syncStatus,
-                      builder: (context, syncSnapshot) {
-                        final isSyncing = syncSnapshot.data ?? false;
-                        
-                        return Stack(
-                          children: [
-                            _buildMainContent(),
-                            if (isSyncing)
-                              const Positioned(
-                                top: 120,
-                                right: 30,
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _syncNotifier,
+                builder: (context, isSyncing, _) {
+                  if (_isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (_errorMessage != null) {
+                    return _buildErrorState();
+                  }
+
+                  return Stack(
+                    fit: StackFit.passthrough,
+                    children: [
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
+                          shape: const RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.black, width: 1),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: MediaQuery.of(context).size.height * 0.7,
+                              maxHeight: MediaQuery.of(context).size.height * 0.7,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  color: const Color(0xFF3A1A5F),
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                  child: Center(
+                                    child: Text(
+                                      'Badges',
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.white,
+                                        fontSize: 42,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMainContent() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_errorMessage != null) {
-      return _buildErrorState();
-    }
-
-    return SlideTransition(
-      position: _slideAnimation,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(color: Colors.black, width: 1),
-          borderRadius: BorderRadius.zero,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height * 0.7,
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Container(
-                width: double.infinity,
-                color: const Color(0xFF3A1A5F),
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                child: Center(
-                  child: Text(
-                    'Badges',
-                    style: GoogleFonts.vt323(
-                      color: Colors.white,
-                      fontSize: 42,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  color: const Color(0xFF241242),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              if (!widget.selectionMode)
-                                Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: _buildFilterDropdown(),
+                                Expanded(
+                                  child: Container(
+                                    color: const Color(0xFF241242),
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                if (!widget.selectionMode)
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    child: _buildFilterDropdown(),
+                                                  ),
+                                                _buildBadgeGrid(_badges),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        if (widget.selectionMode)
+                                          Container(
+                                            width: double.infinity,
+                                            color: const Color(0xFF3A1A5F),
+                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                            child: _buildSaveButton(),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              _buildBadgeGrid(_badges),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      if (widget.selectionMode)
-                        Container(
-                          width: double.infinity,
-                          color: const Color(0xFF3A1A5F),
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                          child: _buildSaveButton(),
+                      if (isSyncing)
+                        const Positioned(
+                          top: 120,
+                          right: 30,
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
                         ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -301,32 +300,40 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     print('Unlocked badges array: $_unlockedBadges');
 
     if (filter == BadgeFilter.myCollection) {
-      print('🎯 Filtering My Collection');
-      var filteredBadges = badges.where((badge) {
-        int badgeId = badge['id'] as int;
-        bool isUnlocked = badgeId < _unlockedBadges.length && _unlockedBadges[badgeId] == 1;
-        return isUnlocked;
-      }).toList();
-      print('Found ${filteredBadges.length} unlocked badges');
-      return filteredBadges;
+      // Queue unlocked badges with HIGH priority
+      for (var badge in badges) {
+        if (_unlockedBadges.contains(badge['id'])) {
+          _badgeService.queueBadgeLoad(badge['id'], BadgePriority.HIGH);
+        }
+      }
+      return badges.where((badge) => 
+        _unlockedBadges.contains(badge['id'])).toList();
     }
     
-    if (filter == BadgeFilter.allBadges) {
-      print('📋 Showing all badges');
-      return badges;
-    }
+    // Handle other filters with appropriate priorities
+    String prefix = filter.toString().split('.').last
+        .replaceAll('Badges', '').toLowerCase();
     
-    String prefix = filter.toString().split('.').last.replaceAll('Badges', '').toLowerCase();
-    print('🏷️ Filtering by prefix: $prefix');
     if (prefix == 'arcade') {
       var filteredBadges = badges.where((badge) => 
         (badge['img'] as String).startsWith('arcade')).toList();
-      print('Filtered arcade badges count: ${filteredBadges.length}');
+      // Queue arcade badges with MEDIUM priority
+      for (var badge in filteredBadges) {
+        _badgeService.queueBadgeLoad(badge['id'], BadgePriority.MEDIUM);
+      }
       return filteredBadges;
     } else {
       var filteredBadges = badges.where((badge) => 
         (badge['img'] as String).startsWith('$prefix-quest')).toList();
-      print('Filtered quest badges count: ${filteredBadges.length}');
+      // Queue quest badges with appropriate priority
+      for (var badge in filteredBadges) {
+        _badgeService.queueBadgeLoad(
+          badge['id'],
+          prefix == widget.currentQuest?.toLowerCase() 
+            ? BadgePriority.CURRENT_QUEST 
+            : BadgePriority.MEDIUM
+        );
+      }
       return filteredBadges;
     }
   }
@@ -577,6 +584,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _profileSubscription?.cancel();
+    _syncSubscription?.cancel();  // Cancel sync subscription
     _animationController.dispose();
     super.dispose();
   }

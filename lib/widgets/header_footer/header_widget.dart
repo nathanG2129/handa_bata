@@ -468,13 +468,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
     print('🔍 Current showing state - Badge: $_isShowingBadgeNotification, Banner: $_isShowingBannerNotification');
     print('🔍 Pending notifications in service: ${BadgeUnlockService.pendingNotifications.toList()}');
     
-    if (!_isShowingBadgeNotification && BadgeUnlockService.pendingNotifications.isNotEmpty) {
+    if (!_isShowingBadgeNotification && BadgeUnlockService.hasNotifications) {
       print('🔍 Adding pending notifications to local queue');
       _pendingBadgeNotifications.addAll(BadgeUnlockService.pendingNotifications);
       // Clear the service's queue after adding to local queue
       BadgeUnlockService.pendingNotifications.clear();
       print('🔍 Local queue after adding: ${_pendingBadgeNotifications.toList()}');
-      print('🔍 Service queue after clearing: ${BadgeUnlockService.pendingNotifications.toList()}');
       _showNextBadgeNotification();
     }
   }
@@ -539,7 +538,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       print('📢 No more badge notifications to show');
       _isShowingBadgeNotification = false;
       if (!_isShowingBannerNotification && _pendingBannerNotifications.isNotEmpty) {
-        print(' Switching to banner notifications');
+        print('📢 Switching to banner notifications');
         _showNextBannerNotification();
       }
       return;
@@ -550,7 +549,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
       print('📢 Showing notification for badge ID: $nextBadgeId');
       _showBadgeUnlockNotification(nextBadgeId);
     } else {
-      print(' Skipping notification - already showing something');
+      print('📢 Skipping notification - already showing something');
     }
   }
 

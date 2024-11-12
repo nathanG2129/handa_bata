@@ -320,7 +320,7 @@ class AdventurePageState extends State<AdventurePage> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

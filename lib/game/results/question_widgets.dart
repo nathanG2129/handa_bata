@@ -271,7 +271,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
                             '${pair['section1']} - ${pair['section2']}',
                             style: GoogleFonts.rubik(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),

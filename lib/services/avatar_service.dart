@@ -658,7 +658,7 @@ class AvatarService {
   Future<void> _cleanupOldLogs() async {
     try {
       // Delete logs older than 30 days
-      final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
       await FirebaseFirestore.instance
           .collection('Logs')
           .where('timestamp', isLessThan: thirtyDaysAgo)

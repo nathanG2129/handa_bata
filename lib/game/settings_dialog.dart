@@ -281,7 +281,7 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text('Speed', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                                  Text('${_visualSpeed.toStringAsFixed(2)}', 
+                                  Text(_visualSpeed.toStringAsFixed(2), 
                                     style: GoogleFonts.vt323(fontSize: 16, color: Colors.white)),
                                 ],
                               ),

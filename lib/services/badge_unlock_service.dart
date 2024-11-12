@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/services/badge_service.dart';
+import 'package:handabatamae/models/pending_badge_unlock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class QuestBadgeRange {
   final int stageStart;     // First badge ID for normal stages
@@ -26,6 +31,7 @@ class BadgeUnlockService {
   final AuthService _authService;
   final ConnectionManager _connectionManager = ConnectionManager();
   final BadgeService _badgeService = BadgeService();
+  StreamSubscription? _connectivitySubscription;
 
   static const Map<String, QuestBadgeRange> questBadgeRanges = {
     'Quake Quest': QuestBadgeRange(0, 14, 16),
@@ -36,14 +42,26 @@ class BadgeUnlockService {
     'Flood Quest': QuestBadgeRange(94, 108, 110),
   };
 
-  BadgeUnlockService._internal() : _authService = AuthService();
+  static const String PENDING_UNLOCKS_KEY = 'pending_badge_unlocks';
+
+  BadgeUnlockService._internal() : _authService = AuthService() {
+    _setupConnectionListener();
+  }
+
+  void _setupConnectionListener() {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) async {
+      if (result != ConnectivityResult.none) {
+        await _processPendingUnlocks();
+      }
+    });
+  }
 
   Future<void> unlockBadges(List<int> badgeIds) async {
     if (badgeIds.isEmpty) return;
     print('🏅 Attempting to unlock badges: $badgeIds');
 
     try {
-      // Check connection quality
       final quality = await _connectionManager.checkConnectionQuality();
       print('📡 Connection quality: $quality');
 
@@ -59,25 +77,20 @@ class BadgeUnlockService {
         );
       }
       
-      // Pre-fetch badge data if online
-      if (quality != ConnectionQuality.OFFLINE) {
-        for (var id in badgeIds) {
-          await _badgeService.getBadgeDetails(id);
-        }
-      }
-      
       for (var id in badgeIds) {
+        if (!await _badgeService.getBadgeById(id)) {
+          print('⚠️ Invalid badge ID: $id');
+          return;
+        }
         updatedUnlockedBadges[id] = 1;
       }
 
       if (quality == ConnectionQuality.OFFLINE) {
-        // Store locally only
         print('📱 Offline mode: Saving unlocks locally');
         await _authService.saveUserProfileLocally(profile.copyWith(
           updates: {'unlockedBadge': updatedUnlockedBadges}
         ));
       } else {
-        // Update both local and server
         print('🌐 Online mode: Updating profile');
         await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
       }
@@ -95,6 +108,7 @@ class BadgeUnlockService {
   }) async {
     try {
       print('🎮 Checking adventure badges for $questName, $stageName');
+      final quality = await _connectionManager.checkConnectionQuality();
       
       int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
       List<int> updatedStageStars = List<int>.from(allStageStars);
@@ -130,6 +144,20 @@ class BadgeUnlockService {
       }
 
       if (badgesToUnlock.isNotEmpty) {
+        if (quality == ConnectionQuality.OFFLINE) {
+          await _queueUnlock(PendingBadgeUnlock(
+            badgeIds: badgesToUnlock,
+            unlockType: 'adventure',
+            unlockContext: {
+              'questName': questName,
+              'stageName': stageName,
+              'difficulty': difficulty,
+              'stars': stars,
+              'allStageStars': allStageStars,
+            },
+            timestamp: DateTime.now(),
+          ));
+        }
         await unlockBadges(badgesToUnlock);
       }
     } catch (e) {
@@ -144,6 +172,7 @@ class BadgeUnlockService {
     required double averageTimePerQuestion,
   }) async {
     try {
+      final quality = await _connectionManager.checkConnectionQuality();
       List<int> badgesToUnlock = [];
 
       if (accuracy >= 100) {
@@ -163,6 +192,19 @@ class BadgeUnlockService {
       }
 
       if (badgesToUnlock.isNotEmpty) {
+        if (quality == ConnectionQuality.OFFLINE) {
+          await _queueUnlock(PendingBadgeUnlock(
+            badgeIds: badgesToUnlock,
+            unlockType: 'arcade',
+            unlockContext: {
+              'totalTime': totalTime,
+              'accuracy': accuracy,
+              'streak': streak,
+              'averageTimePerQuestion': averageTimePerQuestion,
+            },
+            timestamp: DateTime.now(),
+          ));
+        }
         await unlockBadges(badgesToUnlock);
       }
     } catch (e) {
@@ -180,7 +222,58 @@ class BadgeUnlockService {
     return normalStages.every((stars) => stars == 3);
   }
 
+  Future<void> _queueUnlock(PendingBadgeUnlock unlock) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
+      pendingUnlocks.add(jsonEncode(unlock.toJson()));
+      await prefs.setStringList(PENDING_UNLOCKS_KEY, pendingUnlocks);
+      print('💾 Unlock queued for later sync');
+    } catch (e) {
+      print('❌ Error queueing unlock: $e');
+    }
+  }
+
+  Future<void> _processPendingUnlocks() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
+      
+      if (pendingUnlocks.isEmpty) {
+        print('✅ No pending unlocks to process');
+        return;
+      }
+
+      print('🔄 Processing ${pendingUnlocks.length} pending unlocks');
+      
+      for (String unlockJson in pendingUnlocks) {
+        final unlock = PendingBadgeUnlock.fromJson(jsonDecode(unlockJson));
+        if (unlock.unlockType == 'adventure') {
+          await checkAdventureBadges(
+            questName: unlock.unlockContext['questName'],
+            stageName: unlock.unlockContext['stageName'],
+            difficulty: unlock.unlockContext['difficulty'],
+            stars: unlock.unlockContext['stars'],
+            allStageStars: List<int>.from(unlock.unlockContext['allStageStars']),
+          );
+        } else if (unlock.unlockType == 'arcade') {
+          await checkArcadeBadges(
+            totalTime: unlock.unlockContext['totalTime'],
+            accuracy: unlock.unlockContext['accuracy'],
+            streak: unlock.unlockContext['streak'],
+            averageTimePerQuestion: unlock.unlockContext['averageTimePerQuestion'],
+          );
+        }
+      }
+
+      await prefs.setStringList(PENDING_UNLOCKS_KEY, []);
+      print('✅ All pending unlocks processed');
+    } catch (e) {
+      print('❌ Error processing pending unlocks: $e');
+    }
+  }
+
   void dispose() {
-    // Implement dispose logic if needed
+    _connectivitySubscription?.cancel();
   }
 } 

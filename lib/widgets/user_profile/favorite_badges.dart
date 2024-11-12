@@ -27,7 +27,7 @@ class FavoriteBadgesState extends State<FavoriteBadges> {
   
   // Add state management
   late List<int> _badgeShowcase;
-  Map<int, Map<String, dynamic>> _badgeCache = {};
+  final Map<int, Map<String, dynamic>> _badgeCache = {};
   bool _isLoading = true;
   String? _errorMessage;
 

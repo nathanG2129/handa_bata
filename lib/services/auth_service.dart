@@ -31,7 +31,7 @@ class AuthService {
   static const int MAX_CACHE_SIZE = 100;
   static const String USER_CACHE_VERSION_KEY = 'user_cache_version';
 
-  List<StreamSubscription> _subscriptions = [];
+  final List<StreamSubscription> _subscriptions = [];
 
   final Map<String, UserProfile> _userCache = {};
   int _currentCacheVersion = 0;

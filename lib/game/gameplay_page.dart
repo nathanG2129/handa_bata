@@ -63,7 +63,7 @@ class GameplayPageState extends State<GameplayPage> {
   int _fullyCorrectAnswersCount = 0; // Define the fully correct answers count
   bool _isGameOver = false;
   double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
-  List<Map<String, dynamic>> _answeredQuestions = []; // Add this line
+  final List<Map<String, dynamic>> _answeredQuestions = []; // Add this line
 
   List<Map<String, dynamic>> get answeredQuestions => _answeredQuestions;
 

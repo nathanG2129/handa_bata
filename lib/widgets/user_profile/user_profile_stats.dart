@@ -113,7 +113,7 @@ class UserProfileStatsState extends State<UserProfileStats> {
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
-                      '${_totalBadges}',
+                      '$_totalBadges',
                       style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),
@@ -179,7 +179,7 @@ class UserProfileStatsState extends State<UserProfileStats> {
                       ).value,
                     ), // Larger padding for two-digit numbers
                     child: Text(
-                      '${_totalStages}',
+                      '$_totalStages',
                       style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black), // Smaller font size, bold
                     ),
                   ),

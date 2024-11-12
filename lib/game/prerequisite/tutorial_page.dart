@@ -16,7 +16,7 @@ class TutorialPage extends StatefulWidget {
   final bool isFirstPage;
 
   const TutorialPage({
-    Key? key,
+    super.key,
     required this.title,
     required this.imagePaths,
     required this.description,
@@ -24,7 +24,7 @@ class TutorialPage extends StatefulWidget {
     this.onBack,
     this.isLastPage = false,
     this.isFirstPage = true,
-  }) : super(key: key);
+  });
 
   @override
   _TutorialPageState createState() => _TutorialPageState();
@@ -174,10 +174,10 @@ class ImageZoomPage extends StatelessWidget {
   final int initialIndex;
 
   const ImageZoomPage({
-    Key? key,
+    super.key,
     required this.imagePaths,
     required this.initialIndex,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

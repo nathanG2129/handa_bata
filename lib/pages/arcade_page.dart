@@ -440,7 +440,7 @@ class ArcadePageState extends State<ArcadePage> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

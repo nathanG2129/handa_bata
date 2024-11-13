@@ -37,6 +37,7 @@ class ValidationResult {
 class UserProfileService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final BannerService _bannerService;
   
   // Cache constants
   static const String PROFILE_CACHE_KEY = 'user_profile_cache';
@@ -60,18 +61,24 @@ class UserProfileService {
   // Pending updates queue for offline support
   final Map<String, List<Map<String, dynamic>>> _pendingUpdates = {};
   
-  // Singleton pattern
-  static final UserProfileService _instance = UserProfileService._internal();
+  // Singleton pattern with dependency injection
+  static UserProfileService? _instance;
   
-  factory UserProfileService() => _instance;
+  static void initialize(BannerService bannerService) {
+    _instance = UserProfileService._internal(bannerService);
+  }
   
-  final BannerService _bannerService = BannerService();
+  factory UserProfileService() {
+    if (_instance == null) {
+      throw StateError('UserProfileService not initialized');
+    }
+    return _instance!;
+  }
   
-  UserProfileService._internal() {
+  UserProfileService._internal(this._bannerService) {
     _bannerService.setProfileUpdateCallback((field, value) {
       updateProfileWithIntegration(field, value);
     });
-
     _initializeService();
   }
 
@@ -127,6 +134,7 @@ class UserProfileService {
           print('🎯 Server unlocked badges: ${profile.unlockedBadge}');
           await _saveProfileLocally(userId, profile);
           _updateCache(userId, profile);
+          _bannerService.updateCurrentProfile(profile);
           return profile;
         }
       }
@@ -223,6 +231,7 @@ class UserProfileService {
         await _saveProfileLocally(userId, updatedProfile);
         _updateCache(userId, updatedProfile);
         _profileUpdateController.add(updatedProfile);
+        _bannerService.updateCurrentProfile(updatedProfile);
       }
 
       // Rest of the update logic remains the same...

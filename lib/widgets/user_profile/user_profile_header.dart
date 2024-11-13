@@ -246,33 +246,13 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
 
   Future<String?> _getBannerImage() async {
     try {
-      // Adapt behavior based on connection quality
-      switch (_currentQuality) {
-        case ConnectionQuality.OFFLINE:
-          if (_cachedBannerPath != null) {
-            return _cachedBannerPath;
-          }
-          break;
-          
-        case ConnectionQuality.POOR:
-          if (_cachedBannerPath != null) {
-            // Fetch in background but return cached immediately
-            _bannerService.getBannerDetails(
-              widget.bannerId,
-              priority: BannerPriority.CRITICAL
-            );
-            return _cachedBannerPath;
-          }
-          break;
-          
-        default:
-          final banner = await _bannerService.getBannerDetails(
-            widget.bannerId,
-            priority: BannerPriority.CRITICAL
-          );
-          if (mounted && banner != null && banner['img'] != _cachedBannerPath) {
-            setState(() => _cachedBannerPath = banner['img']);
-          }
+      final banner = await _bannerService.getBannerDetails(
+        widget.bannerId,
+        priority: BannerPriority.CRITICAL
+      );
+      
+      if (mounted && banner != null && banner['img'] != _cachedBannerPath) {
+        setState(() => _cachedBannerPath = banner['img']);
       }
       return _cachedBannerPath ?? 'Level01.svg';
     } catch (e) {

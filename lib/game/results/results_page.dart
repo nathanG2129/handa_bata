@@ -140,111 +140,52 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _updateScoreAndStarsInFirestore() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      // Get local game save data first
-      GameSaveData? localSaveData = await _authService.getLocalGameSaveData(widget.category['id']);
-      
-      // Find the stage key
-      final stageKey = '${widget.category['id']}${widget.stageName}';
-
-      if (widget.gamemode == 'arcade') {
-        // For arcade mode: Store if it's the first record (-1) or if new record is better
-        final currentRecord = _convertRecordToSeconds(widget.record);
-        final existingRecord = localSaveData?.stageData[stageKey]?['bestRecord'] ?? -1;
-
-        if (existingRecord == -1 || currentRecord < existingRecord) {
-          await _authService.updateGameProgress(
-            categoryId: widget.category['id'],
-            stageName: widget.stageName,
-            score: widget.score,
-            stars: stars,
-            mode: widget.mode.toLowerCase(),
-            record: currentRecord,
-            isArcade: true,
-          );
-        }
-      } else {
-        // For adventure mode: Store only if score is higher
-        int existingScore;
-        if (widget.mode == 'Hard') {
-          existingScore = localSaveData?.stageData[stageKey]?['scoreHard'] ?? 0;
-        } else {
-          existingScore = localSaveData?.stageData[stageKey]?['scoreNormal'] ?? 0;
-        }
-
-        if (widget.score > existingScore) {
-          await _authService.updateGameProgress(
-            categoryId: widget.category['id'],
-            stageName: widget.stageName,
-            score: widget.score,
-            stars: stars,
-            mode: widget.mode.toLowerCase(),
-            isArcade: false,
-          );
-        }
-      }
-
-      // Calculate XP based on gamemode and difficulty
-      if (widget.gamemode == 'arcade') {
-        _xpGained = widget.isGameOver ? 0 : 500;
-      } else {
-        int multiplier = widget.mode == 'Hard' ? 10 : 5;
-        _xpGained = widget.score * multiplier;
-      }
-
-      // Try to get user profile from local storage first
-      UserProfile? profile = await _authService.getLocalUserProfile();
-      profile ??= await _authService.getUserProfile();
-
+      // Get profile and update XP
+      UserProfile? profile = await _authService.getUserProfile();
       if (profile != null) {
+        // Calculate XP based on gamemode and difficulty
+        if (widget.gamemode == 'arcade') {
+          _xpGained = widget.isGameOver ? 0 : 500;  // Fixed 500 XP for arcade completion
+        } else {
+          int multiplier = widget.mode == 'Hard' ? 10 : 5;  // Hard mode gives 2x XP
+          _xpGained = widget.score * multiplier;
+        }
+
         // Calculate new XP and level
         int newXP = profile.exp + _xpGained;
         int newLevel = profile.level;
-        int requiredXP = profile.level * 100;
+        int requiredXP = profile.level * 100;  // Each level needs level * 100 XP
 
         // Handle level up logic
         while (newXP >= requiredXP) {
           newXP -= requiredXP;
           newLevel++;
-          requiredXP = newLevel * 100;
+          requiredXP = newLevel * 100;  // New level requires more XP
         }
 
-        // Update profile locally first
-        profile = profile.copyWith(updates: {
-          'exp': newXP,
-          'level': newLevel,
-          'expCap': newLevel * 100,
+        // Update profile through AuthService
+        await _authService.updateUserProfile('exp', newXP);
+        await _authService.updateUserProfile('level', newLevel);
+        await _authService.updateUserProfile('expCap', newLevel * 100);
+
+        // Calculate stars
+        int calculatedStars = _calculateStars(
+          widget.accuracy, 
+          widget.score, 
+          widget.stageData['maxScore'],
+          widget.isGameOver
+        );
+
+        setState(() {
+          stars = calculatedStars;
         });
-        await _authService.saveUserProfileLocally(profile);
 
-        // Try to update Firebase if online
-        var connectivityResult = await (Connectivity().checkConnectivity());
-        if (connectivityResult != ConnectivityResult.none) {
-          await _authService.updateUserProfile('exp', newXP);
-          await _authService.updateUserProfile('level', newLevel);
-          await _authService.updateUserProfile('expCap', newLevel * 100);
-        }
+        // Check for badge unlocks after score and stars are updated
+        await _checkBadgeUnlocks();
       }
-
-      // Calculate stars
-      int calculatedStars = _calculateStars(
-        widget.accuracy, 
-        widget.score, 
-        widget.stageData['maxScore'],
-        widget.isGameOver
-      );
-
-      setState(() {
-        stars = calculatedStars;
-      });
-
-      // Check for badge unlocks after score and stars are updated
-      await _checkBadgeUnlocks();
-
     } catch (e) {
       print('❌ Error updating score and stars: $e');
+      // Fallback star calculation if error occurs
       setState(() {
         stars = _calculateStars(
           widget.accuracy,

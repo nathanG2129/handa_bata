@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/banner_details_dialog.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 
 enum BannerFilter { all, myCollection }
@@ -36,7 +35,6 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   late Future<int> _userLevelFuture;
-  final AuthService _authService = AuthService();
   final ValueNotifier<int?> _selectedBannerNotifier = ValueNotifier<int?>(null);
   final ValueNotifier<BannerFilter> _filterNotifier = ValueNotifier(BannerFilter.all);
 
@@ -67,7 +65,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   }
 
   Future<int> _getUserLevel() async {
-    final userProfile = await _authService.getUserProfile();
+    final userProfile = await _userProfileService.fetchUserProfile();
     return userProfile?.level ?? 1;
   }
 

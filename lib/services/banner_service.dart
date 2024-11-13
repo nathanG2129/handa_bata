@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/models/pending_banner_unlock.dart';
-import 'package:handabatamae/services/user_profile_service.dart';
 
 // Add new cache model
 class CachedBanner {
@@ -32,24 +31,59 @@ enum BannerPriority {
   LOW        // Background loading
 }
 
+// At the top of the file, add:
+typedef ProfileUpdateCallback = void Function(String, dynamic);
+
 class BannerService {
   static final BannerService _instance = BannerService._internal();
   factory BannerService() => _instance;
 
-  // Add callback for profile updates
-  void Function(String, dynamic)? _profileUpdateCallback;
-
-  // Method to set the callback
-  void setProfileUpdateCallback(void Function(String, dynamic) callback) {
-    _profileUpdateCallback = callback;
-  }
+  ProfileUpdateCallback? _profileUpdateCallback;
+  
+  // Remove direct UserProfileService instantiation
+  // final UserProfileService _userProfileService = UserProfileService(); // Remove this line
 
   BannerService._internal() {
-    // Initialize connection manager listener
     _connectionManager.connectionQuality.listen((quality) {
       _syncStatusController.add(quality == ConnectionQuality.OFFLINE);
     });
   }
+
+  // Method to set the callback from outside
+  void setProfileUpdateCallback(ProfileUpdateCallback callback) {
+    _profileUpdateCallback = callback;
+  }
+
+  // Update methods that used _userProfileService to use the callback instead
+  Future<void> checkLevelUnlock(int newLevel) async {
+    try {
+      print('🎯 Checking banner unlocks for level $newLevel');
+      final quality = await _connectionManager.checkConnectionQuality();
+      
+      List<Map<String, dynamic>> banners = await fetchBanners();
+      List<int> updatedUnlockedBanners = List<int>.filled(banners.length, 0);
+      
+      if (newLevel <= MAX_BANNER_LEVEL) {
+        updatedUnlockedBanners[newLevel] = 1;
+        
+        if (quality == ConnectionQuality.OFFLINE) {
+          await _queueUnlock(PendingBannerUnlock(
+            bannerId: newLevel,
+            unlockedAtLevel: newLevel,
+            timestamp: DateTime.now(),
+          ));
+        } else if (_profileUpdateCallback != null) {
+          _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
+        }
+      }
+    } catch (e) {
+      print('❌ Error checking banner unlocks: $e');
+      await _logBannerOperation('unlock_error', newLevel, e.toString());
+    }
+  }
+
+  // Remove _setupProfileListener() method as it's no longer needed
+  // Remove _profileSubscription field
 
   final DocumentReference _bannerDoc = FirebaseFirestore.instance.collection('Game').doc('Banner');
   
@@ -88,7 +122,7 @@ class BannerService {
   };
 
   // Add UserProfileService instance
-  final UserProfileService _userProfileService = UserProfileService();
+  // final UserProfileService _userProfileService = UserProfileService(); // Remove this line
 
   // Update getBannerDetails with priority-aware loading
   Future<Map<String, dynamic>?> getBannerDetails(
@@ -642,7 +676,6 @@ class BannerService {
 
   void dispose() {
     _bannerUpdateController.close();
-    _profileSubscription.cancel();
     _syncStatusController.close();
     clearPrewarmTracking();
   }
@@ -724,39 +757,43 @@ class BannerService {
     try {
       print('🔍 Verifying banner unlock state');
       
-      final userProfile = await _userProfileService.fetchUserProfile();
-      if (userProfile == null) return;
+      // Use current profile instead of fetching
+      if (_currentProfile == null) return;
 
       // 1. Verify unlock array size matches banner count
       List<Map<String, dynamic>> banners = await fetchBanners();
-      if (userProfile.unlockedBanner.length != banners.length) {
+      if (_currentProfile!.unlockedBanner.length != banners.length) {
         print('⚠️ Unlock array size mismatch. Resizing...');
         List<int> newUnlockedBanner = List<int>.filled(banners.length, 0);
-        for (int i = 0; i < userProfile.unlockedBanner.length && i < banners.length; i++) {
-          newUnlockedBanner[i] = userProfile.unlockedBanner[i];
+        for (int i = 0; i < _currentProfile!.unlockedBanner.length && i < banners.length; i++) {
+          newUnlockedBanner[i] = _currentProfile!.unlockedBanner[i];
         }
-        await _userProfileService.updateProfileWithIntegration(
-          'unlockedBanner',
-          newUnlockedBanner
-        );
+        if (_profileUpdateCallback != null) {
+          _profileUpdateCallback!(
+            'unlockedBanner',
+            newUnlockedBanner
+          );
+        }
       }
 
       // 2. Verify current banner exists and is unlocked
-      if (userProfile.bannerId > 0) {
-        final bannerExists = await getBannerDetails(userProfile.bannerId) != null;
-        final bannerLevel = getBannerIdForLevel(userProfile.bannerId);
-        final isUnlocked = userProfile.level >= bannerLevel;
+      if (_currentProfile!.bannerId > 0) {
+        final bannerExists = await getBannerDetails(_currentProfile!.bannerId) != null;
+        final bannerLevel = getBannerIdForLevel(_currentProfile!.bannerId);
+        final isUnlocked = _currentProfile!.level >= bannerLevel;
 
         if (!bannerExists || !isUnlocked) {
           print('⚠️ Current banner invalid or locked. Resetting to default...');
-          await _userProfileService.updateProfileWithIntegration('bannerId', 0);
+          if (_profileUpdateCallback != null) {
+            _profileUpdateCallback!('bannerId', 0);
+          }
         }
       }
 
       print('✅ Banner unlock state verified');
 
     } catch (e) {
-      print(' Error verifying unlock state: $e');
+      print('❌ Error verifying unlock state: $e');
       await _logBannerOperation('unlock_verify_error', -1, e.toString());
     }
   }
@@ -1096,10 +1133,12 @@ class BannerService {
     BannerPriority priority = BannerPriority.HIGH,
     int? userLevel
   }) async {
-    final banners = await fetchBanners();
+    final banners = await fetchBanners(priority: priority);
     
     if (userLevel != null) {
-      await loadBannersForLevel(userLevel);
+      // Use current profile's level if available
+      final effectiveLevel = _currentProfile?.level ?? userLevel;
+      await loadBannersForLevel(effectiveLevel);
     }
     
     return banners;
@@ -1424,35 +1463,6 @@ class BannerService {
 
   static const String PENDING_UNLOCKS_KEY = 'pending_banner_unlocks';
 
-  Future<void> checkLevelUnlock(int newLevel) async {
-    try {
-      print('🎯 Checking banner unlocks for level $newLevel');
-      final quality = await _connectionManager.checkConnectionQuality();
-      
-      // Get current unlocked banners
-      List<Map<String, dynamic>> banners = await fetchBanners();
-      List<int> updatedUnlockedBanners = List<int>.filled(banners.length, 0);
-      
-      // Update unlocks
-      if (newLevel <= MAX_BANNER_LEVEL) {
-        updatedUnlockedBanners[newLevel] = 1;
-        
-        if (quality == ConnectionQuality.OFFLINE) {
-          await _queueUnlock(PendingBannerUnlock(
-            bannerId: newLevel,
-            unlockedAtLevel: newLevel,
-            timestamp: DateTime.now(),
-          ));
-        } else if (_profileUpdateCallback != null) {
-          _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
-        }
-      }
-    } catch (e) {
-      print('❌ Error checking banner unlocks: $e');
-      await _logBannerOperation('unlock_error', newLevel, e.toString());
-    }
-  }
-
   Future<void> _queueUnlock(PendingBannerUnlock unlock) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -1487,17 +1497,15 @@ class BannerService {
     }
   }
 
-  late StreamSubscription<UserProfile> _profileSubscription;
+  // Add this field to track profile data
+  UserProfile? _currentProfile;
 
-  void _setupProfileListener() {
-    _profileSubscription = _userProfileService.profileUpdates
-      .listen((profile) async {
-        // Check for level-based unlocks
-        await checkLevelUnlock(profile.level);
-      });
+  // Add method to update current profile
+  void updateCurrentProfile(UserProfile? profile) {
+    _currentProfile = profile;
   }
 
-  // Helper for tracking changed fields
+  // Add the missing _getChangedFields method
   String _getChangedFields(
     Map<String, dynamic> oldBanner,
     Map<String, dynamic> newBanner

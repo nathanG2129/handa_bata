@@ -15,6 +15,7 @@ import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/services/avatar_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 
 class SplashPage extends StatefulWidget {
   final String selectedLanguage;
@@ -48,6 +49,10 @@ class SplashPageState extends State<SplashPage> {
       final avatarService = AvatarService();
       final authService = AuthService();
       final stageService = StageService();
+
+      // Initialize UserProfileService with BannerService
+      print('🔧 Initializing UserProfileService...');
+      UserProfileService.initialize(bannerService);
 
       // Check connection quality first
       print('📡 Checking connection quality...');

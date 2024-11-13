@@ -8,6 +8,7 @@ import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
+import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
@@ -17,6 +18,7 @@ import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -77,18 +79,73 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   Future<void> _initializeResultsPage() async {
-    print('🎮 Initializing results page...');
-    // Load sounds and calculate stars in parallel
-    await Future.wait([
-      _loadSounds(),
-      _updateScoreAndStarsInFirestore(),
-    ]);
-    
-    // Both operations are complete, play sound and show the page
-    _playSoundBasedOnStars();
-    setState(() {
-      _starsCalculated = true;
-    });
+    try {
+      print('🎮 Initializing results page...');
+      
+      // Check connection quality first
+      final connectionManager = ConnectionManager();
+      final quality = await connectionManager.checkConnectionQuality();
+      print('📡 Connection quality: $quality');
+
+      // Load sounds and calculate stars in parallel with timeout
+      try {
+        await Future.wait([
+          _loadSounds().timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              print('⚠️ Sound loading timed out, continuing without sounds');
+              setState(() => _soundsLoaded = true);
+            },
+          ),
+          _updateScoreAndStarsInFirestore().timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('⚠️ Score update timed out, will sync later');
+              // Calculate stars locally
+              setState(() {
+                stars = _calculateStars(
+                  widget.accuracy,
+                  widget.score,
+                  widget.stageData['maxScore'],
+                  widget.isGameOver
+                );
+                _starsCalculated = true;
+              });
+            },
+          ),
+        ], eagerError: false); // Continue if one operation fails
+      } catch (e) {
+        print('⚠️ Error in parallel operations: $e');
+        // Ensure states are set even if operations fail
+        setState(() {
+          _soundsLoaded = true;
+          _starsCalculated = true;
+        });
+      }
+
+      // Only play sound if loaded successfully
+      if (_soundsLoaded) {
+        _playSoundBasedOnStars();
+      }
+
+      // Ensure UI updates
+      if (mounted) {
+        setState(() {
+          _starsCalculated = true;
+        });
+      }
+
+      print('✅ Results page initialization complete');
+    } catch (e) {
+      print('❌ Error initializing results page: $e');
+      // Ensure the page is still usable even if initialization fails
+      if (mounted) {
+        setState(() {
+          _soundsLoaded = true;
+          _starsCalculated = true;
+        });
+      }
+    }
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
@@ -140,52 +197,61 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _updateScoreAndStarsInFirestore() async {
     try {
-      // Get profile and update XP
+      print('🎮 Starting score update process...');
+      
+      // Get connection quality first
+      final connectionManager = ConnectionManager();
+      final quality = await connectionManager.checkConnectionQuality();
+      print('📡 Connection status: $quality');
+
       UserProfile? profile = await _authService.getUserProfile();
       if (profile != null) {
-        // Calculate XP based on gamemode and difficulty
-        if (widget.gamemode == 'arcade') {
-          _xpGained = widget.isGameOver ? 0 : 500;  // Fixed 500 XP for arcade completion
+        print('👤 Current profile stats:');
+        print('📊 Level: ${profile.level}');
+        print('📈 EXP: ${profile.exp}/${profile.expCap}');
+
+        // Add gamemode context
+        print('🎲 Game Details:');
+        print('🎮 Mode: ${widget.gamemode}');
+        print('⚔️ Difficulty: ${widget.mode}');
+        print('🎯 Score: ${widget.score}');
+        print('📊 Accuracy: ${(widget.accuracy * 100).toStringAsFixed(1)}%');
+
+        // Calculate XP and new level
+        final updates = _calculateUpdates(profile);
+        
+        // Handle updates based on connection
+        if (quality == ConnectionQuality.OFFLINE) {
+          print('📱 Offline mode - Queueing updates');
+          // Queue updates for later sync
+          await _queueProfileUpdates(updates);
+          
+          // Update local state immediately
+          setState(() {
+            stars = _calculateStars(
+              widget.accuracy,
+              widget.score,
+              widget.stageData['maxScore'],
+              widget.isGameOver
+            );
+            _xpGained = updates['xpGained'];
+          });
+          
+          print('💾 Updates queued for later sync');
         } else {
-          int multiplier = widget.mode == 'Hard' ? 10 : 5;  // Hard mode gives 2x XP
-          _xpGained = widget.score * multiplier;
+          print('🌐 Online mode - Updating immediately');
+          // Existing online update logic
+          await _authService.updateUserProfile('exp', updates['newXP']);
+          await _authService.updateUserProfile('level', updates['newLevel']);
+          await _authService.updateUserProfile('expCap', updates['newExpCap']);
         }
 
-        // Calculate new XP and level
-        int newXP = profile.exp + _xpGained;
-        int newLevel = profile.level;
-        int requiredXP = profile.level * 100;  // Each level needs level * 100 XP
-
-        // Handle level up logic
-        while (newXP >= requiredXP) {
-          newXP -= requiredXP;
-          newLevel++;
-          requiredXP = newLevel * 100;  // New level requires more XP
-        }
-
-        // Update profile through AuthService
-        await _authService.updateUserProfile('exp', newXP);
-        await _authService.updateUserProfile('level', newLevel);
-        await _authService.updateUserProfile('expCap', newLevel * 100);
-
-        // Calculate stars
-        int calculatedStars = _calculateStars(
-          widget.accuracy, 
-          widget.score, 
-          widget.stageData['maxScore'],
-          widget.isGameOver
-        );
-
-        setState(() {
-          stars = calculatedStars;
-        });
-
-        // Check for badge unlocks after score and stars are updated
+        // Check badges regardless of connection
         await _checkBadgeUnlocks();
       }
     } catch (e) {
-      print('❌ Error updating score and stars: $e');
-      // Fallback star calculation if error occurs
+      print('❌ Error in score update: $e');
+      // Ensure UI still updates
       setState(() {
         stars = _calculateStars(
           widget.accuracy,
@@ -195,6 +261,52 @@ class ResultsPageState extends State<ResultsPage> {
         );
       });
     }
+  }
+
+  // Helper to calculate all updates
+  Map<String, dynamic> _calculateUpdates(UserProfile profile) {
+    // Calculate XP gained
+    int xpGained;
+    if (widget.gamemode == 'arcade') {
+      xpGained = widget.isGameOver ? 0 : 500;
+    } else {
+      int multiplier = widget.mode == 'Hard' ? 10 : 5;
+      xpGained = widget.score * multiplier;
+    }
+
+    // Calculate new stats
+    int newXP = profile.exp + xpGained;
+    int newLevel = profile.level;
+    int requiredXP = profile.level * 100;
+
+    // Handle level ups
+    while (newXP >= requiredXP) {
+      newXP -= requiredXP;
+      newLevel++;
+      requiredXP = newLevel * 100;
+    }
+
+    return {
+      'xpGained': xpGained,
+      'newXP': newXP,
+      'newLevel': newLevel,
+      'newExpCap': newLevel * 100,
+    };
+  }
+
+  // Helper to queue offline updates
+  Future<void> _queueProfileUpdates(Map<String, dynamic> updates) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<Map<String, dynamic>> pendingUpdates = 
+      jsonDecode(prefs.getString('pending_profile_updates') ?? '[]')
+        .cast<Map<String, dynamic>>();
+
+    pendingUpdates.add({
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'updates': updates,
+    });
+
+    await prefs.setString('pending_profile_updates', jsonEncode(pendingUpdates));
   }
 
   Future<void> _deleteSavedGame() async {

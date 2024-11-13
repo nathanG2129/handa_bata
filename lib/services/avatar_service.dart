@@ -107,7 +107,6 @@ class AvatarService {
             break;
           case ConnectionQuality.OFFLINE:
             // Only process from cache
-            print('📡 Offline - Only processing from cache');
             break;
         }
       } catch (e) {

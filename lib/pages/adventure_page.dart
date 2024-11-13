@@ -12,6 +12,7 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import respo
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'user_profile.dart'; // Import UserProfilePage
+import 'package:handabatamae/models/stage_models.dart';
 
 class AdventurePage extends StatefulWidget {
   final String selectedLanguage;
@@ -67,7 +68,9 @@ class AdventurePageState extends State<AdventurePage> {
       // Wait for sync to complete if needed
       await _stageService.synchronizeData();
 
+      // Fetch categories with improved caching and offline support
       final categories = await _stageService.fetchCategories(_selectedLanguage);
+      
       if (mounted) {
         setState(() {
           _categories = categories;
@@ -75,7 +78,11 @@ class AdventurePageState extends State<AdventurePage> {
           _isLoading = false;
         });
       }
+
+      // Prefetch first category's stages in background
+      _prefetchFirstCategory();
     } catch (e) {
+      print('Error initializing categories: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to load categories. Please try again.';
@@ -87,7 +94,21 @@ class AdventurePageState extends State<AdventurePage> {
 
   Future<void> _prefetchFirstCategory() async {
     if (_categories.isNotEmpty) {
-      await _stageService.prefetchCategory(_categories.first['id']);
+      // Remove await since queueStageLoad is void
+      _stageService.queueStageLoad(
+        _categories.first['id'],
+        '', // Empty stageName means fetch whole category
+        StagePriority.HIGH
+      );
+    }
+
+    // Prefetch second category with MEDIUM priority if it exists
+    if (_categories.length > 1) {
+      _stageService.queueStageLoad(
+        _categories[1]['id'],
+        '',
+        StagePriority.MEDIUM
+      );
     }
   }
 

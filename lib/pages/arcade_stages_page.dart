@@ -14,6 +14,7 @@ import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:handabatamae/models/stage_models.dart';  // Add this import
 
 // ignore: must_be_immutable
 class ArcadeStagesPage extends StatefulWidget {
@@ -45,14 +46,11 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      print('ArcadeStagesPage: Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
+      print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
-      // Add loading state
-      if (mounted) {
-        setState(() => _stages = []);
-      }
+      setState(() => _stages = []);
 
-      // Wait for sync to complete if needed
+      // Use improved StageService with sync and caching
       await _stageService.synchronizeData();
       
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
@@ -62,19 +60,40 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       
       if (mounted) {
         setState(() {
+          // Filter for arcade stages only
           _stages = stages.where((stage) => 
             stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
         });
       }
+
+      // Prefetch next stages
+      _prefetchNextStages(0);  // Start prefetching from first stage
     } catch (e) {
-      print('ArcadeStagesPage: Error fetching stages: $e');
+      print('Error fetching stages: $e');
       if (mounted) {
-        setState(() => _stages = []);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading stages: $e'))
-        );
+ 
       }
+    }
+  }
+
+  // Add prefetch for next stages
+  void _prefetchNextStages(int currentIndex) {
+    if (currentIndex + 1 < _stages.length) {
+      // Prefetch next stage with HIGH priority
+      _stageService.queueStageLoad(
+        widget.category['id']!,
+        _stages[currentIndex + 1]['stageName'],
+        StagePriority.HIGH
+      );
+    }
+    if (currentIndex + 2 < _stages.length) {
+      // Prefetch stage after next with MEDIUM priority
+      _stageService.queueStageLoad(
+        widget.category['id']!,
+        _stages[currentIndex + 2]['stageName'],
+        StagePriority.MEDIUM
+      );
     }
   }
 

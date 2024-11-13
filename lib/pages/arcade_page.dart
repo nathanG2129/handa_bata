@@ -9,6 +9,7 @@ import 'play_page.dart';
 import 'leaderboards_page.dart'; // Import LeaderboardsPage
 import 'package:handabatamae/widgets/buttons/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
+import 'package:handabatamae/models/stage_models.dart';  // Add this import
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
@@ -88,7 +89,20 @@ class ArcadePageState extends State<ArcadePage> {
 
   Future<void> _prefetchFirstCategory() async {
     if (_categories.isNotEmpty) {
-      await _stageService.prefetchCategory(_categories.first['id']);
+      _stageService.queueStageLoad(
+        _categories.first['id'],
+        '', // Empty stageName means fetch whole category
+        StagePriority.HIGH
+      );
+    }
+
+    // Prefetch second category with MEDIUM priority if it exists
+    if (_categories.length > 1) {
+      _stageService.queueStageLoad(
+        _categories[1]['id'],
+        '',
+        StagePriority.MEDIUM
+      );
     }
   }
 

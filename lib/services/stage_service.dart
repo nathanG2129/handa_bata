@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
+import 'package:handabatamae/models/stage_models.dart';
 
 class StageService {
+  static final StageService _instance = StageService._internal();
+  factory StageService() => _instance;
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final DocumentReference _stageDoc = FirebaseFirestore.instance.collection('Game').doc('Stage');
   static const String STAGES_CACHE_KEY = 'stages_cache';
@@ -14,9 +20,9 @@ class StageService {
   static const int MAX_STORED_VERSIONS = 5;
   static const int MAX_CACHE_SIZE = 100;
 
-  // Memory cache for stages and categories
-  final Map<String, Map<String, dynamic>> _stageCache = {};
-  final Map<String, List<Map<String, dynamic>>> _categoryCache = {};
+// New cache structure using CachedStage
+final Map<String, CachedStage> _stageCache = {};
+final Map<String, CachedStage> _categoryCache = {};
 
   // Stream controllers for real-time updates
   final _stageUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
@@ -24,10 +30,6 @@ class StageService {
 
   final _categoryUpdateController = StreamController<List<Map<String, dynamic>>>.broadcast();
   Stream<List<Map<String, dynamic>>> get categoryUpdates => _categoryUpdateController.stream;
-
-  // Add cache expiration
-  final Map<String, DateTime> _cacheTimes = {};
-  static const Duration CACHE_DURATION = Duration(hours: 1);
 
   // Add defaultLanguage field
   static const String defaultLanguage = 'en';
@@ -183,23 +185,12 @@ class StageService {
     return mergedData;
   }
 
-  void _manageCacheExpiry() {
-    final now = DateTime.now();
-    _cacheTimes.removeWhere((key, time) {
-      if (now.difference(time) > CACHE_DURATION) {
-        _stageCache.remove(key);
-        _categoryCache.remove(key);
-        return true;
-      }
-      return false;
-    });
-  }
-
   Future<List<Map<String, dynamic>>> fetchCategories(String language) async {
     try {
       // Check memory cache first
       if (_categoryCache.containsKey(language)) {
-        return _categoryCache[language]!;
+        final cachedData = _categoryCache[language]!.data['categories'] as List<dynamic>;
+        return List<Map<String, dynamic>>.from(cachedData);
       }
 
       // Then check local storage
@@ -207,10 +198,7 @@ class StageService {
       
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        // Get all documents in the language collection
-        QuerySnapshot snapshot = await FirebaseFirestore.instance
-            .collection('Game')
-            .doc('Stage')
+        QuerySnapshot snapshot = await _stageDoc
             .collection(language)
             .get();
 
@@ -222,8 +210,13 @@ class StageService {
           };
         }).toList();
 
-        // Cache the results
-        _categoryCache[language] = categories;
+        // Store in CachedStage
+        _categoryCache[language] = CachedStage(
+          data: {'categories': categories},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+        
         await _storeCategoriesLocally(categories, language);
         return categories;
       }
@@ -244,7 +237,8 @@ class StageService {
       // Check memory cache first
       String cacheKey = '${language}_${categoryId}_stages';
       if (_stageCache.containsKey(cacheKey)) {
-        return List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+        List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
+        return stages;
       }
 
       // Then check local storage
@@ -270,10 +264,11 @@ class StageService {
         }).toList();
 
         // Cache the results
-        _stageCache[cacheKey] = {
-          'stages': stages,
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-        };
+        _stageCache[cacheKey] = CachedStage(
+          data: {'stages': stages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
         
         await _storeStagesLocally(stages, categoryId);
         return stages;
@@ -290,8 +285,10 @@ class StageService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? categoriesJson = prefs.getString('${CATEGORIES_CACHE_KEY}_$language');
       if (categoriesJson != null) {
-        List<dynamic> categoriesList = jsonDecode(categoriesJson);
-        return categoriesList.map((category) => category as Map<String, dynamic>).toList();
+        Map<String, dynamic> data = jsonDecode(categoriesJson);
+        List<dynamic> categoriesList = data['categories'];
+        return categoriesList.map((category) => 
+          Map<String, dynamic>.from(category)).toList();
       }
     } catch (e) {
       print('Error getting categories from local: $e');
@@ -388,14 +385,19 @@ class StageService {
     try {
       String cacheKey = '${categoryId}_$stageId';
       if (_stageCache.containsKey(cacheKey)) {
-        return _stageCache[cacheKey];
+        final cachedData = _stageCache[cacheKey]!;
+        return Map<String, dynamic>.from(cachedData.data);
       }
       
       List<Map<String, dynamic>> stages = await _getStagesFromLocal(categoryId);
       var stage = stages.firstWhere((s) => s['id'] == stageId, orElse: () => {});
       
       if (stage.isNotEmpty) {
-        _stageCache[cacheKey] = stage;
+        _stageCache[cacheKey] = CachedStage(
+          data: stage,
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
         _manageCacheSize();
         return stage;
       }
@@ -415,9 +417,36 @@ class StageService {
 
   void _manageCacheSize() {
     if (_stageCache.length > MAX_CACHE_SIZE) {
-      final keysToRemove = _stageCache.keys.take(_stageCache.length - MAX_CACHE_SIZE);
-      for (var key in keysToRemove) {
-        _stageCache.remove(key);
+      // Sort entries by priority and timestamp
+      var entries = _stageCache.entries.toList()
+        ..sort((a, b) {
+          // First compare by priority
+          final priorityCompare = b.value.priority.index.compareTo(a.value.priority.index);
+          if (priorityCompare != 0) return priorityCompare;
+          
+          // Then by timestamp (older entries get removed first)
+          return a.value.timestamp.compareTo(b.value.timestamp);
+        });
+
+      // Remove lowest priority and oldest entries until we're under the limit
+      while (_stageCache.length > MAX_CACHE_SIZE) {
+        var entry = entries.removeLast();
+        _stageCache.remove(entry.key);
+      }
+    }
+
+    // Also manage category cache
+    if (_categoryCache.length > MAX_CACHE_SIZE) {
+      var entries = _categoryCache.entries.toList()
+        ..sort((a, b) {
+          final priorityCompare = b.value.priority.index.compareTo(a.value.priority.index);
+          if (priorityCompare != 0) return priorityCompare;
+          return a.value.timestamp.compareTo(b.value.timestamp);
+        });
+
+      while (_categoryCache.length > MAX_CACHE_SIZE) {
+        var entry = entries.removeLast();
+        _categoryCache.remove(entry.key);
       }
     }
   }
@@ -585,17 +614,11 @@ class StageService {
   Future<void> _storeCategoriesLocally(List<Map<String, dynamic>> categories, String language) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? existingData = prefs.getString('${CATEGORIES_CACHE_KEY}_$language');
-      if (existingData != null) {
-        await prefs.setString('${CATEGORIES_CACHE_KEY}_${language}_backup', existingData);
-      }
-      
-      String categoriesJson = jsonEncode(categories);
-      await prefs.setString('${CATEGORIES_CACHE_KEY}_$language', categoriesJson);
-      
-      await prefs.remove('${CATEGORIES_CACHE_KEY}_${language}_backup');
+      await prefs.setString(
+        '${CATEGORIES_CACHE_KEY}_$language',
+        jsonEncode({'categories': categories})
+      );
     } catch (e) {
-      await _restoreFromBackup(language);
       print('Error storing categories locally: $e');
     }
   }
@@ -671,15 +694,16 @@ class StageService {
         // Update local cache
         String cacheKey = '${language}_${categoryId}_stages';
         if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
           stages.add({
             'stageName': stageName,
             ...stageData,
           });
-          _stageCache[cacheKey] = {
-            'stages': stages,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          };
+          _stageCache[cacheKey] = CachedStage(
+            data: {'stages': stages},
+            timestamp: DateTime.now(),
+            priority: StagePriority.HIGH
+          );
         }
 
         await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
@@ -730,17 +754,18 @@ class StageService {
         // Update local cache
         String cacheKey = '${language}_${categoryId}_stages';
         if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
           int index = stages.indexWhere((s) => s['stageName'] == stageName);
           if (index != -1) {
             stages[index] = {
               ...stages[index],
               ...updatedData,
             };
-            _stageCache[cacheKey] = {
-              'stages': stages,
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            };
+            _stageCache[cacheKey] = CachedStage(
+              data: {'stages': stages},
+              timestamp: DateTime.now(),
+              priority: StagePriority.HIGH
+            );
           }
         }
 
@@ -778,12 +803,13 @@ class StageService {
         // Update local cache
         String cacheKey = '${language}_${categoryId}_stages';
         if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!['stages']);
+          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
           stages.removeWhere((s) => s['stageName'] == stageName);
-          _stageCache[cacheKey] = {
-            'stages': stages,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          };
+          _stageCache[cacheKey] = CachedStage(
+            data: {'stages': stages},
+            timestamp: DateTime.now(),
+            priority: StagePriority.HIGH
+          );
         }
 
         await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
@@ -806,27 +832,27 @@ class StageService {
     try {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        // Update category in Firestore
-        await _firestore
-            .collection('Game')
-            .doc('Stage')
+        await _stageDoc
             .collection(language)
             .doc(categoryId)
-            .update({
-          ...updatedData,
-          'lastModified': FieldValue.serverTimestamp(),
-        });
+            .update(updatedData);
 
         // Update local cache
         if (_categoryCache.containsKey(language)) {
-          List<Map<String, dynamic>> categories = List<Map<String, dynamic>>.from(_categoryCache[language]!);
+          final cachedData = _categoryCache[language]!.data;
+          List<Map<String, dynamic>> categories = List<Map<String, dynamic>>.from(cachedData['categories']);
           int index = categories.indexWhere((c) => c['id'] == categoryId);
           if (index != -1) {
             categories[index] = {
               ...categories[index],
               ...updatedData,
             };
-            _categoryCache[language] = categories;
+            // Update cache with new CachedStage
+            _categoryCache[language] = CachedStage(
+              data: {'categories': categories},
+              timestamp: DateTime.now(),
+              priority: StagePriority.HIGH
+            );
           }
         }
 
@@ -842,7 +868,6 @@ class StageService {
     } catch (e) {
       print('Error updating category: $e');
       await _logStageOperation('update_category_error', categoryId, e.toString());
-      rethrow;
     }
   }
 
@@ -856,9 +881,9 @@ class StageService {
       // Check cache first
       String cacheKey = '${language}_${categoryId}_${stageName}_questions';
       if (_stageCache.containsKey(cacheKey)) {
-        final cachedData = _stageCache[cacheKey];
-        if (cachedData != null && cachedData.containsKey('questions')) {
-          return List<Map<String, dynamic>>.from(cachedData['questions']);
+        final cachedData = _stageCache[cacheKey]!;
+        if (cachedData.data.containsKey('questions')) {
+          return List<Map<String, dynamic>>.from(cachedData.data['questions']);
         }
       }
 
@@ -868,7 +893,11 @@ class StageService {
       if (stageDoc.isNotEmpty && stageDoc.containsKey('questions')) {
         List<Map<String, dynamic>> questions = List<Map<String, dynamic>>.from(stageDoc['questions']);
         // Cache the questions
-        _stageCache[cacheKey] = {'questions': questions};
+        _stageCache[cacheKey] = CachedStage(
+          data: {'questions': questions},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
         return questions;
       }
 
@@ -887,7 +916,7 @@ class StageService {
       if (_stageCache.containsKey(cacheKey)) {
         final cachedData = _stageCache[cacheKey];
         if (cachedData != null) {
-          return Map<String, dynamic>.from(cachedData);
+          return Map<String, dynamic>.from(cachedData.data);
         }
       }
 
@@ -905,7 +934,11 @@ class StageService {
         if (doc.exists) {
           Map<String, dynamic> stageData = doc.data() as Map<String, dynamic>;
           // Cache the document
-          _stageCache[cacheKey] = stageData;
+          _stageCache[cacheKey] = CachedStage(
+            data: stageData,
+            timestamp: DateTime.now(),
+            priority: StagePriority.HIGH
+          );
           await _storeStageDocumentLocally(language, categoryId, stageName, stageData);
           return stageData;
         }
@@ -988,10 +1021,11 @@ class StageService {
       if (_stageCache.containsKey(categoryId)) return;
 
       var stages = await fetchStages(defaultLanguage, categoryId);
-      _stageCache[categoryId] = {
-        'stages': stages,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
+      _stageCache[categoryId] = CachedStage(
+        data: {'stages': stages},
+        timestamp: DateTime.now(),
+        priority: StagePriority.HIGH
+      );
     } catch (e) {
       print('Error prefetching category: $e');
     }
@@ -1065,9 +1099,6 @@ class StageService {
     try {
       // Clean up old versions
       await cleanupOldVersions();
-      
-      // Clear expired cache
-      _manageCacheExpiry();
       
       // Verify data integrity
       await _verifyDataIntegrity();
@@ -1328,11 +1359,6 @@ class StageService {
         await prefs.setInt(STAGE_REVISION_KEY, data['revision']);
       }
       
-      // Update cache times with null check
-      if (data.containsKey('id') && data['id'] != null) {
-        _cacheTimes[data['id']] = DateTime.now();
-      }
-      
       // Manage cache size
       _manageCacheSize();
       
@@ -1344,6 +1370,205 @@ class StageService {
       
       // Try to recover
       await _recoverFromError('local_storage_update', 'all', e);
+    }
+  }
+
+  // Add new connection manager
+  final ConnectionManager _connectionManager = ConnectionManager();
+
+  // Keep existing constructor
+  StageService._internal() {
+    // Add connection quality listener
+    _connectionManager.connectionQuality.listen((quality) {
+      // Handle connection quality changes
+    });
+  }
+
+  // Add after existing cache structures and before stream controllers
+  final Map<StagePriority, Queue<StageLoadRequest>> _loadQueues = {
+    StagePriority.CRITICAL: Queue<StageLoadRequest>(),
+    StagePriority.HIGH: Queue<StageLoadRequest>(),
+    StagePriority.MEDIUM: Queue<StageLoadRequest>(),
+    StagePriority.LOW: Queue<StageLoadRequest>(),
+  };
+
+  // Add queue processing methods
+  Future<void> _processQueue(StagePriority priority) async {
+    final quality = await _connectionManager.checkConnectionQuality();
+    final queue = _loadQueues[priority]!;
+    
+    // Adjust batch size based on connection quality
+    int batchSize = quality == ConnectionQuality.EXCELLENT ? 5 :
+                    quality == ConnectionQuality.GOOD ? 3 :
+                    quality == ConnectionQuality.POOR ? 1 : 0;
+                  
+    if (batchSize == 0) return; // Don't process if offline
+
+    while (queue.isNotEmpty) {
+      final request = queue.removeFirst();
+      try {
+        if (request.stageName.isNotEmpty) {
+          // Stage request
+          await _fetchStageWithPriority(
+            request.categoryId,
+            request.stageName,
+            request.priority
+          );
+        } else {
+          // Category request
+          await _fetchCategoryWithPriority(
+            request.categoryId,
+            request.priority
+          );
+        }
+      } catch (e) {
+        print('Error processing queue item: $e');
+        await _logStageOperation('queue_processing_error', request.categoryId, e.toString());
+      }
+    }
+  }
+
+  // Add method to queue stage loads
+  void queueStageLoad(String categoryId, String stageName, StagePriority priority) {
+    final request = StageLoadRequest(
+      categoryId: categoryId,
+      stageName: stageName,
+      priority: priority,
+      timestamp: DateTime.now(),
+    );
+    
+    _loadQueues[priority]!.add(request);
+    
+    // Start processing immediately for CRITICAL priority
+    if (priority == StagePriority.CRITICAL) {
+      _processQueue(priority);
+    }
+  }
+
+  Future<void> _fetchStageWithPriority(
+    String categoryId,
+    String stageName,
+    StagePriority priority
+  ) async {
+    try {
+      final quality = await _connectionManager.checkConnectionQuality();
+      final cacheKey = '${categoryId}_$stageName';
+
+      // Check cache first
+      if (_stageCache.containsKey(cacheKey)) {
+        return;
+      }
+
+      // If offline, try to get from local storage
+      if (quality == ConnectionQuality.OFFLINE) {
+        final localData = await _getFromLocal('$STAGES_CACHE_KEY_PREFIX$cacheKey');
+        if (localData.isNotEmpty) {
+          _stageCache[cacheKey] = CachedStage(
+            data: localData.first,
+            timestamp: DateTime.now(),
+            priority: StagePriority.HIGH
+          );
+          return;
+        }
+        return;
+      }
+
+      // Fetch from Firebase
+      final stageDoc = await _stageDoc
+          .collection(defaultLanguage)
+          .doc(categoryId)
+          .collection('stages')
+          .doc(stageName)
+          .get();
+
+      if (stageDoc.exists) {
+        final stageData = stageDoc.data() as Map<String, dynamic>;
+        _stageCache[cacheKey] = CachedStage(
+          data: stageData,
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+        
+        // Store locally
+        await _storeStagesLocally([stageData], categoryId);
+      }
+    } catch (e) {
+      print('Error fetching stage with priority: $e');
+      await _logStageOperation('fetch_stage_error', categoryId, e.toString());
+    }
+  }
+
+  Future<void> _fetchCategoryWithPriority(
+    String categoryId,
+    StagePriority priority
+  ) async {
+    try {
+      final quality = await _connectionManager.checkConnectionQuality();
+
+      // Check cache first
+      if (_categoryCache.containsKey(categoryId)) {
+        return;
+      }
+
+      // If offline, try to get from local storage
+      if (quality == ConnectionQuality.OFFLINE) {
+        final localData = await _getFromLocal('${CATEGORIES_CACHE_KEY}_$categoryId');
+        if (localData.isNotEmpty) {
+          _categoryCache[categoryId] = CachedStage(
+            data: {'categories': localData},
+            timestamp: DateTime.now(),
+            priority: StagePriority.HIGH
+          );
+          return;
+        }
+        return;
+      }
+
+      // Fetch from Firebase
+      final categoryDoc = await _stageDoc
+          .collection(defaultLanguage)
+          .doc(categoryId)
+          .get();
+
+      if (categoryDoc.exists) {
+        final categoryData = categoryDoc.data() as Map<String, dynamic>;
+        _categoryCache[categoryId] = CachedStage(
+          data: {'categories': [categoryData]},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+        
+        // Store locally
+        await _storeCategoriesLocally([categoryData], defaultLanguage);
+        
+        // Notify listeners
+        _categoryUpdateController.add([categoryData]);
+      }
+    } catch (e) {
+      print('Error fetching category with priority: $e');
+      await _logStageOperation('fetch_category_error', categoryId, e.toString());
+    }
+  }
+
+  // Add this method to StageService
+  Future<List<Map<String, dynamic>>> _getFromLocal(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? data = prefs.getString(key);
+      
+      if (data != null) {
+        final decoded = jsonDecode(data);
+        if (decoded is List) {
+          return List<Map<String, dynamic>>.from(decoded);
+        } else if (decoded is Map) {
+          return [Map<String, dynamic>.from(decoded)];
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting data from local storage: $e');
+      await _logStageOperation('local_storage_error', key, e.toString());
+      return [];
     }
   }
 }

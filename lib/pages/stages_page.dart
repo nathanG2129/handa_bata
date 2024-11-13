@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/game_save_data.dart';
+import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
@@ -49,12 +50,11 @@ class StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      print('StagesPage: Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
+      print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
-      if (mounted) {
-        setState(() => _stages = []);
-      }
+      setState(() => _stages = []);
 
+      // Use improved StageService with sync and caching
       await _stageService.synchronizeData();
       
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
@@ -64,20 +64,47 @@ class StagesPageState extends State<StagesPage> {
       
       if (mounted) {
         setState(() {
+          // Filter out arcade stages
           _stages = stages.where((stage) => 
             !stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
         });
       }
+
+      // Prefetch next stages
+      _prefetchNextStages(0);  // Start prefetching from first stage
     } catch (e) {
-      print('StagesPage: Error fetching stages: $e');
+      print('Error fetching stages: $e');
       if (mounted) {
-        setState(() => _stages = []);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading stages: $e'))
-        );
+        setState(() {
+        });
       }
     }
+  }
+
+  // Add prefetch for next stages
+  void _prefetchNextStages(int currentIndex) {
+    if (currentIndex + 1 < _stages.length) {
+      // Prefetch next stage with HIGH priority
+      _stageService.queueStageLoad(
+        widget.category['id']!,
+        _stages[currentIndex + 1]['stageName'],
+        StagePriority.HIGH
+      );
+    }
+    if (currentIndex + 2 < _stages.length) {
+      // Prefetch stage after next with MEDIUM priority
+      _stageService.queueStageLoad(
+        widget.category['id']!,
+        _stages[currentIndex + 2]['stageName'],
+        StagePriority.MEDIUM
+      );
+    }
+  }
+
+  // Add retry mechanism
+  Future<void> _retryLoading() async {
+    await _fetchStages();
   }
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {

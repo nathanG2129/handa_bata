@@ -65,7 +65,13 @@ class UserProfileService {
   
   factory UserProfileService() => _instance;
   
+  final BannerService _bannerService = BannerService();
+  
   UserProfileService._internal() {
+    _bannerService.setProfileUpdateCallback((field, value) {
+      updateProfileWithIntegration(field, value);
+    });
+
     _initializeService();
   }
 
@@ -819,7 +825,6 @@ class UserProfileService {
 
   // Add service instances
   BadgeService get _badgeService => BadgeService();
-  final BannerService _bannerService = BannerService();
   final AvatarService _avatarService = AvatarService();
 
   // Add stream subscriptions for coordinated updates

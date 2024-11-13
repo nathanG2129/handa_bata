@@ -33,6 +33,24 @@ enum BannerPriority {
 }
 
 class BannerService {
+  static final BannerService _instance = BannerService._internal();
+  factory BannerService() => _instance;
+
+  // Add callback for profile updates
+  void Function(String, dynamic)? _profileUpdateCallback;
+
+  // Method to set the callback
+  void setProfileUpdateCallback(void Function(String, dynamic) callback) {
+    _profileUpdateCallback = callback;
+  }
+
+  BannerService._internal() {
+    // Initialize connection manager listener
+    _connectionManager.connectionQuality.listen((quality) {
+      _syncStatusController.add(quality == ConnectionQuality.OFFLINE);
+    });
+  }
+
   final DocumentReference _bannerDoc = FirebaseFirestore.instance.collection('Game').doc('Banner');
   
   // Update cache constants
@@ -738,7 +756,7 @@ class BannerService {
       print('✅ Banner unlock state verified');
 
     } catch (e) {
-      print('❌ Error verifying unlock state: $e');
+      print(' Error verifying unlock state: $e');
       await _logBannerOperation('unlock_verify_error', -1, e.toString());
     }
   }
@@ -1411,35 +1429,22 @@ class BannerService {
       print('🎯 Checking banner unlocks for level $newLevel');
       final quality = await _connectionManager.checkConnectionQuality();
       
-      // Get current unlocked banners from profile
-      final userProfile = await _userProfileService.fetchUserProfile();
-      if (userProfile == null) return;
-
-      List<int> updatedUnlockedBanners = List<int>.from(userProfile.unlockedBanner);
+      // Get current unlocked banners
+      List<Map<String, dynamic>> banners = await fetchBanners();
+      List<int> updatedUnlockedBanners = List<int>.filled(banners.length, 0);
       
-      // Check for new unlocks
+      // Update unlocks
       if (newLevel <= MAX_BANNER_LEVEL) {
         updatedUnlockedBanners[newLevel] = 1;
         
         if (quality == ConnectionQuality.OFFLINE) {
-          // Queue unlock for later
           await _queueUnlock(PendingBannerUnlock(
             bannerId: newLevel,
             unlockedAtLevel: newLevel,
             timestamp: DateTime.now(),
           ));
-        } else {
-          // Update profile immediately
-          await _userProfileService.updateProfileWithIntegration(
-            'unlockedBanner',
-            updatedUnlockedBanners
-          );
-
-          // Start preloading new banner
-          await getBannerDetails(
-            getBannerIdForLevel(newLevel),
-            priority: BannerPriority.CRITICAL
-          );
+        } else if (_profileUpdateCallback != null) {
+          _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
         }
       }
     } catch (e) {

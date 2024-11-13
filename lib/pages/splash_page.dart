@@ -43,11 +43,11 @@ class SplashPageState extends State<SplashPage> {
       print('🚀 Starting data prefetch...');
       setState(() => _isLoading = true);
 
-      final stageService = StageService();
-      final badgeService = BadgeService();
       final bannerService = BannerService();
+      final badgeService = BadgeService();
       final avatarService = AvatarService();
       final authService = AuthService();
+      final stageService = StageService();
 
       // Check connection quality first
       print('📡 Checking connection quality...');
@@ -130,16 +130,33 @@ class SplashPageState extends State<SplashPage> {
 
       print('✅ Badge prefetch complete');
 
-      final results = await Future.wait([
-        badgeService.fetchBadges().then((badges) {
-          print('✅ Badges fetched: ${badges.length} badges');
-          return badges;
-        }),
-        bannerService.fetchBanners().then((banners) {
-          print('✅ Banners fetched: ${banners.length} banners');
-          return banners;
-        }),
-      ]);
+      // First fetch ALL banners for offline storage
+      print('📥 Prefetching all banners for offline use...');
+      final allBanners = await bannerService.fetchBanners();
+      print('✅ All banners cached: ${allBanners.length} banners');
+
+      // Then prioritize loading based on user level
+      final userLevel = userProfile?.level ?? 1;
+      print('🎯 Prioritizing banner loading...');
+      final visibleBanners = await bannerService.fetchBannersWithLevel(
+        priority: BannerPriority.HIGH,
+        userLevel: userLevel
+      );
+
+      // Load current banner with CRITICAL priority
+      if (userProfile != null && userProfile.bannerId > 0) {
+        print('🎯 Prefetching current banner...');
+        await bannerService.getBannerDetails(
+          userProfile.bannerId,
+          priority: BannerPriority.CRITICAL
+        );
+      }
+
+      print('✅ Banners fetched: ${visibleBanners.length} banners');
+
+      // Only fetch badges now
+      final badges = await badgeService.fetchBadges();
+      print('✅ Badges fetched: ${badges.length} badges');
 
       print('🎉 All resources prefetched and cached successfully!');
       print('📊 Summary:');
@@ -147,15 +164,14 @@ class SplashPageState extends State<SplashPage> {
       print('   - FIL Categories: ${filCategories.length}');
       print('   - Avatars: ${avatars.length}');
       print('   - Current user avatar cached: ${userProfile != null}');
-      print('   - Badges: ${results[0].length}');
-      print('   - Banners: ${results[1].length}');
+      print('   - Badges: ${badges.length}');
+      print('   - Banners: ${visibleBanners.length}');
 
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('❌ Error during prefetch: $e');
-      print('❌ Stack trace: $stackTrace');
       if (mounted) {
         setState(() => _isLoading = false);
       }

@@ -51,10 +51,13 @@ class UserProfileHeader extends StatefulWidget {
 class UserProfileHeaderState extends State<UserProfileHeader> {
   final UserProfileService _userProfileService = UserProfileService();
   final AvatarService _avatarService = AvatarService();
+  final BannerService _bannerService = BannerService();
   String? _cachedAvatarPath;
   late StreamSubscription<Map<int, String>> _avatarSubscription;
   late StreamSubscription<ConnectionQuality> _connectionSubscription;
   ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
+  String? _cachedBannerPath;
+  late StreamSubscription<List<Map<String, dynamic>>> _bannerSubscription;
 
   @override
   void initState() {
@@ -76,12 +79,26 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     });
 
     _getAvatarImage();
+
+    // Add banner subscription
+    _bannerSubscription = _bannerService.bannerUpdates.listen((banners) {
+      final currentBanner = banners.firstWhere(
+        (b) => b['id'] == widget.bannerId,
+        orElse: () => {'img': 'Level01.svg'},
+      );
+      if (mounted && currentBanner['img'] != _cachedBannerPath) {
+        setState(() => _cachedBannerPath = currentBanner['img']);
+      }
+    });
+
+    _getBannerImage();
   }
 
   @override
   void dispose() {
     _avatarSubscription.cancel();
     _connectionSubscription.cancel();
+    _bannerSubscription.cancel();
     super.dispose();
   }
 
@@ -229,14 +246,38 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
 
   Future<String?> _getBannerImage() async {
     try {
-      final banners = await BannerService().fetchBanners();
-      final banner = banners.firstWhere(
-        (banner) => banner['id'] == widget.bannerId,
-        orElse: () => {'img': 'Level01.svg'}, // Provide a default banner
-      );
-      return banner['img'];
+      // Adapt behavior based on connection quality
+      switch (_currentQuality) {
+        case ConnectionQuality.OFFLINE:
+          if (_cachedBannerPath != null) {
+            return _cachedBannerPath;
+          }
+          break;
+          
+        case ConnectionQuality.POOR:
+          if (_cachedBannerPath != null) {
+            // Fetch in background but return cached immediately
+            _bannerService.getBannerDetails(
+              widget.bannerId,
+              priority: BannerPriority.CRITICAL
+            );
+            return _cachedBannerPath;
+          }
+          break;
+          
+        default:
+          final banner = await _bannerService.getBannerDetails(
+            widget.bannerId,
+            priority: BannerPriority.CRITICAL
+          );
+          if (mounted && banner != null && banner['img'] != _cachedBannerPath) {
+            setState(() => _cachedBannerPath = banner['img']);
+          }
+      }
+      return _cachedBannerPath ?? 'Level01.svg';
     } catch (e) {
-      return 'Level01.svg';
+      print('Error getting banner image: $e');
+      return _cachedBannerPath ?? 'Level01.svg';
     }
   }
 
@@ -246,6 +287,10 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     // Check if avatar changed
     if (oldWidget.avatarId != widget.avatarId) {
       _getAvatarImage();
+    }
+    // Check if banner changed
+    if (oldWidget.bannerId != widget.bannerId) {
+      _getBannerImage();
     }
   }
 

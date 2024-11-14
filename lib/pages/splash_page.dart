@@ -2,8 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
@@ -41,7 +43,7 @@ class SplashPageState extends State<SplashPage> {
 
   Future<void> _prefetchData() async {
     try {
-      print('🚀 Starting data prefetch...');
+      print('🚀 Starting data prefetch check...');
       setState(() => _isLoading = true);
 
       final bannerService = BannerService();
@@ -54,124 +56,134 @@ class SplashPageState extends State<SplashPage> {
       print('🔧 Initializing UserProfileService...');
       UserProfileService.initialize(bannerService);
 
+      // Check if we already have cached data
+      final hasLocalBadges = await badgeService.getLocalBadges().then((b) => b.isNotEmpty);
+      final hasLocalBanners = await bannerService.getLocalBanners().then((b) => b.isNotEmpty);
+      final hasLocalStages = await stageService.getStagesFromLocal('all').then((s) => s.isNotEmpty);
+      final hasLocalAvatars = await avatarService.fetchAvatars().then((a) => a.isNotEmpty);
+
+      if (hasLocalStages && hasLocalBadges && hasLocalBanners && hasLocalAvatars) {
+        print('✅ Found existing cached data, skipping full prefetch');
+        
+        // Just fetch critical user-specific data if needed
+        final userProfile = await authService.getUserProfile();
+        if (userProfile != null) {
+          // Only fetch user's current items with CRITICAL priority
+          await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
+          if (userProfile.bannerId > 0) {
+            await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
+          }
+          await badgeService.fetchBadgesWithPriority(
+            'Quake Quest',
+            userProfile.badgeShowcase,
+            priority: BadgePriority.CURRENT_QUEST
+          );
+        }
+
+        // Queue background syncs for updates
+        stageService.triggerBackgroundSync();
+        badgeService.triggerBackgroundSync();
+        bannerService.triggerBackgroundSync();
+        avatarService.triggerBackgroundSync();
+        
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // If we don't have complete cached data, proceed with full prefetch
+      print('📥 No complete cached data found, starting full prefetch...');
+
       // Check connection quality first
       print('📡 Checking connection quality...');
-      await avatarService.connectionQuality.first;  // Wait for first connection check
+      final connectionQuality = await avatarService.connectionQuality.first;
 
       // Priority load current user's avatar
       print('👤 Checking user profile...');
       final userProfile = await authService.getUserProfile();
-      if (userProfile != null) {
-        print('🎯 Prefetching current user avatar...');
-        await avatarService.getAvatarDetails(
-          userProfile.avatarId,
-          priority: LoadPriority.CRITICAL
-        );
-      }
-
-      print('📥 Fetching all resources...');
       
-      // Keep existing stage prefetches
+      // Fetch and store ALL categories
+      print('📥 Fetching all categories...');
       final enCategories = await stageService.fetchCategories('en');
-      print('✅ EN Categories fetched: ${enCategories.length} categories');
-      
       final filCategories = await stageService.fetchCategories('fil');
-      print('✅ FIL Categories fetched: ${filCategories.length} categories');
+      print('✅ Categories fetched - EN: ${enCategories.length}, FIL: ${filCategories.length}');
 
-      // Keep stage fetches for categories
-      print('📥 Fetching stages for all categories...');
-      for (var category in enCategories) {
-        print('📥 Fetching EN stages for category: ${category['id']}');
-        final stages = await stageService.fetchStages('en', category['id']);
-        print('✅ EN Stages fetched for ${category['name']}: ${stages.length} stages');
+      // Adjust fetch strategy based on connection quality
+      if (connectionQuality == ConnectionQuality.OFFLINE) {
+        print('📱 Offline mode: Using cached data only');
+        // Only load from cache, no background fetching
+      } else if (connectionQuality == ConnectionQuality.POOR) {
+        print('📡 Poor connection: Loading essential data only');
+        // Load only critical data
+        if (userProfile != null) {
+          await stageService.fetchStages('en', enCategories.first['id']);
+          await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
+          await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.CURRENT_QUEST);
+          if (userProfile.bannerId > 0) {
+            await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
+          }
+        }
+      } else {
+        print('🚀 Good connection: Loading all data');
+        // Load everything with prioritization
+        print('📥 Fetching stages for all categories...');
+        
+        if (enCategories.isNotEmpty) {
+          // Fetch first category immediately with HIGH priority
+          final firstCategory = enCategories.first;
+          await stageService.fetchStages('en', firstCategory['id']);
+
+          // Queue remaining categories with MEDIUM priority
+          for (var category in enCategories.skip(1)) {
+            stageService.queueStageLoad(
+              category['id'],
+              'all',  // Load all stages for this category
+              StagePriority.MEDIUM
+            );
+          }
+
+          // Queue Filipino categories with MEDIUM priority
+          for (var category in filCategories) {
+            stageService.queueStageLoad(
+              category['id'],
+              'all',
+              StagePriority.MEDIUM
+            );
+          }
+        }
+
+        // Fetch ALL avatars
+        print('📥 Fetching all avatars...');
+        final avatars = await avatarService.fetchAvatars();
+        print('✅ Avatars cached: ${avatars.length}');
+
+        if (userProfile != null) {
+          await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
+        }
+
+        // Fetch ALL badges
+        print('📥 Fetching all badges...');
+        if (userProfile != null) {
+          await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.CURRENT_QUEST);
+          await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.SHOWCASE);
+          await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.MEDIUM);
+        } else {
+          await badgeService.fetchBadges();
+        }
+
+        // Fetch ALL banners
+        print('📥 Fetching all banners...');
+        if (userProfile != null) {
+          if (userProfile.bannerId > 0) {
+            await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
+          }
+          await bannerService.fetchBannersWithLevel(priority: BannerPriority.MEDIUM, userLevel: userProfile.level);
+        } else {
+          await bannerService.fetchBanners();
+        }
       }
 
-      for (var category in filCategories) {
-        print('📥 Fetching FIL stages for category: ${category['id']}');
-        final stages = await stageService.fetchStages('fil', category['id']);
-        print('✅ FIL Stages fetched for ${category['name']}: ${stages.length} stages');
-      }
-
-      // Load visible avatars first with HIGH priority
-      print('📥 Fetching initial avatars...');
-      final avatars = await avatarService.fetchAvatars();
-      print('✅ Avatars fetched and cached: ${avatars.length} avatars');
-
-      // Then trigger background sync for remaining avatars
-      print('📥 Background loading remaining avatars...');
-      avatarService.triggerBackgroundSync();
-
-      // Verify cache integrity
-      print('🔍 Verifying avatar cache integrity...');
-      await avatarService.performMaintenance();
-
-      // Keep existing badge and banner prefetches
-      print('📥 Fetching badges...');
-      // Use existing badgeService instance
+      print('🎉 All data prefetched based on connection quality!');
       
-      // First fetch user profile to get current quest and showcase
-      // Use existing userProfile instance
-      if (userProfile != null) {
-        // 1. Load current quest badges with CRITICAL priority
-        print('🎯 Prefetching current quest badges...');
-        await badgeService.fetchBadgesWithPriority(
-          'Quake Quest', // Default to first quest since currentQuest isn't available
-          userProfile.badgeShowcase,
-          priority: BadgePriority.CURRENT_QUEST
-        );
-
-        // 2. Load showcase badges with HIGH priority
-        print('🎯 Prefetching showcase badges...');
-        await badgeService.fetchBadgesWithPriority(
-          'Quake Quest',
-          userProfile.badgeShowcase,
-          priority: BadgePriority.SHOWCASE
-        );
-
-        // 3. Trigger background loading for other badges
-        print('📥 Background loading remaining badges...');
-        badgeService.triggerBackgroundSync();
-      }
-
-      print('✅ Badge prefetch complete');
-
-      // First fetch ALL banners for offline storage
-      print('📥 Prefetching all banners for offline use...');
-      final allBanners = await bannerService.fetchBanners();
-      print('✅ All banners cached: ${allBanners.length} banners');
-
-      // Then prioritize loading based on user level
-      final userLevel = userProfile?.level ?? 1;
-      print('🎯 Prioritizing banner loading...');
-      final visibleBanners = await bannerService.fetchBannersWithLevel(
-        priority: BannerPriority.HIGH,
-        userLevel: userLevel
-      );
-
-      // Load current banner with CRITICAL priority
-      if (userProfile != null && userProfile.bannerId > 0) {
-        print('🎯 Prefetching current banner...');
-        await bannerService.getBannerDetails(
-          userProfile.bannerId,
-          priority: BannerPriority.CRITICAL
-        );
-      }
-
-      print('✅ Banners fetched: ${visibleBanners.length} banners');
-
-      // Only fetch badges now
-      final badges = await badgeService.fetchBadges();
-      print('✅ Badges fetched: ${badges.length} badges');
-
-      print('🎉 All resources prefetched and cached successfully!');
-      print('📊 Summary:');
-      print('   - EN Categories: ${enCategories.length}');
-      print('   - FIL Categories: ${filCategories.length}');
-      print('   - Avatars: ${avatars.length}');
-      print('   - Current user avatar cached: ${userProfile != null}');
-      print('   - Badges: ${badges.length}');
-      print('   - Banners: ${visibleBanners.length}');
-
       if (mounted) {
         setState(() => _isLoading = false);
       }

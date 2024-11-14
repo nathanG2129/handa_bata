@@ -242,7 +242,7 @@ final Map<String, CachedStage> _categoryCache = {};
       }
 
       // Then check local storage
-      List<Map<String, dynamic>> localStages = await _getStagesFromLocal(categoryId);
+      List<Map<String, dynamic>> localStages = await getStagesFromLocal(categoryId);
       
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
@@ -279,6 +279,8 @@ final Map<String, CachedStage> _categoryCache = {};
       return await _getStagesFromLocal(categoryId);
     }
   }
+
+  Future<List<Map<String, dynamic>>> getStagesFromLocal(String categoryId) => _getStagesFromLocal(categoryId);
 
   Future<List<Map<String, dynamic>>> _getCategoriesFromLocal(String language) async {
     try {
@@ -1569,6 +1571,63 @@ final Map<String, CachedStage> _categoryCache = {};
       print('Error getting data from local storage: $e');
       await _logStageOperation('local_storage_error', key, e.toString());
       return [];
+    }
+  }
+
+  // Add these properties at the top of the class
+  Timer? _syncDebounceTimer;
+  final StreamController<bool> _syncStatusController = StreamController<bool>.broadcast();
+  Stream<bool> get syncStatus => _syncStatusController.stream;
+
+  // Add this method
+  void triggerBackgroundSync() {
+    _syncDebounceTimer?.cancel();
+    _syncDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _syncWithServer();
+    });
+  }
+
+  // Add this helper method
+  void _setSyncState(bool syncing) {
+    _isSyncing = syncing;
+    _syncStatusController.add(syncing);
+  }
+
+  // Add the sync method
+  Future<void> _syncWithServer() async {
+    if (_isSyncing) {
+      print('🔄 Stage sync already in progress, skipping...');
+      return;
+    }
+
+    try {
+      print('🔄 Starting stage sync process');
+      _setSyncState(true);
+
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        // Sync categories by re-fetching them
+        print('📥 Syncing categories...');
+        final enCategories = await fetchCategories('en');
+        final filCategories = await fetchCategories('fil');
+        
+        // Sync stages for each category using existing fetchStages method
+        print('📥 Syncing stages for all categories...');
+        for (var category in enCategories) {
+          await fetchStages('en', category['id']);
+        }
+        
+        for (var category in filCategories) {
+          await fetchStages('fil', category['id']);
+        }
+
+        print('✅ Stage sync completed');
+      }
+    } catch (e) {
+      print('❌ Error in stage sync: $e');
+    } finally {
+      print('🏁 Stage sync process completed');
+      _setSyncState(false);
     }
   }
 }

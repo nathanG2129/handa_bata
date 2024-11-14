@@ -779,14 +779,13 @@ class AvatarService {
       print('🔄 Starting avatar sync process');
       _setSyncState(true);
 
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
+      final quality = await _connectionManager.checkConnectionQuality();
+      if (quality == ConnectionQuality.OFFLINE) {
         print('📡 No internet connection, aborting avatar sync');
         return;
       }
 
       print('📥 Fetching avatar data from server');
-      // Add timeout to prevent hanging
       DocumentSnapshot snapshot = await _avatarDoc.get()
           .timeout(SYNC_TIMEOUT);
 

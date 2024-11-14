@@ -57,6 +57,9 @@ class AuthService {
         syncProfiles();
       }
     });
+  }
+
+  void startListening() {
     _listenToFirestoreChanges();
   }
 
@@ -472,21 +475,25 @@ class AuthService {
           (docSnapshot) async {
             if (!docSnapshot.exists) return;
 
-            // Check if we have local changes pending sync
-            bool hasLocalChanges = await hasLocalUserProfile();
-            if (hasLocalChanges) {
-              // Don't overwrite local changes
+            // Get local profile first
+            UserProfile? localProfile = await getLocalUserProfile();
+            if (localProfile == null) {
+              UserProfile userProfile = UserProfile.fromMap(docSnapshot.data() as Map<String, dynamic>);
+              await saveUserProfileLocally(userProfile);
               return;
             }
 
-            var connectivityResult = await (Connectivity().checkConnectivity());
-            if (connectivityResult != ConnectivityResult.none) {
-              UserProfile userProfile = UserProfile.fromMap(docSnapshot.data() as Map<String, dynamic>);
-              await saveUserProfileLocally(userProfile);
+            // Calculate total XP for both profiles
+            UserProfile serverProfile = UserProfile.fromMap(docSnapshot.data() as Map<String, dynamic>);
+            int localTotalXP = ((localProfile.level - 1) * 100) + localProfile.exp;
+            int serverTotalXP = ((serverProfile.level - 1) * 100) + serverProfile.exp;
+
+            // Only update if server has higher XP
+            if (serverTotalXP > localTotalXP) {
+              await saveUserProfileLocally(serverProfile);
             }
           },
-          onError: (error) {
-          },
+          onError: (e) => print('Error in profile listener: $e'),
         ),
       );
 
@@ -499,7 +506,7 @@ class AuthService {
             .snapshots()
             .listen(
           (QuerySnapshot snapshot) async {
-            var connectivityResult = await (Connectivity().checkConnectivity());
+            var connectivityResult = await Connectivity().checkConnectivity();
             if (connectivityResult != ConnectivityResult.none) {
               for (var change in snapshot.docChanges) {
                 if (change.type == DocumentChangeType.modified) {
@@ -517,15 +524,7 @@ class AuthService {
         ),
       );
     } catch (e) {
-    }
-  }
-
-  Future<void> _syncFirestoreToLocal(DocumentSnapshot doc) async {
-    String userId = doc.id;
-    DocumentSnapshot userProfileDoc = await _firestore.collection('User').doc(userId).collection('ProfileData').doc(userId).get();
-    if (userProfileDoc.exists) {
-      UserProfile userProfile = UserProfile.fromMap(userProfileDoc.data() as Map<String, dynamic>);
-      await saveUserProfileLocally(userProfile);
+      print('Error in _listenToFirestoreChanges: $e');
     }
   }
 
@@ -1038,17 +1037,7 @@ class AuthService {
     if (connectivityResult != ConnectivityResult.none) {
       User? currentUser = _auth.currentUser;
       if (currentUser != null) {
-        String? role = await getUserRole(currentUser.uid);
-        
-        // Sync profile data
-        if (role == 'guest') {
-          await syncProfile('guest');
-        } else {
-          await syncProfile('user');
-        }
 
-        // Sync GameSaveData
-        // First get local data for each category
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
         for (var category in categories) {
           String categoryId = category['id'];

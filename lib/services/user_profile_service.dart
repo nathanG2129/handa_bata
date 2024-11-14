@@ -440,9 +440,25 @@ class UserProfileService {
             .listen(
           (snapshot) async {
             if (snapshot.exists) {
-              UserProfile profile = UserProfile.fromMap(snapshot.data()!);
-              _updateCache(user.uid, profile);
-              _profileUpdateController.add(profile);
+              // Get local profile first
+              UserProfile? localProfile = await _getProfileFromLocal(user.uid);
+              UserProfile serverProfile = UserProfile.fromMap(snapshot.data()!);
+
+              if (localProfile != null) {
+                // Calculate total XP for both profiles
+                int serverTotalXP = (serverProfile.level - 1) * 100 + serverProfile.exp;
+                int localTotalXP = (localProfile.level - 1) * 100 + localProfile.exp;
+                
+                // Take the higher XP value
+                if (localTotalXP >= serverTotalXP) {
+                  // Keep local values if they're higher
+                  return;
+                }
+              }
+
+              // Only update if we don't have local data or server data is higher
+              _updateCache(user.uid, serverProfile);
+              _profileUpdateController.add(serverProfile);
             }
           },
           onError: (e) => _logOperation('listener_error', e.toString()),
@@ -668,8 +684,6 @@ class UserProfileService {
   
   // Batch operation queue
   final List<Map<String, dynamic>> _batchQueue = [];
-  Timer? _batchTimer;
-
   // Add batch update method
   Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
     try {
@@ -697,6 +711,57 @@ class UserProfileService {
         }
       }
 
+      // Get current profile
+      UserProfile? currentProfile = await fetchUserProfile();
+      if (currentProfile == null) return;
+
+      // Handle XP updates
+      bool isXPUpdate = updates.containsKey('exp') || 
+                       updates.containsKey('level') || 
+                       updates.containsKey('expCap');
+
+      if (isXPUpdate) {
+        // Get current total XP
+        int currentTotalXP = (currentProfile.level - 1) * 100 + currentProfile.exp;
+        print('Current total XP: $currentTotalXP');
+
+        // Get the XP gain from updates
+        int xpGain = updates['exp'] ?? 0;
+        print('XP gain: $xpGain');
+
+        // Add the gain to current total
+        int newTotalXP = currentTotalXP + xpGain;
+        print('New total XP: $newTotalXP');
+
+        // Calculate new level and exp
+        int finalLevel = 1;
+        int remainingXP = newTotalXP;
+        int levelRequirement = 100;  // First level requires 100 XP
+
+        // Keep leveling up while we have enough XP
+        while (remainingXP >= levelRequirement) {
+          remainingXP -= levelRequirement;
+          finalLevel++;
+          levelRequirement = finalLevel * 100;  // Next level requires level * 100 XP
+        }
+
+        int finalExp = remainingXP;
+        int finalExpCap = finalLevel * 100;  // Cap is based on current level
+
+        // Update the updates map
+        updates = {
+          'exp': finalExp,
+          'level': finalLevel,
+          'expCap': finalExpCap,
+        };
+      }
+
+      // Apply updates locally
+      UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
+      await _saveProfileLocally(userId, updatedProfile);
+      _updateCache(userId, updatedProfile);
+      _profileUpdateController.add(updatedProfile);
+
       // Add to batch queue
       _batchQueue.add({
         'userId': userId,
@@ -704,23 +769,24 @@ class UserProfileService {
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       });
 
-      // Process batch if queue is full or schedule processing
-      if (_batchQueue.length >= BATCH_SIZE) {
-        await _processBatchQueue();
-      } else {
-        _scheduleBatchProcessing();
+      // Update Firestore if online
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        await _retryOperation(() async {
+          await _firestore
+              .collection('User')
+              .doc(userId)
+              .collection('ProfileData')
+              .doc(userId)
+              .update(updates);
+        });
       }
-    } catch (e) {
-      await _logOperation('batch_update_error', e.toString());
-      throw Exception('Failed to queue batch update: $e');
-    }
-  }
 
-  void _scheduleBatchProcessing() {
-    _batchTimer?.cancel();
-    _batchTimer = Timer(const Duration(milliseconds: 500), () async {
-      await _processBatchQueue();
-    });
+    } catch (e) {
+      print('❌ Error in batchUpdateProfile: $e');
+      await _logOperation('batch_update_error', e.toString());
+      throw Exception('Failed to update profile: $e');
+    }
   }
 
   Future<void> _processBatchQueue() async {
@@ -729,11 +795,58 @@ class UserProfileService {
     try {
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
-        // Store batch for later processing
         await _storeBatchLocally();
         return;
       }
 
+      // Get the current server state
+      User? user = _auth.currentUser;
+      if (user == null) return;
+
+      // Get both server and local states
+      DocumentSnapshot doc = await _firestore
+          .collection('User')
+          .doc(user.uid)
+          .collection('ProfileData')
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) return;
+
+      UserProfile? localProfile = await fetchUserProfile();
+      if (localProfile == null) return;
+
+      UserProfile serverProfile = UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+
+      // Merge exp/level changes
+      if (localProfile.exp != serverProfile.exp || 
+          localProfile.level != serverProfile.level || 
+          localProfile.expCap != serverProfile.expCap) {
+        
+        // Calculate total XP for both profiles
+        int serverTotalXP = (serverProfile.level - 1) * 100 + serverProfile.exp;
+        int localTotalXP = (localProfile.level - 1) * 100 + localProfile.exp;
+        
+        // Take the higher XP value
+        int finalTotalXP = localTotalXP > serverTotalXP ? localTotalXP : serverTotalXP;
+        
+        // Recalculate level and exp
+        int finalLevel = (finalTotalXP ~/ 100) + 1;
+        int finalExp = finalTotalXP % 100;
+        int finalExpCap = finalLevel * 100;
+
+        _batchQueue.add({
+          'userId': user.uid,
+          'updates': {
+            'exp': finalExp,
+            'level': finalLevel,
+            'expCap': finalExpCap,
+          },
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+      }
+
+      // Process all queued updates
       WriteBatch batch = _firestore.batch();
       Map<String, UserProfile> updatedProfiles = {};
 
@@ -752,15 +865,13 @@ class UserProfileService {
           'lastUpdated': FieldValue.serverTimestamp(),
         });
 
-        UserProfile? currentProfile = _profileCache[userId];
-        if (currentProfile != null) {
-          UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
-          updatedProfiles[userId] = updatedProfile;
-        }
+        UserProfile updatedProfile = localProfile.copyWith(updates: updates);
+        updatedProfiles[userId] = updatedProfile;
       }
 
       await batch.commit();
 
+      // Update local storage and cache
       for (var entry in updatedProfiles.entries) {
         await _saveProfileLocally(entry.key, entry.value);
         _updateCache(entry.key, entry.value);
@@ -768,7 +879,9 @@ class UserProfileService {
       }
 
       _batchQueue.clear();
+      
     } catch (e) {
+      print('❌ Error processing batch queue: $e');
       await _logOperation('batch_processing_error', e.toString());
     }
   }
@@ -813,22 +926,6 @@ class UserProfileService {
       await prefs.setString('pending_batch_updates', batchJson);
     } catch (e) {
       await _logOperation('store_batch_error', e.toString());
-    }
-  }
-
-  // Add method to process stored batch updates
-  Future<void> _processStoredBatchUpdates() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? batchJson = prefs.getString('pending_batch_updates');
-      if (batchJson != null) {
-        List<dynamic> storedBatch = jsonDecode(batchJson);
-        _batchQueue.addAll(storedBatch.cast<Map<String, dynamic>>());
-        await _processBatchQueue();
-        await prefs.remove('pending_batch_updates');
-      }
-    } catch (e) {
-      await _logOperation('process_stored_batch_error', e.toString());
     }
   }
 

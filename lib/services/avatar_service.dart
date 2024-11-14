@@ -83,7 +83,27 @@ class AvatarService {
   final ConnectionManager _connectionManager = ConnectionManager();
   final StreamController<ConnectionQuality> _connectionQualityController = 
       StreamController<ConnectionQuality>.broadcast();
-  Stream<ConnectionQuality> get connectionQuality => _connectionQualityController.stream;
+  Stream<ConnectionQuality> get connectionQuality async* {
+    yield await checkConnectionQuality();
+    await for (var result in Connectivity().onConnectivityChanged) {
+      switch (result) {
+        case ConnectivityResult.none:
+          yield ConnectionQuality.OFFLINE;
+        case ConnectivityResult.mobile:
+          yield ConnectionQuality.GOOD;
+        case ConnectivityResult.wifi:
+          yield ConnectionQuality.EXCELLENT;
+        case ConnectivityResult.bluetooth:
+          yield ConnectionQuality.POOR;  // Consider Bluetooth as poor connection
+        case ConnectivityResult.ethernet:
+          yield ConnectionQuality.EXCELLENT;
+        case ConnectivityResult.vpn:
+          yield ConnectionQuality.GOOD;
+        case ConnectivityResult.other:
+          yield ConnectionQuality.GOOD;
+      }
+    }
+  }
 
   Future<void> _startQueueProcessing() async {
     while (true) {
@@ -829,5 +849,32 @@ class AvatarService {
   // Add this public method
   void triggerBackgroundSync() {
     _debouncedSync();
+  }
+
+  Future<ConnectionQuality> checkConnectionQuality() async {
+    try {
+      var result = await Connectivity().checkConnectivity()
+          .timeout(const Duration(seconds: 2));
+          
+      switch (result) {
+        case ConnectivityResult.none:
+          return ConnectionQuality.OFFLINE;
+        case ConnectivityResult.mobile:
+          return ConnectionQuality.GOOD;
+        case ConnectivityResult.wifi:
+          return ConnectionQuality.EXCELLENT;
+        case ConnectivityResult.bluetooth:
+          return ConnectionQuality.POOR;  // Consider Bluetooth as poor connection
+        case ConnectivityResult.ethernet:
+          return ConnectionQuality.EXCELLENT;
+        case ConnectivityResult.vpn:
+          return ConnectionQuality.GOOD;
+        case ConnectivityResult.other:
+          return ConnectionQuality.GOOD;
+      }
+    } catch (e) {
+      print('❌ Error checking connection: $e');
+      return ConnectionQuality.GOOD; // Default to GOOD on error
+    }
   }
 }

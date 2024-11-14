@@ -52,23 +52,23 @@ class SplashPageState extends State<SplashPage> {
       final authService = AuthService();
       final stageService = StageService();
 
-      // Initialize UserProfileService with BannerService
       print('🔧 Initializing UserProfileService...');
       UserProfileService.initialize(bannerService);
 
-      // Check if we already have cached data
+      // Check if we already have cached game assets - look at raw cache instead
       final hasLocalBadges = await badgeService.getLocalBadges().then((b) => b.isNotEmpty);
       final hasLocalBanners = await bannerService.getLocalBanners().then((b) => b.isNotEmpty);
-      final hasLocalStages = await stageService.getStagesFromLocal('all').then((s) => s.isNotEmpty);
+      final hasLocalStages = await stageService.getStagesFromLocal('raw').then((s) => s.isNotEmpty);
       final hasLocalAvatars = await avatarService.fetchAvatars().then((a) => a.isNotEmpty);
 
       if (hasLocalStages && hasLocalBadges && hasLocalBanners && hasLocalAvatars) {
-        print('✅ Found existing cached data, skipping full prefetch');
+        print('✅ Found existing cached game assets, skipping full prefetch');
         
-        // Just fetch critical user-specific data if needed
+        // Just fetch user-specific data
         final userProfile = await authService.getUserProfile();
         if (userProfile != null) {
-          // Only fetch user's current items with CRITICAL priority
+          print('👤 Loading user-specific data only');
+          // Only fetch user's current items
           await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
           if (userProfile.bannerId > 0) {
             await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
@@ -80,7 +80,7 @@ class SplashPageState extends State<SplashPage> {
           );
         }
 
-        // Queue background syncs for updates
+        // Queue background syncs to check for any asset updates
         stageService.triggerBackgroundSync();
         badgeService.triggerBackgroundSync();
         bannerService.triggerBackgroundSync();
@@ -90,12 +90,12 @@ class SplashPageState extends State<SplashPage> {
         return;
       }
 
-      // If we don't have complete cached data, proceed with full prefetch
-      print('📥 No complete cached data found, starting full prefetch...');
+      // If we're here, we need to fetch game assets
+      print('📥 No complete cached assets, starting full prefetch...');
 
       // Check connection quality first
       print('📡 Checking connection quality...');
-      final connectionQuality = await avatarService.connectionQuality.first;
+      final connectionQuality = await avatarService.checkConnectionQuality();
 
       // Priority load current user's avatar
       print('👤 Checking user profile...');

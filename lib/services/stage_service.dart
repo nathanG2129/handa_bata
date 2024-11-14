@@ -229,11 +229,6 @@ final Map<String, CachedStage> _categoryCache = {};
 
   Future<List<Map<String, dynamic>>> fetchStages(String language, String categoryId) async {
     try {
-      // Check if sync is needed
-      if (await _shouldSync()) {
-        await synchronizeData();
-      }
-
       // Check memory cache first
       String cacheKey = '${language}_${categoryId}_stages';
       if (_stageCache.containsKey(cacheKey)) {
@@ -241,8 +236,8 @@ final Map<String, CachedStage> _categoryCache = {};
         return stages;
       }
 
-      // Then check local storage
-      List<Map<String, dynamic>> localStages = await getStagesFromLocal(categoryId);
+      // Then check local storage using the new method
+      List<Map<String, dynamic>> localStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
       
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
@@ -276,11 +271,54 @@ final Map<String, CachedStage> _categoryCache = {};
       return localStages;
     } catch (e) {
       print('Error in fetchStages: $e');
-      return await _getStagesFromLocal(categoryId);
+      return await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
     }
   }
 
-  Future<List<Map<String, dynamic>>> getStagesFromLocal(String categoryId) => _getStagesFromLocal(categoryId);
+  Future<List<Map<String, dynamic>>> getStagesFromLocal(String mode) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      if (mode == 'raw') {
+        // Get ALL raw stage data
+        final allStages = <Map<String, dynamic>>[];
+        
+        // Get all keys that start with STAGES_CACHE_KEY
+        final stageKeys = prefs.getKeys()
+            .where((key) => key.startsWith(STAGES_CACHE_KEY))
+            .toList();
+        
+        for (var key in stageKeys) {
+          String? stagesJson = prefs.getString(key);
+          if (stagesJson != null) {
+            List<dynamic> stagesList = jsonDecode(stagesJson);
+            allStages.addAll(
+              stagesList.map((stage) => stage as Map<String, dynamic>)
+            );
+          }
+        }
+        
+        if (allStages.isNotEmpty) {
+          print('📦 Found ${allStages.length} stages in raw cache');
+          return allStages;
+        }
+      } else {
+        // Get category-specific stages or game save data
+        String key = mode.startsWith('game_save_data_') 
+            ? mode 
+            : '${STAGES_CACHE_KEY}_$mode';
+            
+        String? dataJson = prefs.getString(key);
+        if (dataJson != null) {
+          List<dynamic> dataList = jsonDecode(dataJson);
+          return dataList.map((data) => data as Map<String, dynamic>).toList();
+        }
+      }
+    } catch (e) {
+      print('❌ Error getting stages from local: $e');
+    }
+    return [];
+  }
 
   Future<List<Map<String, dynamic>>> _getCategoriesFromLocal(String language) async {
     try {
@@ -557,21 +595,19 @@ final Map<String, CachedStage> _categoryCache = {};
   Future<void> _storeStagesLocally(List<Map<String, dynamic>> stages, String categoryId) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? existingData = prefs.getString('${STAGES_CACHE_KEY}_$categoryId');
+      String key = '${STAGES_CACHE_KEY}_$categoryId';
+      
+      // Create backup
+      String? existingData = prefs.getString(key);
       if (existingData != null) {
-        await prefs.setString('${STAGES_CACHE_KEY}_${categoryId}_backup', existingData);
+        await prefs.setString('${key}_backup', existingData);
       }
       
-      // Filter out null values and sanitize the data
-      List<Map<String, dynamic>> sanitizedStages = stages
-        .map((stage) => _sanitizeMap(stage))
-        .toList();
+      String stagesJson = jsonEncode(stages);
+      await prefs.setString(key, stagesJson);
       
-      if (sanitizedStages.isNotEmpty) {
-        String stagesJson = jsonEncode(sanitizedStages);
-        await prefs.setString('${STAGES_CACHE_KEY}_$categoryId', stagesJson);
-        await prefs.remove('${STAGES_CACHE_KEY}_${categoryId}_backup');
-      }
+      // Clear backup after successful save
+      await prefs.remove('${key}_backup');
     } catch (e) {
       print('Error storing stages locally: $e');
       await _restoreFromBackup(categoryId);

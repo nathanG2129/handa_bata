@@ -312,11 +312,11 @@ class GameSaveData {
   factory GameSaveData.initial(int stageCount) {
     return GameSaveData(
       stageData: {},
-      normalStageStars: List<int>.filled(stageCount, 0),
-      hardStageStars: List<int>.filled(stageCount, 0),
-      unlockedNormalStages: List.generate(stageCount, (i) => i == 0),
-      unlockedHardStages: List.generate(stageCount, (i) => i == 0),
-      hasSeenPrerequisite: List<bool>.filled(stageCount, false),
+      normalStageStars: List<int>.filled(stageCount + 1, 0),
+      hardStageStars: List<int>.filled(stageCount + 1, 0),
+      unlockedNormalStages: List.generate(stageCount + 1, (i) => i == 0),
+      unlockedHardStages: List.generate(stageCount + 1, (i) => i == 0),
+      hasSeenPrerequisite: List<bool>.filled(stageCount + 1, false),
     );
   }
 
@@ -326,7 +326,7 @@ class GameSaveData {
 
   // Helper to get arcade key format
   static String getArcadeKey(String categoryId) => 
-    '${categoryId}_Arcade';
+    '${categoryId}Arcade';
 
   // Get stage data with auto-creation if missing
   StageDataEntry getOrCreateStageData(String key, bool isArcade, int maxScore) {
@@ -409,9 +409,21 @@ class GameSaveData {
   /// Checks if a stage can be unlocked based on previous stage completion
   bool canUnlockStage(int index, String mode) {
     try {
+      // Don't try to unlock beyond total stages
+      if (index >= unlockedNormalStages.length) return false;
+      
       if (!isValidStageIndex(index)) return false;
       if (index == 0) return true;
       
+      // For arcade stage (last index), check if all previous stages are unlocked
+      if (index == unlockedNormalStages.length - 1) {
+        final previousStages = mode.toLowerCase() == 'normal'
+            ? unlockedNormalStages.sublist(0, index)
+            : unlockedHardStages.sublist(0, index);
+        return !previousStages.contains(false);
+      }
+      
+      // For regular stages, just check the previous stage
       final previousUnlocked = mode.toLowerCase() == 'normal'
           ? unlockedNormalStages[index - 1]
           : unlockedHardStages[index - 1];

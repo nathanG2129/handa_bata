@@ -888,7 +888,7 @@ class AuthService {
       // Group stages by category and type
       Map<String, List<Map<String, dynamic>>> adventureStages = {};
       Map<String, Map<String, dynamic>> arcadeStages = {};
-      
+
       for (var stage in stages) {
         // Debug print the stage data
         print('📝 Processing stage data: ${stage.toString()}');
@@ -964,19 +964,24 @@ class AuthService {
         }
       }
 
-      // Calculate total adventure stages
+      // Calculate total stages including arcade
+      int totalStages = adventureStages.values
+          .fold(0, (sum, stages) => sum + stages.length)
+          + 1; 
+
+      // Calculate total stages including arcade
       int totalAdventureStages = adventureStages.values
           .fold(0, (sum, stages) => sum + stages.length);
 
-      print('📊 Creating save data with $totalAdventureStages adventure stages');
+      print('📊 Creating save data with $totalStages stages');
       
       return GameSaveData(
         stageData: stageData,
         normalStageStars: List<int>.filled(totalAdventureStages, 0),
         hardStageStars: List<int>.filled(totalAdventureStages, 0),
-        unlockedNormalStages: List.generate(totalAdventureStages, (i) => i == 0),
-        unlockedHardStages: List.generate(totalAdventureStages, (i) => i == 0),
-        hasSeenPrerequisite: List<bool>.filled(totalAdventureStages, false),
+        unlockedNormalStages: List.generate(totalStages, (i) => i == 0),
+        unlockedHardStages: List.generate(totalStages, (i) => i == 0),
+        hasSeenPrerequisite: List<bool>.filled(totalStages, false),
       );
     } catch (e) {
       print('❌ Error creating initial game data: $e');

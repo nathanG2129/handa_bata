@@ -65,9 +65,6 @@ class BadgeUnlockService {
     int? stars,
     List<int>? allStageStars,
   }) async {
-    if (badgeIds.isEmpty) return;
-    print('🏅 Attempting to unlock badges: $badgeIds');
-
     try {
       final quality = await _connectionManager.checkConnectionQuality();
       print('📡 Connection quality: $quality');
@@ -76,8 +73,30 @@ class BadgeUnlockService {
       if (profile == null) return;
 
       List<int> updatedUnlockedBadges = List<int>.from(profile.unlockedBadge);
-      int maxBadgeId = badgeIds.reduce((max, id) => id > max ? id : max);
       
+      // Process any pending offline unlocks first
+      if (quality != ConnectionQuality.OFFLINE) {
+        final prefs = await SharedPreferences.getInstance();
+        List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
+        
+        // Merge all pending unlocks with current badges
+        for (String unlockJson in pendingUnlocks) {
+          final unlock = PendingBadgeUnlock.fromJson(jsonDecode(unlockJson));
+          for (var id in unlock.badgeIds) {
+            if (id < updatedUnlockedBadges.length) {
+              updatedUnlockedBadges[id] = 1;
+            }
+          }
+        }
+        
+        // Clear pending unlocks only after successful merge
+        if (quality == ConnectionQuality.GOOD || quality == ConnectionQuality.EXCELLENT) {
+          await prefs.setStringList(PENDING_UNLOCKS_KEY, []);
+        }
+      }
+
+      // Add new badges to unlock
+      int maxBadgeId = badgeIds.reduce((max, id) => id > max ? id : max);
       if (maxBadgeId >= updatedUnlockedBadges.length) {
         updatedUnlockedBadges.addAll(
           List<int>.filled(maxBadgeId - updatedUnlockedBadges.length + 1, 0)
@@ -95,14 +114,14 @@ class BadgeUnlockService {
       // Convert to string representation before passing
       final String encodedList = jsonEncode({
         'type': 'badge_array',
-        'data': updatedUnlockedBadges,  // This will be serialized as a JSON array
+        'data': updatedUnlockedBadges,
       });
 
-      // Pass as string to UserProfileService
+      // Update profile with merged badges
       final userProfileService = UserProfileService();
       await userProfileService.updateProfileWithIntegration(
         'unlockedBadge',
-        encodedList  // Pass as string instead of List
+        encodedList
       );
 
       if (quality == ConnectionQuality.OFFLINE) {
@@ -120,7 +139,7 @@ class BadgeUnlockService {
           timestamp: DateTime.now(),
         ));
       } else {
-        print('🌐 Online mode: Updating profile');
+        print('🌐 Online mode: Updating profile with merged badges');
         await _authService.updateUserProfile('unlockedBadge', updatedUnlockedBadges);
       }
     } catch (e) {
@@ -137,6 +156,9 @@ class BadgeUnlockService {
   }) async {
     try {
       print('🎮 Checking adventure badges for $questName, $stageName');
+      print('⭐ Current stage stars: $stars');
+      print('📊 All stage stars: $allStageStars');
+      
       final quality = await _connectionManager.checkConnectionQuality();
       
       int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
@@ -144,6 +166,9 @@ class BadgeUnlockService {
       if (stageNumber < updatedStageStars.length) {
         updatedStageStars[stageNumber] = stars;
       }
+
+      print('🔄 Updated stage stars array: $updatedStageStars');
+      print('📍 Current stage number: ${stageNumber + 1}');
 
       final questRange = questBadgeRanges[questName];
       if (questRange == null) return;
@@ -153,26 +178,40 @@ class BadgeUnlockService {
       // Stage badge
       int stageBadgeId = questRange.stageStart + (stageNumber * 2) + (difficulty == 'hard' ? 1 : 0);
       if (stars > 0) {
+        print('🏅 Adding stage badge: $stageBadgeId (${difficulty == 'hard' ? 'Hard' : 'Normal'} mode)');
         badgesToUnlock.add(stageBadgeId);
       }
       
-      // Complete badge
-      if (_hasAllStagesCleared(updatedStageStars)) {
+      // Complete badge check
+      bool isCompleted = _hasAllStagesCleared(updatedStageStars);
+      print('🔍 Checking quest completion...');
+      print('📊 Normal stages: ${updatedStageStars.sublist(0, updatedStageStars.length)}');
+      print('✅ All stages cleared? $isCompleted');
+      
+      if (isCompleted) {
         int completeBadgeId = difficulty == 'hard' 
             ? questRange.completeStart + 1
             : questRange.completeStart;
+        print('🎖️ Adding completion badge: $completeBadgeId');
         badgesToUnlock.add(completeBadgeId);
       }
       
-      // Full clear badge
-      if (_hasAllStagesFullyCleared(updatedStageStars)) {
+      // Full clear badge check
+      bool isFullyCleared = _hasAllStagesFullyCleared(updatedStageStars);
+      print('🔍 Checking quest full clear...');
+      print('⭐ Required: All stages must have 3 stars');
+      print('✨ All stages fully cleared? $isFullyCleared');
+      
+      if (isFullyCleared) {
         int fullClearBadgeId = difficulty == 'hard'
             ? questRange.fullClearStart + 1
             : questRange.fullClearStart;
+        print('👑 Adding full clear badge: $fullClearBadgeId');
         badgesToUnlock.add(fullClearBadgeId);
       }
 
       if (badgesToUnlock.isNotEmpty) {
+        print('🎯 Badges to unlock: $badgesToUnlock');
         if (quality == ConnectionQuality.OFFLINE) {
           await _queueUnlock(PendingBadgeUnlock(
             badgeIds: badgesToUnlock,
@@ -188,6 +227,8 @@ class BadgeUnlockService {
           ));
         }
         await unlockBadges(badgesToUnlock);
+      } else {
+        print('ℹ️ No new badges to unlock');
       }
     } catch (e) {
       print('❌ Error checking adventure badges: $e');
@@ -242,13 +283,25 @@ class BadgeUnlockService {
   }
 
   bool _hasAllStagesCleared(List<int> stageStars) {
-    List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
-    return !normalStages.contains(0);
+    // We need exactly 7 adventure stages (0-6) to be cleared
+    print('🔍 Checking adventure stages for completion: $stageStars');
+    if (stageStars.length < 7) return false;
+    
+    // Get first 7 stages (0-6), excluding arcade
+    List<int> adventureStages = stageStars.sublist(0, 7);
+    print('📊 Checking stages (excluding arcade): $adventureStages');
+    return !adventureStages.contains(0);
   }
 
   bool _hasAllStagesFullyCleared(List<int> stageStars) {
-    List<int> normalStages = stageStars.sublist(0, stageStars.length - 1);
-    return normalStages.every((stars) => stars == 3);
+    // We need exactly 7 adventure stages (0-6) to be 3-starred
+    print('🔍 Checking adventure stages for full clear: $stageStars');
+    if (stageStars.length < 7) return false;
+    
+    // Get first 7 stages (0-6), excluding arcade
+    List<int> adventureStages = stageStars.sublist(0, 7);
+    print('📊 Checking stages (excluding arcade): $adventureStages');
+    return adventureStages.every((stars) => stars == 3);
   }
 
   Future<void> _queueUnlock(PendingBadgeUnlock unlock) async {

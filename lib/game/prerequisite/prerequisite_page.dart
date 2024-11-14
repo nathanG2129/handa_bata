@@ -1,7 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/game/prerequisite/quake_prerequisite_content.dart';
 import 'package:handabatamae/game/prerequisite/storm_prerequisite_content.dart';
@@ -57,97 +56,49 @@ class PrerequisitePageState extends State<PrerequisitePage> {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Get local game save data first
+      // Get local game save data
       GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
       
       if (localData != null) {
-        int stageIndex;
-        if (widget.stageName.contains('Arcade')) {
-          stageIndex = localData.hasSeenPrerequisite.length - 1;
-        } else {
-          stageIndex = int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
-        }
+        int stageIndex = widget.stageName.contains('Arcade')
+            ? localData.hasSeenPrerequisite.length - 1
+            : int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
 
-        // If already seen prerequisite locally, navigate to gameplay
-        if (localData.hasSeenPrerequisite.length > stageIndex && 
-            localData.hasSeenPrerequisite[stageIndex]) {
+        // Use helper method to check if seen
+        if (localData.hasSeenStagePrerequisite(stageIndex)) {
           if (!mounted) return;
           _navigateToGameplay();
           return;
         }
 
-        // Update local data
-        List<bool> updatedPrerequisites = List<bool>.from(localData.hasSeenPrerequisite);
-        if (updatedPrerequisites.length <= stageIndex) {
-          updatedPrerequisites.length = stageIndex + 1;
-        }
-        updatedPrerequisites[stageIndex] = true;
+        // Use helper method to mark as seen
+        localData.markPrerequisiteSeen(stageIndex);
 
-        // Create updated GameSaveData
-        GameSaveData updatedData = GameSaveData(
-          stageData: localData.stageData,
-          normalStageStars: localData.normalStageStars,
-          hardStageStars: localData.hardStageStars,
-          unlockedNormalStages: localData.unlockedNormalStages,
-          unlockedHardStages: localData.unlockedHardStages,
-          hasSeenPrerequisite: updatedPrerequisites,
-        );
+        // Save locally using AuthService
+        await _authService.saveGameSaveDataLocally(widget.category['id']!, localData);
 
-        // Save locally
-        await _authService.saveGameSaveDataLocally(widget.category['id']!, updatedData);
-
-        // Try to update Firestore if online
+        // Use AuthService's sync method instead of direct Firebase call
         var connectivityResult = await Connectivity().checkConnectivity();
         if (connectivityResult != ConnectivityResult.none) {
-          DocumentReference gameSaveDataRef = FirebaseFirestore.instance
-              .collection('User')
-              .doc(user.uid)
-              .collection('GameSaveData')
-              .doc(widget.category['id']);
-
-          await gameSaveDataRef.update({
-            'hasSeenPrerequisite': updatedPrerequisites,
-          });
+          await _authService.syncProfiles(); // This will handle the Firebase sync
         }
       } else {
-        // If no local data, create new GameSaveData
-        List<bool> hasSeenPrerequisite = [];
-        int stageIndex;
-        if (widget.stageName.contains('Arcade')) {
-          stageIndex = 0; // For arcade, just use index 0
-        } else {
-          stageIndex = int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
-        }
+        // Create new data using GameSaveData factory
+        int stageCount = widget.stageName.contains('Arcade') ? 1 : 10;
+        GameSaveData newData = GameSaveData.initial(stageCount);
+        
+        int stageIndex = widget.stageName.contains('Arcade') 
+            ? 0 
+            : int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        
+        newData.markPrerequisiteSeen(stageIndex);
 
-        hasSeenPrerequisite.length = stageIndex + 1;
-        hasSeenPrerequisite[stageIndex] = true;
-
-        GameSaveData newData = GameSaveData(
-          stageData: {},
-          normalStageStars: List<int>.filled(stageIndex + 1, 0),
-          hardStageStars: List<int>.filled(stageIndex + 1, 0),
-          unlockedNormalStages: List<bool>.filled(stageIndex + 1, false),
-          unlockedHardStages: List<bool>.filled(stageIndex + 1, false),
-          hasSeenPrerequisite: hasSeenPrerequisite,
-        );
-
-        // Save locally
+        // Save using AuthService methods
         await _authService.saveGameSaveDataLocally(widget.category['id']!, newData);
-
-        // Try to update Firestore if online
-        var connectivityResult = await Connectivity().checkConnectivity();
-        if (connectivityResult != ConnectivityResult.none) {
-          DocumentReference gameSaveDataRef = FirebaseFirestore.instance
-              .collection('User')
-              .doc(user.uid)
-              .collection('GameSaveData')
-              .doc(widget.category['id']);
-
-          await gameSaveDataRef.set(newData.toMap());
-        }
+        await _authService.syncProfiles(); // This will handle the Firebase sync
       }
     } catch (e) {
-      print('Error in _checkAndSetPrerequisite: $e');
+      print('❌ Error in _checkAndSetPrerequisite: $e');
     }
   }
 

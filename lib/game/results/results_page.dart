@@ -8,7 +8,6 @@ import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
-import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
@@ -73,21 +72,14 @@ class ResultsPageState extends State<ResultsPage> {
   @override
   void initState() {
     super.initState();
-    _deleteSavedGame();
-    _soundpool = Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
     _initializeResultsPage();
   }
 
   Future<void> _initializeResultsPage() async {
     try {
-      print('🎮 Initializing results page...');
-      
-      // Check connection quality first
-      final connectionManager = ConnectionManager();
-      final quality = await connectionManager.checkConnectionQuality();
-      print('📡 Connection quality: $quality');
+      print('🎮 Initializing results page');
 
-      // Load sounds and calculate stars in parallel with timeout
+      // Load sounds and update progress in parallel with timeout
       try {
         await Future.wait([
           _loadSounds().timeout(
@@ -97,10 +89,10 @@ class ResultsPageState extends State<ResultsPage> {
               setState(() => _soundsLoaded = true);
             },
           ),
-          _updateScoreAndStarsInFirestore().timeout(
+          _updateProgress().timeout(
             const Duration(seconds: 10),
             onTimeout: () {
-              print('⚠️ Score update timed out, will sync later');
+              print('⚠️ Progress update timed out, will sync later');
               // Calculate stars locally
               setState(() {
                 stars = _calculateStars(
@@ -113,10 +105,9 @@ class ResultsPageState extends State<ResultsPage> {
               });
             },
           ),
-        ], eagerError: false); // Continue if one operation fails
+        ], eagerError: false);
       } catch (e) {
         print('⚠️ Error in parallel operations: $e');
-        // Ensure states are set even if operations fail
         setState(() {
           _soundsLoaded = true;
           _starsCalculated = true;
@@ -128,17 +119,9 @@ class ResultsPageState extends State<ResultsPage> {
         _playSoundBasedOnStars();
       }
 
-      // Ensure UI updates
-      if (mounted) {
-        setState(() {
-          _starsCalculated = true;
-        });
-      }
-
       print('✅ Results page initialization complete');
     } catch (e) {
       print('❌ Error initializing results page: $e');
-      // Ensure the page is still usable even if initialization fails
       if (mounted) {
         setState(() {
           _soundsLoaded = true;
@@ -149,15 +132,18 @@ class ResultsPageState extends State<ResultsPage> {
   }
 
   int _calculateStars(double accuracy, int score, int maxScore, bool isGameOver) {
-    if (isGameOver) {
-      return 0;
-    } else if (accuracy > 0.9 && score == maxScore) {
-      return 3;
-    } else if (score > maxScore / 2) {
-      return 2;
-    } else {
-      return 1;
-    }
+    // If game is over, return 0 stars
+    if (isGameOver) return 0;
+    
+    // Otherwise calculate stars normally
+    double accuracyPercent = accuracy * 100;
+    double scorePercent = (score / maxScore) * 100;
+    
+    // Calculate stars based on both accuracy and score percentage
+    if (accuracyPercent >= 90 && scorePercent >= 90) return 3;
+    if (accuracyPercent >= 75 && scorePercent >= 75) return 2;
+    if (accuracyPercent >= 60 && scorePercent >= 60) return 1;
+    return 0;
   }
 
   int _convertRecordToSeconds(String record) {
@@ -192,74 +178,6 @@ class ResultsPageState extends State<ResultsPage> {
       case 3:
         _soundpool.play(_soundId3Stars);
         break;
-    }
-  }
-
-  Future<void> _updateScoreAndStarsInFirestore() async {
-    try {
-      print('🎮 Starting score update process...');
-      
-      // Get connection quality first
-      final connectionManager = ConnectionManager();
-      final quality = await connectionManager.checkConnectionQuality();
-      print('📡 Connection status: $quality');
-
-      UserProfile? profile = await _authService.getUserProfile();
-      if (profile != null) {
-        print('👤 Current profile stats:');
-        print('📊 Level: ${profile.level}');
-        print('📈 EXP: ${profile.exp}/${profile.expCap}');
-
-        // Add gamemode context
-        print('🎲 Game Details:');
-        print('🎮 Mode: ${widget.gamemode}');
-        print('⚔️ Difficulty: ${widget.mode}');
-        print('🎯 Score: ${widget.score}');
-        print('📊 Accuracy: ${(widget.accuracy * 100).toStringAsFixed(1)}%');
-
-        // Calculate XP and new level
-        final updates = _calculateUpdates(profile);
-        
-        // Handle updates based on connection
-        if (quality == ConnectionQuality.OFFLINE) {
-          print('📱 Offline mode - Queueing updates');
-          // Queue updates for later sync
-          await _queueProfileUpdates(updates);
-          
-          // Update local state immediately
-          setState(() {
-            stars = _calculateStars(
-              widget.accuracy,
-              widget.score,
-              widget.stageData['maxScore'],
-              widget.isGameOver
-            );
-            _xpGained = updates['xpGained'];
-          });
-          
-          print('💾 Updates queued for later sync');
-        } else {
-          print('🌐 Online mode - Updating immediately');
-          // Existing online update logic
-          await _authService.updateUserProfile('exp', updates['newXP']);
-          await _authService.updateUserProfile('level', updates['newLevel']);
-          await _authService.updateUserProfile('expCap', updates['newExpCap']);
-        }
-
-        // Check badges regardless of connection
-        await _checkBadgeUnlocks();
-      }
-    } catch (e) {
-      print('❌ Error in score update: $e');
-      // Ensure UI still updates
-      setState(() {
-        stars = _calculateStars(
-          widget.accuracy,
-          widget.score,
-          widget.stageData['maxScore'],
-          widget.isGameOver
-        );
-      });
     }
   }
 
@@ -568,12 +486,68 @@ class ResultsPageState extends State<ResultsPage> {
           questName: widget.category['name'],
           stageName: widget.stageName,
           difficulty: widget.mode.toLowerCase(),
-          stars: stars,
+          stars: _calculateStars(
+            widget.accuracy, 
+            widget.score, 
+            widget.stageData['maxScore'],
+            widget.isGameOver
+          ),
           allStageStars: stageStars,
         );
       }
     } catch (e) {
       print('❌ Error checking badge unlocks: $e');
+    }
+  }
+
+  Future<void> _updateProgress() async {
+    try {
+      final categoryId = widget.category['id'];
+      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
+      
+      if (localData != null) {
+        final stageKey = widget.gamemode == 'arcade'
+            ? GameSaveData.getArcadeKey(categoryId)
+            : GameSaveData.getStageKey(
+                categoryId,
+                int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')),
+              );
+
+        // Update progress using GameSaveData methods
+        if (widget.gamemode == 'arcade') {
+          // Handle arcade mode
+          final recordParts = widget.record.split(':');
+          final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
+          localData.updateArcadeRecord(stageKey, totalSeconds);
+        } else {
+          // Handle adventure mode
+          localData.updateScore(stageKey, widget.score, widget.mode);
+          
+          // Calculate and update stars
+          int stageIndex = int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+          int stars = _calculateStars(
+            widget.accuracy, 
+            widget.score, 
+            widget.stageData['maxScore'],
+            widget.isGameOver
+          );
+          localData.updateStars(stageIndex, stars, widget.mode);
+          
+          // Unlock next stage if applicable and not game over
+          if (!widget.isGameOver && stars > 0 && localData.canUnlockStage(stageIndex + 1, widget.mode)) {
+            localData.unlockStage(stageIndex + 1, widget.mode);
+          }
+        }
+
+        // Save updated data
+        await _authService.saveGameSaveDataLocally(categoryId, localData);
+        await _authService.syncProfiles(); // Sync with Firebase
+
+        // Check for badge unlocks
+        await _checkBadgeUnlocks();
+      }
+    } catch (e) {
+      print('❌ Error updating progress: $e');
     }
   }
 }

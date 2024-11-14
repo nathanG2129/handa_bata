@@ -38,6 +38,7 @@ class StagesPage extends StatefulWidget {
 
 class StagesPageState extends State<StagesPage> {
   final StageService _stageService = StageService();
+  final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _stages = [];
   String _selectedMode = 'Normal';
   bool _isUserProfileVisible = false;
@@ -83,22 +84,44 @@ class StagesPageState extends State<StagesPage> {
   }
 
   // Add prefetch for next stages
-  void _prefetchNextStages(int currentIndex) {
-    if (currentIndex + 1 < _stages.length) {
-      // Prefetch next stage with HIGH priority
-      _stageService.queueStageLoad(
-        widget.category['id']!,
-        _stages[currentIndex + 1]['stageName'],
-        StagePriority.HIGH
-      );
-    }
-    if (currentIndex + 2 < _stages.length) {
-      // Prefetch stage after next with MEDIUM priority
-      _stageService.queueStageLoad(
-        widget.category['id']!,
-        _stages[currentIndex + 2]['stageName'],
-        StagePriority.MEDIUM
-      );
+  void _prefetchNextStages(int currentIndex) async {
+    try {
+      final categoryId = widget.category['id']!;
+      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
+      
+      if (localData != null) {
+        // Only prefetch if next stage is unlocked
+        if (currentIndex + 1 < _stages.length && 
+            localData.isStageUnlocked(currentIndex + 1, _selectedMode)) {
+          _stageService.queueStageLoad(
+            categoryId,
+            GameSaveData.getStageKey(categoryId, currentIndex + 2), // +2 because stage numbers start at 1
+            StagePriority.HIGH
+          );
+
+          // Also prefetch hard mode if normal mode is completed with stars
+          if (_selectedMode == 'normal' && 
+              localData.normalStageStars[currentIndex + 1] > 0) {
+            _stageService.queueStageLoad(
+              categoryId,
+              GameSaveData.getStageKey(categoryId, currentIndex + 2),
+              StagePriority.LOW
+            );
+          }
+        }
+
+        // Prefetch second next stage if unlocked
+        if (currentIndex + 2 < _stages.length && 
+            localData.isStageUnlocked(currentIndex + 2, _selectedMode)) {
+          _stageService.queueStageLoad(
+            categoryId,
+            GameSaveData.getStageKey(categoryId, currentIndex + 3),
+            StagePriority.MEDIUM
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Error prefetching stages: $e');
     }
   }
 
@@ -108,98 +131,92 @@ class StagesPageState extends State<StagesPage> {
   }
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
+      }
 
-    // Try to get from local storage first
-    final AuthService authService = AuthService();
-    final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
-    
-    if (localData != null) {
-      final stageKey = '${widget.category['id']}${stageIndex + 1}';
+      // Get local data using new GameSaveData structure
+      final AuthService authService = AuthService();
+      final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
       
-      // Check for saved game if savedGameDocId matches this stage
+      if (localData != null) {
+        // Use new helper methods from GameSaveData
+        final stageKey = GameSaveData.getStageKey(
+          widget.category['id']!,
+          stageIndex + 1
+        );
+        
+        // Get standardized stats format
+        final stats = localData.getStageStats(stageKey, _selectedMode);
+
+        // Check for saved game if savedGameDocId matches this stage
+        Map<String, dynamic>? savedGame;
+        if (widget.savedGameDocId != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String? savedGameJson = prefs.getString('${GameStateKeys.SAVE_PREFIX}${widget.savedGameDocId}');
+          if (savedGameJson != null) {
+            savedGame = jsonDecode(savedGameJson);
+          }
+        }
+
+        // Return stats in consistent format
+        return {
+          'personalBest': stats['personalBest'] ?? 0,
+          'stars': stats['stars'] ?? 0,
+          'maxScore': stats['maxScore'] ?? 0,
+          'savedGame': savedGame,
+        };
+      }
+
+      // Fallback to Firebase if no local data
+      final docRef = FirebaseFirestore.instance
+          .collection('User')
+          .doc(user.uid)
+          .collection('GameSaveData')
+          .doc(widget.category['id']);
+
+      final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
+      }
+
+      // Convert Firebase data to GameSaveData
+      final gameSaveData = GameSaveData.fromMap(docSnapshot.data() as Map<String, dynamic>);
+      
+      // Use same helper methods for consistency
+      final stageKey = GameSaveData.getStageKey(
+        widget.category['id']!,
+        stageIndex + 1
+      );
+      
+      final stats = gameSaveData.getStageStats(stageKey, _selectedMode);
+
+      // Check for saved game in Firebase
       Map<String, dynamic>? savedGame;
       if (widget.savedGameDocId != null) {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? savedGameJson = prefs.getString('game_progress_${widget.savedGameDocId}');
-        if (savedGameJson != null) {
-          savedGame = jsonDecode(savedGameJson);
+        final savedGameDoc = await FirebaseFirestore.instance
+            .collection('User')
+            .doc(user.uid)
+            .collection('GameProgress')
+            .doc(widget.savedGameDocId)
+            .get();
+        
+        if (savedGameDoc.exists) {
+          savedGame = savedGameDoc.data();
         }
       }
 
-      if (_selectedMode == 'Normal') {
-        final personalBest = localData.stageData[stageKey]?['scoreNormal'] ?? 0;
-        final maxScore = localData.stageData[stageKey]?['maxScore'] ?? 0;
-        final stars = localData.normalStageStars[stageIndex];
-        return {
-          'personalBest': personalBest,
-          'stars': stars,
-          'maxScore': maxScore,
-          'savedGame': savedGame,
-        };
-      } else {
-        final personalBest = localData.stageData[stageKey]?['scoreHard'] ?? 0;
-        final maxScore = localData.stageData[stageKey]?['maxScore'] ?? 0;
-        final stars = localData.hardStageStars[stageIndex];
-        return {
-          'personalBest': personalBest,
-          'stars': stars,
-          'maxScore': maxScore,
-          'savedGame': savedGame,
-        };
-      }
-    }
-
-    // Fallback to Firebase if no local data
-    final docRef = FirebaseFirestore.instance
-        .collection('User')
-        .doc(user.uid)
-        .collection('GameSaveData')
-        .doc(widget.category['id']);
-
-    final docSnapshot = await docRef.get();
-    if (!docSnapshot.exists) return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
-
-    final data = docSnapshot.data() as Map<String, dynamic>;
-    final stageData = data['stageData'] as Map<String, dynamic>;
-    final stageKey = '${widget.category['id']}${stageIndex + 1}';
-
-    // Check for saved game if savedGameDocId matches this stage
-    Map<String, dynamic>? savedGame;
-    if (widget.savedGameDocId != null) {
-      final savedGameDoc = await FirebaseFirestore.instance
-          .collection('User')
-          .doc(user.uid)
-          .collection('GameProgress')
-          .doc(widget.savedGameDocId)
-          .get();
-      
-      if (savedGameDoc.exists) {
-        savedGame = savedGameDoc.data();
-      }
-    }
-
-    if (_selectedMode == 'Normal') {
-      final personalBest = stageData[stageKey]['scoreNormal'] as int;
-      final maxScore = stageData[stageKey]['maxScore'] as int;
-      final stars = data['normalStageStars'][stageIndex] as int;
       return {
-        'personalBest': personalBest,
-        'stars': stars,
-        'maxScore': maxScore,
+        'personalBest': stats['personalBest'] ?? 0,
+        'stars': stats['stars'] ?? 0,
+        'maxScore': stats['maxScore'] ?? 0,
         'savedGame': savedGame,
       };
-    } else {
-      final personalBest = stageData[stageKey]['scoreHard'] as int;
-      final maxScore = stageData[stageKey]['maxScore'] as int;
-      final stars = data['hardStageStars'][stageIndex] as int;
-      return {
-        'personalBest': personalBest,
-        'stars': stars,
-        'maxScore': maxScore,
-        'savedGame': savedGame,
-      };
+    } catch (e) {
+      print('❌ Error fetching stage stats: $e');
+      return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
     }
   }
 

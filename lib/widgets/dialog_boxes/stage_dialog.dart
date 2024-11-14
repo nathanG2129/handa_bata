@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
-// Import the GameplayPage
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
-import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
+import 'package:handabatamae/localization/stages/localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:handabatamae/services/auth_service.dart';
 
 void showStageDialog(
   BuildContext context,
@@ -35,8 +33,16 @@ void showStageDialog(
     },
     transitionBuilder: (context, anim1, anim2, child) {
       return FutureBuilder<Map<String, dynamic>?>(
-        future: _getSavedGameData(category['id']!, stageNumber, mode),
+        future: _getSavedGameData(
+          category['id']!,
+          stageNumber,
+          mode
+        ),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print('❌ Error loading saved game: ${snapshot.error}');
+          }
+
           return ScaleTransition(
             scale: Tween<double>(begin: 0.0, end: 1.0).animate(
               CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
@@ -111,31 +117,43 @@ void showStageDialog(
                       if (!(snapshot.data!['completed'] ?? false)) ...[
                         ElevatedButton(
                           onPressed: () async {
-                            await _handleOfflineStageStart(
-                              category['id']!, 
-                              'Stage $stageNumber',
-                              mode,
-                              stageService
-                            );
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => GameplayPage(
-                                  language: selectedLanguage,
-                                  category: {
-                                    'id': category['id'],
-                                    'name': category['name'],
-                                  },
-                                  stageName: 'Stage $stageNumber',
-                                  stageData: {
-                                    ...stageData,
-                                    'savedGame': snapshot.data,
-                                  },
-                                  mode: mode,
-                                  gamemode: 'adventure',
-                                ),
-                              ),
-                            );
+                            try {
+                              await _handleOfflineStageStart(
+                                category['id']!, 
+                                stageNumber,
+                                mode,
+                                stageService
+                              );
+                              
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => GameplayPage(
+                                      language: selectedLanguage,
+                                      category: {
+                                        'id': category['id'],
+                                        'name': category['name'],
+                                      },
+                                      stageName: 'Stage $stageNumber',
+                                      stageData: {
+                                        ...stageData,
+                                        'savedGame': snapshot.data,
+                                      },
+                                      mode: mode,
+                                      gamemode: 'adventure',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              print('❌ Error resuming game: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to resume game: $e')),
+                                );
+                              }
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
@@ -157,7 +175,7 @@ void showStageDialog(
                       onPressed: () async {
                         await _handleOfflineStageStart(
                           category['id']!, 
-                          'Stage $stageNumber',
+                          stageNumber,
                           mode,
                           stageService
                         );
@@ -205,60 +223,51 @@ void showStageDialog(
   );
 }
 
-// Helper function to get saved game data
-Future<Map<String, dynamic>?> _getSavedGameData(String categoryId, int stageNumber, String mode) async {
+Future<Map<String, dynamic>?> _getSavedGameData(
+  String categoryId,
+  int stageNumber,
+  String mode
+) async {
   try {
-    final docId = '${categoryId}_Stage ${stageNumber}_${mode.toLowerCase()}';
+    final stageKey = GameSaveData.getStageKey(categoryId, stageNumber);
     
-    // Try local storage first
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedGameJson = prefs.getString('game_progress_$docId');
-    if (savedGameJson != null) {
-      return jsonDecode(savedGameJson);
+    // Use AuthService's getSavedGameState instead of direct access
+    final authService = AuthService();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return await authService.getSavedGameState(
+        userId: user.uid,
+        categoryId: categoryId,
+        stageName: stageKey,
+        mode: mode,
+      );
     }
-    
-    // Only try Firebase if we're online
-    final connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult != ConnectivityResult.none) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(docId)
-            .get();
-            
-        if (doc.exists) {
-          final savedGame = doc.data();
-          // Cache the Firebase data locally
-          await prefs.setString('game_progress_$docId', jsonEncode(savedGame));
-          return savedGame;
-        }
-      }
-    }
-    
     return null;
   } catch (e) {
-    print('Error getting saved game data: $e');
+    print('❌ Error getting saved game data: $e');
     return null;
   }
 }
 
-// Add offline change handling
 Future<void> _handleOfflineStageStart(
   String categoryId, 
-  String stageName, 
+  int stageNumber,
   String mode,
   StageService stageService
 ) async {
-  final connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult == ConnectivityResult.none) {
-    await stageService.addOfflineChange('stage_start', {
-      'categoryId': categoryId,
-      'stageName': stageName,
-      'mode': mode,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    });
+  try {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      await stageService.addOfflineChange('stage_start', {
+        'categoryId': categoryId,
+        'stageKey': GameSaveData.getStageKey(categoryId, stageNumber),
+        'mode': mode,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      print('📱 Added offline change for stage start');
+    }
+  } catch (e) {
+    print('❌ Error handling offline start: $e');
+    throw GameSaveDataException('Failed to handle offline start: $e');
   }
 }

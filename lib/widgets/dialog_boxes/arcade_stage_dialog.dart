@@ -1,14 +1,18 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// Import the GameplayPage
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
-import 'package:handabatamae/localization/stages/localization.dart'; // Import the localization file
+import 'package:handabatamae/localization/stages/localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:handabatamae/services/auth_service.dart';
+
+String formatTime(int seconds) {
+  final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+  final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
+  return '$minutes:$remainingSeconds';
+}
 
 void showArcadeStageDialog(
   BuildContext context,
@@ -17,17 +21,11 @@ void showArcadeStageDialog(
   Map<String, dynamic> stageData,
   String mode,
   int bestRecord,
-  int currentRecord,
+  int crntRecord,
   int stars,
   String selectedLanguage,
   StageService stageService,
 ) {
-  String formatTime(int seconds) {
-    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
-    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$remainingSeconds';
-  }
-
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
@@ -39,8 +37,19 @@ void showArcadeStageDialog(
     },
     transitionBuilder: (context, anim1, anim2, child) {
       return FutureBuilder<Map<String, dynamic>?>(
-        future: _getSavedGameData(category['id']!, stageData['stageName'], mode),
+        future: _getSavedGameData(
+          category['id']!,
+          stageNumber,
+          mode
+        ),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print('❌ Error loading saved game: ${snapshot.error}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error loading game data: ${snapshot.error}')),
+            );
+          }
+
           return ScaleTransition(
             scale: Tween<double>(begin: 0.0, end: 1.0).animate(
               CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
@@ -99,7 +108,7 @@ void showArcadeStageDialog(
                           textAlign: TextAlign.center,
                         ),
                         Text(
-                          currentRecord == -1 ? 'None' : formatTime(currentRecord),
+                          crntRecord == -1 ? 'None' : formatTime(crntRecord),
                           style: GoogleFonts.vt323(
                             fontSize: 24,
                           ),
@@ -110,29 +119,41 @@ void showArcadeStageDialog(
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
-                        await _handleOfflineArcadeStart(
-                          category['id']!, 
-                          stageData['stageName'],
-                          mode,
-                          stageService
-                        );
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PrerequisitePage(
-                              language: selectedLanguage, // Pass selectedLanguage
-                              category: category,
-                              stageName: stageData['stageName'],
-                              stageData: stageData,
-                              mode: mode,
-                              gamemode: 'arcade', // Set gamemode to arcade
-                              personalBest: bestRecord, // Pass bestRecord as personalBest
-                              crntRecord: currentRecord, // Pass bestRecord as personalBest
-                              stars: stars,
-                              maxScore: 0,
-                            ),
-                          ),
-                        );
+                        try {
+                          await _handleOfflineArcadeStart(
+                            category['id']!, 
+                            stageNumber,
+                            mode,
+                            stageService
+                          );
+                          
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => PrerequisitePage(
+                                  language: selectedLanguage,
+                                  category: category,
+                                  stageName: stageData['stageName'],
+                                  stageData: stageData,
+                                  mode: mode,
+                                  gamemode: 'arcade',
+                                  personalBest: bestRecord,
+                                  crntRecord: crntRecord,
+                                  stars: stars,
+                                  maxScore: 0,
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          print('❌ Error starting arcade game: $e');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to start game: $e')),
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -160,60 +181,52 @@ void showArcadeStageDialog(
   );
 }
 
-// Helper function to get saved game data
-Future<Map<String, dynamic>?> _getSavedGameData(String categoryId, String stageName, String mode) async {
+Future<Map<String, dynamic>?> _getSavedGameData(
+  String categoryId,
+  int stageNumber,
+  String mode
+) async {
   try {
-    final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+    final arcadeKey = GameSaveData.getArcadeKey(categoryId);
     
-    // Try local storage first
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedGameJson = prefs.getString('game_progress_$docId');
-    if (savedGameJson != null) {
-      return jsonDecode(savedGameJson);
+    // Use AuthService's getSavedGameState instead of direct access
+    final authService = AuthService();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return await authService.getSavedGameState(
+        userId: user.uid,
+        categoryId: categoryId,
+        stageName: arcadeKey,
+        mode: mode,
+      );
     }
-    
-    // Only try Firebase if we're online
-    final connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult != ConnectivityResult.none) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(docId)
-            .get();
-            
-        if (doc.exists) {
-          final savedGame = doc.data();
-          // Cache the Firebase data locally
-          await prefs.setString('game_progress_$docId', jsonEncode(savedGame));
-          return savedGame;
-        }
-      }
-    }
-    
     return null;
   } catch (e) {
-    print('Error getting saved game data: $e');
+    print('❌ Error getting saved game data: $e');
     return null;
   }
 }
 
-// Update the _handleOfflineArcadeStart function to accept stageService parameter
 Future<void> _handleOfflineArcadeStart(
   String categoryId, 
-  String stageName, 
+  int stageNumber,
   String mode,
   StageService stageService
 ) async {
-  final connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult == ConnectivityResult.none) {
-    await stageService.addOfflineChange('arcade_start', {
-      'categoryId': categoryId,
-      'stageName': stageName,
-      'mode': mode,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    });
+  try {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      final arcadeKey = GameSaveData.getArcadeKey(categoryId);
+      await stageService.addOfflineChange('arcade_start', {
+        'categoryId': categoryId,
+        'stageKey': arcadeKey,
+        'mode': mode,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      print('📱 Added offline change for arcade start');
+    }
+  } catch (e) {
+    print('❌ Error handling offline start: $e');
+    throw GameSaveDataException('Failed to handle offline arcade start: $e');
   }
 }

@@ -8,6 +8,7 @@ import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
 import 'package:handabatamae/game/type/identificationquestion.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -706,169 +707,98 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
 
   Future<void> handleQuitGame() async {
-    print('🎮 Starting handleQuitGame');
-  
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-    // Store context in local variable to ensure type safety
-    final BuildContext currentContext = context;
-
-    // Skip saving if it's the first question and hasn't been answered yet
-    if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
-      print('🎮 Skipping save - first unanswered question');
-      // Just do cleanup and navigation
-      _timer?.cancel();
-      _timer = null;
-      _stopwatchTimer?.cancel();
-      _stopwatchTimer = null;
-      flutterTts.stop();
-      flutterTts.pause();
-      _audioPlayer.pause();
-      _audioPlayer.stop();
-      _audioPlayer.dispose();
-
-      if (widget.gamemode == 'arcade') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ArcadeStagesPage(
-              category: {
-                'id': widget.category['id'],
-                'name': widget.category['name'],
-              },
-              selectedLanguage: widget.language,
-              questName: widget.category['name'],
-            ),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StagesPage(
-              questName: widget.category['name'],
-              category: {
-                'id': widget.category['id'],
-                'name': widget.category['name'],
-              },
-              selectedLanguage: widget.language,
-            ),
-          ),
-        );
+      // Skip saving if first unanswered question
+      if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
+        print('🎮 Skipping save - first unanswered question');
+        _cleanup();
+        _navigateBack();
+        return;
       }
-      return;
+
+      // Create game state
+      Map<String, dynamic> gameState = {
+        'completed': false,
+        'score': _correctAnswersCount,
+        'accuracy': _calculateAccuracy(),
+        'streak': _calculateStreak(),
+        'currentQuestionIndex': _currentQuestionIndex,
+        'questions': _questions,
+        'gamemode': widget.gamemode,
+        'hp': _hp,
+      };
+
+      // Handle quit through AuthService
+      await _authService.handleGameQuit(
+        userId: user.uid,
+        categoryId: widget.category['id'],
+        stageName: widget.stageName,
+        mode: widget.mode.toLowerCase(),
+        gamemode: widget.gamemode,
+        gameState: gameState,
+        onCleanup: _cleanup,
+        navigateBack: (BuildContext ctx) => _navigateBack(), // Correct type
+        context: context,
+      );
+    } catch (e) {
+      print('❌ Error handling game quit: $e');
+      _cleanup();
+      _navigateBack();
     }
-
-    // Calculate accuracy safely
-    double accuracy = 0.0;
-    int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
-    if (totalAnswers > 0) {
-      accuracy = _correctAnswersCount / totalAnswers;
-    }
-
-    Map<String, dynamic> gameState = {
-      'completed': false,
-      'score': _correctAnswersCount,
-      'accuracy': accuracy, // Use the safely calculated accuracy
-      'streak': _calculateStreak(),
-      'answeredQuestions': _answeredQuestions,
-      'currentQuestionIndex': _currentQuestionIndex,
-      'totalQuestions': _totalQuestions,
-      'fullyCorrectAnswersCount': _fullyCorrectAnswersCount,
-      'questions': _questions,
-      'gamemode': widget.gamemode,
-    };
-
-    // Add gamemode-specific data
-    if (widget.gamemode == 'arcade') {
-      gameState['stopwatchTime'] = _stopwatchTime;
-      gameState['averageTimePerQuestion'] = _averageTimePerQuestion;
-      gameState['questionsAnswered'] = _questionsAnswered;
-    } else {
-      gameState['hp'] = _hp;
-    }
-
-    await _authService.handleGameQuit(
-      userId: user.uid,
-      categoryId: widget.category['id'],
-      stageName: widget.stageName,
-      mode: widget.mode.toLowerCase(),
-      gamemode: widget.gamemode,
-      gameState: gameState,
-      onCleanup: () {
-        // Cleanup logic
-        _timer?.cancel();
-        _timer = null;
-        _stopwatchTimer?.cancel();
-        _stopwatchTimer = null;
-        flutterTts.stop();
-        flutterTts.pause();
-        _audioPlayer.pause();
-        _audioPlayer.stop();
-        _audioPlayer.dispose();
-      },
-      navigateBack: (BuildContext context) {
-        if (widget.gamemode == 'arcade') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ArcadeStagesPage(
-                category: {
-                  'id': widget.category['id'],
-                  'name': widget.category['name'],
-                },
-                selectedLanguage: widget.language,
-                questName: widget.category['name'],
-              ),
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => StagesPage(
-                questName: widget.category['name'],
-                category: {
-                  'id': widget.category['id'],
-                  'name': widget.category['name'],
-                },
-                selectedLanguage: widget.language,
-              ),
-            ),
-          );
-        }
-      },
-      context: currentContext,
-    );
   }
 
-  void _loadSavedGameOrInitialize() {
-    final savedGame = widget.stageData['savedGame'];
-    if (savedGame != null) {
-      setState(() {
-        _questions = List<Map<String, dynamic>>.from(savedGame['questions'] ?? []);
-        _currentQuestionIndex = savedGame['currentQuestionIndex'];
-        
-        // Check if the current question was answered
-        final answeredQuestions = List<Map<String, dynamic>>.from(savedGame['answeredQuestions']);
-        if (answeredQuestions.isNotEmpty) {
-          // Compare the current question with the last answered question
-          final lastAnsweredQuestion = answeredQuestions.last;
-          final currentQuestion = _questions[_currentQuestionIndex];
-          
-          // If this question was already answered, move to the next one
-          if (lastAnsweredQuestion['question'] == currentQuestion['question']) {
-            // Only increment if not at the last question
-            if (_currentQuestionIndex < _questions.length - 1) {
-              _currentQuestionIndex++;
-            }
+  void _loadSavedGameOrInitialize() async {
+    try {
+      final savedGame = widget.stageData['savedGame'];
+      if (savedGame != null) {
+        // Get current game save data
+        GameSaveData? localData = await _authService.getLocalGameSaveData(
+          widget.category['id']
+        );
+
+        if (localData != null) {
+          // Generate proper key based on mode
+          final stageKey = widget.gamemode == 'arcade'
+              ? GameSaveData.getArcadeKey(widget.category['id'])
+              : GameSaveData.getStageKey(
+                  widget.category['id'],
+                  int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')),
+                );
+
+          // Get saved game state using AuthService
+          final savedGameState = await _authService.getSavedGameState(
+            userId: FirebaseAuth.instance.currentUser!.uid,
+            categoryId: widget.category['id'],
+            stageName: stageKey,
+            mode: widget.mode,
+          );
+
+          if (savedGameState != null) {
+            setState(() {
+              _questions = List<Map<String, dynamic>>.from(savedGameState['questions'] ?? []);
+              _currentQuestionIndex = savedGameState['currentQuestionIndex'];
+              _correctAnswersCount = savedGameState['score'] ?? 0;
+              _hp = savedGameState['hp'] ?? 100.0;
+              
+              if (widget.gamemode == 'arcade') {
+                _stopwatchSeconds = _convertTimeToSeconds(savedGameState['stopwatchTime'] ?? '00:00');
+                _stopwatchTime = savedGameState['stopwatchTime'] ?? '00:00';
+                _questionsAnswered = savedGameState['questionsAnswered'] ?? 0;
+                _averageTimePerQuestion = savedGameState['averageTimePerQuestion'] ?? 0.0;
+              }
+            });
+          } else {
+            _initializeQuestions();
           }
         }
-        
-        // Rest of the initialization code...
-      });
-    } else {
+      } else {
+        _initializeQuestions();
+      }
+    } catch (e) {
+      print('❌ Error loading saved game: $e');
       _initializeQuestions();
     }
   }
@@ -879,46 +809,56 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
 
   Future<void> _saveGameState() async {
-    print('🎮 Starting _saveGameState');
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        // Don't save if this is the last question and it's been answered
-        if (_currentQuestionIndex >= _totalQuestions - 1 && 
-            _answeredQuestions.length >= _totalQuestions) {
-          print('🎮 Last question answered - not saving game state');
-          return;
+      if (user == null) return;
+
+      // Get current game save data
+      GameSaveData? localData = await _authService.getLocalGameSaveData(
+        widget.category['id']
+      );
+
+      if (localData != null) {
+        final stageKey = widget.gamemode == 'arcade'
+            ? GameSaveData.getArcadeKey(widget.category['id'])
+            : GameSaveData.getStageKey(
+                widget.category['id'],
+                int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')),
+              );
+
+        // Update progress using GameSaveData methods
+        if (widget.gamemode == 'arcade') {
+          localData.updateArcadeRecord(stageKey, _stopwatchSeconds);
+        } else {
+          localData.updateScore(stageKey, _correctAnswersCount, widget.mode);
         }
 
-        // Calculate accuracy safely
-        double accuracy = 0.0;
-        int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
-        if (totalAnswers > 0) {
-          accuracy = _correctAnswersCount / totalAnswers;
-        }
+        // Save updated data
+        await _authService.saveGameSaveDataLocally(widget.category['id'], localData);
 
+        // Save current game state
         Map<String, dynamic> gameState = {
           'completed': false,
           'score': _correctAnswersCount,
-          'accuracy': accuracy, // Use the safely calculated accuracy
+          'accuracy': _calculateAccuracy(),
           'streak': _calculateStreak(),
-          'answeredQuestions': _answeredQuestions,
           'currentQuestionIndex': _currentQuestionIndex,
-          'totalQuestions': _totalQuestions,
-          'fullyCorrectAnswersCount': _fullyCorrectAnswersCount,
           'questions': _questions,
           'gamemode': widget.gamemode,
         };
 
         // Add gamemode-specific data
         if (widget.gamemode == 'arcade') {
-          gameState['stopwatchTime'] = _stopwatchTime;
-          gameState['averageTimePerQuestion'] = _averageTimePerQuestion;
-          gameState['questionsAnswered'] = _questionsAnswered;
+          gameState.addAll({
+            'stopwatchTime': _stopwatchTime,
+            'averageTimePerQuestion': _averageTimePerQuestion,
+            'questionsAnswered': _questionsAnswered,
+          });
         } else {
           gameState['hp'] = _hp;
         }
 
+        // Save using AuthService
         await _authService.saveGameState(
           userId: user.uid,
           categoryId: widget.category['id'],
@@ -927,7 +867,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           gamemode: widget.gamemode,
           gameState: gameState,
         );
-        print('🎮 Game state saved');
       }
     } catch (e) {
       print('❌ Error saving game state: $e');
@@ -1201,6 +1140,55 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   bool _isLastAnsweredQuestion() {
     return _currentQuestionIndex >= _totalQuestions - 1 && 
            _answeredQuestions.length >= _totalQuestions;
+  }
+
+  double _calculateAccuracy() {
+    int totalAnswers = _correctAnswersCount + _wrongAnswersCount;
+    return totalAnswers > 0 ? _correctAnswersCount / totalAnswers : 0.0;
+  }
+
+  void _cleanup() {
+    _timer?.cancel();
+    _timer = null;
+    _stopwatchTimer?.cancel();
+    _stopwatchTimer = null;
+    flutterTts.stop();
+    flutterTts.pause();
+    _audioPlayer.pause();
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+  }
+
+  void _navigateBack() {
+    if (widget.gamemode == 'arcade') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ArcadeStagesPage(
+            category: {
+              'id': widget.category['id'],
+              'name': widget.category['name'],
+            },
+            selectedLanguage: widget.language,
+            questName: widget.category['name'],
+          ),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StagesPage(
+            questName: widget.category['name'],
+            category: {
+              'id': widget.category['id'],
+              'name': widget.category['name'],
+            },
+            selectedLanguage: widget.language,
+          ),
+        ),
+      );
+    }
   }
 }
 

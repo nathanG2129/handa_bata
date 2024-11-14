@@ -14,6 +14,21 @@ import '../services/banner_service.dart'; // Add this import
 import '../services/badge_service.dart'; // Add this import
 import 'package:flutter/material.dart';  // For BuildContext and VoidCallback
 
+/// Constants for game save error messages
+class GameSaveError {
+  static const String SAVE_FAILED = 'Failed to save game data';
+  static const String LOAD_FAILED = 'Failed to load game data';
+  static const String CREATE_FAILED = 'Failed to create initial game data';
+  static const String BACKUP_FAILED = 'Failed to backup game data';
+  static const String RESTORE_FAILED = 'Failed to restore game data';
+}
+
+/// Constants for game state keys
+class GameStateKeys {
+  static const String SAVE_PREFIX = 'game_progress_';
+  static const String BACKUP_PREFIX = 'game_progress_backup_';
+}
+
 /// Service for handling authentication and user profile management.
 /// Supports both regular users and guest accounts with offline capabilities.
 class AuthService {
@@ -81,78 +96,17 @@ class AuthService {
         await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
 
         // Fetch categories and create gameSaveData documents
-        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage); // Assuming 'en' as the language
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
         CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
+        
         for (Map<String, dynamic> category in categories) {
           // Fetch stages for the category
           List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
-          int stageCount = stages.length;
           
-          // Initialize arrays with default values
-          List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
-          List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
-          List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
-          List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
-          List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
+          // Create initial GameSaveData using the new structure
+          GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
           
-          // Unlock the first stage by default
-          if (stageCount > 0) {
-            unlockedNormalStages[0] = true;
-            unlockedHardStages[0] = true;
-          }
-          
-          // Create stageData map
-          Map<String, Map<String, dynamic>> stageData = {};
-          for (var stage in stages) {
-            String stageName = stage['stageName'];
-            if (stageName.contains('Arcade')) {
-              stageData[stageName] = {
-                'bestRecord': -1,
-                'crntRecord': -1,
-              };
-            } else {
-              int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-                if (question['type'] == 'Multiple Choice') {
-                  return sum + 1;
-                } else if (question['type'] == 'Fill in the Blanks') {
-                  return sum + (question['answer'] as List).length;
-                } else if (question['type'] == 'Identification') {
-                  return sum + 1;
-                } else if (question['type'] == 'Matching Type') {
-                  return sum + (question['answerPairs'] as List).length;
-                } else {
-                  return sum;
-                }
-              });
-              stageData[stageName] = {
-                'maxScore': maxScore,
-                'scoreHard': 0,
-                'scoreNormal': 0,
-              };
-            }
-          }
-          
-          // Create gameSaveData document
-          GameSaveData gameSaveData = GameSaveData(
-            stageData: stageData,
-            normalStageStars: normalStageStars,
-            hardStageStars: hardStageStars,
-            unlockedNormalStages: unlockedNormalStages,
-            unlockedHardStages: unlockedHardStages,
-            hasSeenPrerequisite: hasSeenPrerequisite,
-          );
-          
-          // Remove arcade stages from stars related fields
-          for (var stage in stages) {
-            String stageName = stage['stageName'];
-            if (stageName.contains('Arcade')) {
-              int index = stages.indexOf(stage);
-              normalStageStars.removeAt(index);
-              hardStageStars.removeAt(index);
-              unlockedHardStages.removeAt(index);
-            }
-          }
-          
+          // Save to Firestore
           await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
         }
 
@@ -860,25 +814,55 @@ class AuthService {
 
   Future<void> saveGameSaveDataLocally(String categoryId, GameSaveData data) async {
     try {
+      print('💾 Saving game data for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Create backup of current data
+      String? existingData = prefs.getString('game_save_data_$categoryId');
+      if (existingData != null) {
+        await prefs.setString('game_save_data_backup_$categoryId', existingData);
+        print('📦 Backup created for category: $categoryId');
+      }
+
+      // Save new data
       String saveDataJson = jsonEncode(data.toMap());
       await prefs.setString('game_save_data_$categoryId', saveDataJson);
+      print('✅ Game data saved successfully');
+      
+      // Clear backup after successful save
+      if (existingData != null) {
+        await prefs.remove('game_save_data_backup_$categoryId');
+        print('🧹 Backup cleared after successful save');
+      }
     } catch (e) {
-      rethrow;
+      print('❌ Error saving game data: $e');
+      await _restoreGameSaveBackup(categoryId);
+      throw GameSaveDataException('${GameSaveError.SAVE_FAILED}: $e');
     }
   }
 
   Future<GameSaveData?> getLocalGameSaveData(String categoryId) async {
     try {
+      print('🔍 Getting game data for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? saveDataJson = prefs.getString('game_save_data_$categoryId');
+      
       if (saveDataJson != null) {
         Map<String, dynamic> saveDataMap = jsonDecode(saveDataJson);
-        return GameSaveData.fromMap(saveDataMap);
+        final data = GameSaveData.fromMap(saveDataMap);
+        print('✅ Game data loaded successfully');
+        return data;
       }
+      print('ℹ️ No game data found for category: $categoryId');
       return null;
     } catch (e) {
-      return null;
+      print('❌ Error loading game data: $e');
+      final backup = await _restoreGameSaveBackup(categoryId);
+      if (backup != null) {
+        print('🔄 Restored from backup successfully');
+        return backup;
+      }
+      throw GameSaveDataException('${GameSaveError.LOAD_FAILED}: $e');
     }
   }
 
@@ -897,61 +881,81 @@ class AuthService {
   }
 
   Future<GameSaveData> _createInitialGameSaveData(List<Map<String, dynamic>> stages) async {
-    int stageCount = stages.length;
-    
-    // Initialize arrays with default values
-    List<bool> unlockedNormalStages = List<bool>.filled(stageCount, false, growable: true);
-    List<bool> unlockedHardStages = List<bool>.filled(stageCount, false, growable: true);
-    List<bool> hasSeenPrerequisite = List<bool>.filled(stageCount, false, growable: true);
-    List<int> normalStageStars = List<int>.filled(stageCount, 0, growable: true);
-    List<int> hardStageStars = List<int>.filled(stageCount, 0, growable: true);
-    
-    // Unlock the first stage by default
-    if (stageCount > 0) {
-      unlockedNormalStages[0] = true;
-      unlockedHardStages[0] = true;
-    }
-    
-    // Create stageData map
-  Map<String, Map<String, dynamic>> stageData = {};
-  for (var stage in stages) {
-    String stageName = stage['stageName'];
-    if (stageName.contains('Arcade')) {
-      stageData[stageName] = {
-        'bestRecord': -1,
-        'crntRecord': -1,
-      };
-    } else {
-      //Calculate maxScore
-      int maxScore = (stage['questions'] as List).fold(0, (sum, question) {
-        if (question['type'] == 'Multiple Choice') {
-          return sum + 1;
-        } else if (question['type'] == 'Fill in the Blanks') {
-          return sum + (question['answer'] as List).length;
-        } else if (question['type'] == 'Identification') {
-          return sum + 1;
-        } else if (question['type'] == 'Matching Type') {
-          return sum + (question['answerPairs'] as List).length;
-        } else {
-          return sum;
-        }
-      });
-      stageData[stageName] = {
-        'maxScore': maxScore,
-        'scoreHard': 0,
-        'scoreNormal': 0,
-      };
+    try {
+      print('🎮 Creating initial game data');
+      Map<String, StageDataEntry> stageData = {};
+
+      // Initialize stage data for each stage
+      for (var stage in stages) {
+        String stageName = stage['stageName'];
+        String categoryId = stage['categoryId'];
+        bool isArcade = stageName.toLowerCase().contains('arcade');
+        
+        // Calculate maxScore for the stage
+        int maxScore = _calculateMaxScore(stage);
+
+        // Create appropriate stage data entry
+        String stageKey = isArcade 
+            ? GameSaveData.getArcadeKey(categoryId)
+            : GameSaveData.getStageKey(categoryId, _getStageNumber(stageName));
+
+        stageData[stageKey] = isArcade
+            ? ArcadeStageData(maxScore: maxScore)
+            : AdventureStageData(maxScore: maxScore);
+      }
+
+      // Filter out arcade stages for arrays
+      int adventureStageCount = stages.where((s) => 
+        !s['stageName'].toLowerCase().contains('arcade')).length;
+
+      print('📊 Creating save data with $adventureStageCount adventure stages');
+      
+      return GameSaveData(
+        stageData: stageData,
+        normalStageStars: List<int>.filled(adventureStageCount, 0),
+        hardStageStars: List<int>.filled(adventureStageCount, 0),
+        unlockedNormalStages: List.generate(adventureStageCount, (i) => i == 0),
+        unlockedHardStages: List.generate(adventureStageCount, (i) => i == 0),
+        hasSeenPrerequisite: List<bool>.filled(adventureStageCount, false),
+      );
+    } catch (e) {
+      print('❌ Error creating initial game data: $e');
+      throw GameSaveDataException('${GameSaveError.CREATE_FAILED}: $e');
     }
   }
+
+  int _calculateMaxScore(Map<String, dynamic> stage) {
+    if (stage['questions'] == null) return 0;
     
-    return GameSaveData(
-      stageData: stageData,
-      normalStageStars: normalStageStars,
-      hardStageStars: hardStageStars,
-      unlockedNormalStages: unlockedNormalStages,
-      unlockedHardStages: unlockedHardStages,
-      hasSeenPrerequisite: hasSeenPrerequisite,
-    );
+    return (stage['questions'] as List).fold(0, (sum, question) {
+      switch (question['type']) {
+        case 'Multiple Choice': return sum + 1;
+        case 'Fill in the Blanks': return sum + (question['answer'] as List).length;
+        case 'Identification': return sum + 1;
+        case 'Matching Type': return sum + (question['answerPairs'] as List).length;
+        default: return sum;
+      }
+    });
+  }
+
+  int _getStageNumber(String stageName) {
+    final match = RegExp(r'\d+').firstMatch(stageName);
+    return match != null ? int.parse(match.group(0)!) : 1;
+  }
+
+  Future<GameSaveData?> _restoreGameSaveBackup(String categoryId) async {
+    try {
+      print('🔄 Attempting to restore from backup for category: $categoryId');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? backupJson = prefs.getString('game_save_data_backup_$categoryId');
+      if (backupJson != null) {
+        return GameSaveData.fromMap(jsonDecode(backupJson));
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error restoring from backup: $e');
+      throw GameSaveDataException('${GameSaveError.RESTORE_FAILED}: $e');
+    }
   }
 
   Future<void> dispose() async {
@@ -1024,80 +1028,64 @@ class AuthService {
     required bool isArcade,
   }) async {
     try {
-      User? currentUser = _auth.currentUser;
-      if (currentUser == null) return;
-
+      print('🎮 Updating game progress for ${isArcade ? 'arcade' : 'adventure'} mode');
+      
+      // Get current game save data
       GameSaveData? localData = await getLocalGameSaveData(categoryId);
-      if (localData == null) return;
-
-      // Update local data
-      if (isArcade && record != null) {
-        // For arcade mode, find the correct stage key
-        String arcadeStageKey = localData.stageData.keys
-            .firstWhere((key) => key.contains('Arcade'), 
-            orElse: () => stageName);
-        
-        // Get current records
-        int currentBestRecord = localData.stageData[arcadeStageKey]?['bestRecord'];
-        int currentRecord = localData.stageData[arcadeStageKey]?['crntRecord'];
-        
-        // Update records only if:
-        // 1. Current record is -1 (no record yet)
-        // 2. New record is lower than current record (better time)
-
-        //Update personal best record
-        if (currentBestRecord == -1 || record < currentBestRecord) {
-          localData.stageData[arcadeStageKey]?['bestRecord'] = record;
-        }
-
-        //Update current season record
-        if (currentRecord == -1 || record < currentRecord) {
-          localData.stageData[arcadeStageKey]?['crntRecord'] = record;
-        }
-
-      } else {
-        // For normal mode, find the correct stage key
-        String stageKey = localData.stageData.keys
-            .firstWhere((key) => key.endsWith(stageName.split(' ').last),
-            orElse: () => stageName);
-        
-        // Update score
-        String scoreKey = mode == 'normal' ? 'scoreNormal' : 'scoreHard';
-        if (localData.stageData[stageKey] != null) {
-          localData.stageData[stageKey]![scoreKey] = score;
-        }
-        
-        // Update stars
-        List<int> stageStars = mode == 'normal' 
-            ? localData.normalStageStars 
-            : localData.hardStageStars;
-        
-        // Extract stage number from stageName (e.g., "Stage 1" -> 1)
-        int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), ''));
-        int stageIndex = stageNumber - 1;
-        
-        if (stageIndex >= 0 && stageIndex < stageStars.length) {
-          if (stars > stageStars[stageIndex]) {
-            stageStars[stageIndex] = stars;
-          }
-        }
+      if (localData == null) {
+        throw GameSaveDataException('No save data found for category: $categoryId');
       }
 
-      // Save locally
-      await saveGameSaveDataLocally(categoryId, localData);
+      // Get the appropriate stage key
+      String stageKey = isArcade 
+          ? GameSaveData.getArcadeKey(categoryId)
+          : GameSaveData.getStageKey(categoryId, _getStageNumber(stageName));
 
+      // Update based on game mode
+      if (isArcade) {
+        if (record == null) {
+          throw GameSaveDataException('Record is required for arcade mode');
+        }
+        localData.updateArcadeRecord(stageKey, record);
+        print('🏁 Updated arcade record: $record');
+      } else {
+        // Update adventure mode score and stars
+        localData.updateScore(stageKey, score, mode);
+        
+        int stageIndex = _getStageNumber(stageName) - 1;
+        localData.updateStars(stageIndex, stars, mode);
+        
+        // Unlock next stage if applicable
+        if (stars > 0 && stageIndex + 1 < (mode == 'normal' 
+            ? localData.unlockedNormalStages.length 
+            : localData.unlockedHardStages.length)) {
+          localData.unlockStage(stageIndex + 1, mode);
+        }
+        
+        print('⭐ Updated adventure progress - Score: $score, Stars: $stars');
+      }
+
+      // Save updated data locally
+      await saveGameSaveDataLocally(categoryId, localData);
+      
       // Sync with Firestore if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
+        print('🌐 Syncing with Firestore...');
         await _firestore
             .collection('User')
-            .doc(currentUser.uid)
+            .doc(_auth.currentUser?.uid)
             .collection('GameSaveData')
             .doc(categoryId)
             .set(localData.toMap());
+        print('✅ Sync complete');
+      } else {
+        print('📱 Offline - Changes saved locally');
       }
     } catch (e) {
-      rethrow;
+      print('❌ Error updating game progress: $e');
+      if (e is GameSaveDataException) rethrow;
+      throw GameSaveDataException('Failed to update game progress: $e');
     }
   }
 
@@ -1160,20 +1148,34 @@ class AuthService {
     required String gamemode,
     required Map<String, dynamic> gameState,
   }) async {
-    // Skip saving for arcade mode
-    if (gamemode == 'arcade') return;
-
     try {
+      print('💾 Saving game state...');
+      // Skip saving for arcade mode
+      if (gamemode == 'arcade') {
+        print('ℹ️ Skipping save for arcade mode');
+        return;
+      }
+
       // Create document ID in consistent format
       final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
       
-      // First save locally
+      // First save locally with backup
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Create backup of existing state
+      String? existingState = prefs.getString('${GameStateKeys.SAVE_PREFIX}$docId');
+      if (existingState != null) {
+        await prefs.setString('${GameStateKeys.BACKUP_PREFIX}$docId', existingState);
+        print('📦 Created backup of existing state');
+      }
+
+      // Save new state
       String gameStateJson = jsonEncode({
         'timestamp': DateTime.now().toIso8601String(),
         ...gameState
       });
-      await prefs.setString('game_progress_$docId', gameStateJson);
+      await prefs.setString('${GameStateKeys.SAVE_PREFIX}$docId', gameStateJson);
+      print('✅ Game state saved locally');
 
       // Then save to Firebase if online
       var connectivityResult = await (Connectivity().checkConnectivity());
@@ -1187,10 +1189,55 @@ class AuthService {
           'timestamp': DateTime.now(),
           ...gameState
         });
+        print('🌐 Game state synced to Firebase');
       }
     } catch (e) {
       print('❌ Error saving game state: $e');
-      rethrow;
+      throw GameSaveDataException('Failed to save game state: $e');
+    }
+  }
+
+  /// Retrieves saved game state from local storage or Firebase
+  Future<Map<String, dynamic>?> getSavedGameState({
+    required String userId,
+    required String categoryId,
+    required String stageName,
+    required String mode,
+  }) async {
+    try {
+      print('🔍 Getting saved game state...');
+      final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
+      
+      // Check local storage first
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? localGameState = prefs.getString('${GameStateKeys.SAVE_PREFIX}$docId');
+      
+      if (localGameState != null) {
+        print('📱 Found local game state');
+        return jsonDecode(localGameState);
+      }
+
+      // If not in local storage and online, check Firebase
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        DocumentSnapshot doc = await _firestore
+            .collection('User')
+            .doc(userId)
+            .collection('GameProgress')
+            .doc(docId)
+            .get();
+          
+        if (doc.exists) {
+          print('🌐 Found game state in Firebase');
+          return doc.data() as Map<String, dynamic>;
+        }
+      }
+      
+      print('ℹ️ No saved game state found');
+      return null;
+    } catch (e) {
+      print('❌ Error getting game state: $e');
+      return null;
     }
   }
 
@@ -1206,9 +1253,9 @@ class AuthService {
     required Function(BuildContext) navigateBack,
     required BuildContext context,
   }) async {
-    print('🎮 Starting handleGameQuit in AuthService');
-
     try {
+      print('🎮 Starting handleGameQuit');
+
       // Only save state for non-arcade modes
       if (gamemode != 'arcade') {
         await saveGameState(
@@ -1219,61 +1266,41 @@ class AuthService {
           gamemode: gamemode,
           gameState: gameState,
         );
-        print('🎮 Game state saved');
+        print('💾 Game state saved');
       }
 
       // Execute cleanup callback
       onCleanup();
-      print('🎮 Cleanup completed');
+      print('🧹 Cleanup completed');
 
       // Navigate back
       if (context.mounted) {
         navigateBack(context);
+        print('◀️ Navigation completed');
       }
-      print('🎮 Navigation completed');
-
     } catch (e) {
       print('❌ Error in handleGameQuit: $e');
+      // Still try to navigate back even if save fails
+      if (context.mounted) {
+        navigateBack(context);
+      }
       rethrow;
     }
   }
 
-  /// Retrieves saved game state
-  Future<Map<String, dynamic>?> getSavedGameState({
-    required String userId,
-    required String categoryId,
-    required String stageName,
-    required String mode,
-  }) async {
+  // Add helper method for restoring game state
+  Future<Map<String, dynamic>?> _restoreGameStateBackup(String docId) async {
     try {
-      final docId = '${categoryId}_${stageName}_${mode.toLowerCase()}';
-      
-      // Check local storage first
+      print('🔄 Attempting to restore game state from backup');
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? localGameState = prefs.getString('game_progress_$docId');
-      
-      if (localGameState != null) {
-        return jsonDecode(localGameState);
+      String? backupJson = prefs.getString('${GameStateKeys.BACKUP_PREFIX}$docId');
+      if (backupJson != null) {
+        print('✅ Restored from backup');
+        return jsonDecode(backupJson);
       }
-
-      // If not in local storage and online, check Firebase
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        DocumentSnapshot doc = await _firestore
-            .collection('User')
-            .doc(userId)
-            .collection('GameProgress')
-            .doc(docId)
-            .get();
-          
-        if (doc.exists) {
-          return doc.data() as Map<String, dynamic>;
-        }
-      }
-      
       return null;
     } catch (e) {
-      print('❌ Error retrieving game state: $e');
+      print('❌ Error restoring game state backup: $e');
       return null;
     }
   }
@@ -1583,27 +1610,17 @@ class AuthService {
     }
   }
 
-  Future<bool> _restoreFromBackup(String backupKey) async {
+  Future<bool> _restoreProfileBackup(String backupKey) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      
-      // Restore profile
-      String? profileBackup = prefs.getString(backupKey);
-      if (profileBackup != null) {
-        UserProfile profile = UserProfile.fromMap(jsonDecode(profileBackup));
-        await saveUserProfileLocally(profile);
+      String? backup = prefs.getString(backupKey);
+      if (backup != null) {
+        await prefs.setString(USER_PROFILE_KEY, backup);
+        return true;
       }
-
-      // Restore game progress
-      String? progressBackup = prefs.getString('${backupKey}_progress');
-      if (progressBackup != null) {
-        Map<String, dynamic> progress = jsonDecode(progressBackup);
-        await _restoreGameProgress(progress);
-      }
-
-      return true;
+      return false;
     } catch (e) {
-      print('Error restoring from backup: $e');
+      print('Error restoring profile backup: $e');
       return false;
     }
   }
@@ -1628,7 +1645,7 @@ class AuthService {
         if (attempts == maxAttempts) {
           // Final attempt failed, restore from backup
           final backupKey = 'backup_${tempId}_${DateTime.now().millisecondsSinceEpoch}';
-          await _restoreFromBackup(backupKey);
+          await _restoreProfileBackup(backupKey);
           rethrow;
         }
         

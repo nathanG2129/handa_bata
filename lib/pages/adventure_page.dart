@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'play_page.dart';
@@ -13,6 +14,7 @@ import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'user_profile.dart'; // Import UserProfilePage
 import 'package:handabatamae/models/stage_models.dart';
+import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
 
 class AdventurePage extends StatefulWidget {
   final String selectedLanguage;
@@ -25,6 +27,7 @@ class AdventurePage extends StatefulWidget {
 
 class AdventurePageState extends State<AdventurePage> {
   final StageService _stageService = StageService();
+  final AuthService _authService = AuthService();
   late StreamSubscription<List<Map<String, dynamic>>> _categorySubscription;
   bool _isLoading = true;
   String? _errorMessage;
@@ -94,21 +97,40 @@ class AdventurePageState extends State<AdventurePage> {
 
   Future<void> _prefetchFirstCategory() async {
     if (_categories.isNotEmpty) {
-      // Remove await since queueStageLoad is void
-      _stageService.queueStageLoad(
-        _categories.first['id'],
-        '', // Empty stageName means fetch whole category
-        StagePriority.HIGH
-      );
-    }
+      final categoryId = _categories.first['id'];
+      // Use GameSaveData to check if category is unlocked
+      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
+      
+      if (localData != null) {
+        // Prefetch based on unlocked stages
+        for (int i = 0; i < localData.unlockedNormalStages.length; i++) {
+          if (localData.unlockedNormalStages[i]) {
+            // Prioritize loading based on stage index
+            _stageService.queueStageLoad(
+              categoryId,
+              GameSaveData.getStageKey(categoryId, i + 1),
+              i == 0 ? StagePriority.HIGH : StagePriority.MEDIUM
+            );
+          } else {
+            // Stop prefetching once we hit a locked stage
+            break;
+          }
+        }
+      }
 
-    // Prefetch second category with MEDIUM priority if it exists
-    if (_categories.length > 1) {
-      _stageService.queueStageLoad(
-        _categories[1]['id'],
-        '',
-        StagePriority.MEDIUM
-      );
+      // Prefetch second category if available
+      if (_categories.length > 1) {
+        final secondCategoryId = _categories[1]['id'];
+        GameSaveData? secondData = await _authService.getLocalGameSaveData(secondCategoryId);
+        
+        if (secondData?.unlockedNormalStages[0] == true) {
+          _stageService.queueStageLoad(
+            secondCategoryId,
+            GameSaveData.getStageKey(secondCategoryId, 1),
+            StagePriority.LOW
+          );
+        }
+      }
     }
   }
 

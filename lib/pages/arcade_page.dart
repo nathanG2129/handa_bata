@@ -14,6 +14,7 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import respo
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
+import 'package:handabatamae/models/game_save_data.dart'; // Import GameSaveData
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -89,20 +90,28 @@ class ArcadePageState extends State<ArcadePage> {
 
   Future<void> _prefetchFirstCategory() async {
     if (_categories.isNotEmpty) {
+      final categoryId = _categories.first['id'];
+      // Use arcade-specific key format
+      final arcadeKey = GameSaveData.getArcadeKey(categoryId);
+      
+      // Arcade stages are always available, so just prefetch
       _stageService.queueStageLoad(
-        _categories.first['id'],
-        '', // Empty stageName means fetch whole category
+        categoryId,
+        arcadeKey,
         StagePriority.HIGH
       );
-    }
 
-    // Prefetch second category with MEDIUM priority if it exists
-    if (_categories.length > 1) {
-      _stageService.queueStageLoad(
-        _categories[1]['id'],
-        '',
-        StagePriority.MEDIUM
-      );
+      // Prefetch second category's arcade stage if available
+      if (_categories.length > 1) {
+        final secondCategoryId = _categories[1]['id'];
+        final secondArcadeKey = GameSaveData.getArcadeKey(secondCategoryId);
+        
+        _stageService.queueStageLoad(
+          secondCategoryId,
+          secondArcadeKey,
+          StagePriority.MEDIUM
+        );
+      }
     }
   }
 

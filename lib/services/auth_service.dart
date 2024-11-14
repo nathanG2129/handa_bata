@@ -885,41 +885,102 @@ class AuthService {
       print('🎮 Creating initial game data');
       Map<String, StageDataEntry> stageData = {};
 
-      // Initialize stage data for each stage
+      // Group stages by category and type
+      Map<String, List<Map<String, dynamic>>> adventureStages = {};
+      Map<String, Map<String, dynamic>> arcadeStages = {};
+      
       for (var stage in stages) {
-        String stageName = stage['stageName'];
-        String categoryId = stage['categoryId'];
+        // Debug print the stage data
+        print('📝 Processing stage data: ${stage.toString()}');
+
+        String stageName = stage['stageName'] ?? '';
+        if (stageName.isEmpty) {
+          print('⚠️ Warning: Stage found with missing stageName');
+          continue;
+        }
+
+        // Get category from the parent collection in StageService
+        String categoryId = stage['id'] ?? stage['categoryId'] ?? _extractCategoryFromStageName(stageName);
+        if (categoryId.isEmpty) {
+          print('⚠️ Warning: Could not determine category for stage: $stageName');
+          continue;
+        }
+
+        // Add category to stage data
+        Map<String, dynamic> stageWithCategory = {
+          ...stage,
+          'categoryId': categoryId,
+        };
+
         bool isArcade = stageName.toLowerCase().contains('arcade');
-        
-        // Calculate maxScore for the stage
-        int maxScore = _calculateMaxScore(stage);
+        print('🎯 Processing ${isArcade ? 'Arcade' : 'Adventure'} stage: $stageName for category: $categoryId');
 
-        // Create appropriate stage data entry
-        String stageKey = isArcade 
-            ? GameSaveData.getArcadeKey(categoryId)
-            : GameSaveData.getStageKey(categoryId, _getStageNumber(stageName));
-
-        stageData[stageKey] = isArcade
-            ? ArcadeStageData(maxScore: maxScore)
-            : AdventureStageData(maxScore: maxScore);
+        if (isArcade) {
+          arcadeStages[categoryId] = stageWithCategory;
+        } else {
+          adventureStages.putIfAbsent(categoryId, () => []).add(stageWithCategory);
+        }
       }
 
-      // Filter out arcade stages for arrays
-      int adventureStageCount = stages.where((s) => 
-        !s['stageName'].toLowerCase().contains('arcade')).length;
+      // Print summary of collected stages
+      adventureStages.forEach((category, stages) {
+        print('📊 Category $category: ${stages.length} adventure stages');
+      });
+      arcadeStages.forEach((category, _) {
+        print('📊 Category $category: 1 arcade stage');
+      });
 
-      print('📊 Creating save data with $adventureStageCount adventure stages');
+      // Process arcade stages
+      for (var entry in arcadeStages.entries) {
+        String categoryId = entry.key;
+        var arcadeStage = entry.value;
+        String arcadeKey = GameSaveData.getArcadeKey(categoryId);
+        
+        print('🎮 Creating arcade stage for $arcadeKey');
+        stageData[arcadeKey] = ArcadeStageData(
+          maxScore: _calculateMaxScore(arcadeStage),
+        );
+      }
+
+      // Process adventure stages
+      for (var entry in adventureStages.entries) {
+        String categoryId = entry.key;
+        var categoryStages = entry.value;
+
+        // Sort stages by number
+        categoryStages.sort((a, b) => _getStageNumber(a['stageName'])
+            .compareTo(_getStageNumber(b['stageName'])));
+
+        print('🎮 Creating ${categoryStages.length} adventure stages for $categoryId');
+        
+        for (var stage in categoryStages) {
+          int stageNumber = _getStageNumber(stage['stageName']);
+          String stageKey = GameSaveData.getStageKey(categoryId, stageNumber);
+          
+          print('📝 Creating stage data for $stageKey');
+          stageData[stageKey] = AdventureStageData(
+            maxScore: _calculateMaxScore(stage),
+          );
+        }
+      }
+
+      // Calculate total adventure stages
+      int totalAdventureStages = adventureStages.values
+          .fold(0, (sum, stages) => sum + stages.length);
+
+      print('📊 Creating save data with $totalAdventureStages adventure stages');
       
       return GameSaveData(
         stageData: stageData,
-        normalStageStars: List<int>.filled(adventureStageCount, 0),
-        hardStageStars: List<int>.filled(adventureStageCount, 0),
-        unlockedNormalStages: List.generate(adventureStageCount, (i) => i == 0),
-        unlockedHardStages: List.generate(adventureStageCount, (i) => i == 0),
-        hasSeenPrerequisite: List<bool>.filled(adventureStageCount, false),
+        normalStageStars: List<int>.filled(totalAdventureStages, 0),
+        hardStageStars: List<int>.filled(totalAdventureStages, 0),
+        unlockedNormalStages: List.generate(totalAdventureStages, (i) => i == 0),
+        unlockedHardStages: List.generate(totalAdventureStages, (i) => i == 0),
+        hasSeenPrerequisite: List<bool>.filled(totalAdventureStages, false),
       );
     } catch (e) {
       print('❌ Error creating initial game data: $e');
+      print('Stack trace: ${StackTrace.current}');
       throw GameSaveDataException('${GameSaveError.CREATE_FAILED}: $e');
     }
   }
@@ -1688,6 +1749,27 @@ class AuthService {
     } catch (e) {
       print('Error restoring game progress: $e');
     }
+  }
+
+  // Add helper method to extract category from stage name
+  String _extractCategoryFromStageName(String stageName) {
+    // Map of special cases and their correct category IDs
+    const Map<String, String> specialCases = {
+      'Volcanic': 'Volcanic',
+      // Add any other special cases here if needed
+    };
+
+    // Check special cases first
+    for (var prefix in specialCases.keys) {
+      if (stageName.startsWith(prefix)) {
+        return specialCases[prefix]!;
+      }
+    }
+    
+    // For regular cases, extract everything before the first number or "Arcade"
+    RegExp exp = RegExp(r'^([A-Za-z]+)(?:\d+|Arcade)');
+    var match = exp.firstMatch(stageName);
+    return match?.group(1) ?? '';
   }
 }
 

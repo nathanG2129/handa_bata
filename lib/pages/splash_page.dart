@@ -252,43 +252,99 @@ class SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _checkSignInStatus(BuildContext context) async {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const LoadingWidget();
-      },
-    );
-
-    AuthService authService = AuthService();
-    bool isSignedIn = await authService.isSignedIn();
-
-    if (!context.mounted) return;
-
-    // Remove the loading dialog
-    Navigator.of(context).pop();
-
-    if (isSignedIn) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const LoadingWidget();
+        },
       );
-    } else {
-      // Check for local guest profile
-      UserProfile? localGuestProfile = await authService.getLocalGuestProfile();
+
+      AuthService authService = AuthService();
+      bool isSignedIn = await authService.isSignedIn();
 
       if (!context.mounted) return;
 
-      if (localGuestProfile != null) {
+      // Remove the loading dialog
+      Navigator.of(context).pop();
+
+      if (isSignedIn) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
         );
       } else {
-        // Sign in anonymously if no local guest profile exists
-        _signInAnonymously(context);
+        // Check for local guest profile
+        UserProfile? localGuestProfile = await authService.getLocalGuestProfile();
+
+        if (!context.mounted) return;
+
+        if (localGuestProfile != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+          );
+        } else {
+          // Create guest account with proper error handling
+          try {
+            UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+            if (userCredential.user != null) {
+              await authService.createGuestProfile(userCredential.user!);
+              
+              if (!context.mounted) return;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
+              );
+            }
+          } catch (e) {
+            print('❌ Error creating guest account: $e');
+            if (!context.mounted) return;
+            
+            // Show error dialog
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Error'),
+                  content: Text('Failed to create guest account: $e'),
+                  actions: [
+                    TextButton(
+                      child: const Text('OK'),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        }
       }
+    } catch (e) {
+      print('❌ Error in _checkSignInStatus: $e');
+      if (!context.mounted) return;
+      
+      // Remove loading dialog if still showing
+      Navigator.of(context).pop();
+      
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: Text('An error occurred: $e'),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 

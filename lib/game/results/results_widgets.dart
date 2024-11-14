@@ -5,19 +5,24 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 Widget buildReactionWidget(int stars) {
   String reaction;
+  
   switch (stars) {
     case 3:
-      reaction = 'Great job!';
+      reaction = 'Excellent!';
       break;
     case 2:
+      reaction = 'Great job!';
+      break;
+    case 1:
       reaction = 'Good effort!';
       break;
     default:
       reaction = 'Keep trying!';
   }
+  
   return TextWithShadow(
     text: reaction,
-    fontSize: 48, // Larger font size
+    fontSize: 48,
   );
 }
 
@@ -25,8 +30,9 @@ Widget buildStarsWidget(int stars) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: List.generate(3, (index) {
+      bool isLit = index < stars;
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add horizontal spacing
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: SvgPicture.string(
           '''
           <svg
@@ -37,8 +43,16 @@ Widget buildStarsWidget(int stars) {
           >
             <path
               d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-              fill="${stars > index ? '#F1B33A' : '#453958'}"
+              fill="${isLit ? '#F1B33A' : '#453958'}"
+              stroke="${isLit ? '#F1B33A' : '#453958'}"
+              stroke-width="0.2"
             />
+            ${isLit ? '''
+              <path
+                d="M6 2L7 4L9 4.5L7.5 6L8 8L6 7L4 8L4.5 6L3 4.5L5 4L6 2Z"
+                fill="#FFD700"
+              />
+            ''' : ''}
           </svg>
           ''',
           width: 48,

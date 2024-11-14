@@ -63,8 +63,7 @@ class ResultsPageState extends State<ResultsPage> {
   late int _soundId1Star;
   late int _soundId2Stars;
   late int _soundId3Stars;
-  bool _soundsLoaded = false;
-  bool _starsCalculated = false;
+  bool _isInitialized = false;
   int stars = 0;
   int _xpGained = 0;
   final AuthService _authService = AuthService();
@@ -77,57 +76,88 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _initializeResultsPage() async {
     try {
-      print('🎮 Initializing results page');
+      print('🎮 Starting results page initialization');
 
-      // Load sounds and update progress in parallel with timeout
-      try {
-        await Future.wait([
-          _loadSounds().timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              print('⚠️ Sound loading timed out, continuing without sounds');
-              setState(() => _soundsLoaded = true);
-            },
-          ),
-          _updateProgress().timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('⚠️ Progress update timed out, will sync later');
-              // Calculate stars locally
-              setState(() {
-                stars = _calculateStars(
-                  widget.accuracy,
-                  widget.score,
-                  widget.stageData['maxScore'],
-                  widget.isGameOver
-                );
-                _starsCalculated = true;
-              });
-            },
-          ),
-        ], eagerError: false);
-      } catch (e) {
-        print('⚠️ Error in parallel operations: $e');
-        setState(() {
-          _soundsLoaded = true;
-          _starsCalculated = true;
-        });
+      // Calculate stars first
+      stars = _calculateStars(
+        widget.accuracy,
+        widget.score,
+        widget.stageData['maxScore'],
+        widget.isGameOver
+      );
+
+      // Initialize soundpool
+      _soundpool = Soundpool.fromOptions(
+        options: const SoundpoolOptions(
+          streamType: StreamType.notification,
+          maxStreams: 4,
+        ),
+      );
+
+      // Run tasks in parallel
+      await Future.wait([
+        _loadSounds(),
+        _updateProgress(),
+      ], eagerError: false).catchError((e) {
+        print('⚠️ Error in initialization tasks: $e');
+        return [null, null]; // Return a list of nulls to satisfy the Future.wait type
+      });
+
+      // Play appropriate sound
+      if (mounted) {
+        _playSoundBasedOnStars(stars);
       }
 
-      // Only play sound if loaded successfully
-      if (_soundsLoaded) {
-        _playSoundBasedOnStars();
+      // Mark as initialized and update UI
+      if (mounted) {
+        setState(() => _isInitialized = true);
       }
 
       print('✅ Results page initialization complete');
     } catch (e) {
       print('❌ Error initializing results page: $e');
       if (mounted) {
-        setState(() {
-          _soundsLoaded = true;
-          _starsCalculated = true;
-        });
+        setState(() => _isInitialized = true); // Still show the page even if there's an error
       }
+    }
+  }
+
+  Future<void> _loadSounds() async {
+    try {
+      final sounds = await Future.wait([
+        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3')),
+        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3')),
+        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3')),
+        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3')),
+      ]);
+
+      _soundIdFail = sounds[0];
+      _soundId1Star = sounds[1];
+      _soundId2Stars = sounds[2];
+      _soundId3Stars = sounds[3];
+    } catch (e) {
+      print('❌ Error loading sounds: $e');
+    }
+  }
+
+  void _playSoundBasedOnStars(int stars) {
+    try {
+      switch (stars) {
+        case 0:
+          _soundpool.play(_soundIdFail);
+          break;
+        case 1:
+          _soundpool.play(_soundId1Star);
+          break;
+        case 2:
+          _soundpool.play(_soundId2Stars);
+          break;
+        case 3:
+          _soundpool.play(_soundId3Stars);
+          break;
+      }
+    } catch (e) {
+      print('⚠️ Error playing sound: $e');
     }
   }
 
@@ -151,34 +181,6 @@ class ResultsPageState extends State<ResultsPage> {
     final minutes = int.parse(parts[0]);
     final seconds = int.parse(parts[1]);
     return (minutes * 60) + seconds;
-  }
-
-  Future<void> _loadSounds() async {
-    _soundIdFail = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3'));
-    _soundId1Star = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3'));
-    _soundId2Stars = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3'));
-    _soundId3Stars = await _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3'));
-    setState(() {
-      _soundsLoaded = true;
-    });
-  }
-
-  void _playSoundBasedOnStars() {
-    int stars = _calculateStars(widget.accuracy, widget.score, widget.stageData['totalQuestions'] ?? 0, widget.isGameOver);
-    switch (stars) {
-      case 0:
-        _soundpool.play(_soundIdFail);
-        break;
-      case 1:
-        _soundpool.play(_soundId1Star);
-        break;
-      case 2:
-        _soundpool.play(_soundId2Stars);
-        break;
-      case 3:
-        _soundpool.play(_soundId3Stars);
-        break;
-    }
   }
 
   // Helper to calculate all updates
@@ -258,14 +260,16 @@ class ResultsPageState extends State<ResultsPage> {
 
   @override
   void dispose() {
+    _soundpool.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: (_soundsLoaded && _starsCalculated)
-          ? ResponsiveBreakpoints(
+      body: !_isInitialized
+          ? const Center(child: LoadingWidget())
+          : ResponsiveBreakpoints(
               breakpoints: const [
                 Breakpoint(start: 0, end: 450, name: MOBILE),
                 Breakpoint(start: 451, end: 800, name: TABLET),
@@ -416,10 +420,7 @@ class ResultsPageState extends State<ResultsPage> {
                   ),
                 ),
               )
-          ) : Container(
-              color: const Color(0xFF5E31AD),
-              child: const LoadingWidget(),
-            ),
+          ),
     );
   }
 

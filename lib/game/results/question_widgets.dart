@@ -235,7 +235,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
     }
 
   Widget buildMatchingTypeQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
-    List<Map<String, String>> correctPairs = List<Map<String, String>>.from(question['correctPairs'] ?? []);
+    List<Map<String, dynamic>> correctPairs = List<Map<String, dynamic>>.from(question['correctPairs'] ?? []);
   
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -267,8 +267,10 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
                         ),
                         const SizedBox(height: 4),
                         ...correctPairs.map((pair) {
+                          String section1 = pair['section1']?.toString() ?? '';
+                          String section2 = pair['section2']?.toString() ?? '';
                           return Text(
-                            '${pair['section1']} - ${pair['section2']}',
+                            '$section1 - $section2',
                             style: GoogleFonts.rubik(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold),
                           );
                         }),

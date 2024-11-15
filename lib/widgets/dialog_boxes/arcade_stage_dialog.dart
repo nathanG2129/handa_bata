@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/game_save_manager.dart';
 
 String formatTime(int seconds) {
   final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -189,16 +188,16 @@ Future<Map<String, dynamic>?> _getSavedGameData(
   try {
     final arcadeKey = GameSaveData.getArcadeKey(categoryId);
     
-    // Use AuthService's getSavedGameState instead of direct access
-    final authService = AuthService();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return await authService.getSavedGameState(
-        userId: user.uid,
-        categoryId: categoryId,
-        stageName: arcadeKey,
-        mode: mode,
-      );
+    // Use GameSaveManager instead of AuthService
+    final gameSaveManager = GameSaveManager();
+    final savedState = await gameSaveManager.getSavedGameState(
+      categoryId: categoryId,
+      stageName: arcadeKey,
+      mode: mode,
+    );
+
+    if (savedState != null) {
+      return savedState.toJson();
     }
     return null;
   } catch (e) {

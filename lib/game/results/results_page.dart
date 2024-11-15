@@ -1,5 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,9 +14,7 @@ import 'question_widgets.dart';
 import 'results_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:handabatamae/services/game_save_manager.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -59,6 +55,7 @@ class ResultsPage extends StatefulWidget {
 }
 
 class ResultsPageState extends State<ResultsPage> {
+  final GameSaveManager _gameSaveManager = GameSaveManager();
   late Soundpool _soundpool;
   late int _soundIdFail;
   late int _soundId1Star;
@@ -95,13 +92,14 @@ class ResultsPageState extends State<ResultsPage> {
         ),
       );
 
-      // Run tasks in parallel
+      // Run tasks in parallel with error handling
       await Future.wait([
         _loadSounds(),
         _updateProgress(),
-      ], eagerError: false).catchError((e) {
+        _cleanupGameSave(),
+      ]).catchError((e) {
         print('⚠️ Error in initialization tasks: $e');
-        return [null, null]; // Return a list of nulls to satisfy the Future.wait type
+        return [null, null, null];
       });
 
       // Play appropriate sound
@@ -118,7 +116,7 @@ class ResultsPageState extends State<ResultsPage> {
     } catch (e) {
       print('❌ Error initializing results page: $e');
       if (mounted) {
-        setState(() => _isInitialized = true); // Still show the page even if there's an error
+        setState(() => _isInitialized = true);
       }
     }
   }
@@ -182,50 +180,6 @@ class ResultsPageState extends State<ResultsPage> {
     final minutes = int.parse(parts[0]);
     final seconds = int.parse(parts[1]);
     return (minutes * 60) + seconds;
-  }
-
-  // Helper to queue offline updates
-  Future<void> _queueProfileUpdates(Map<String, dynamic> updates) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> pendingUpdates = 
-      jsonDecode(prefs.getString('pending_profile_updates') ?? '[]')
-        .cast<Map<String, dynamic>>();
-
-    pendingUpdates.add({
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'updates': updates,
-    });
-
-    await prefs.setString('pending_profile_updates', jsonEncode(pendingUpdates));
-  }
-
-  Future<void> _deleteSavedGame() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final docId = '${widget.category['id']}_${widget.stageName}_${widget.mode.toLowerCase()}';
-        print('🎮 Deleting saved game...');
-        
-        // Delete from local storage first
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.remove('game_progress_$docId');
-        print('🎮 Local saved game deleted');
-
-        // Try to delete from Firebase if online
-        var connectivityResult = await (Connectivity().checkConnectivity());
-        if (connectivityResult != ConnectivityResult.none) {
-          await FirebaseFirestore.instance
-              .collection('User')
-              .doc(user.uid)
-              .collection('GameProgress')
-              .doc(docId)
-              .delete();
-          print('🎮 Firebase saved game deleted');
-        }
-      }
-    } catch (e) {
-      print('❌ Error deleting saved game: $e');
-    }
   }
 
   @override
@@ -511,7 +465,7 @@ class ResultsPageState extends State<ResultsPage> {
         );
 
         // Delete saved game state if exists
-        await _deleteSavedGame();
+        await _cleanupGameSave();
       }
 
       // Update state for UI
@@ -525,6 +479,26 @@ class ResultsPageState extends State<ResultsPage> {
       await _checkBadgeUnlocks();
     } catch (e) {
       print('❌ Error updating progress: $e');
+    }
+  }
+
+  Future<void> _cleanupGameSave() async {
+    try {
+      // Delete save if:
+      // 1. Game is over (HP = 0)
+      // 2. Game completed normally (got stars)
+      // 3. Arcade mode (no saves needed)
+      if (widget.isGameOver || stars > 0 || widget.gamemode == 'arcade') {
+        await _gameSaveManager.deleteSavedGame(
+          categoryId: widget.category['id'],
+          stageName: widget.stageName,
+          mode: widget.mode,
+        );
+        print('🧹 Game save cleaned up - ${widget.isGameOver ? "Game over" : 
+              widget.gamemode == "arcade" ? "Arcade mode" : "Stage completed"}');
+      }
+    } catch (e) {
+      print('❌ Error cleaning up game save: $e');
     }
   }
 }

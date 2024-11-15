@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/localization/stages/localization.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/models/game_save_data.dart';
+import 'package:handabatamae/models/game_state.dart';
 import 'package:handabatamae/services/stage_service.dart';
-import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/game_save_manager.dart';
 
 void showStageDialog(
   BuildContext context,
@@ -114,88 +114,113 @@ void showStageDialog(
                     const SizedBox(height: 30),
                     if (snapshot.hasData && snapshot.data != null) ...[
                       const SizedBox(height: 20),
-                      if (!(snapshot.data!['completed'] ?? false)) ...[
-                        ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              await _handleOfflineStageStart(
-                                category['id']!, 
-                                stageNumber,
-                                mode,
-                                stageService
-                              );
-                              
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => GameplayPage(
-                                      language: selectedLanguage,
-                                      category: {
-                                        'id': category['id'],
-                                        'name': category['name'],
-                                      },
-                                      stageName: 'Stage $stageNumber',
-                                      stageData: {
-                                        ...stageData,
-                                        'savedGame': snapshot.data,
-                                      },
-                                      mode: mode,
-                                      gamemode: 'adventure',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              print('❌ Error resuming game: $e');
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Failed to resume game: $e')),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: const Color(0xFF32C067),
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
-                          ),
-                          child: Text(
-                            'Resume Game',
-                            style: GoogleFonts.vt323(fontSize: 24),
-                          ),
-                        ),
-                      ],
+                      Builder(
+                        builder: (context) {
+                          final savedState = GameState.fromJson(snapshot.data!);
+                          if (!savedState.completed && !savedState.isGameOver) {
+                            return ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  await _handleOfflineStageStart(
+                                    category['id']!, 
+                                    stageNumber,
+                                    mode,
+                                    stageService
+                                  );
+                                  
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => GameplayPage(
+                                          language: selectedLanguage,
+                                          category: {
+                                            'id': category['id'],
+                                            'name': category['name'],
+                                          },
+                                          stageName: 'Stage $stageNumber',
+                                          stageData: {
+                                            ...stageData,
+                                            'savedGame': savedState.toJson(),
+                                          },
+                                          mode: mode,
+                                          gamemode: 'adventure',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  print('❌ Error resuming game: $e');
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Failed to resume game: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: const Color(0xFF32C067),
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                              ),
+                              child: Text(
+                                'Resume Game',
+                                style: GoogleFonts.vt323(fontSize: 24),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ],
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
-                        await _handleOfflineStageStart(
-                          category['id']!, 
-                          stageNumber,
-                          mode,
-                          stageService
-                        );
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PrerequisitePage(
-                              language: selectedLanguage, // Pass selectedLanguage
-                              category: category,
-                              stageName: 'Stage $stageNumber',
-                              stageData: stageData,
-                              mode: mode,
-                              gamemode: 'adventure',
-                              personalBest: 0,
-                              crntRecord: -1,
-                              maxScore: maxScore,
-                              stars: stars,
+                        try {
+                          // Delete any existing saves first
+                          final gameSaveManager = GameSaveManager();
+                          await gameSaveManager.deleteSavedGame(
+                            categoryId: category['id']!,
+                            stageName: 'Stage $stageNumber',
+                            mode: mode,
+                          );
+                          print('🧹 Cleaned up existing saves before starting new game');
+
+                          await _handleOfflineStageStart(
+                            category['id']!, 
+                            stageNumber,
+                            mode,
+                            stageService
+                          );
+
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PrerequisitePage(
+                                language: selectedLanguage,
+                                category: category,
+                                stageName: 'Stage $stageNumber',
+                                stageData: stageData,
+                                mode: mode,
+                                gamemode: 'adventure',
+                                personalBest: 0,
+                                crntRecord: -1,
+                                maxScore: maxScore,
+                                stars: stars,
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        } catch (e) {
+                          print('❌ Error starting new game: $e');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to start game: $e')),
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -229,18 +254,17 @@ Future<Map<String, dynamic>?> _getSavedGameData(
   String mode
 ) async {
   try {
-    final stageKey = GameSaveData.getStageKey(categoryId, stageNumber);
+    final stageName = 'Stage $stageNumber';
     
-    // Use AuthService's getSavedGameState instead of direct access
-    final authService = AuthService();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return await authService.getSavedGameState(
-        userId: user.uid,
-        categoryId: categoryId,
-        stageName: stageKey,
-        mode: mode,
-      );
+    final gameSaveManager = GameSaveManager();
+    final savedState = await gameSaveManager.getSavedGameState(
+      categoryId: categoryId,
+      stageName: stageName,
+      mode: mode,
+    );
+
+    if (savedState != null) {
+      return savedState.toJson();
     }
     return null;
   } catch (e) {

@@ -7,14 +7,11 @@ import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/dialog_boxes/arcade_stage_dialog.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:handabatamae/models/stage_models.dart';  // Add this import
+import '../services/game_save_manager.dart';
 
 // ignore: must_be_immutable
 class ArcadeStagesPage extends StatefulWidget {
@@ -37,6 +34,7 @@ class ArcadeStagesPage extends StatefulWidget {
 class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final StageService _stageService = StageService();
   final AuthService _authService = AuthService();
+  final GameSaveManager _gameSaveManager = GameSaveManager();
   List<Map<String, dynamic>> _stages = [];
   List<Map<String, dynamic>> _categories = [];
 
@@ -131,81 +129,41 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
-      }
+      // Get local game save data for stats
+      GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
+      
+      // Get arcade key
+      final arcadeKey = GameSaveData.getArcadeKey(widget.category['id']!);
 
-      // Get local data using new GameSaveData structure
-      final AuthService authService = AuthService();
-      final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
+      // Check for saved game state using GameSaveManager
+      final savedGameState = await _gameSaveManager.getSavedGameState(
+        categoryId: widget.category['id']!,
+        stageName: arcadeKey,
+        mode: 'normal', // Arcade mode always uses normal
+      );
       
       if (localData != null) {
-        // Use arcade key format
-        final arcadeKey = GameSaveData.getArcadeKey(widget.category['id']!);
-        
-        // Get standardized stats format for arcade
-        final stats = localData.getStageStats(arcadeKey, 'normal'); // mode doesn't matter for arcade
-
-        // Check for saved game if savedGameDocId matches this stage
-        Map<String, dynamic>? savedGame;
-        if (widget.savedGameDocId != null) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          String? savedGameJson = prefs.getString('${GameStateKeys.SAVE_PREFIX}${widget.savedGameDocId}');
-          if (savedGameJson != null) {
-            savedGame = jsonDecode(savedGameJson);
-          }
-        }
-
+        // Get stats from GameSaveData
+        final stats = localData.getStageStats(arcadeKey, 'normal');
         return {
           'bestRecord': stats['bestRecord'] ?? -1,
           'crntRecord': stats['crntRecord'] ?? -1,
-          'savedGame': savedGame,
+          'savedGame': savedGameState?.toJson(),
         };
       }
 
-      // Fallback to Firebase if no local data
-      final docRef = FirebaseFirestore.instance
-          .collection('User')
-          .doc(user.uid)
-          .collection('GameSaveData')
-          .doc(widget.category['id']);
-
-      final docSnapshot = await docRef.get();
-      if (!docSnapshot.exists) {
-        return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
-      }
-
-      // Convert Firebase data to GameSaveData
-      final gameSaveData = GameSaveData.fromMap(docSnapshot.data() as Map<String, dynamic>);
-      
-      // Use same helper methods for consistency
-      final arcadeKey = GameSaveData.getArcadeKey(widget.category['id']!);
-      final stats = gameSaveData.getStageStats(arcadeKey, 'normal');
-
-      // Check for saved game in Firebase
-      Map<String, dynamic>? savedGame;
-      if (widget.savedGameDocId != null) {
-        final savedGameDoc = await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(widget.savedGameDocId)
-            .get();
-        
-        if (savedGameDoc.exists) {
-          savedGame = savedGameDoc.data();
-        }
-      }
-
       return {
-        'bestRecord': stats['bestRecord'] ?? -1,
-        'crntRecord': stats['crntRecord'] ?? -1,
-        'savedGame': savedGame,
+        'bestRecord': -1,
+        'crntRecord': -1,
+        'savedGame': null
       };
     } catch (e) {
       print('❌ Error fetching arcade stats: $e');
-      return {'bestRecord': -1, 'crntRecord': -1, 'savedGame': null};
+      return {
+        'bestRecord': -1,
+        'crntRecord': -1,
+        'savedGame': null
+      };
     }
   }
 

@@ -8,7 +8,6 @@ import 'package:handabatamae/game/type/multiplechoicequestion.dart';
 import 'package:handabatamae/game/type/fillintheblanksquestion.dart';
 import 'package:handabatamae/game/type/matchingtypequestion.dart';
 import 'package:handabatamae/game/type/identificationquestion.dart';
-import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -16,8 +15,8 @@ import 'settings_dialog.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:handabatamae/services/auth_service.dart';
+import '../services/game_save_manager.dart';
+import '../models/game_state.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -64,7 +63,7 @@ class GameplayPageState extends State<GameplayPage> {
   int _fullyCorrectAnswersCount = 0; // Define the fully correct answers count
   bool _isGameOver = false;
   double _hp = 100.0; // Define the HP variable with a default value of 1.0 (full HP)
-  final List<Map<String, dynamic>> _answeredQuestions = []; // Add this line
+  List<Map<String, dynamic>> _answeredQuestions = []; // Add this line
 
   List<Map<String, dynamic>> get answeredQuestions => _answeredQuestions;
 
@@ -94,7 +93,10 @@ class GameplayPageState extends State<GameplayPage> {
   // Add this field to track if the page is being disposed
   bool _isDisposing = false;
 
-  final AuthService _authService = AuthService();
+  final GameSaveManager _gameSaveManager = GameSaveManager();
+
+  // Internal save state question index
+  int _saveStateQuestionIndex = 0;
 
   @override
   void initState() {
@@ -194,38 +196,23 @@ class GameplayPageState extends State<GameplayPage> {
     _stopwatchTimer?.cancel();
     _stopwatchTimer = null;
 
-    // Cleanup TTS
+    // Cleanup TTS and audio
     Future.microtask(() async {
       try {
         await flutterTts.stop();
         await flutterTts.pause();
-      } catch (e) {
-        print('❌ Error disposing TTS: $e');
-      }
-    });
-
-    // Cleanup audio
-    Future.microtask(() async {
-      try {
         await _audioPlayer.pause();
         await _audioPlayer.stop();
         await _audioPlayer.setVolume(0);
         await _audioPlayer.dispose();
       } catch (e) {
-        print('❌ Error disposing audio player: $e');
+        print('❌ Error disposing audio: $e');
       }
     });
 
-    // Only save state if:
-    // 1. Not in arcade mode
-    // 2. Game is not over
-    // 3. Not navigating to results page
-    // 4. Not first unanswered question
-    if (!_isGameOver && 
-        widget.gamemode != 'arcade' && 
-        !ModalRoute.of(context)!.settings.name!.contains('ResultsPage') &&
-        !_isFirstUnansweredQuestion()) {
-      _saveGameState();
+    // Auto-save if needed
+    if (_shouldSaveGame()) {
+      _autoSaveGame();
     }
 
     super.dispose();
@@ -428,20 +415,24 @@ void readCurrentQuestion() {
         );
       });
     } else if (_currentQuestionIndex < _totalQuestions - 1) {
-      _saveGameState(); // Auto-save after each question
+      _autoSaveGame(); // Save after completing a question
       setState(() {
         _currentQuestionIndex++;
         _selectedOptionIndex = null;
         _isCorrect = null;
         _controller.clear();
-        _progress = 1.0; // Reset the progress bar immediately
+        _progress = 1.0;
       });
+
+      // Save again after state update
+      _autoSaveGame();
+
       if (widget.gamemode != 'arcade') {
         Future.delayed(const Duration(seconds: 5), () {
-          _startTimer(); // Restart the timer after the intro delay
+          _startTimer();
         });
-      } else if (widget.gamemode == 'arcade') {
-      _resumeStopwatch();
+      } else {
+        _resumeStopwatch();
       }
     } else {
       // Calculate accuracy
@@ -502,57 +493,65 @@ void readCurrentQuestion() {
   }
 
   void _handleMultipleChoiceAnswerSubmission(int? index, bool isCorrect) {
-    _timer?.cancel(); // Stop the timer when an option is selected or forced check occurs
+    _timer?.cancel();
     setState(() {
       _selectedOptionIndex = index;
       _isCorrect = isCorrect;
       
-      // Update questions answered and total time for arcade mode
+      // Update arcade stats
       if (widget.gamemode == 'arcade') {
         _questionsAnswered++;
         _totalTimeInSeconds = _stopwatchSeconds;
         _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
       }
 
+      // Update scores and streaks
       if (index == null) {
         _wrongAnswersCount++;
-        _currentStreak = 0; // Reset the current streak
+        _currentStreak = 0;
       } else if (_isCorrect == true) {
         _correctAnswersCount++;
-        _fullyCorrectAnswersCount++; // Increment fully correct answers count
-        _currentStreak++; // Increment the current streak
+        _fullyCorrectAnswersCount++;
+        _currentStreak++;
         if (_currentStreak > _highestStreak) {
-          _highestStreak = _currentStreak; // Update the highest streak
+          _highestStreak = _currentStreak;
         }
+        // Handle arcade time
         if (widget.gamemode == 'arcade') {
-          _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
-          if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
-          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+          _stopwatchSeconds -= 10;
+          if (_stopwatchSeconds < 0) _stopwatchSeconds = 0;
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
         }
       } else {
         _wrongAnswersCount++;
-        _currentStreak = 0; // Reset the current streak
+        _currentStreak = 0;
+        // Handle arcade time
         if (widget.gamemode == 'arcade') {
-          _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
-          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+          _stopwatchSeconds += 10;
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
         }
       }
     });
-  
-    // Add a delay of 1 second before updating health
+
+    // Increment save state index after answer
+    _saveStateQuestionIndex = _currentQuestionIndex + 1;
+    
+    // Save with incremented index
+    _autoSaveGame();
+
+    // Update health after delay
     Future.delayed(const Duration(seconds: 1), () {
       _updateHealth(isCorrect, 'Multiple Choice');
     });
-  
-    // Print fully correct answers count
-  
+
+    // Move to next question after delay
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
     });
   }
 
   void _handleFillInTheBlanksAnswerSubmission(Map<String, dynamic> answerData) {
-    _timer?.cancel(); // Stop the timer when an answer is submitted
+    _timer?.cancel();
     setState(() {
       _answeredQuestions.add({
         'question': _questions[_currentQuestionIndex]['question'],
@@ -561,99 +560,109 @@ void readCurrentQuestion() {
         'type': 'Fill in the Blanks',
       });
       
-      // Update questions answered and total time for arcade mode
-      if (widget.gamemode == 'arcade') {
-        _questionsAnswered++;
-        _totalTimeInSeconds = _stopwatchSeconds;
-        _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
-      }
-
+      // Update stats
       _correctAnswersCount += (answerData['correctCount'] as int);
       _wrongAnswersCount += (answerData['wrongCount'] as int);
       if (answerData['isFullyCorrect'] as bool) {
-        _fullyCorrectAnswersCount++; // Increment fully correct answers count
-        _currentStreak++; // Increment the current streak
+        _fullyCorrectAnswersCount++;
+        _currentStreak++;
         if (_currentStreak > _highestStreak) {
-          _highestStreak = _currentStreak; // Update the highest streak
+          _highestStreak = _currentStreak;
         }
       } else {
-        _currentStreak = 0; // Reset the current streak
+        _currentStreak = 0;
       }
     });
+
+    // Save right after answer submission
+    _autoSaveGame();
+    
+    // Increment save state index after answer
+    _saveStateQuestionIndex = _currentQuestionIndex + 1;
   }
   
 void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
-    _timer?.cancel(); // Stop the timer when an answer is submitted
+    _timer?.cancel();
     Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
     
     _answeredQuestions.add({
     'question': currentQuestion['question'],
-    'options': [], // Identification questions don't have options
+    'options': [],
     'correctAnswer': currentQuestion['answer'],
     'isCorrect': isCorrect,
     'type': 'Identification',
-  });
+    });
 
   setState(() {
     _isCorrect = isCorrect;
     
-    // Update questions answered and total time for arcade mode
+    // Update arcade stats
     if (widget.gamemode == 'arcade') {
       _questionsAnswered++;
       _totalTimeInSeconds = _stopwatchSeconds;
       _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
     }
 
+    // Update scores and streaks
     if (_isCorrect == true) {
       _correctAnswersCount++;
-      _fullyCorrectAnswersCount++; // Increment fully correct answers count
-      _currentStreak++; // Increment the current streak
+      _fullyCorrectAnswersCount++;
+      _currentStreak++;
       if (_currentStreak > _highestStreak) {
-        _highestStreak = _currentStreak; // Update the highest streak
+        _highestStreak = _currentStreak;
       }
+      // Handle arcade time
       if (widget.gamemode == 'arcade') {
-        _stopwatchSeconds -= 10; // Deduct 10 seconds for correct answer
-        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0; // Ensure stopwatch doesn't go below 0
-        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+        _stopwatchSeconds -= 10;
+        if (_stopwatchSeconds < 0) _stopwatchSeconds = 0;
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
       }
     } else {
       _wrongAnswersCount++;
-      _currentStreak = 0; // Reset the current streak
+      _currentStreak = 0;
+      // Handle arcade time
       if (widget.gamemode == 'arcade') {
-        _stopwatchSeconds += 10; // Add 10 seconds for wrong answer
-        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds); // Update the stopwatch time immediately
+        _stopwatchSeconds += 10;
+        _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
       }
     }
   });
 
+  // Save right after answer submission
+  _autoSaveGame();
+
   // Update health
   _updateHealth(isCorrect, 'Identification');
 
-  // Print fully correct answers count
-
+  // Move to next question after delay
   Future.delayed(const Duration(seconds: 6), () {
     _nextQuestion();
   });
 }
   
   void _handleMatchingTypeAnswerSubmission() {
-    _timer?.cancel(); // Stop the timer when an answer is submitted
+    _timer?.cancel();
     setState(() {
-      // Assuming correctPairCount and incorrectPairCount are updated in MatchingTypeQuestion
       _correctAnswersCount += _matchingTypeQuestionKey.currentState?.correctPairCount ?? 0;
       _wrongAnswersCount += _matchingTypeQuestionKey.currentState?.incorrectPairCount ?? 0;
-  
-      // Check if all pairs are correct and increment the fully correct answers count
-      if (_matchingTypeQuestionKey.currentState?.areAllPairsCorrect() == true) {
-        _fullyCorrectAnswersCount++; // Increment fully correct answers count
-        _currentStreak++; // Increment the current streak
+      
+      bool isFullyCorrect = _matchingTypeQuestionKey.currentState?.areAllPairsCorrect() ?? false;
+      if (isFullyCorrect) {
+        _fullyCorrectAnswersCount++;
+        _currentStreak++;
         if (_currentStreak > _highestStreak) {
-          _highestStreak = _currentStreak; // Update the highest streak
+          _highestStreak = _currentStreak;
         }
       } else {
-        _currentStreak = 0; // Reset the current streak
+        _currentStreak = 0;
       }
     });
+
+    // Save right after answer submission
+    _autoSaveGame();
+
+    // Increment save state index after answer
+    _saveStateQuestionIndex = _currentQuestionIndex + 1;
   }
   
   void _handleVisualDisplayComplete() {
@@ -708,39 +717,16 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   Future<void> handleQuitGame() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      // Skip saving if first unanswered question
-      if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
-        print('🎮 Skipping save - first unanswered question');
+      if (!_shouldSaveGame()) {
         _cleanup();
         _navigateBack();
         return;
       }
 
-      // Create game state
-      Map<String, dynamic> gameState = {
-        'completed': false,
-        'score': _correctAnswersCount,
-        'accuracy': _calculateAccuracy(),
-        'streak': _calculateStreak(),
-        'currentQuestionIndex': _currentQuestionIndex,
-        'questions': _questions,
-        'gamemode': widget.gamemode,
-        'hp': _hp,
-      };
-
-      // Handle quit through AuthService
-      await _authService.handleGameQuit(
-        userId: user.uid,
-        categoryId: widget.category['id'],
-        stageName: widget.stageName,
-        mode: widget.mode.toLowerCase(),
-        gamemode: widget.gamemode,
-        gameState: gameState,
+      await _gameSaveManager.handleGameQuit(
+        state: _createGameState(),
         onCleanup: _cleanup,
-        navigateBack: (BuildContext ctx) => _navigateBack(), // Correct type
+        navigateBack: (BuildContext ctx) => _navigateBack(),
         context: context,
       );
     } catch (e) {
@@ -750,50 +736,31 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     }
   }
 
-  void _loadSavedGameOrInitialize() async {
+  Future<void> _loadSavedGameOrInitialize() async {
     try {
       final savedGame = widget.stageData['savedGame'];
       if (savedGame != null) {
-        // Get current game save data
-        GameSaveData? localData = await _authService.getLocalGameSaveData(
-          widget.category['id']
-        );
-
-        if (localData != null) {
-          // Generate proper key based on mode
-          final stageKey = widget.gamemode == 'arcade'
-              ? GameSaveData.getArcadeKey(widget.category['id'])
-              : GameSaveData.getStageKey(
-                  widget.category['id'],
-                  int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')),
-                );
-
-          // Get saved game state using AuthService
-          final savedGameState = await _authService.getSavedGameState(
-            userId: FirebaseAuth.instance.currentUser!.uid,
-            categoryId: widget.category['id'],
-            stageName: stageKey,
-            mode: widget.mode,
-          );
-
-          if (savedGameState != null) {
-            setState(() {
-              _questions = List<Map<String, dynamic>>.from(savedGameState['questions'] ?? []);
-              _currentQuestionIndex = savedGameState['currentQuestionIndex'];
-              _correctAnswersCount = savedGameState['score'] ?? 0;
-              _hp = savedGameState['hp'] ?? 100.0;
-              
-              if (widget.gamemode == 'arcade') {
-                _stopwatchSeconds = _convertTimeToSeconds(savedGameState['stopwatchTime'] ?? '00:00');
-                _stopwatchTime = savedGameState['stopwatchTime'] ?? '00:00';
-                _questionsAnswered = savedGameState['questionsAnswered'] ?? 0;
-                _averageTimePerQuestion = savedGameState['averageTimePerQuestion'] ?? 0.0;
-              }
-            });
-          } else {
-            _initializeQuestions();
+        final savedGameState = GameState.fromJson(savedGame);
+        setState(() {
+          _questions = savedGameState.questions;
+          _currentQuestionIndex = savedGameState.currentQuestionIndex;
+          _saveStateQuestionIndex = savedGameState.currentQuestionIndex;
+          _correctAnswersCount = savedGameState.correctAnswers;
+          _wrongAnswersCount = savedGameState.wrongAnswers;
+          _currentStreak = savedGameState.currentStreak;
+          _highestStreak = savedGameState.highestStreak;
+          _hp = savedGameState.hp;
+          _isGameOver = savedGameState.isGameOver;
+          _answeredQuestions = savedGameState.answeredQuestions;
+          _totalQuestions = savedGameState.questions.length;
+          
+          if (widget.gamemode == 'arcade') {
+            _stopwatchTime = savedGameState.stopwatchTime ?? '00:00';
+            _questionsAnswered = savedGameState.questionsAnswered ?? 0;
+            _averageTimePerQuestion = savedGameState.averageTimePerQuestion ?? 0.0;
           }
-        }
+        });
+        _isLoading = false;
       } else {
         _initializeQuestions();
       }
@@ -810,68 +777,41 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   Future<void> _saveGameState() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      // Get current game save data
-      GameSaveData? localData = await _authService.getLocalGameSaveData(
-        widget.category['id']
-      );
-
-      if (localData != null) {
-        final stageKey = widget.gamemode == 'arcade'
-            ? GameSaveData.getArcadeKey(widget.category['id'])
-            : GameSaveData.getStageKey(
-                widget.category['id'],
-                int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')),
-              );
-
-        // Update progress using GameSaveData methods
-        if (widget.gamemode == 'arcade') {
-          localData.updateArcadeRecord(stageKey, _stopwatchSeconds);
-        } else {
-          localData.updateScore(stageKey, _correctAnswersCount, widget.mode);
-        }
-
-        // Save updated data
-        await _authService.saveGameSaveDataLocally(widget.category['id'], localData);
-
-        // Save current game state
-        Map<String, dynamic> gameState = {
-          'completed': false,
-          'score': _correctAnswersCount,
-          'accuracy': _calculateAccuracy(),
-          'streak': _calculateStreak(),
-          'currentQuestionIndex': _currentQuestionIndex,
-          'questions': _questions,
-          'gamemode': widget.gamemode,
-        };
-
-        // Add gamemode-specific data
-        if (widget.gamemode == 'arcade') {
-          gameState.addAll({
-            'stopwatchTime': _stopwatchTime,
-            'averageTimePerQuestion': _averageTimePerQuestion,
-            'questionsAnswered': _questionsAnswered,
-          });
-        } else {
-          gameState['hp'] = _hp;
-        }
-
-        // Save using AuthService
-        await _authService.saveGameState(
-          userId: user.uid,
-          categoryId: widget.category['id'],
-          stageName: widget.stageName,
-          mode: widget.mode.toLowerCase(),
-          gamemode: widget.gamemode,
-          gameState: gameState,
-        );
+      // Skip saving if first unanswered question
+      if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
+        print('🎮 Skipping save - first unanswered question');
+        return;
       }
+
+      await _gameSaveManager.saveGameState(
+        state: _createGameState(),
+      );
     } catch (e) {
       print('❌ Error saving game state: $e');
     }
   }
+
+  GameState _createGameState() => GameState(
+    categoryId: widget.category['id'],
+    stageId: widget.stageName,
+    mode: widget.mode,
+    gamemode: widget.gamemode,
+    currentQuestionIndex: _saveStateQuestionIndex,
+    questions: _questions,
+    answeredQuestions: _answeredQuestions,
+    score: _correctAnswersCount,
+    correctAnswers: _correctAnswersCount,
+    wrongAnswers: _wrongAnswersCount,
+    currentStreak: _currentStreak,
+    highestStreak: _highestStreak,
+    hp: _hp,
+    isGameOver: _isGameOver,
+    stopwatchTime: widget.gamemode == 'arcade' ? _stopwatchTime : null,
+    averageTimePerQuestion: widget.gamemode == 'arcade' ? _averageTimePerQuestion : null,
+    questionsAnswered: widget.gamemode == 'arcade' ? _questionsAnswered : null,
+    completed: false,
+    lastSaved: DateTime.now(),
+  );
 
    @override
   Widget build(BuildContext context) {
@@ -1188,6 +1128,35 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           ),
         ),
       );
+    }
+  }
+
+  bool _shouldSaveGame() {
+    // Don't save if:
+    if (widget.gamemode == 'arcade') return false;  // Arcade mode
+    if (_isFirstUnansweredQuestion()) return false; // First question
+    if (_isGameOver) return false;                 // Game over
+    if (_isNavigatingToResults()) return false;    // Going to results
+
+    // Save if:
+    return true; // Normal gameplay progress
+  }
+
+  bool _isNavigatingToResults() {
+    final route = ModalRoute.of(context);
+    return route?.settings.name?.contains('ResultsPage') ?? false;
+  }
+
+  void _autoSaveGame() async {
+    if (!_shouldSaveGame()) return;
+    
+    try {
+      await _gameSaveManager.saveGameState(
+        state: _createGameState(),
+      );
+      print('✅ Auto-saved game state');
+    } catch (e) {
+      print('❌ Error auto-saving: $e');
     }
   }
 }

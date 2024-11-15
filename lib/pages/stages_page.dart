@@ -6,16 +6,13 @@ import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/services/game_save_manager.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/dialog_boxes/stage_dialog.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 // ignore: must_be_immutable
 class StagesPage extends StatefulWidget {
@@ -37,6 +34,7 @@ class StagesPage extends StatefulWidget {
 }
 
 class StagesPageState extends State<StagesPage> {
+  final GameSaveManager _gameSaveManager = GameSaveManager();
   final StageService _stageService = StageService();
   final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _stages = [];
@@ -130,95 +128,53 @@ class StagesPageState extends State<StagesPage> {
     await _fetchStages();
   }
 
-  Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
-      }
+Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
+  try {
+    // Get local game save data for stats
+    GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
+    
+    // Get stage key
+    final stageKey = GameSaveData.getStageKey(
+      widget.category['id']!,
+      stageIndex + 1
+    );
 
-      // Get local data using new GameSaveData structure
-      final AuthService authService = AuthService();
-      final GameSaveData? localData = await authService.getLocalGameSaveData(widget.category['id']!);
-      
-      if (localData != null) {
-        // Use new helper methods from GameSaveData
-        final stageKey = GameSaveData.getStageKey(
-          widget.category['id']!,
-          stageIndex + 1
-        );
-        
-        // Get standardized stats format
-        final stats = localData.getStageStats(stageKey, _selectedMode);
+    final stageName = 'Stage ${stageIndex + 1}';
 
-        // Check for saved game if savedGameDocId matches this stage
-        Map<String, dynamic>? savedGame;
-        if (widget.savedGameDocId != null) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          String? savedGameJson = prefs.getString('${GameStateKeys.SAVE_PREFIX}${widget.savedGameDocId}');
-          if (savedGameJson != null) {
-            savedGame = jsonDecode(savedGameJson);
-          }
-        }
-
-        // Return stats in consistent format
-        return {
-          'personalBest': stats['personalBest'] ?? 0,
-          'stars': stats['stars'] ?? 0,
-          'maxScore': stats['maxScore'] ?? 0,
-          'savedGame': savedGame,
-        };
-      }
-
-      // Fallback to Firebase if no local data
-      final docRef = FirebaseFirestore.instance
-          .collection('User')
-          .doc(user.uid)
-          .collection('GameSaveData')
-          .doc(widget.category['id']);
-
-      final docSnapshot = await docRef.get();
-      if (!docSnapshot.exists) {
-        return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
-      }
-
-      // Convert Firebase data to GameSaveData
-      final gameSaveData = GameSaveData.fromMap(docSnapshot.data() as Map<String, dynamic>);
-      
-      // Use same helper methods for consistency
-      final stageKey = GameSaveData.getStageKey(
-        widget.category['id']!,
-        stageIndex + 1
-      );
-      
-      final stats = gameSaveData.getStageStats(stageKey, _selectedMode);
-
-      // Check for saved game in Firebase
-      Map<String, dynamic>? savedGame;
-      if (widget.savedGameDocId != null) {
-        final savedGameDoc = await FirebaseFirestore.instance
-            .collection('User')
-            .doc(user.uid)
-            .collection('GameProgress')
-            .doc(widget.savedGameDocId)
-            .get();
-        
-        if (savedGameDoc.exists) {
-          savedGame = savedGameDoc.data();
-        }
-      }
-
+    // Check for saved game state using GameSaveManager
+    final savedGameState = await _gameSaveManager.getSavedGameState(
+      categoryId: widget.category['id']!,
+      stageName: stageName,  // Use 'Stage X' format,
+      mode: _selectedMode.toLowerCase(),
+    );
+    
+    if (localData != null) {
+      // Get stats from GameSaveData
+      final stats = localData.getStageStats(stageKey, _selectedMode);
       return {
         'personalBest': stats['personalBest'] ?? 0,
         'stars': stats['stars'] ?? 0,
         'maxScore': stats['maxScore'] ?? 0,
-        'savedGame': savedGame,
+        'savedGame': savedGameState?.toJson(),
       };
-    } catch (e) {
-      print('❌ Error fetching stage stats: $e');
-      return {'personalBest': 0, 'stars': 0, 'maxScore': 0, 'savedGame': null};
     }
+
+    return {
+      'personalBest': 0,
+      'stars': 0,
+      'maxScore': 0,
+      'savedGame': savedGameState?.toJson(),
+    };
+  } catch (e) {
+    print('❌ Error fetching stage stats: $e');
+    return {
+      'personalBest': 0,
+      'stars': 0,
+      'maxScore': 0,
+      'savedGame': null
+    };
   }
+}
 
   Color _getStageColor(String? category) {
     if (category == null) return Colors.grey;

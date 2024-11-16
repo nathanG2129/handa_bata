@@ -329,23 +329,58 @@ final Map<String, CachedStage> _categoryCache = {};
         : '${LOCAL_STORAGE_VERSION}${STAGES_CACHE_KEY}_$categoryId';
   }
 
-  Future<List<Map<String, dynamic>>> _getAllRawStages() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final allStages = <Map<String, dynamic>>[];
-    
-    final stageKeys = prefs.getKeys()
-        .where((key) => key.startsWith(LOCAL_STORAGE_VERSION))
-        .where((key) => !key.endsWith('_backup'))
-        .toList();
-    
-    for (var key in stageKeys) {
-      final stages = await _getFromLocalWithBackup(key);
+Future<List<Map<String, dynamic>>> _getAllRawStages() async {
+  print('🔍 Getting all raw stages from all categories');
+  final allStages = <Map<String, dynamic>>[];
+  int totalStages = 0;
+  
+  // First check memory cache
+  print('📦 Checking memory cache...');
+  _stageCache.forEach((key, value) {
+    if (value.data.containsKey('stages')) {
+      final stages = List<Map<String, dynamic>>.from(value.data['stages']);
+      print('📦 Found ${stages.length} stages in memory cache for key: $key');
       allStages.addAll(stages);
+      totalStages += stages.length;
     }
-    
-    print('📦 Found ${allStages.length} stages in raw cache');
+  });
+
+  print('📦 Found $totalStages stages in memory cache');
+  
+  // Return memory cache if we have stages
+  if (totalStages > 0) {
+    print('📦 Returning $totalStages stages from memory cache');
     return allStages;
   }
+
+  // If nothing in memory, check local storage
+  print('💾 Checking local storage for stages...');
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  
+  // Get all stage cache keys
+  final stageKeys = prefs.getKeys()
+      .where((key) => key.startsWith(LOCAL_STORAGE_VERSION))
+      .where((key) => key.contains('stages_cache'))
+      .where((key) => !key.endsWith('_backup'))
+      .toList();
+  
+  print('🔑 Found ${stageKeys.length} stage cache keys in local storage');
+  
+  // Load stages from each key
+  for (var key in stageKeys) {
+    try {
+      final stages = await _getFromLocalWithBackup(key);
+      print('📦 Found ${stages.length} stages for key: $key');
+      allStages.addAll(stages);
+      totalStages += stages.length;
+    } catch (e) {
+      print('⚠️ Error loading stages for key $key: $e');
+    }
+  }
+  
+  print('📦 Found $totalStages total stages across all storage');
+  return allStages;
+}
 
   Future<List<Map<String, dynamic>>> _getFromLocalWithBackup(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

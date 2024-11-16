@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
@@ -55,20 +54,31 @@ class SplashPageState extends State<SplashPage> {
       print('🔧 Initializing UserProfileService...');
       UserProfileService.initialize(bannerService);
 
-      // Check if we already have cached game assets - look at raw cache instead
-      final hasLocalBadges = await badgeService.getLocalBadges().then((b) => b.isNotEmpty);
-      final hasLocalBanners = await bannerService.getLocalBanners().then((b) => b.isNotEmpty);
-      final hasLocalStages = await stageService.getStagesFromLocal('raw').then((s) => s.isNotEmpty);
-      final hasLocalAvatars = await avatarService.fetchAvatars().then((a) => a.isNotEmpty);
+      // More thorough cache check
+      print('🔍 Checking cached game assets...');
+      
+      final localBadges = await badgeService.getLocalBadges();
+      final localBanners = await bannerService.getLocalBanners();
+      final localStages = await stageService.getStagesFromLocal('raw', useRawCache: true);
+      final localAvatars = await avatarService.fetchAvatars();
 
-      if (hasLocalStages && hasLocalBadges && hasLocalBanners && hasLocalAvatars) {
+      print('📊 Found cached assets:');
+      print('- Badges: ${localBadges.length}');
+      print('- Banners: ${localBanners.length}');
+      print('- Stages: ${localStages.length}');
+      print('- Avatars: ${localAvatars.length}');
+
+      // Check for minimum required assets
+      if (localBadges.length >= 8 && 
+          localBanners.length >= 8 && 
+          localStages.length >= 8 && 
+          localAvatars.length >= 8) {
         print('✅ Found existing cached game assets, skipping full prefetch');
         
         // Just fetch user-specific data
         final userProfile = await authService.getUserProfile();
         if (userProfile != null) {
           print('👤 Loading user-specific data only');
-          // Only fetch user's current items
           await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
           if (userProfile.bannerId > 0) {
             await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
@@ -80,7 +90,7 @@ class SplashPageState extends State<SplashPage> {
           );
         }
 
-        // Queue background syncs to check for any asset updates
+        // Queue background syncs
         stageService.triggerBackgroundSync();
         badgeService.triggerBackgroundSync();
         bannerService.triggerBackgroundSync();
@@ -121,34 +131,23 @@ class SplashPageState extends State<SplashPage> {
           if (userProfile.bannerId > 0) {
             await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
           }
+          await stageService.fetchStages('en', enCategories.first['id']);
         }
       } else {
         print('🚀 Good connection: Loading all data');
         // Load everything with prioritization
         print('📥 Fetching stages for all categories...');
         
-        if (enCategories.isNotEmpty) {
-          // Fetch first category immediately with HIGH priority
-          final firstCategory = enCategories.first;
-          await stageService.fetchStages('en', firstCategory['id']);
+        // Fetch English stages
+        for (var category in enCategories) {
+          print('📥 Fetching EN stages for category: ${category['name']}');
+          await stageService.fetchStages('en', category['id']);
+        }
 
-          // Queue remaining categories with MEDIUM priority
-          for (var category in enCategories.skip(1)) {
-            stageService.queueStageLoad(
-              category['id'],
-              'all',  // Load all stages for this category
-              StagePriority.MEDIUM
-            );
-          }
-
-          // Queue Filipino categories with MEDIUM priority
-          for (var category in filCategories) {
-            stageService.queueStageLoad(
-              category['id'],
-              'all',
-              StagePriority.MEDIUM
-            );
-          }
+        // Fetch Filipino stages
+        for (var category in filCategories) {
+          print('📥 Fetching FIL stages for category: ${category['name']}');
+          await stageService.fetchStages('fil', category['id']);
         }
 
         // Fetch ALL avatars

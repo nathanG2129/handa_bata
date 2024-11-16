@@ -926,7 +926,7 @@ class AuthService {
         print('📊 Category $category: ${stages.length} adventure stages');
       });
       arcadeStages.forEach((category, _) {
-        print('📊 Category $category: 1 arcade stage');
+        print('��� Category $category: 1 arcade stage');
       });
 
       // Process arcade stages
@@ -1034,40 +1034,19 @@ class AuthService {
   /// Handles both user and guest profiles.
   Future<void> syncProfiles() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult != ConnectivityResult.none) {
-      User? currentUser = _auth.currentUser;
-      if (currentUser != null) {
+    if (connectivityResult == ConnectivityResult.none) return;
 
-        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
-        for (var category in categories) {
-          String categoryId = category['id'];
-          GameSaveData? localData = await getLocalGameSaveData(categoryId);
-          
-          if (localData != null) {
-            // If we have local data, sync it to Firestore
-            await _firestore
-                .collection('User')
-                .doc(currentUser.uid)
-                .collection('GameSaveData')
-                .doc(categoryId)
-                .set(localData.toMap());
-          } else {
-            // If no local data, get from Firestore and save locally
-            DocumentSnapshot firestoreData = await _firestore
-                .collection('User')
-                .doc(currentUser.uid)
-                .collection('GameSaveData')
-                .doc(categoryId)
-                .get();
-
-            if (firestoreData.exists) {
-              GameSaveData gameSaveData = GameSaveData.fromMap(
-                firestoreData.data() as Map<String, dynamic>
-              );
-              await saveGameSaveDataLocally(categoryId, gameSaveData);
-            }
-          }
-        }
+    User? currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      // Only sync profile data, not game saves
+      UserProfile? localProfile = await getLocalUserProfile();
+      if (localProfile != null) {
+        await _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('ProfileData')
+            .doc(currentUser.uid)
+            .set(localProfile.toMap());
       }
     }
   }
@@ -1085,10 +1064,11 @@ class AuthService {
     try {
       print('🎮 Updating game progress for ${isArcade ? 'arcade' : 'adventure'} mode');
       
-      // Get current game save data
+      // Get current game save data for this category only
       GameSaveData? localData = await getLocalGameSaveData(categoryId);
       if (localData == null) {
-        throw GameSaveDataException('No save data found for category: $categoryId');
+        // Create new data if none exists
+        localData = GameSaveData.initial(isArcade ? 1 : 10);
       }
 
       // Get the appropriate stage key
@@ -1102,44 +1082,28 @@ class AuthService {
           throw GameSaveDataException('Record is required for arcade mode');
         }
         localData.updateArcadeRecord(stageKey, record);
-        print('🏁 Updated arcade record: $record');
       } else {
-        // Update adventure mode score and stars
+        // Update adventure mode progress
         localData.updateScore(stageKey, score, mode);
-        
         int stageIndex = _getStageNumber(stageName) - 1;
         localData.updateStars(stageIndex, stars, mode);
         
         // Unlock next stage if applicable
-        if (stars > 0 && stageIndex + 1 < (mode == 'normal' 
-            ? localData.unlockedNormalStages.length 
-            : localData.unlockedHardStages.length)) {
+        if (stars > 0) {
           localData.unlockStage(stageIndex + 1, mode);
         }
-        
-        print('⭐ Updated adventure progress - Score: $score, Stars: $stars');
       }
 
-      // Save updated data locally
+      // Save locally
       await saveGameSaveDataLocally(categoryId, localData);
       
       // Sync with Firestore if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        print('🌐 Syncing with Firestore...');
-        await _firestore
-            .collection('User')
-            .doc(_auth.currentUser?.uid)
-            .collection('GameSaveData')
-            .doc(categoryId)
-            .set(localData.toMap());
-        print('✅ Sync complete');
-      } else {
-        print('📱 Offline - Changes saved locally');
+        await syncCategoryData(categoryId);
       }
     } catch (e) {
       print('❌ Error updating game progress: $e');
-      if (e is GameSaveDataException) rethrow;
       throw GameSaveDataException('Failed to update game progress: $e');
     }
   }
@@ -1598,6 +1562,35 @@ class AuthService {
     RegExp exp = RegExp(r'^([A-Za-z]+)(?:\d+|Arcade)');
     var match = exp.firstMatch(stageName);
     return match?.group(1) ?? '';
+  }
+
+  /// Syncs game save data for a specific category
+  Future<void> syncCategoryData(String categoryId) async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      // Get local data for this category
+      GameSaveData? localData = await getLocalGameSaveData(categoryId);
+      
+      if (localData != null) {
+        // Sync only this category's data to Firestore
+        await _firestore
+            .collection('User')
+            .doc(currentUser.uid)
+            .collection('GameSaveData')
+            .doc(categoryId)
+            .set(localData.toMap());
+            
+        print('✅ Synced game data for category: $categoryId');
+      }
+    } catch (e) {
+      print('❌ Error syncing category data: $e');
+      throw GameSaveDataException('Failed to sync category data: $e');
+    }
   }
 }
 

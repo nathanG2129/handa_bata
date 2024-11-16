@@ -15,6 +15,7 @@ import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
 import 'package:handabatamae/models/game_save_data.dart'; // Import GameSaveData
+import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -27,20 +28,22 @@ class ArcadePage extends StatefulWidget {
 
 class ArcadePageState extends State<ArcadePage> {
   final StageService _stageService = StageService();
+  final AuthService _authService = AuthService();
   late StreamSubscription<List<Map<String, dynamic>>> _categorySubscription;
   bool _isLoading = true;
+  bool _isSyncing = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _categories = [];
-  bool _isUserProfileVisible = false;
+  Map<String, GameSaveData> _categorySaveData = {}; // Cache for all categories
   late String _selectedLanguage;
+  bool _isUserProfileVisible = false;
 
   @override
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    _initializeCategories();
+    _initializeData();
     
-    // Listen to category updates
     _categorySubscription = _stageService.categoryUpdates.listen((categories) {
       if (mounted) {
         setState(() {
@@ -49,75 +52,113 @@ class ArcadePageState extends State<ArcadePage> {
         });
       }
     });
-
-    // Prefetch first category's stages
-    _prefetchFirstCategory();
   }
 
   @override
   void dispose() {
     _categorySubscription.cancel();
+    _categorySaveData.clear(); // Clear cache on dispose
     super.dispose();
   }
 
-  Future<void> _initializeCategories() async {
+  Future<void> _initializeData() async {
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      // Wait for sync to complete if needed
+      // Sync stage data once at start
       await _stageService.synchronizeData();
 
+      // Load categories
       final categories = await _stageService.fetchCategories(_selectedLanguage);
+      
+      // Load game save data for all categories
+      setState(() => _isSyncing = true);
+      
+      // Load all game save data first
+      await Future.wait(
+        categories.map((category) async {
+          try {
+            final saveData = await _authService.getLocalGameSaveData(category['id']);
+            if (saveData != null) {
+              _categorySaveData[category['id']] = saveData;
+            }
+          } catch (e) {
+            print('❌ Error loading save data for category ${category['id']}: $e');
+          }
+        })
+      );
+
+      // Then sync all categories at once
+      if (_categorySaveData.isNotEmpty) {
+        await Future.wait(
+          _categorySaveData.keys.map((categoryId) => 
+            _authService.syncCategoryData(categoryId)
+          )
+        );
+      }
+
       if (mounted) {
         setState(() {
           _categories = categories;
           _sortCategories();
           _isLoading = false;
+          _isSyncing = false;
         });
       }
+
+      // Prefetch first category's arcade stage
+      if (categories.isNotEmpty) {
+        _prefetchFirstCategory();
+      }
     } catch (e) {
+      print('❌ Error initializing arcade data: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to load categories. Please try again.';
+          _errorMessage = 'Failed to load categories';
           _isLoading = false;
+          _isSyncing = false;
         });
       }
     }
   }
 
   Future<void> _prefetchFirstCategory() async {
-    if (_categories.isNotEmpty) {
-      final categoryId = _categories.first['id'];
-      // Use arcade-specific key format
-      final arcadeKey = GameSaveData.getArcadeKey(categoryId);
-      
-      // Arcade stages are always available, so just prefetch
-      _stageService.queueStageLoad(
-        categoryId,
-        arcadeKey,
-        StagePriority.HIGH
-      );
+    if (_categories.isEmpty) return;
 
-      // Prefetch second category's arcade stage if available
-      if (_categories.length > 1) {
-        final secondCategoryId = _categories[1]['id'];
-        final secondArcadeKey = GameSaveData.getArcadeKey(secondCategoryId);
-        
-        _stageService.queueStageLoad(
-          secondCategoryId,
-          secondArcadeKey,
-          StagePriority.MEDIUM
-        );
-      }
-    }
+    final categoryId = _categories.first['id'];
+    final arcadeKey = GameSaveData.getArcadeKey(categoryId);
+    
+    // Queue stage load - let StageService handle caching internally
+    _stageService.queueStageLoad(
+      categoryId,
+      arcadeKey,
+      StagePriority.HIGH
+    );
   }
 
-  // Add retry mechanism
   Future<void> _retryLoading() async {
-    await _initializeCategories();
+    _categorySaveData.clear(); // Clear cache before retry
+    await _initializeData();
+  }
+
+  void _onCategoryPressed(Map<String, dynamic> category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArcadeStagesPage(
+          questName: category['name'],
+          category: {
+            'id': category['id'],
+            'name': category['name'],
+          },
+          selectedLanguage: _selectedLanguage,
+          gameSaveData: _categorySaveData[category['id']], // Pass cached data
+        ),
+      ),
+    );
   }
 
   void _toggleUserProfile() {
@@ -129,7 +170,7 @@ class ArcadePageState extends State<ArcadePage> {
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
-      _initializeCategories();
+      _initializeData();
     });
   }
 
@@ -188,22 +229,6 @@ class ArcadePageState extends State<ArcadePage> {
     }
   }
 
-  void _onCategoryPressed(Map<String, dynamic> category) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ArcadeStagesPage(
-          questName: category['name'],
-          category: {
-            'id': category['id'],
-            'name': category['name'],
-          },
-          selectedLanguage: _selectedLanguage, // Pass the selected language
-        ),
-      ),
-    );
-  }
-
   void _sortCategories() {
     const order = ['Quake', 'Storm', 'Volcano', 'Drought', 'Flood', 'Tsunami'];
     _categories.sort((a, b) {
@@ -232,161 +257,171 @@ class ArcadePageState extends State<ArcadePage> {
         }
       },
       child: Scaffold(
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  Column(
+        body: Stack(
+          children: [
+            ResponsiveBreakpoints(
+              breakpoints: const [
+                Breakpoint(start: 0, end: 450, name: MOBILE),
+                Breakpoint(start: 451, end: 800, name: TABLET),
+                Breakpoint(start: 801, end: 1920, name: DESKTOP),
+                Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+              ],
+              child: MaxWidthBox(
+                maxWidth: 1200,
+                child: ResponsiveScaledBox(
+                  width: ResponsiveValue<double>(context, conditionalValues: [
+                    const Condition.equals(name: MOBILE, value: 450),
+                    const Condition.between(start: 800, end: 1100, value: 800),
+                    const Condition.between(start: 1000, end: 1200, value: 1000),
+                  ]).value,
+                  child: Stack(
                     children: [
-                      HeaderWidget(
-                        selectedLanguage: _selectedLanguage,
-                        onBack: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
-                            ),
-                          );
-                        },
-                        onChangeLanguage: _changeLanguage,
+                      SvgPicture.asset(
+                        'assets/backgrounds/background.svg',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                      Expanded(
-                        child: CustomScrollView(
-                          slivers: [
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 20),
-                                    child: ArcadeButton(
-                                      onPressed: () {
-                                        // Define the action for the Arcade button if needed
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(height: 30),
-                                  _isLoading
-                                      ? const CircularProgressIndicator()
-                                      : _errorMessage != null
-                                          ? _buildErrorState()
-                                          : Column(
-                                              children: _categories.map((category) {
-                                                final buttonColor = _getButtonColor(category['name']);
-                                                final categoryText = _getCategoryText(category['name']);
-                                                return Padding(
-                                                  padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Button3D(
-                                                      width: 350,
-                                                      height: 150,
-                                                      onPressed: () => _onCategoryPressed(category),
-                                                      backgroundColor: buttonColor,
-                                                      borderColor: _darkenColor(buttonColor),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.all(8.0),
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            Text(
-                                                              categoryText['name']!,
-                                                              style: GoogleFonts.vt323(
-                                                                fontSize: 30, // Larger font size
-                                                                color: Colors.white, // Text color
-                                                              ),
-                                                            ),
-                                                            const SizedBox(height: 10),
-                                                            Text(
-                                                              categoryText['description']!,
-                                                              style: GoogleFonts.vt323(
-                                                                fontSize: 22,
-                                                                color: Colors.white, // Text color
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 0, bottom: 40),
-                                    child: Button3D(
-                                      width: 350,
-                                      height: 150,
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const LeaderboardsPage(),
-                                          ),
-                                        );
-                                      },
-                                      backgroundColor: const Color.fromARGB(255, 37, 196, 100),
-                                      borderColor: _darkenColor(const Color(0xFF28e172)),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Leaderboards',
-                                              style: GoogleFonts.vt323(
-                                                fontSize: 30, // Larger font size
-                                                color: Colors.white, // Text color
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              'Show the world what you\'re made of and climb the leaderboards!',
-                                              style: GoogleFonts.vt323(
-                                                fontSize: 22,
-                                                color: Colors.white, // Text color
-                                              ),
-                                            ),
-                                          ],
+                      Column(
+                        children: [
+                          HeaderWidget(
+                            selectedLanguage: _selectedLanguage,
+                            onBack: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
+                                ),
+                              );
+                            },
+                            onChangeLanguage: _changeLanguage,
+                          ),
+                          Expanded(
+                            child: CustomScrollView(
+                              slivers: [
+                                SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 20),
+                                        child: ArcadeButton(
+                                          onPressed: () {
+                                            // Define the action for the Arcade button if needed
+                                          },
                                         ),
                                       ),
-                                    ),
+                                      const SizedBox(height: 30),
+                                      _isLoading
+                                          ? const CircularProgressIndicator()
+                                          : _errorMessage != null
+                                              ? _buildErrorState()
+                                              : Column(
+                                                  children: _categories.map((category) {
+                                                    final buttonColor = _getButtonColor(category['name']);
+                                                    final categoryText = _getCategoryText(category['name']);
+                                                    return Padding(
+                                                      padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
+                                                      child: Align(
+                                                        alignment: Alignment.center,
+                                                        child: Button3D(
+                                                          width: 350,
+                                                          height: 150,
+                                                          onPressed: () => _onCategoryPressed(category),
+                                                          backgroundColor: buttonColor,
+                                                          borderColor: _darkenColor(buttonColor),
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.all(8.0),
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Text(
+                                                                  categoryText['name']!,
+                                                                  style: GoogleFonts.vt323(
+                                                                    fontSize: 30, // Larger font size
+                                                                    color: Colors.white, // Text color
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(height: 10),
+                                                                Text(
+                                                                  categoryText['description']!,
+                                                                  style: GoogleFonts.vt323(
+                                                                    fontSize: 22,
+                                                                    color: Colors.white, // Text color
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 0, bottom: 40),
+                                        child: Button3D(
+                                          width: 350,
+                                          height: 150,
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => const LeaderboardsPage(),
+                                              ),
+                                            );
+                                          },
+                                          backgroundColor: const Color.fromARGB(255, 37, 196, 100),
+                                          borderColor: _darkenColor(const Color(0xFF28e172)),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Leaderboards',
+                                                  style: GoogleFonts.vt323(
+                                                    fontSize: 30, // Larger font size
+                                                    color: Colors.white, // Text color
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  'Show the world what you\'re made of and climb the leaderboards!',
+                                                  style: GoogleFonts.vt323(
+                                                    fontSize: 22,
+                                                    color: Colors.white, // Text color
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(), // Push the footer to the bottom
+                                      const FooterWidget(), // Add the footer here
+                                    ],
                                   ),
-                                  const Spacer(), // Push the footer to the bottom
-                                  const FooterWidget(), // Add the footer here
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      if (_isUserProfileVisible)
+                        UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
+                      if (_isSyncing)
+                        const Positioned(
+                          top: 16,
+                          right: 16,
+                          child: CircularProgressIndicator(),
+                        ),
                     ],
                   ),
-                  if (_isUserProfileVisible)
-                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

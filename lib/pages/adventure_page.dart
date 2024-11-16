@@ -30,8 +30,10 @@ class AdventurePageState extends State<AdventurePage> {
   final AuthService _authService = AuthService();
   late StreamSubscription<List<Map<String, dynamic>>> _categorySubscription;
   bool _isLoading = true;
+  bool _isSyncing = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _categories = [];
+  Map<String, GameSaveData> _categorySaveData = {};
   late String _selectedLanguage;
   bool _isUserProfileVisible = false;
 
@@ -39,9 +41,8 @@ class AdventurePageState extends State<AdventurePage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    _initializeCategories();
+    _initializeData();
     
-    // Listen to category updates
     _categorySubscription = _stageService.categoryUpdates.listen((categories) {
       if (mounted) {
         setState(() {
@@ -50,93 +51,94 @@ class AdventurePageState extends State<AdventurePage> {
         });
       }
     });
-
-    // Prefetch first category's stages
-    _prefetchFirstCategory();
   }
 
   @override
   void dispose() {
     _categorySubscription.cancel();
+    _categorySaveData.clear(); // Clear cache on dispose
     super.dispose();
   }
 
-  Future<void> _initializeCategories() async {
+  Future<void> _initializeData() async {
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      // Wait for sync to complete if needed
-      await _stageService.synchronizeData();
-
-      // Fetch categories with improved caching and offline support
+      // Load categories first
       final categories = await _stageService.fetchCategories(_selectedLanguage);
       
+      // Load and sync game save data for all categories
+      setState(() => _isSyncing = true);
+      
+      await Future.wait(
+        categories.map((category) async {
+          try {
+            final saveData = await _authService.getLocalGameSaveData(category['id']);
+            if (saveData != null) {
+              _categorySaveData[category['id']] = saveData;
+              
+              // Sync with server if online
+              await _authService.syncCategoryData(category['id']);
+            }
+          } catch (e) {
+            print('❌ Error loading save data for category ${category['id']}: $e');
+          }
+        })
+      );
+
       if (mounted) {
         setState(() {
           _categories = categories;
           _sortCategories();
           _isLoading = false;
+          _isSyncing = false;
         });
       }
 
-      // Prefetch first category's stages in background
-      _prefetchFirstCategory();
+      // Prefetch first category's stages
+      if (categories.isNotEmpty) {
+        _prefetchFirstCategory();
+      }
     } catch (e) {
-      print('Error initializing categories: $e');
+      print('❌ Error initializing data: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to load categories. Please try again.';
+          _errorMessage = 'Failed to load categories';
           _isLoading = false;
+          _isSyncing = false;
         });
       }
     }
   }
 
   Future<void> _prefetchFirstCategory() async {
-    if (_categories.isNotEmpty) {
-      final categoryId = _categories.first['id'];
-      // Use GameSaveData to check if category is unlocked
-      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
-      
-      if (localData != null) {
-        // Prefetch based on unlocked stages
-        for (int i = 0; i < localData.unlockedNormalStages.length; i++) {
-          if (localData.unlockedNormalStages[i]) {
-            // Prioritize loading based on stage index
-            _stageService.queueStageLoad(
-              categoryId,
-              GameSaveData.getStageKey(categoryId, i + 1),
-              i == 0 ? StagePriority.HIGH : StagePriority.MEDIUM
-            );
-          } else {
-            // Stop prefetching once we hit a locked stage
-            break;
-          }
-        }
-      }
+    if (_categories.isEmpty) return;
 
-      // Prefetch second category if available
-      if (_categories.length > 1) {
-        final secondCategoryId = _categories[1]['id'];
-        GameSaveData? secondData = await _authService.getLocalGameSaveData(secondCategoryId);
-        
-        if (secondData?.unlockedNormalStages[0] == true) {
+    final categoryId = _categories.first['id'];
+    final saveData = _categorySaveData[categoryId];
+    
+    if (saveData != null) {
+      // Use cached game save data for prefetching
+      for (int i = 0; i < saveData.unlockedNormalStages.length; i++) {
+        if (saveData.unlockedNormalStages[i]) {
           _stageService.queueStageLoad(
-            secondCategoryId,
-            GameSaveData.getStageKey(secondCategoryId, 1),
-            StagePriority.LOW
+            categoryId,
+            GameSaveData.getStageKey(categoryId, i + 1),
+            i == 0 ? StagePriority.HIGH : StagePriority.MEDIUM
           );
+        } else {
+          break;
         }
       }
     }
   }
 
-  // Add retry mechanism
   Future<void> _retryLoading() async {
-    await _initializeCategories();
+    _categorySaveData.clear(); // Clear cache before retry
+    await _initializeData();
   }
 
   void _sortCategories() {
@@ -158,7 +160,7 @@ class AdventurePageState extends State<AdventurePage> {
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
-      _initializeCategories(); // Fetch categories again with the new language
+      _initializeData(); // Fetch categories again with the new language
     });
   }
 
@@ -203,7 +205,8 @@ class AdventurePageState extends State<AdventurePage> {
             'id': category['id'],
             'name': category['name'],
           },
-          selectedLanguage: _selectedLanguage, // Pass the selected language
+          selectedLanguage: _selectedLanguage,
+          gameSaveData: _categorySaveData[category['id']], // Pass cached data
         ),
       ),
     );
@@ -280,6 +283,12 @@ class AdventurePageState extends State<AdventurePage> {
                   ),
                   if (_isUserProfileVisible)
                     UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
+                  if (_isSyncing)
+                    const Positioned(
+                      top: 16,
+                      right: 16,
+                      child: CircularProgressIndicator(),
+                    ),
                 ],
               ),
             ),

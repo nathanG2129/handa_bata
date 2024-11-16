@@ -36,17 +36,14 @@ void showArcadeStageDialog(
     },
     transitionBuilder: (context, anim1, anim2, child) {
       return FutureBuilder<Map<String, dynamic>?>(
-        future: _getSavedGameData(
+        future: _getSavedGameState(
           category['id']!,
           stageNumber,
           mode
         ),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('❌ Error loading saved game: ${snapshot.error}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error loading game data: ${snapshot.error}')),
-            );
+            print('❌ Error loading saved game state: ${snapshot.error}');
           }
 
           return ScaleTransition(
@@ -180,7 +177,7 @@ void showArcadeStageDialog(
   );
 }
 
-Future<Map<String, dynamic>?> _getSavedGameData(
+Future<Map<String, dynamic>?> _getSavedGameState(
   String categoryId,
   int stageNumber,
   String mode
@@ -188,7 +185,7 @@ Future<Map<String, dynamic>?> _getSavedGameData(
   try {
     final arcadeKey = GameSaveData.getArcadeKey(categoryId);
     
-    // Use GameSaveManager instead of AuthService
+    // Only get saved game state from GameSaveManager
     final gameSaveManager = GameSaveManager();
     final savedState = await gameSaveManager.getSavedGameState(
       categoryId: categoryId,
@@ -201,7 +198,7 @@ Future<Map<String, dynamic>?> _getSavedGameData(
     }
     return null;
   } catch (e) {
-    print('❌ Error getting saved game data: $e');
+    print('❌ Error getting saved game state: $e');
     return null;
   }
 }

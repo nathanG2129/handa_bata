@@ -19,6 +19,7 @@ class StagesPage extends StatefulWidget {
   final String questName;
   final Map<String, String> category;
   String selectedLanguage;
+  final GameSaveData? gameSaveData;
   final String? savedGameDocId;
 
   StagesPage({
@@ -26,6 +27,7 @@ class StagesPage extends StatefulWidget {
     required this.questName,
     required this.category,
     required this.selectedLanguage,
+    this.gameSaveData,
     this.savedGameDocId,
   });
 
@@ -40,10 +42,12 @@ class StagesPageState extends State<StagesPage> {
   List<Map<String, dynamic>> _stages = [];
   String _selectedMode = 'Normal';
   bool _isUserProfileVisible = false;
+  GameSaveData? _gameSaveData; // Cached game save data from parent
 
   @override
   void initState() {
     super.initState();
+    _gameSaveData = widget.gameSaveData; // Store the passed data
     _fetchStages();
   }
 
@@ -51,7 +55,6 @@ class StagesPageState extends State<StagesPage> {
     try {
       print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
-      setState(() => _stages = []);
 
       // Use improved StageService with sync and caching
       await _stageService.synchronizeData();
@@ -70,52 +73,38 @@ class StagesPageState extends State<StagesPage> {
         });
       }
 
-      // Prefetch next stages
-      _prefetchNextStages(0);  // Start prefetching from first stage
+      // Prefetch next stages using cached game save data
+      if (_gameSaveData != null) {
+        _prefetchNextStages(0);
+      }
     } catch (e) {
-      print('Error fetching stages: $e');
+      print('❌ Error fetching stages: $e');
       if (mounted) {
-        setState(() {
-        });
       }
     }
   }
 
-  // Add prefetch for next stages
   void _prefetchNextStages(int currentIndex) async {
     try {
-      final categoryId = widget.category['id']!;
-      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
-      
-      if (localData != null) {
-        // Only prefetch if next stage is unlocked
+      // Use cached game save data for prefetching
+      if (_gameSaveData != null) {
         if (currentIndex + 1 < _stages.length && 
-            localData.isStageUnlocked(currentIndex + 1, _selectedMode)) {
+            _gameSaveData!.isStageUnlocked(currentIndex + 1, _selectedMode)) {
           _stageService.queueStageLoad(
-            categoryId,
-            GameSaveData.getStageKey(categoryId, currentIndex + 2), // +2 because stage numbers start at 1
+            widget.category['id']!,
+            GameSaveData.getStageKey(widget.category['id']!, currentIndex + 2),
             StagePriority.HIGH
           );
 
           // Also prefetch hard mode if normal mode is completed with stars
           if (_selectedMode == 'normal' && 
-              localData.normalStageStars[currentIndex + 1] > 0) {
+              _gameSaveData!.normalStageStars[currentIndex + 1] > 0) {
             _stageService.queueStageLoad(
-              categoryId,
-              GameSaveData.getStageKey(categoryId, currentIndex + 2),
+              widget.category['id']!,
+              GameSaveData.getStageKey(widget.category['id']!, currentIndex + 2),
               StagePriority.LOW
             );
           }
-        }
-
-        // Prefetch second next stage if unlocked
-        if (currentIndex + 2 < _stages.length && 
-            localData.isStageUnlocked(currentIndex + 2, _selectedMode)) {
-          _stageService.queueStageLoad(
-            categoryId,
-            GameSaveData.getStageKey(categoryId, currentIndex + 3),
-            StagePriority.MEDIUM
-          );
         }
       }
     } catch (e) {
@@ -123,58 +112,59 @@ class StagesPageState extends State<StagesPage> {
     }
   }
 
-  // Add retry mechanism
-  Future<void> _retryLoading() async {
-    await _fetchStages();
-  }
+  Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
+    try {
+      // Use cached game save data if available
+      GameSaveData? saveData = _gameSaveData;
+      
+      // Fallback to loading if not cached
+      if (saveData == null) {
+        saveData = await _authService.getLocalGameSaveData(widget.category['id']!);
+        _gameSaveData = saveData; // Cache for future use
+      }
 
-Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
-  try {
-    // Get local game save data for stats
-    GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
-    
-    // Get stage key
-    final stageKey = GameSaveData.getStageKey(
-      widget.category['id']!,
-      stageIndex + 1
-    );
+      // Get stage key
+      final stageKey = GameSaveData.getStageKey(
+        widget.category['id']!,
+        stageIndex + 1
+      );
 
-    final stageName = 'Stage ${stageIndex + 1}';
+      final stageName = 'Stage ${stageIndex + 1}';
 
-    // Check for saved game state using GameSaveManager
-    final savedGameState = await _gameSaveManager.getSavedGameState(
-      categoryId: widget.category['id']!,
-      stageName: stageName,  // Use 'Stage X' format,
-      mode: _selectedMode.toLowerCase(),
-    );
-    
-    if (localData != null) {
-      // Get stats from GameSaveData
-      final stats = localData.getStageStats(stageKey, _selectedMode);
+      // Get saved game state from GameSaveManager (separate from GameSaveData)
+      final savedGameState = await _gameSaveManager.getSavedGameState(
+        categoryId: widget.category['id']!,
+        stageName: stageName,
+        mode: _selectedMode.toLowerCase(),
+      );
+      
+      if (saveData != null) {
+        // Get progress stats from GameSaveData
+        final stats = saveData.getStageStats(stageKey, _selectedMode);
+        return {
+          'personalBest': stats['personalBest'] ?? 0,
+          'stars': stats['stars'] ?? 0,
+          'maxScore': stats['maxScore'] ?? 0,
+          'savedGame': savedGameState?.toJson(), // Game state from GameSaveManager
+        };
+      }
+
       return {
-        'personalBest': stats['personalBest'] ?? 0,
-        'stars': stats['stars'] ?? 0,
-        'maxScore': stats['maxScore'] ?? 0,
+        'personalBest': 0,
+        'stars': 0,
+        'maxScore': 0,
         'savedGame': savedGameState?.toJson(),
       };
+    } catch (e) {
+      print('❌ Error fetching stage stats: $e');
+      return {
+        'personalBest': 0,
+        'stars': 0,
+        'maxScore': 0,
+        'savedGame': null
+      };
     }
-
-    return {
-      'personalBest': 0,
-      'stars': 0,
-      'maxScore': 0,
-      'savedGame': savedGameState?.toJson(),
-    };
-  } catch (e) {
-    print('❌ Error fetching stage stats: $e');
-    return {
-      'personalBest': 0,
-      'stars': 0,
-      'maxScore': 0,
-      'savedGame': null
-    };
   }
-}
 
   Color _getStageColor(String? category) {
     if (category == null) return Colors.grey;

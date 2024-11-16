@@ -44,6 +44,7 @@ class PrerequisitePage extends StatefulWidget {
 class PrerequisitePageState extends State<PrerequisitePage> {
   late Future<void> _checkPrerequisiteFuture;
   final AuthService _authService = AuthService();
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -54,51 +55,54 @@ class PrerequisitePageState extends State<PrerequisitePage> {
   Future<void> _checkAndSetPrerequisite() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
 
-      // Get local game save data
+      // Get stage index from stage name
+      int stageIndex = widget.stageName.contains('Arcade')
+          ? -1  // Special case for arcade
+          : int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+
+      // Get local game save data only for this category
       GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
       
       if (localData != null) {
-        int stageIndex = widget.stageName.contains('Arcade')
-            ? localData.hasSeenPrerequisite.length - 1
-            : int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
+        // For arcade stages, use the last index
+        if (widget.stageName.contains('Arcade')) {
+          stageIndex = localData.hasSeenPrerequisite.length - 1;
+        }
 
-        // Use helper method to check if seen
+        // Check if already seen
         if (localData.hasSeenStagePrerequisite(stageIndex)) {
           if (!mounted) return;
           _navigateToGameplay();
           return;
         }
 
-        // Use helper method to mark as seen
+        // Mark as seen and save
         localData.markPrerequisiteSeen(stageIndex);
-
-        // Save locally using AuthService
         await _authService.saveGameSaveDataLocally(widget.category['id']!, localData);
 
-        // Use AuthService's sync method instead of direct Firebase call
+        // Only sync this category's data
         var connectivityResult = await Connectivity().checkConnectivity();
         if (connectivityResult != ConnectivityResult.none) {
-          await _authService.syncProfiles(); // This will handle the Firebase sync
+          await _authService.syncCategoryData(widget.category['id']!);
         }
       } else {
-        // Create new data using GameSaveData factory
+        // Create new data only for this category
         int stageCount = widget.stageName.contains('Arcade') ? 1 : 10;
         GameSaveData newData = GameSaveData.initial(stageCount);
         
-        int stageIndex = widget.stageName.contains('Arcade') 
-            ? 0 
-            : int.parse(widget.stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
-        
         newData.markPrerequisiteSeen(stageIndex);
-
-        // Save using AuthService methods
         await _authService.saveGameSaveDataLocally(widget.category['id']!, newData);
-        await _authService.syncProfiles(); // This will handle the Firebase sync
+        
+        // Only sync this category
+        await _authService.syncCategoryData(widget.category['id']!);
       }
     } catch (e) {
       print('❌ Error in _checkAndSetPrerequisite: $e');
+      setState(() => _errorMessage = e.toString());
     }
   }
 
@@ -129,9 +133,35 @@ class PrerequisitePageState extends State<PrerequisitePage> {
               child: CircularProgressIndicator(),
             ),
           );
-        } else {
-          return _buildPrerequisiteContent(context);
         }
+        
+        if (_errorMessage != null) {
+          return Scaffold(
+            backgroundColor: const Color(0xFF5E31AD),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error: $_errorMessage',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _errorMessage = null;
+                        _checkPrerequisiteFuture = _checkAndSetPrerequisite();
+                      });
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return _buildPrerequisiteContent(context);
       },
     );
   }

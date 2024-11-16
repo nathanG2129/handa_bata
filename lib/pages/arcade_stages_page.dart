@@ -18,14 +18,17 @@ class ArcadeStagesPage extends StatefulWidget {
   final String questName;
   final Map<String, String> category;
   String selectedLanguage;
+  final GameSaveData? gameSaveData;
   final String? savedGameDocId;
 
   ArcadeStagesPage({
-    super.key, 
-    required this.questName, 
-    required this.category, 
-    required this.selectedLanguage, 
-    this.savedGameDocId});
+    super.key,
+    required this.questName,
+    required this.category,
+    required this.selectedLanguage,
+    this.gameSaveData,
+    this.savedGameDocId,
+  });
 
   @override
   ArcadeStagesPageState createState() => ArcadeStagesPageState();
@@ -37,10 +40,14 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final GameSaveManager _gameSaveManager = GameSaveManager();
   List<Map<String, dynamic>> _stages = [];
   List<Map<String, dynamic>> _categories = [];
+  // ignore: unused_field
+  bool _isLoading = true;
+  GameSaveData? _gameSaveData; // Store passed game save data
 
   @override
   void initState() {
     super.initState();
+    _gameSaveData = widget.gameSaveData; // Store passed data
     _fetchStages();
     _fetchCategories();
   }
@@ -49,7 +56,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     try {
       print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
       
-      setState(() => _stages = []);
+      setState(() => _isLoading = true);
 
       // Use improved StageService with sync and caching
       await _stageService.synchronizeData();
@@ -65,15 +72,16 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
           _stages = stages.where((stage) => 
             stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
+          _isLoading = false;
         });
       }
 
       // Prefetch next stages
       _prefetchNextStages(0);  // Start prefetching from first stage
     } catch (e) {
-      print('Error fetching stages: $e');
+      print('❌ Error fetching stages: $e');
       if (mounted) {
- 
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -129,22 +137,28 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     try {
-      // Get local game save data for stats
-      GameSaveData? localData = await _authService.getLocalGameSaveData(widget.category['id']!);
+      // Use cached game save data if available
+      GameSaveData? saveData = _gameSaveData;
       
+      // Fallback to loading if not cached
+      if (saveData == null) {
+        saveData = await _authService.getLocalGameSaveData(widget.category['id']!);
+        _gameSaveData = saveData; // Cache for future use
+      }
+
       // Get arcade key
       final arcadeKey = GameSaveData.getArcadeKey(widget.category['id']!);
 
-      // Check for saved game state using GameSaveManager
+      // Get saved game state from GameSaveManager
       final savedGameState = await _gameSaveManager.getSavedGameState(
         categoryId: widget.category['id']!,
         stageName: arcadeKey,
-        mode: 'normal', // Arcade mode always uses normal
+        mode: 'normal',
       );
       
-      if (localData != null) {
-        // Get stats from GameSaveData
-        final stats = localData.getStageStats(arcadeKey, 'normal');
+      if (saveData != null) {
+        // Get arcade stats from GameSaveData
+        final stats = saveData.getStageStats(arcadeKey, 'normal');
         return {
           'bestRecord': stats['bestRecord'] ?? -1,
           'crntRecord': stats['crntRecord'] ?? -1,
@@ -155,7 +169,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       return {
         'bestRecord': -1,
         'crntRecord': -1,
-        'savedGame': null
+        'savedGame': savedGameState?.toJson(),
       };
     } catch (e) {
       print('❌ Error fetching arcade stats: $e');

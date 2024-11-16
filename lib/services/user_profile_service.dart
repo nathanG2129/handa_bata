@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -721,8 +722,16 @@ class UserProfileService {
                        updates.containsKey('expCap');
 
       if (isXPUpdate) {
-        // Get current total XP
-        int currentTotalXP = (currentProfile.level - 1) * 100 + currentProfile.exp;
+        // Get current profile
+        UserProfile? currentProfile = await fetchUserProfile();
+        if (currentProfile == null) return;
+
+        // Calculate current total XP
+        int currentTotalXP = 0;
+        for (int i = 1; i < currentProfile.level; i++) {
+          currentTotalXP += i * 100;  // Add up XP required for previous levels
+        }
+        currentTotalXP += currentProfile.exp;
         print('Current total XP: $currentTotalXP');
 
         // Get the XP gain from updates
@@ -734,19 +743,24 @@ class UserProfileService {
         print('New total XP: $newTotalXP');
 
         // Calculate new level and exp
-        int finalLevel = 1;
         int remainingXP = newTotalXP;
-        int levelRequirement = 100;  // First level requires 100 XP
-
-        // Keep leveling up while we have enough XP
-        while (remainingXP >= levelRequirement) {
-          remainingXP -= levelRequirement;
-          finalLevel++;
-          levelRequirement = finalLevel * 100;  // Next level requires level * 100 XP
+        int finalLevel = 1;
+        
+        // Keep checking if we have enough XP for next level
+        while (remainingXP >= (finalLevel * 100)) {
+            remainingXP -= finalLevel * 100;
+            finalLevel++;
         }
 
         int finalExp = remainingXP;
-        int finalExpCap = finalLevel * 100;  // Cap is based on current level
+        int finalExpCap = finalLevel * 100;
+
+        print('Final calculations:');
+        print('  XP needed for next level: ${finalExpCap}');
+        print('  Current total XP: $newTotalXP');
+        print('  Level: $finalLevel');
+        print('  Exp: $finalExp');
+        print('  ExpCap: $finalExpCap');
 
         // Update the updates map
         updates = {
@@ -824,16 +838,22 @@ class UserProfileService {
           localProfile.expCap != serverProfile.expCap) {
         
         // Calculate total XP for both profiles
-        int serverTotalXP = (serverProfile.level - 1) * 100 + serverProfile.exp;
-        int localTotalXP = (localProfile.level - 1) * 100 + localProfile.exp;
+        int serverTotalXP = ((serverProfile.level - 1) * 100) + serverProfile.exp;
+        int localTotalXP = ((localProfile.level - 1) * 100) + localProfile.exp;
+        
+        print('XP Sync:');
+        print('  Server: Level ${serverProfile.level}, Exp ${serverProfile.exp} (Total: $serverTotalXP)');
+        print('  Local: Level ${localProfile.level}, Exp ${localProfile.exp} (Total: $localTotalXP)');
         
         // Take the higher XP value
-        int finalTotalXP = localTotalXP > serverTotalXP ? localTotalXP : serverTotalXP;
+        int finalTotalXP = max(serverTotalXP, localTotalXP);
         
-        // Recalculate level and exp
+        // Calculate final values
         int finalLevel = (finalTotalXP ~/ 100) + 1;
         int finalExp = finalTotalXP % 100;
         int finalExpCap = finalLevel * 100;
+        
+        print('  Final: Level $finalLevel, Exp $finalExp (Total: $finalTotalXP)');
 
         _batchQueue.add({
           'userId': user.uid,

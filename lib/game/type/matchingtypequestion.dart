@@ -369,7 +369,6 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     }
 
     widget.onAnswerChecked();
-    _recordAnsweredQuestion(correctPairCount == correctAnswers.length);
 
     setState(() {
       isChecking = false;
@@ -433,7 +432,19 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       }
     }
 
-    // Rest of the method...
+    // Record answer AFTER saving state
+    _recordAnsweredQuestion(correctPairCount == correctAnswers.length);
+
+        // Add delay then show correct answers
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      showCorrectAnswer = true;
+      userPairs = List.from(correctAnswers);
+      pairColors = List.filled(correctAnswers.length, Colors.green);
+    });
+  
+    widget.onVisualDisplayComplete();
+
   }
   
   void _checkAnswer() {

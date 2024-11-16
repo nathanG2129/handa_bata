@@ -165,13 +165,12 @@ class ResultsPageState extends State<ResultsPage> {
     if (isGameOver) return 0;
     
     // Otherwise calculate stars normally
-    double accuracyPercent = accuracy * 100;
     double scorePercent = (score / maxScore) * 100;
     
     // Calculate stars based on both accuracy and score percentage
-    if (accuracyPercent >= 90 && scorePercent >= 90) return 3;
-    if (accuracyPercent >= 75 && scorePercent >= 75) return 2;
-    if (accuracyPercent >= 60 && scorePercent >= 60) return 1;
+    if (scorePercent >= 90) return 3;
+    if (scorePercent >= 75) return 2;
+    if (scorePercent >= 0) return 1;
     return 0;
   }
 

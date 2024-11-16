@@ -47,12 +47,6 @@ Widget buildStarsWidget(int stars) {
               stroke="${isLit ? '#F1B33A' : '#453958'}"
               stroke-width="0.2"
             />
-            ${isLit ? '''
-              <path
-                d="M6 2L7 4L9 4.5L7.5 6L8 8L6 7L4 8L4.5 6L3 4.5L5 4L6 2Z"
-                fill="#FFD700"
-              />
-            ''' : ''}
           </svg>
           ''',
           width: 48,

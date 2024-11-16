@@ -761,27 +761,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     }
   }
 
-  int _convertTimeToSeconds(String time) {
-    final parts = time.split(':');
-    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
-  }
-
-  Future<void> _saveGameState() async {
-    try {
-      // Skip saving if first unanswered question
-      if (widget.gamemode != 'arcade' && _isFirstUnansweredQuestion()) {
-        print('🎮 Skipping save - first unanswered question');
-        return;
-      }
-
-      await _gameSaveManager.saveGameState(
-        state: _createGameState(),
-      );
-    } catch (e) {
-      print('❌ Error saving game state: $e');
-    }
-  }
-
   GameState _createGameState() => GameState(
     categoryId: widget.category['id'],
     stageId: widget.stageName,

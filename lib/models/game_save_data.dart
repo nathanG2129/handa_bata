@@ -214,9 +214,13 @@ class GameSaveData {
       }
 
       if (mode.toLowerCase() == 'normal') {
-        data.scoreNormal = score;
+        if (score > data.scoreNormal) {
+          data.scoreNormal = score;
+        }
       } else if (mode.toLowerCase() == 'hard') {
-        data.scoreHard = score;
+        if (score > data.scoreHard) {
+          data.scoreHard = score;
+        }
       } else {
         throw GameSaveDataException('Invalid mode: $mode');
       }

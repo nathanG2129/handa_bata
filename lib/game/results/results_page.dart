@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:handabatamae/game/gameplay_page.dart';
+import 'package:handabatamae/game/prerequisite/prerequisite_page.dart';
 import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
@@ -285,16 +285,28 @@ class ResultsPageState extends State<ResultsPage> {
                                 const SizedBox(width: 25),
                                 ElevatedButton(
                                   onPressed: () {
+                                    // Delete any existing saved game first
+                                    _gameSaveManager.deleteSavedGame(
+                                      categoryId: widget.category['id'],
+                                      stageName: widget.stageName,
+                                      mode: widget.mode,
+                                    );
+
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => GameplayPage(
+                                        builder: (context) => PrerequisitePage(
                                           language: widget.language,
-                                          category: widget.category,
+                                          category: widget.category as Map<String, String>,
                                           stageName: widget.stageName,
                                           stageData: widget.stageData,
                                           mode: widget.mode,
                                           gamemode: widget.gamemode,
+                                          personalBest: widget.score,
+                                          maxScore: widget.stageData['maxScore'],
+                                          stars: stars,
+                                          crntRecord: widget.gamemode == 'arcade' ? 
+                                            _convertRecordToSeconds(widget.record) : -1,
                                         ),
                                       ),
                                     );

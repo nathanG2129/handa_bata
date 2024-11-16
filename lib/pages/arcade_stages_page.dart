@@ -39,99 +39,67 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
   final AuthService _authService = AuthService();
   final GameSaveManager _gameSaveManager = GameSaveManager();
   List<Map<String, dynamic>> _stages = [];
-  List<Map<String, dynamic>> _categories = [];
-  // ignore: unused_field
-  bool _isLoading = true;
-  GameSaveData? _gameSaveData; // Store passed game save data
+  GameSaveData? _gameSaveData;
 
   @override
   void initState() {
     super.initState();
-    _gameSaveData = widget.gameSaveData; // Store passed data
+    _gameSaveData = widget.gameSaveData;
     _fetchStages();
-    _fetchCategories();
   }
 
   Future<void> _fetchStages() async {
     try {
-      print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
+      print('\n🎮 Arcade Stages Page - Fetching stages');
+      print('📋 Category: ${widget.category['id']}');
+      print('🌍 Language: ${widget.selectedLanguage}');
       
-      setState(() => _isLoading = true);
+      await _stageService.debugCacheState();
+      
 
-      // Use improved StageService with sync and caching
-      await _stageService.synchronizeData();
-      
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
         widget.selectedLanguage, 
-        widget.category['id']!
+        widget.category['id']!,
       );
       
       if (mounted) {
         setState(() {
-          // Filter for arcade stages only
           _stages = stages.where((stage) => 
             stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
-          _isLoading = false;
+          print('✅ Loaded ${_stages.length} arcade stages');
         });
       }
 
-      // Prefetch next stages
-      _prefetchNextStages(0);  // Start prefetching from first stage
+      // Prefetch arcade stages for next category
+      if (_gameSaveData != null) {
+        print('🎯 Prefetching next arcade stages');
+        _prefetchNextArcadeStages();
+      }
     } catch (e) {
-      print('❌ Error fetching stages: $e');
+      print('❌ Error fetching arcade stages: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }
 
-  Future<void> _fetchCategories() async {
+  Future<void> _prefetchNextArcadeStages() async {
     try {
       final categories = await _stageService.fetchCategories(widget.selectedLanguage);
-      if (mounted) {
-        setState(() {
-          _categories = categories;
-        });
+      final currentIndex = categories.indexWhere((c) => c['id'] == widget.category['id']);
+      
+      if (currentIndex >= 0 && currentIndex < categories.length - 1) {
+        final nextCategory = categories[currentIndex + 1];
+        print('🎯 Prefetching arcade stages for ${nextCategory['id']}');
+        
+        _stageService.queueStageLoad(
+          nextCategory['id'],
+          GameSaveData.getArcadeKey(nextCategory['id']),
+          StagePriority.MEDIUM
+        );
       }
     } catch (e) {
-      print('❌ Error fetching categories: $e');
-    }
-  }
-
-  // Add prefetch for next stages
-  void _prefetchNextStages(int currentIndex) async {
-    try {
-      final categoryId = widget.category['id']!;
-      final arcadeKey = GameSaveData.getArcadeKey(categoryId);
-      
-      // Get current game save data
-      GameSaveData? localData = await _authService.getLocalGameSaveData(categoryId);
-      
-      if (localData != null) {
-        // Arcade stages are always available
-        if (currentIndex + 1 < _stages.length) {
-          _stageService.queueStageLoad(
-            categoryId,
-            arcadeKey,
-            StagePriority.HIGH
-          );
-        }
-
-        // Also prefetch next category's arcade stage if available
-        if (_categories.length > 1) {
-          final nextCategoryId = _categories[1]['id'];
-          final nextArcadeKey = GameSaveData.getArcadeKey(nextCategoryId);
-          
-          _stageService.queueStageLoad(
-            nextCategoryId,
-            nextArcadeKey,
-            StagePriority.MEDIUM
-          );
-        }
-      }
-    } catch (e) {
-      print('❌ Error prefetching arcade stages: $e');
+      print('❌ Error prefetching next arcade stages: $e');
     }
   }
 

@@ -62,26 +62,29 @@ class AdventurePageState extends State<AdventurePage> {
 
   Future<void> _initializeData() async {
     try {
+      print('\n🎮 Adventure Page Initialization');
+      await _stageService.debugCacheState();
+      
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      // Load categories first
+      print('📥 Fetching categories for $_selectedLanguage');
       final categories = await _stageService.fetchCategories(_selectedLanguage);
       
-      // Load and sync game save data for all categories
+      // Load and sync game save data
+      print('💾 Loading game save data');
       setState(() => _isSyncing = true);
       
       await Future.wait(
         categories.map((category) async {
           try {
+            print('🎯 Processing category: ${category['id']}');
             final saveData = await _authService.getLocalGameSaveData(category['id']);
             if (saveData != null) {
               _categorySaveData[category['id']] = saveData;
-              
-              // Sync with server if online
-              await _authService.syncCategoryData(category['id']);
+              print('✅ Loaded save data for ${category['id']}');
             }
           } catch (e) {
             print('❌ Error loading save data for category ${category['id']}: $e');
@@ -96,14 +99,14 @@ class AdventurePageState extends State<AdventurePage> {
           _isLoading = false;
           _isSyncing = false;
         });
+        print('✅ Adventure Page initialization complete');
       }
 
-      // Prefetch first category's stages
       if (categories.isNotEmpty) {
         _prefetchFirstCategory();
       }
     } catch (e) {
-      print('❌ Error initializing data: $e');
+      print('❌ Error in Adventure Page initialization: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to load categories';

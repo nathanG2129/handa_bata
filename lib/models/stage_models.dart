@@ -18,8 +18,19 @@ class CachedStage {
     this.priority = StagePriority.LOW,
   });
   
-  bool get isValid => 
-    DateTime.now().difference(timestamp) < const Duration(hours: 1);
+  bool get isValid {
+    final age = DateTime.now().difference(timestamp);
+    switch (priority) {
+      case StagePriority.CRITICAL:
+        return age < const Duration(minutes: 30);
+      case StagePriority.HIGH:
+        return age < const Duration(hours: 2);
+      case StagePriority.MEDIUM:
+        return age < const Duration(hours: 4);
+      case StagePriority.LOW:
+        return age < const Duration(hours: 8);
+    }
+  }
 }
 
 /// Structure for managing load requests

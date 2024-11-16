@@ -53,12 +53,13 @@ class StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      print('Fetching stages for category ${widget.category['id']} in ${widget.selectedLanguage}');
+      print('\n🎮 Stages Page - Fetching stages');
+      print('📋 Category: ${widget.category['id']}');
+      print('🌍 Language: ${widget.selectedLanguage}');
+      
+      await _stageService.debugCacheState();
       
 
-      // Use improved StageService with sync and caching
-      await _stageService.synchronizeData();
-      
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(
         widget.selectedLanguage, 
         widget.category['id']!
@@ -66,15 +67,15 @@ class StagesPageState extends State<StagesPage> {
       
       if (mounted) {
         setState(() {
-          // Filter out arcade stages
           _stages = stages.where((stage) => 
             !stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
+          print('✅ Loaded ${_stages.length} stages');
         });
       }
 
-      // Prefetch next stages using cached game save data
       if (_gameSaveData != null) {
+        print('🎯 Prefetching next stages');
         _prefetchNextStages(0);
       }
     } catch (e) {

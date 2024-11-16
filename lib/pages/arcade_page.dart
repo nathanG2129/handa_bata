@@ -63,42 +63,35 @@ class ArcadePageState extends State<ArcadePage> {
 
   Future<void> _initializeData() async {
     try {
+      print('\n🎮 Arcade Page Initialization');
+      await _stageService.debugCacheState();
+      
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      // Sync stage data once at start
-      await _stageService.synchronizeData();
-
-      // Load categories
+      print('📥 Fetching categories for $_selectedLanguage');
       final categories = await _stageService.fetchCategories(_selectedLanguage);
       
-      // Load game save data for all categories
+      // Load and sync game save data
+      print('💾 Loading game save data');
       setState(() => _isSyncing = true);
       
-      // Load all game save data first
       await Future.wait(
         categories.map((category) async {
           try {
+            print('🎯 Processing category: ${category['id']}');
             final saveData = await _authService.getLocalGameSaveData(category['id']);
             if (saveData != null) {
               _categorySaveData[category['id']] = saveData;
+              print('✅ Loaded save data for ${category['id']}');
             }
           } catch (e) {
             print('❌ Error loading save data for category ${category['id']}: $e');
           }
         })
       );
-
-      // Then sync all categories at once
-      if (_categorySaveData.isNotEmpty) {
-        await Future.wait(
-          _categorySaveData.keys.map((categoryId) => 
-            _authService.syncCategoryData(categoryId)
-          )
-        );
-      }
 
       if (mounted) {
         setState(() {
@@ -107,14 +100,10 @@ class ArcadePageState extends State<ArcadePage> {
           _isLoading = false;
           _isSyncing = false;
         });
-      }
-
-      // Prefetch first category's arcade stage
-      if (categories.isNotEmpty) {
-        _prefetchFirstCategory();
+        print('✅ Arcade Page initialization complete');
       }
     } catch (e) {
-      print('❌ Error initializing arcade data: $e');
+      print('❌ Error in Arcade Page initialization: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to load categories';

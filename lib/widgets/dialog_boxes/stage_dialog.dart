@@ -22,6 +22,13 @@ void showStageDialog(
   String selectedLanguage,
   StageService stageService,
 ) {
+  print('\n🎮 Opening Stage Dialog');
+  print('📋 Stage: $stageNumber');
+  print('🎯 Category: ${category['id']}');
+  print('🌍 Language: $selectedLanguage');
+  
+  stageService.debugCacheState();
+  
   showGeneralDialog(
     context: context,
     barrierDismissible: true,

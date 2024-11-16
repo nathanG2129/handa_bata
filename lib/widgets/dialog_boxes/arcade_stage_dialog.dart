@@ -25,6 +25,15 @@ void showArcadeStageDialog(
   String selectedLanguage,
   StageService stageService,
 ) {
+  print('\n🎮 Opening Arcade Stage Dialog');
+  print('📋 Stage: $stageNumber');
+  print('🎯 Category: ${category['id']}');
+  print('🌍 Language: $selectedLanguage');
+  print('🏆 Best Record: ${formatTime(bestRecord)}');
+  print('📊 Current Record: ${formatTime(crntRecord)}');
+  
+  stageService.debugCacheState();
+  
   showGeneralDialog(
     context: context,
     barrierDismissible: true,

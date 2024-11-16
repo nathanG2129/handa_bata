@@ -232,17 +232,35 @@ final Map<String, CachedStage> _categoryCache = {};
       // Check memory cache first
       String cacheKey = '${language}_${categoryId}_stages';
       if (_stageCache.containsKey(cacheKey)) {
-        List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
-        return stages;
+        final cachedData = _stageCache[cacheKey]!;
+        if (cachedData.isValid) {
+          print('💾 Returning stages from memory cache');
+          return List<Map<String, dynamic>>.from(cachedData.data['stages']);
+        }
+        print('📦 Memory cache expired for $cacheKey');
       }
 
-      // Then check local storage using the new method
+      // Then check local storage
+      print('🔍 Checking local storage for stages');
       List<Map<String, dynamic>> localStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+      if (localStages.isNotEmpty) {
+        print('📱 Found ${localStages.length} stages in local storage');
+        
+        // Refresh memory cache from local storage
+        _stageCache[cacheKey] = CachedStage(
+          data: {'stages': localStages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+        
+        return localStages;
+      }
       
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      // Only fetch from server if we have no local data
+      var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        // Get stages from server
-        QuerySnapshot snapshot = await FirebaseFirestore.instance
+        print('🌐 Fetching stages from server');
+        QuerySnapshot snapshot = await _firestore
             .collection('Game')
             .doc('Stage')
             .collection(language)
@@ -258,7 +276,7 @@ final Map<String, CachedStage> _categoryCache = {};
           };
         }).toList();
 
-        // Cache the results
+        // Update both caches
         _stageCache[cacheKey] = CachedStage(
           data: {'stages': stages},
           timestamp: DateTime.now(),
@@ -266,58 +284,96 @@ final Map<String, CachedStage> _categoryCache = {};
         );
         
         await _storeStagesLocally(stages, categoryId);
+        print('✅ Cached ${stages.length} stages in memory and local storage');
+        
         return stages;
       }
-      return localStages;
+
+      // If offline and no local data
+      print('⚠️ No stages available - offline and no local cache');
+      return [];
     } catch (e) {
-      print('Error in fetchStages: $e');
+      print('❌ Error in fetchStages: $e');
+      // Final fallback to local storage
       return await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
     }
   }
 
-  Future<List<Map<String, dynamic>>> getStagesFromLocal(String mode) async {
+  // Add these constants at the top of StageService
+  static const String LOCAL_STORAGE_VERSION = 'stage_storage_v1_';
+  static const Duration BACKUP_RETENTION = Duration(days: 7);
+
+  // Replace the multiple getFromLocal methods with one unified method
+  Future<List<Map<String, dynamic>>> getStagesFromLocal(
+    String categoryId, {
+    bool isArcade = false,
+    bool useRawCache = false,
+  }) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      
-      if (mode == 'raw') {
-        // Get ALL raw stage data
-        final allStages = <Map<String, dynamic>>[];
-        
-        // Get all keys that start with STAGES_CACHE_KEY
-        final stageKeys = prefs.getKeys()
-            .where((key) => key.startsWith(STAGES_CACHE_KEY))
-            .toList();
-        
-        for (var key in stageKeys) {
-          String? stagesJson = prefs.getString(key);
-          if (stagesJson != null) {
-            List<dynamic> stagesList = jsonDecode(stagesJson);
-            allStages.addAll(
-              stagesList.map((stage) => stage as Map<String, dynamic>)
-            );
-          }
-        }
-        
-        if (allStages.isNotEmpty) {
-          print('📦 Found ${allStages.length} stages in raw cache');
-          return allStages;
-        }
-      } else {
-        // Get category-specific stages or game save data
-        String key = mode.startsWith('game_save_data_') 
-            ? mode 
-            : '${STAGES_CACHE_KEY}_$mode';
-            
-        String? dataJson = prefs.getString(key);
-        if (dataJson != null) {
-          List<dynamic> dataList = jsonDecode(dataJson);
-          return dataList.map((data) => data as Map<String, dynamic>).toList();
-        }
+      if (useRawCache) {
+        return await _getAllRawStages();
       }
+
+      String key = _getStorageKey(categoryId, isArcade);
+      return await _getFromLocalWithBackup(key);
     } catch (e) {
       print('❌ Error getting stages from local: $e');
+      return [];
     }
+  }
+
+  // Add helper methods
+  String _getStorageKey(String categoryId, bool isArcade) {
+    return isArcade 
+        ? '${LOCAL_STORAGE_VERSION}${STAGES_CACHE_KEY}_arcade_$categoryId'
+        : '${LOCAL_STORAGE_VERSION}${STAGES_CACHE_KEY}_$categoryId';
+  }
+
+  Future<List<Map<String, dynamic>>> _getAllRawStages() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final allStages = <Map<String, dynamic>>[];
+    
+    final stageKeys = prefs.getKeys()
+        .where((key) => key.startsWith(LOCAL_STORAGE_VERSION))
+        .where((key) => !key.endsWith('_backup'))
+        .toList();
+    
+    for (var key in stageKeys) {
+      final stages = await _getFromLocalWithBackup(key);
+      allStages.addAll(stages);
+    }
+    
+    print('📦 Found ${allStages.length} stages in raw cache');
+    return allStages;
+  }
+
+  Future<List<Map<String, dynamic>>> _getFromLocalWithBackup(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    
+    // Try main storage
+    String? dataJson = prefs.getString(key);
+    if (dataJson != null) {
+      return _parseStagesJson(dataJson);
+    }
+    
+    // Try backup
+    String? backupJson = prefs.getString('${key}_backup');
+    if (backupJson != null) {
+      print('📦 Restored from backup for $key');
+      // Restore main from backup
+      await prefs.setString(key, backupJson);
+      return _parseStagesJson(backupJson);
+    }
+    
     return [];
+  }
+
+  List<Map<String, dynamic>> _parseStagesJson(String json) {
+    List<dynamic> dataList = jsonDecode(json);
+    return dataList.map((data) {
+      Map<String, dynamic> stageMap = Map<String, dynamic>.from(data);
+      return _restoreTimestamps(stageMap);
+    }).toList();
   }
 
   Future<List<Map<String, dynamic>>> _getCategoriesFromLocal(String language) async {
@@ -592,25 +648,57 @@ final Map<String, CachedStage> _categoryCache = {};
     }
   }
 
-  Future<void> _storeStagesLocally(List<Map<String, dynamic>> stages, String categoryId) async {
+  Future<void> _storeStagesLocally(
+    List<Map<String, dynamic>> stages, 
+    String categoryId, {
+    bool isArcade = false,
+  }) async {
     try {
+      String key = _getStorageKey(categoryId, isArcade);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String key = '${STAGES_CACHE_KEY}_$categoryId';
       
-      // Create backup
+      // Create backup first
       String? existingData = prefs.getString(key);
       if (existingData != null) {
         await prefs.setString('${key}_backup', existingData);
+        print('📦 Created backup for $key');
       }
-      
-      String stagesJson = jsonEncode(stages);
+
+      // Store new data
+      String stagesJson = jsonEncode(_sanitizeForStorage(stages));
       await prefs.setString(key, stagesJson);
+      print('✅ Stored ${stages.length} stages for $key');
       
-      // Clear backup after successful save
+      // Clear old backup
       await prefs.remove('${key}_backup');
+      
+      // Clean up old backups periodically
+      await _cleanupOldBackups();
     } catch (e) {
-      print('Error storing stages locally: $e');
-      await _restoreFromBackup(categoryId);
+      print('❌ Error storing stages: $e');
+      // Keep backup in case of error
+    }
+  }
+
+  Future<void> _cleanupOldBackups() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now();
+      
+      for (String key in prefs.getKeys()) {
+        if (key.startsWith(LOCAL_STORAGE_VERSION) && key.endsWith('_backup')) {
+          String? timestamp = prefs.getString('${key}_timestamp');
+          if (timestamp != null) {
+            DateTime backupDate = DateTime.parse(timestamp);
+            if (now.difference(backupDate) > BACKUP_RETENTION) {
+              await prefs.remove(key);
+              await prefs.remove('${key}_timestamp');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error cleaning up backups: $e');
     }
   }
 
@@ -620,15 +708,7 @@ final Map<String, CachedStage> _categoryCache = {};
     
     map.forEach((key, value) {
       if (value != null) {
-        if (value is Timestamp) {
-          sanitized[key] = value.toDate().millisecondsSinceEpoch;
-        } else if (value is Map) {
-          sanitized[key] = _sanitizeMap(value as Map<String, dynamic>);
-        } else if (value is List) {
-          sanitized[key] = _sanitizeList(value);
-        } else {
-          sanitized[key] = value;
-        }
+        sanitized[key] = _sanitizeForStorage(value);
       }
     });
     
@@ -637,16 +717,7 @@ final Map<String, CachedStage> _categoryCache = {};
 
   // Helper method to sanitize lists
   List _sanitizeList(List list) {
-    return list.where((item) => item != null).map((item) {
-      if (item is Timestamp) {
-        return item.toDate().millisecondsSinceEpoch;
-      } else if (item is Map) {
-        return _sanitizeMap(item as Map<String, dynamic>);
-      } else if (item is List) {
-        return _sanitizeList(item);
-      }
-      return item;
-    }).toList();
+    return list.map((item) => _sanitizeForStorage(item)).toList();
   }
 
   Future<void> _storeCategoriesLocally(List<Map<String, dynamic>> categories, String language) async {
@@ -1665,5 +1736,64 @@ final Map<String, CachedStage> _categoryCache = {};
       print('🏁 Stage sync process completed');
       _setSyncState(false);
     }
+  }
+
+  // Add these methods to StageService class
+
+  void _logCacheStatus(String cacheKey, String operation) {
+    print('📦 Cache $operation - Key: $cacheKey');
+    print('💾 Memory cache size: ${_stageCache.length}');
+    print('🗄️ Cache keys: ${_stageCache.keys.join(', ')}');
+  }
+  Future<void> debugCacheState() async {
+    try {
+      print('\n🔍 Stage Service Cache Debug:');
+      print('📦 Memory Cache:');
+      _stageCache.forEach((key, value) {
+        print('  Key: $key');
+        print('  Priority: ${value.priority}');
+        print('  Age: ${DateTime.now().difference(value.timestamp).inMinutes}m');
+        print('  Valid: ${value.isValid}\n');
+      });
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final localKeys = prefs.getKeys()
+          .where((key) => key.startsWith(STAGES_CACHE_KEY))
+          .toList();
+      
+      print('💾 Local Storage Cache:');
+      for (var key in localKeys) {
+        print('  Key: $key');
+      }
+      print('------------------------\n');
+    } catch (e) {
+      print('❌ Error in debugCacheState: $e');
+    }
+  }
+
+  // Add this method to StageService class
+  dynamic _sanitizeForStorage(dynamic data) {
+    if (data == null) return null;
+    
+    if (data is Map<String, dynamic>) {
+      return _sanitizeMap(data);
+    } else if (data is Map) {
+      // Convert other Map types to Map<String, dynamic>
+      return _sanitizeMap(Map<String, dynamic>.from(data));
+    }
+    
+    if (data is List) {
+      return data.map((item) => _sanitizeForStorage(item)).toList();
+    }
+    
+    if (data is Timestamp) {
+      return data.toDate().millisecondsSinceEpoch;
+    }
+    
+    if (data is DateTime) {
+      return data.millisecondsSinceEpoch;
+    }
+    
+    return data;
   }
 }

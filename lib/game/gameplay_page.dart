@@ -47,7 +47,7 @@ class GameplayPageState extends State<GameplayPage> {
   double _musicVolume = 0.5; // Default music volume
   double _sfxVolume = 0.5; // Default SFX volume
   List<Map<String, dynamic>> _questions = [];
-  int _currentQuestionIndex = 0;
+  int currentQuestionIndex = 0;
   int _totalQuestions = 0;
   bool _isLoading = true;
   bool _hasError = false;
@@ -96,7 +96,7 @@ class GameplayPageState extends State<GameplayPage> {
   final GameSaveManager _gameSaveManager = GameSaveManager();
 
   // Internal save state question index
-  int _saveStateQuestionIndex = 0;
+  int saveStateQuestionIndex = 0;
 
   @override
   void initState() {
@@ -212,7 +212,7 @@ class GameplayPageState extends State<GameplayPage> {
 
     // Auto-save if needed
     if (_shouldSaveGame()) {
-      _autoSaveGame();
+      autoSaveGame();
     }
 
     super.dispose();
@@ -220,8 +220,8 @@ class GameplayPageState extends State<GameplayPage> {
 
 void readCurrentQuestion() {
   if (_isTextToSpeechEnabled) {
-    if (_currentQuestionIndex < _questions.length) {
-      Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    if (currentQuestionIndex < _questions.length) {
+      Map<String, dynamic> currentQuestion = _questions[currentQuestionIndex];
       String questionType = currentQuestion['type'] ?? '';
 
       String textToRead = '';
@@ -338,7 +338,7 @@ void readCurrentQuestion() {
   }
   
   void _forceCheckAnswer() {
-    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    Map<String, dynamic> currentQuestion = _questions[currentQuestionIndex];
     String? questionType = currentQuestion['type'];
   
     switch (questionType) {
@@ -414,10 +414,10 @@ void readCurrentQuestion() {
           ),
         );
       });
-    } else if (_currentQuestionIndex < _totalQuestions - 1) {
-      _autoSaveGame(); // Save after completing a question
+    } else if (currentQuestionIndex < _totalQuestions - 1) {
+      autoSaveGame(); // Save after completing a question
       setState(() {
-        _currentQuestionIndex++;
+        currentQuestionIndex++;
         _selectedOptionIndex = null;
         _isCorrect = null;
         _controller.clear();
@@ -425,7 +425,7 @@ void readCurrentQuestion() {
       });
 
       // Save again after state update
-      _autoSaveGame();
+      autoSaveGame();
 
       if (widget.gamemode != 'arcade') {
         Future.delayed(const Duration(seconds: 5), () {
@@ -534,10 +534,10 @@ void readCurrentQuestion() {
     });
 
     // Increment save state index after answer
-    _saveStateQuestionIndex = _currentQuestionIndex + 1;
+    saveStateQuestionIndex = currentQuestionIndex + 1;
     
     // Save with incremented index
-    _autoSaveGame();
+    autoSaveGame();
 
     // Update health after delay
     Future.delayed(const Duration(seconds: 1), () {
@@ -554,7 +554,7 @@ void readCurrentQuestion() {
     _timer?.cancel();
     setState(() {
       _answeredQuestions.add({
-        'question': _questions[_currentQuestionIndex]['question'],
+        'question': _questions[currentQuestionIndex]['question'],
         'correctAnswer': answerData['correctAnswer'],
         'isCorrect': answerData['isCorrect'],
         'type': 'Fill in the Blanks',
@@ -573,17 +573,11 @@ void readCurrentQuestion() {
         _currentStreak = 0;
       }
     });
-
-    // Save right after answer submission
-    _autoSaveGame();
-    
-    // Increment save state index after answer
-    _saveStateQuestionIndex = _currentQuestionIndex + 1;
   }
   
 void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     _timer?.cancel();
-    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    Map<String, dynamic> currentQuestion = _questions[currentQuestionIndex];
     
     _answeredQuestions.add({
     'question': currentQuestion['question'],
@@ -628,8 +622,11 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     }
   });
 
+  // Increment save state index after answer
+  saveStateQuestionIndex = currentQuestionIndex + 1;
+
   // Save right after answer submission
-  _autoSaveGame();
+  autoSaveGame();
 
   // Update health
   _updateHealth(isCorrect, 'Identification');
@@ -657,12 +654,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         _currentStreak = 0;
       }
     });
-
-    // Save right after answer submission
-    _autoSaveGame();
-
-    // Increment save state index after answer
-    _saveStateQuestionIndex = _currentQuestionIndex + 1;
   }
   
   void _handleVisualDisplayComplete() {
@@ -743,8 +734,8 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         final savedGameState = GameState.fromJson(savedGame);
         setState(() {
           _questions = savedGameState.questions;
-          _currentQuestionIndex = savedGameState.currentQuestionIndex;
-          _saveStateQuestionIndex = savedGameState.currentQuestionIndex;
+          currentQuestionIndex = savedGameState.currentQuestionIndex;
+          saveStateQuestionIndex = savedGameState.currentQuestionIndex;
           _correctAnswersCount = savedGameState.correctAnswers;
           _wrongAnswersCount = savedGameState.wrongAnswers;
           _currentStreak = savedGameState.currentStreak;
@@ -796,7 +787,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     stageId: widget.stageName,
     mode: widget.mode,
     gamemode: widget.gamemode,
-    currentQuestionIndex: _saveStateQuestionIndex,
+    currentQuestionIndex: saveStateQuestionIndex,
     questions: _questions,
     answeredQuestions: _answeredQuestions,
     score: _correctAnswersCount,
@@ -848,7 +839,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       );
     }
   
-    Map<String, dynamic> currentQuestion = _questions[_currentQuestionIndex];
+    Map<String, dynamic> currentQuestion = _questions[currentQuestionIndex];
     String? questionType = currentQuestion['type'];
   
     Widget questionWidget;
@@ -878,6 +869,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           gamemode: widget.gamemode,
           updateHealth: _updateHealth, // Pass the updateHealth method
           updateStopwatch: _updateStopwatch, // Pass the updateStopwatch method
+          currentQuestionIndex: currentQuestionIndex, // Pass the current question index
         );
         break;
       case 'Matching Type':
@@ -891,6 +883,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
           gamemode: widget.gamemode,
           updateHealth: _updateHealth, // Pass the updateHealth method
           updateStopwatch: _updateStopwatch, // Pass the updateStopwatch method
+          currentQuestionIndex: currentQuestionIndex, // Pass the current question index
         );
         break;
       case 'Identification':
@@ -947,7 +940,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${_currentQuestionIndex + 1} of $_totalQuestions',
+                              '${currentQuestionIndex + 1} of $_totalQuestions',
                               style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
                             ),
                             IconButton(
@@ -1074,11 +1067,11 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
 
   bool _isFirstUnansweredQuestion() {
-    return _currentQuestionIndex == 0 && !_hasAnsweredQuestions();
+    return currentQuestionIndex == 0 && !_hasAnsweredQuestions();
   }
 
   bool _isLastAnsweredQuestion() {
-    return _currentQuestionIndex >= _totalQuestions - 1 && 
+    return currentQuestionIndex >= _totalQuestions - 1 && 
            _answeredQuestions.length >= _totalQuestions;
   }
 
@@ -1147,7 +1140,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     return route?.settings.name?.contains('ResultsPage') ?? false;
   }
 
-  void _autoSaveGame() async {
+  void autoSaveGame() async {
     if (!_shouldSaveGame()) return;
     
     try {

@@ -16,6 +16,7 @@ class MatchingTypeQuestion extends StatefulWidget {
   final String gamemode; // Add this line
   final Function(bool, String, {int blankPairs, String difficulty}) updateHealth; // Add this line
   final Function(int) updateStopwatch; // Add this line
+  final int currentQuestionIndex; // Add this line
 
   const MatchingTypeQuestion({
     super.key,
@@ -26,7 +27,8 @@ class MatchingTypeQuestion extends StatefulWidget {
     required this.sfxVolume, 
     required this.gamemode, 
     required this.updateHealth, 
-    required this.updateStopwatch, // Add this line
+    required this.updateStopwatch, 
+    required this.currentQuestionIndex, // Add this line
   });
 
   @override
@@ -378,7 +380,10 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
     setState(() {
       isChecking = true;
     });
-  
+
+    int totalPairs = correctPairCount;
+    int completedUpdates = 0;
+
     // Only check pairs that don't have empty sections
     for (int i = 0; i < userPairs.length; i++) {
       if (userPairs[i]['section1']!.isEmpty || userPairs[i]['section2']!.isEmpty) {
@@ -415,18 +420,20 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
             }
           }
         }
+        completedUpdates++;
       });
     }
-    
-    // Add delay then show correct answers
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() {
-      showCorrectAnswer = true;
-      userPairs = List.from(correctAnswers);
-      pairColors = List.filled(correctAnswers.length, Colors.green);
-    });
-  
-    widget.onVisualDisplayComplete();
+
+    // Only save after all HP updates are complete
+    if (completedUpdates == totalPairs) {
+      final gameplayState = context.findAncestorStateOfType<GameplayPageState>();
+      if (gameplayState != null) {
+        gameplayState.saveStateQuestionIndex = widget.currentQuestionIndex + 1;
+        gameplayState.autoSaveGame();
+      }
+    }
+
+    // Rest of the method...
   }
   
   void _checkAnswer() {

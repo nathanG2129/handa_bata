@@ -19,6 +19,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
   final String gamemode; // Add this line
   final Function(bool, String, {int blankPairs, String difficulty}) updateHealth; // Add this line
   final Function(int) updateStopwatch; // Add this line
+  final int currentQuestionIndex; // Add this line
 
   const FillInTheBlanksQuestion({
     super.key,
@@ -33,6 +34,7 @@ class FillInTheBlanksQuestion extends StatefulWidget {
     required this.gamemode, 
     required this.updateHealth, // Add this line
     required this.updateStopwatch, // Add this line
+    required this.currentQuestionIndex, // Add this line
   });
 
   @override
@@ -214,26 +216,39 @@ void _checkAnswer() {
 }
 
 void _showAnswerVisually() async {
+  int totalUpdates = correctOptions.length;
+  int completedUpdates = 0;
+
   for (int i = 0; i < selectedOptions.length; i++) {
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 750)); // Introduce a delay of 1.75 seconds
+    await Future.delayed(const Duration(seconds: 1, milliseconds: 750));
 
     setState(() {
       if (selectedOptions[i] == correctOptions[i]) {
-        _playSound(_soundId2); // Play correct answer sound
-        correctness[i] = true; // Mark as correct
-        widget.updateHealth(true, 'Fill in the Blanks'); // Add HP for correct answer
+        _playSound(_soundId2);
+        correctness[i] = true;
+        widget.updateHealth(true, 'Fill in the Blanks');
         if (widget.gamemode == 'arcade') {
-          widget.updateStopwatch(-5); // Deduct 5 seconds for correct answer
+          widget.updateStopwatch(-5);
         }
       } else {
-        _playSound(_soundId1); // Play wrong answer sound
-        correctness[i] = false; // Mark as incorrect
-        widget.updateHealth(false, 'Fill in the Blanks', blankPairs: 1); // Subtract HP for incorrect answer
+        _playSound(_soundId1);
+        correctness[i] = false;
+        widget.updateHealth(false, 'Fill in the Blanks', blankPairs: 1);
         if (widget.gamemode == 'arcade') {
-          widget.updateStopwatch(5); // Add 5 seconds for incorrect answer
+          widget.updateStopwatch(5);
         }
       }
+      completedUpdates++;
     });
+  }
+
+  // Only save after all HP updates are complete
+  if (completedUpdates == totalUpdates) {
+    final gameplayState = context.findAncestorStateOfType<GameplayPageState>();
+    if (gameplayState != null) {
+      gameplayState.saveStateQuestionIndex = widget.currentQuestionIndex + 1;
+      gameplayState.autoSaveGame();
+    }
   }
 
   // Show the correct answers after a delay

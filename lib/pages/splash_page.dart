@@ -204,65 +204,6 @@ class SplashPageState extends State<SplashPage> {
   static const double bottomPadding = 140.0;
   static const double buttonSpacing = 20.0;
 
-  Future<void> _signInAnonymously(BuildContext context) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const LoadingWidget();
-        },
-      );
-
-      AuthService authService = AuthService();
-
-      // Check if a guest account already exists
-      String? guestUid = await authService.getGuestAccountDetails();
-      if (guestUid != null) {
-        // Sign in with the existing guest account
-        UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
-        if (userCredential.user != null) {
-          // Check if the widget is still mounted before using the context
-          if (!context.mounted) return;
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
-          );
-          return;
-        }
-      }
-
-      // If no guest account exists, create a new one
-      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
-      User? user = userCredential.user;
-      if (user != null) {
-        await authService.createGuestProfile(user);
-      }
-
-      // Check if the widget is still mounted before using the context
-      if (!context.mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
-      );
-    } catch (e) {
-      // Remove the loading dialog in case of error
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      if (!context.mounted) return;
-
-      // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in anonymously: $e')),
-      );
-    }
-  }
-
   Future<void> _checkSignInStatus(BuildContext context) async {
     try {
       // Show loading dialog
@@ -270,7 +211,12 @@ class SplashPageState extends State<SplashPage> {
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return const LoadingWidget();
+          return Container(
+            color: Colors.black.withOpacity(0.7),
+            child: const Center(
+              child: LoadingWidget(),
+            ),
+          );
         },
       );
 
@@ -301,11 +247,26 @@ class SplashPageState extends State<SplashPage> {
         } else {
           // Create guest account with proper error handling
           try {
+            // Show loading again for account creation
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return Container(
+                  color: Colors.black.withOpacity(0.7),
+                  child: const Center(
+                    child: LoadingWidget(),
+                  ),
+                );
+              },
+            );
+
             UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
             if (userCredential.user != null) {
               await authService.createGuestProfile(userCredential.user!);
               
               if (!context.mounted) return;
+              Navigator.of(context).pop(); // Remove loading dialog
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MainPage(selectedLanguage: _selectedLanguage)),
@@ -314,6 +275,7 @@ class SplashPageState extends State<SplashPage> {
           } catch (e) {
             print('❌ Error creating guest account: $e');
             if (!context.mounted) return;
+            Navigator.of(context).pop(); // Remove loading dialog
             
             // Show error dialog
             showDialog(

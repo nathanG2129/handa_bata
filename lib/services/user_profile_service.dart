@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -527,6 +526,7 @@ class UserProfileService {
       'type': List,
       'elementType': int,
       'allowedValues': [0, 1],
+      'minLength': 1,
     },
     ProfileField.unlockedBanner: {
       'type': List,
@@ -686,225 +686,117 @@ class UserProfileService {
   // Batch operation queue
   final List<Map<String, dynamic>> _batchQueue = [];
   // Add batch update method
-  Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
-    try {
-      // Validate avatar if included in updates
-      if (updates.containsKey('avatarId')) {
-        final avatar = await _avatarService.getAvatarDetails(updates['avatarId']);
-        if (avatar == null) {
-          throw Exception('Invalid avatar ID in batch update');
-        }
+ Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
+  try {
+    // Validate avatar if included in updates
+    if (updates.containsKey('avatarId')) {
+      final avatar = await _avatarService.getAvatarDetails(updates['avatarId']);
+      if (avatar == null) {
+        throw Exception('Invalid avatar ID in batch update');
       }
-
-      User? user = _auth.currentUser;
-      if (user == null) return;
-
-      String userId = user.uid;
-
-      // Validate all updates first
-      for (var entry in updates.entries) {
-        ProfileField? field = _getProfileField(entry.key);
-        if (field == null) continue;
-
-        ValidationResult result = _validateField(field, entry.value);
-        if (!result.isValid) {
-          throw Exception('Invalid value for ${entry.key}: ${result.error}');
-        }
-      }
-
-      // Get current profile
-      UserProfile? currentProfile = await fetchUserProfile();
-      if (currentProfile == null) return;
-
-      // Handle XP updates
-      bool isXPUpdate = updates.containsKey('exp') || 
-                       updates.containsKey('level') || 
-                       updates.containsKey('expCap');
-
-      if (isXPUpdate) {
-        // Get current profile
-        UserProfile? currentProfile = await fetchUserProfile();
-        if (currentProfile == null) return;
-
-        // Calculate current total XP
-        int currentTotalXP = 0;
-        for (int i = 1; i < currentProfile.level; i++) {
-          currentTotalXP += i * 100;  // Add up XP required for previous levels
-        }
-        currentTotalXP += currentProfile.exp;
-        print('Current total XP: $currentTotalXP');
-
-        // Get the XP gain from updates
-        int xpGain = updates['exp'] ?? 0;
-        print('XP gain: $xpGain');
-
-        // Add the gain to current total
-        int newTotalXP = currentTotalXP + xpGain;
-        print('New total XP: $newTotalXP');
-
-        // Calculate new level and exp
-        int remainingXP = newTotalXP;
-        int finalLevel = 1;
-        
-        // Keep checking if we have enough XP for next level
-        while (remainingXP >= (finalLevel * 100)) {
-            remainingXP -= finalLevel * 100;
-            finalLevel++;
-        }
-
-        int finalExp = remainingXP;
-        int finalExpCap = finalLevel * 100;
-
-        print('Final calculations:');
-        print('  XP needed for next level: ${finalExpCap}');
-        print('  Current total XP: $newTotalXP');
-        print('  Level: $finalLevel');
-        print('  Exp: $finalExp');
-        print('  ExpCap: $finalExpCap');
-
-        // Update the updates map
-        updates = {
-          'exp': finalExp,
-          'level': finalLevel,
-          'expCap': finalExpCap,
-        };
-      }
-
-      // Apply updates locally
-      UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
-      await _saveProfileLocally(userId, updatedProfile);
-      _updateCache(userId, updatedProfile);
-      _profileUpdateController.add(updatedProfile);
-
-      // Add to batch queue
-      _batchQueue.add({
-        'userId': userId,
-        'updates': updates,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
-
-      // Update Firestore if online
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        await _retryOperation(() async {
-          await _firestore
-              .collection('User')
-              .doc(userId)
-              .collection('ProfileData')
-              .doc(userId)
-              .update(updates);
-        });
-      }
-
-    } catch (e) {
-      print('❌ Error in batchUpdateProfile: $e');
-      await _logOperation('batch_update_error', e.toString());
-      throw Exception('Failed to update profile: $e');
     }
-  }
 
-  Future<void> _processBatchQueue() async {
-    if (_batchQueue.isEmpty) return;
+    User? user = _auth.currentUser;
+    if (user == null) return;
 
-    try {
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        await _storeBatchLocally();
-        return;
+    String userId = user.uid;
+
+    // Validate all updates first
+    for (var entry in updates.entries) {
+      ProfileField? field = _getProfileField(entry.key);
+      if (field == null) continue;
+
+      ValidationResult result = _validateField(field, entry.value);
+      if (!result.isValid) {
+        throw Exception('Invalid value for ${entry.key}: ${result.error}');
+      }
+    }
+
+    // Get current profile
+    UserProfile? currentProfile = await fetchUserProfile();
+    if (currentProfile == null) return;
+
+    // Handle XP updates
+    bool isXPUpdate = updates.containsKey('exp');
+
+    if (isXPUpdate) {
+      // Calculate current total XP
+      int currentTotalXP = 0;
+      for (int i = 1; i < currentProfile.level; i++) {
+        currentTotalXP += i * 100;  // Add up XP required for previous levels
+      }
+      currentTotalXP += currentProfile.exp;
+      print('Current total XP: $currentTotalXP');
+
+      // Get the XP gain from updates
+      int xpGain = updates['exp'] ?? 0;
+      print('XP gain: $xpGain');
+
+      // Add the gain to current total
+      int newTotalXP = currentTotalXP + xpGain;
+      print('New total XP: $newTotalXP');
+
+      // Calculate new level and exp
+      int remainingXP = newTotalXP;
+      int finalLevel = 1;
+      
+      // Keep checking if we have enough XP for next level
+      while (remainingXP >= (finalLevel * 100)) {
+          remainingXP -= finalLevel * 100;
+          finalLevel++;
       }
 
-      // Get the current server state
-      User? user = _auth.currentUser;
-      if (user == null) return;
+      int finalExp = remainingXP;
+      int finalExpCap = finalLevel * 100;
 
-      // Get both server and local states
-      DocumentSnapshot doc = await _firestore
-          .collection('User')
-          .doc(user.uid)
-          .collection('ProfileData')
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists) return;
-
-      UserProfile? localProfile = await fetchUserProfile();
-      if (localProfile == null) return;
-
-      UserProfile serverProfile = UserProfile.fromMap(doc.data() as Map<String, dynamic>);
-
-      // Merge exp/level changes
-      if (localProfile.exp != serverProfile.exp || 
-          localProfile.level != serverProfile.level || 
-          localProfile.expCap != serverProfile.expCap) {
+      // Add banner unlock update if level changed or first banner not unlocked
+      if (finalLevel != currentProfile.level || currentProfile.unlockedBanner[0] != 1) {
+        print('🎯 Updating banner unlocks for level $finalLevel');
+        print('Previous unlock state: ${currentProfile.unlockedBanner}');
         
-        // Calculate total XP for both profiles
-        int serverTotalXP = ((serverProfile.level - 1) * 100) + serverProfile.exp;
-        int localTotalXP = ((localProfile.level - 1) * 100) + localProfile.exp;
+        List<int> newUnlockedBanner = List<int>.from(currentProfile.unlockedBanner);
+        for (int i = 0; i < finalLevel && i < newUnlockedBanner.length; i++) {
+          newUnlockedBanner[i] = 1;
+        }
         
-        print('XP Sync:');
-        print('  Server: Level ${serverProfile.level}, Exp ${serverProfile.exp} (Total: $serverTotalXP)');
-        print('  Local: Level ${localProfile.level}, Exp ${localProfile.exp} (Total: $localTotalXP)');
-        
-        // Take the higher XP value
-        int finalTotalXP = max(serverTotalXP, localTotalXP);
-        
-        // Calculate final values
-        int finalLevel = (finalTotalXP ~/ 100) + 1;
-        int finalExp = finalTotalXP % 100;
-        int finalExpCap = finalLevel * 100;
-        
-        print('  Final: Level $finalLevel, Exp $finalExp (Total: $finalTotalXP)');
-
-        _batchQueue.add({
-          'userId': user.uid,
-          'updates': {
-            'exp': finalExp,
-            'level': finalLevel,
-            'expCap': finalExpCap,
-          },
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-        });
+        print('New unlock state: $newUnlockedBanner');
+        updates['unlockedBanner'] = newUnlockedBanner;
       }
 
-      // Process all queued updates
-      WriteBatch batch = _firestore.batch();
-      Map<String, UserProfile> updatedProfiles = {};
+      // Update the updates map
+      updates = {
+        ...updates,
+        'exp': finalExp,
+        'level': finalLevel,
+        'expCap': finalExpCap,
+      };
+    }
 
-      for (var update in _batchQueue) {
-        String userId = update['userId'];
-        Map<String, dynamic> updates = update['updates'];
+    // Apply updates locally
+    UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
+    await _saveProfileLocally(userId, updatedProfile);
+    _updateCache(userId, updatedProfile);
+    _profileUpdateController.add(updatedProfile);
 
-        DocumentReference docRef = _firestore
+    // Update Firestore if online
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult != ConnectivityResult.none) {
+      await _retryOperation(() async {
+        await _firestore
             .collection('User')
             .doc(userId)
             .collection('ProfileData')
-            .doc(userId);
-
-        batch.update(docRef, {
-          ...updates,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
-
-        UserProfile updatedProfile = localProfile.copyWith(updates: updates);
-        updatedProfiles[userId] = updatedProfile;
-      }
-
-      await batch.commit();
-
-      // Update local storage and cache
-      for (var entry in updatedProfiles.entries) {
-        await _saveProfileLocally(entry.key, entry.value);
-        _updateCache(entry.key, entry.value);
-        _profileUpdateController.add(entry.value);
-      }
-
-      _batchQueue.clear();
-      
-    } catch (e) {
-      print('❌ Error processing batch queue: $e');
-      await _logOperation('batch_processing_error', e.toString());
+            .doc(userId)
+            .update(updates);
+      });
     }
+
+  } catch (e) {
+    print('❌ Error in batchUpdateProfile: $e');
+    await _logOperation('batch_update_error', e.toString());
+    throw Exception('Failed to update profile: $e');
   }
+}
 
   // Add prefetching
   Future<void> prefetchProfile(String userId) async {
@@ -1003,6 +895,9 @@ class UserProfileService {
       // Update unlocked banners array size if needed
       if (profile.unlockedBanner.length != banners.length) {
         List<int> newUnlockedBanner = List<int>.filled(banners.length, 0);
+        if (profile.level >= 1) {
+          newUnlockedBanner[0] = 1;  // Unlock first banner
+        }
         for (int i = 0; i < profile.unlockedBanner.length && i < banners.length; i++) {
           newUnlockedBanner[i] = profile.unlockedBanner[i];
         }
@@ -1033,8 +928,12 @@ class UserProfileService {
   // Override updateProfile to handle integrated updates
   Future<void> updateProfileWithIntegration(String field, dynamic value) async {
     try {
+      print('🔄 Starting profile integration update for field: $field');
+      print('📊 Input value type: ${value.runtimeType}');
+      print('📊 Input value: $value');
+      
       // Handle array fields specifically
-      if (field == 'unlockedBadge' || field == 'unlockedBanner') {
+      if (field == 'unlockedBanner') {
         if (value is String) {
           // Decode the string back to a proper List<int>
           final decoded = jsonDecode(value) as Map<String, dynamic>;
@@ -1043,6 +942,8 @@ class UserProfileService {
             value = (decoded['data'] as List).map((e) => e as int).toList();
           }
         }
+      } else if (field == 'unlockedBadge') {
+        value = await _processBadgeArrayUpdate(value);
       }
       
       // Update profile
@@ -1053,11 +954,150 @@ class UserProfileService {
       if (updatedProfile != null) {
         _profileUpdateController.add(updatedProfile);
       }
+
+      print('✅ Profile integration update complete');
     } catch (e) {
       print('Error in updateProfileWithIntegration: $e');
       rethrow;
     }
   }
+
+  Future<List<int>> _processBadgeArrayUpdate(dynamic value) async {
+  try {
+    print('🎯 Processing badge array update');
+    
+    // If already List<int>, validate and return
+    if (value is List<int>) {
+      print('📊 Value is already List<int>');
+      return value;
+    }
+
+    // If String, try to decode
+    if (value is String) {
+      try {
+        print('🔄 Attempting to decode string value');
+        final decoded = jsonDecode(value);
+        if (decoded is Map<String, dynamic> && decoded['type'] == 'badge_array') {
+          value = (decoded['data'] as List).map((e) => e as int).toList();
+          print('✅ Successfully decoded badge array');
+        }
+      } catch (e) {
+        print('⚠️ Error decoding string value: $e');
+      }
+    }
+
+    // Get current profile for merging
+    final currentProfile = await fetchUserProfile();
+    if (currentProfile == null) {
+      print('⚠️ No current profile found');
+      throw Exception('No current profile available for badge update');
+    }
+
+    // Ensure we have a List<int>
+    List<int> newBadges;
+    if (value is List) {
+      newBadges = List<int>.from(value);
+    } else {
+      print('⚠️ Invalid badge array format');
+      throw Exception('Invalid badge array format');
+    }
+
+    // Merge with existing badges
+    List<int> mergedBadges = List<int>.from(currentProfile.unlockedBadge);
+    for (int i = 0; i < newBadges.length && i < mergedBadges.length; i++) {
+      if (newBadges[i] == 1) {
+        mergedBadges[i] = 1;
+      }
+    }
+
+    // Add validation before returning
+    final validationResult = await _validateBadgeArray(mergedBadges);
+    if (!validationResult.isValid) {
+      print('⚠️ Invalid merged badge array: ${validationResult.error}');
+      throw Exception(validationResult.error);
+    }
+
+    print('📊 Final badge array length: ${mergedBadges.length}');
+    return mergedBadges;
+  } catch (e) {
+    print('❌ Error processing badge array: $e');
+    print('🔄 Attempting badge update recovery');
+    return await _recoverBadgeUpdate(value);
+  }
+}
+
+Future<ValidationResult> _validateBadgeArray(List<int> badges) async {
+  try {
+    // Check if array is empty
+    if (badges.isEmpty) {
+      return const ValidationResult(
+        isValid: false,
+        error: 'Badge array cannot be empty'
+      );
+    }
+
+    // Check if all elements are 0 or 1
+    if (!badges.every((value) => value == 0 || value == 1)) {
+      return const ValidationResult(
+        isValid: false,
+        error: 'Badge array can only contain 0 or 1'
+      );
+    }
+
+    // Get current profile for validation
+    final currentProfile = await fetchUserProfile();
+    if (currentProfile == null) {
+      return const ValidationResult(
+        isValid: false,
+        error: 'No current profile available'
+      );
+    }
+
+    // Compare with current profile's badge array length
+    if (badges.length != currentProfile.unlockedBadge.length) {
+      return ValidationResult(
+        isValid: false,
+        error: 'Badge array length mismatch. Expected: ${currentProfile.unlockedBadge.length}, Got: ${badges.length}'
+      );
+    }
+
+    return const ValidationResult(isValid: true);
+  } catch (e) {
+    return ValidationResult(
+      isValid: false,
+      error: 'Badge array validation error: $e'
+    );
+  }
+}
+
+Future<List<int>> _recoverBadgeUpdate(List<int> intendedUpdate) async {
+  try {
+    print('🔄 Starting badge update recovery');
+    
+    // Get current profile
+    final currentProfile = await fetchUserProfile();
+    if (currentProfile == null) {
+      print('⚠️ No profile found during recovery');
+      throw Exception('No profile available for recovery');
+    }
+
+    // Create recovered array
+    List<int> recoveredBadges = List<int>.from(currentProfile.unlockedBadge);
+    
+    // Merge with intended update, preserving all unlocks
+    for (int i = 0; i < intendedUpdate.length && i < recoveredBadges.length; i++) {
+      if (intendedUpdate[i] == 1 || recoveredBadges[i] == 1) {
+        recoveredBadges[i] = 1;
+      }
+    }
+
+    print('✅ Badge recovery complete - Preserved ${recoveredBadges.where((b) => b == 1).length} unlocks');
+    return recoveredBadges;
+  } catch (e) {
+    print('❌ Error in badge update recovery: $e');
+    rethrow;
+  }
+}
 
   // Rename the second dispose method to disposeIntegrations
   void disposeIntegrations() {

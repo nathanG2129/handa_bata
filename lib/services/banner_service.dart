@@ -44,6 +44,7 @@ class BannerService {
   // final UserProfileService _userProfileService = UserProfileService(); // Remove this line
 
   BannerService._internal() {
+    _setupConnectivityListener();
     _connectionManager.connectionQuality.listen((quality) {
       _syncStatusController.add(quality == ConnectionQuality.OFFLINE);
     });
@@ -58,26 +59,39 @@ class BannerService {
   Future<void> checkLevelUnlock(int newLevel) async {
     try {
       print('🎯 Checking banner unlocks for level $newLevel');
-      final quality = await _connectionManager.checkConnectionQuality();
       
-      List<Map<String, dynamic>> banners = await fetchBanners();
-      List<int> updatedUnlockedBanners = List<int>.filled(banners.length, 0);
-      
-      if (newLevel <= MAX_BANNER_LEVEL) {
-        updatedUnlockedBanners[newLevel] = 1;
-        
-        if (quality == ConnectionQuality.OFFLINE) {
-          await _queueUnlock(PendingBannerUnlock(
-            bannerId: newLevel,
-            unlockedAtLevel: newLevel,
-            timestamp: DateTime.now(),
-          ));
-        } else if (_profileUpdateCallback != null) {
-          _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
-        }
+      // Add validation
+      if (newLevel < 0 || newLevel > MAX_BANNER_LEVEL) {
+        print('⚠️ Invalid level: $newLevel');
+        return;
       }
+      
+      final quality = await _connectionManager.checkConnectionQuality();
+      List<int> updatedUnlockedBanners = await _calculateUnlockState(newLevel);
+      
+      if (quality == ConnectionQuality.OFFLINE) {
+        print('📱 Offline mode: Queueing unlock update');
+        await _queueUnlock(PendingBannerUnlock(
+          bannerId: newLevel,
+          unlockedAtLevel: newLevel,
+          timestamp: DateTime.now(),
+          unlockState: updatedUnlockedBanners,
+        ));
+        
+        // Store locally for offline access
+        await _storeLocalUnlockState(updatedUnlockedBanners);
+      } else if (_profileUpdateCallback != null) {
+        print('🔄 Updating unlock state with ${updatedUnlockedBanners.length} banners');
+        _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
+      }
+      
+      await _logBannerOperation(
+        'level_unlock',
+        newLevel,
+        'Updated unlock state for level $newLevel'
+      );
     } catch (e) {
-      print('❌ Error checking banner unlocks: $e');
+      print('❌ Error in checkLevelUnlock: $e');
       await _logBannerOperation('unlock_error', newLevel, e.toString());
     }
   }
@@ -91,6 +105,7 @@ class BannerService {
   static const String BANNERS_CACHE_KEY = 'banners_cache';
   static const String BANNER_VERSION_KEY = 'banner_version';
   static const String BANNER_REVISION_KEY = 'banner_revision';
+  static const String LOCAL_UNLOCK_STATE_KEY = 'banner_unlock_state';
   static const int MAX_STORED_VERSIONS = 5;
   static const int MAX_CACHE_SIZE = 100;
   static const Duration CACHE_DURATION = Duration(hours: 1);
@@ -358,7 +373,7 @@ class BannerService {
   // Unified sync system
   Future<void> _syncWithServer() async {
     if (_isSyncing) {
-      print('🔄 Banner sync already in progress, skipping...');
+      print(' Banner sync already in progress, skipping...');
       return;
     }
 
@@ -1465,13 +1480,29 @@ class BannerService {
 
   Future<void> _queueUnlock(PendingBannerUnlock unlock) async {
     try {
+      print('💾 Queueing banner unlock for sync');
+      print('📊 Unlock state to queue: ${unlock.unlockState}');
+      
       final prefs = await SharedPreferences.getInstance();
       List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
-      pendingUnlocks.add(jsonEncode(unlock.toJson()));
+      
+      // Convert to JSON with proper List handling
+      final unlockJson = jsonEncode({
+        'bannerId': unlock.bannerId,
+        'unlockedAtLevel': unlock.unlockedAtLevel,
+        'timestamp': unlock.timestamp.toIso8601String(),
+        'unlockState': unlock.unlockState.toList(),  // Ensure proper List conversion
+      });
+      
+      pendingUnlocks.add(unlockJson);
       await prefs.setStringList(PENDING_UNLOCKS_KEY, pendingUnlocks);
-      print('💾 Banner unlock queued for later sync');
+      
+      print('✅ Banner unlock queued successfully');
+      print('📊 Total pending unlocks: ${pendingUnlocks.length}');
+      
     } catch (e) {
       print('❌ Error queueing unlock: $e');
+      await _logBannerOperation('queue_error', unlock.bannerId, e.toString());
     }
   }
 
@@ -1481,19 +1512,56 @@ class BannerService {
       List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
       
       if (pendingUnlocks.isEmpty) return;
-
+      
       print('🔄 Processing ${pendingUnlocks.length} pending unlocks');
       
       for (String unlockJson in pendingUnlocks) {
-        final unlock = PendingBannerUnlock.fromJson(jsonDecode(unlockJson));
-        await checkLevelUnlock(unlock.unlockedAtLevel);
+        try {
+          // 1. Parse JSON with proper error handling
+          final Map<String, dynamic> data = jsonDecode(unlockJson);
+          final unlock = PendingBannerUnlock(
+            bannerId: data['bannerId'],
+            unlockedAtLevel: data['unlockedAtLevel'],
+            timestamp: DateTime.parse(data['timestamp']),
+            unlockState: List<int>.from(data['unlockState']),
+          );
+          
+          // 2. Add Validation
+          if (_currentProfile != null) {
+            if (unlock.unlockState.length != _currentProfile!.unlockedBanner.length) {
+              print('⚠️ Unlock state size mismatch');
+              continue;
+            }
+            
+            // 3. Add Conflict Resolution
+            List<int> mergedState = List<int>.from(_currentProfile!.unlockedBanner);
+            for (int i = 0; i < mergedState.length; i++) {
+              mergedState[i] = mergedState[i] | unlock.unlockState[i];
+            }
+            
+            // 4. Add Detailed Logging
+            if (_profileUpdateCallback != null) {
+              print('🔄 Applying merged unlock state');
+              print('📊 Current state: ${_currentProfile!.unlockedBanner}');
+              print('📊 Pending state: ${unlock.unlockState}');
+              print('📊 Merged state: $mergedState');
+              
+              _profileUpdateCallback!('unlockedBanner', mergedState);
+            }
+          }
+        } catch (e) {
+          print('❌ Error processing unlock: $e');
+          continue;  // Skip failed unlock but continue others
+        }
       }
-
+      
+      // Clear processed unlocks
       await prefs.setStringList(PENDING_UNLOCKS_KEY, []);
-      print('✅ All pending unlocks processed');
-
+      print('✅ Processed all pending unlocks');
+      
     } catch (e) {
-      print('❌ Error processing pending unlocks: $e');
+      print('❌ Error processing pending banner unlocks: $e');
+      await _logBannerOperation('sync_error', -1, e.toString());
     }
   }
 
@@ -1517,5 +1585,162 @@ class BannerService {
       }
     });
     return changes.join(', ');
+  }
+
+  // Add these helper methods first
+  Future<List<int>> _calculateUnlockState(int userLevel) async {
+    try {
+      print('📊 Calculating banner unlock state for level $userLevel');
+      
+      // Get current unlock state first
+      List<int> currentUnlocks = await _getLocalUnlockState();
+      List<Map<String, dynamic>> banners = await fetchBanners();
+      
+      // Create new unlock array, preserving existing unlocks
+      List<int> newUnlockState = List<int>.generate(
+        banners.length,
+        (index) {
+          // Keep existing unlocks
+          if (index < currentUnlocks.length && currentUnlocks[index] == 1) {
+            return 1;
+          }
+          // Add new unlocks up to current level
+          return index <= userLevel ? 1 : 0;
+        }
+      );
+      
+      print('✅ Generated unlock state: ${newUnlockState.length} banners');
+      return newUnlockState;
+    } catch (e) {
+      print('❌ Error calculating unlock state: $e');
+      throw e;
+    }
+  }
+
+  // Add local storage support
+  Future<void> _storeLocalUnlockState(List<int> unlockState) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Store backup before updating (using existing BANNERS_CACHE_KEY)
+      String? existingData = prefs.getString(BANNERS_CACHE_KEY);
+      if (existingData != null) {
+        await prefs.setString('${BANNERS_CACHE_KEY}_backup', existingData);
+      }
+      
+      await prefs.setString(
+        BANNERS_CACHE_KEY,
+        jsonEncode(unlockState)
+      );
+      
+      // Clear backup after successful update
+      await prefs.remove('${BANNERS_CACHE_KEY}_backup');
+    } catch (e) {
+      print('❌ Error storing local unlock state: $e');
+      await _restoreFromBackup();  // Use existing restore method
+    }
+  }
+
+  Future<List<int>> _getLocalUnlockState() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? storedState = prefs.getString(BANNERS_CACHE_KEY);
+      if (storedState != null) {
+        return List<int>.from(jsonDecode(storedState));
+      }
+    } catch (e) {
+      print('❌ Error getting local unlock state: $e');
+    }
+    return [];
+  }
+
+  bool _isUnlockStateValid(List<int> current, List<int> expected) {
+    if (current.length != expected.length) return false;
+    for (int i = 0; i < current.length; i++) {
+      if (current[i] > expected[i]) return false;
+    }
+    return true;
+  }
+
+  // Add these methods after other helper methods
+
+  Future<void> validateAndSelectBanner(int bannerId, UserProfile profile) async {
+    try {
+      print('🎯 Validating banner selection: $bannerId');
+      
+      // Basic validation
+      if (bannerId < 0 || bannerId > MAX_BANNER_LEVEL) {
+        throw Exception('Invalid banner ID');
+      }
+
+      // Verify banner exists
+      final banner = await getBannerDetails(
+        bannerId,
+        priority: BannerPriority.CRITICAL
+      );
+      if (banner == null) {
+        throw Exception('Banner not found');
+      }
+
+      // Double check level requirement (even though UI filters)
+      if (bannerId > profile.level) {
+        throw Exception('Banner not unlocked');
+      }
+
+      // Update banner selection
+      if (_profileUpdateCallback != null) {
+        print('✅ Updating selected banner to: $bannerId');
+        _profileUpdateCallback!('bannerId', bannerId);
+      }
+
+      await _logBannerOperation(
+        'banner_select',
+        bannerId,
+        'Banner selected successfully'
+      );
+    } catch (e) {
+      print('❌ Error selecting banner: $e');
+      await _logBannerOperation('selection_error', bannerId, e.toString());
+      throw e;  // Re-throw for UI handling
+    }
+  }
+
+  // Add helper method to check if a banner is unlocked
+  bool isBannerUnlocked(int bannerId, UserProfile profile) {
+    return bannerId <= profile.level &&
+           profile.unlockedBanner.length > bannerId &&
+           profile.unlockedBanner[bannerId] == 1;
+  }
+
+  // Add this to the class fields
+  final Connectivity _connectivity = Connectivity();
+
+  // Add connectivity listener setup
+  void _setupConnectivityListener() {
+    _connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
+      if (result != ConnectivityResult.none) {
+        print('🌐 Connection restored, processing pending unlocks');
+        await _processPendingUnlocks();
+      }
+    });
+  }
+
+  // Add to syncBanners method
+  Future<void> syncBanners() async {
+    try {
+      print('🔄 Starting banner sync process');
+      
+      final quality = await _connectionManager.checkConnectionQuality();
+      if (quality != ConnectionQuality.OFFLINE) {
+        await _processPendingUnlocks();
+        // Rest of sync logic...
+      } else {
+        print('📡 Offline: Skipping sync');
+      }
+      
+    } catch (e) {
+      print('❌ Error in syncBanners: $e');
+      await _logBannerOperation('sync_error', -1, e.toString());
+    }
   }
 }

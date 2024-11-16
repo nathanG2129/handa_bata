@@ -127,10 +127,15 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       if (saveData != null) {
         // Get arcade stats from GameSaveData
         final stats = saveData.getStageStats(arcadeKey, 'normal');
+
+        // Get correct last index (number of normal stages)
+        final lastIndex = saveData.normalStageStars.length;  // This is the correct index
+
         return {
           'bestRecord': stats['bestRecord'] ?? -1,
           'crntRecord': stats['crntRecord'] ?? -1,
           'savedGame': savedGameState?.toJson(),
+          'isUnlocked': saveData.canUnlockStage(lastIndex, 'normal'),  // Use correct index
         };
       }
 
@@ -138,13 +143,15 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         'bestRecord': -1,
         'crntRecord': -1,
         'savedGame': savedGameState?.toJson(),
+        'isUnlocked': false,
       };
     } catch (e) {
       print('❌ Error fetching arcade stats: $e');
       return {
         'bestRecord': -1,
         'crntRecord': -1,
-        'savedGame': null
+        'savedGame': null,
+        'isUnlocked': false
       };
     }
   }
@@ -302,10 +309,16 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                       }
                                       final stageStats = snapshot.data!;
   
+                                      // Add unlock check
+                                      bool isUnlocked = false;
+                                      if (_gameSaveData != null) {
+                                        // Check if all normal stages have stars
+                                        isUnlocked = !_gameSaveData!.normalStageStars.contains(0);
+                                      }
+  
                                       return GestureDetector(
-                                        onTap: () async {
-                                          Map<String, dynamic> stageData = _stages[stageIndex];
-                                          if (!mounted) return;
+                                        onTap: isUnlocked ? () {
+                                          // Show dialog only if unlocked
                                           showArcadeStageDialog(
                                             context,
                                             stageNumber,
@@ -313,7 +326,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                               'id': widget.category['id']!,
                                               'name': widget.category['name']!,
                                             },
-                                            stageData,
+                                            _stages[stageIndex],
                                             'normal',
                                             stageStats['bestRecord'],
                                             stageStats['crntRecord'],
@@ -321,9 +334,9 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                                             widget.selectedLanguage,
                                             _stageService,
                                           );
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                                        } : null,
+                                        child: Opacity(
+                                          opacity: isUnlocked ? 1.0 : 0.5,  // Dim if locked
                                           child: Stack(
                                             alignment: Alignment.center,
                                             children: [

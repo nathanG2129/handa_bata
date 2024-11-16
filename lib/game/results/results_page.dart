@@ -469,7 +469,7 @@ class ResultsPageState extends State<ResultsPage> {
 
       // Send only the XP gain to batchUpdateProfile
       await userProfileService.batchUpdateProfile({
-        'exp': xpGained,  // Just send the XP gain, not the total
+        'exp': xpGained,
       });
 
       // Update game progress
@@ -488,6 +488,9 @@ class ResultsPageState extends State<ResultsPage> {
           record: widget.gamemode == 'arcade' ? _convertRecordToSeconds(widget.record) : null,
           isArcade: widget.gamemode == 'arcade',
         );
+
+        // Add this: Update total stages cleared after game progress is updated
+        await userProfileService.updateTotalStagesCleared();
 
         // Delete saved game state if exists
         await _cleanupGameSave();

@@ -147,6 +147,7 @@ class StagesPageState extends State<StagesPage> {
           'stars': stats['stars'] ?? 0,
           'maxScore': stats['maxScore'] ?? 0,
           'savedGame': savedGameState?.toJson(), // Game state from GameSaveManager
+          'isUnlocked': saveData.canUnlockStage(stageIndex, _selectedMode.toLowerCase()),
         };
       }
 
@@ -155,6 +156,7 @@ class StagesPageState extends State<StagesPage> {
         'stars': 0,
         'maxScore': 0,
         'savedGame': savedGameState?.toJson(),
+        'isUnlocked': false,
       };
     } catch (e) {
       print('❌ Error fetching stage stats: $e');
@@ -162,7 +164,8 @@ class StagesPageState extends State<StagesPage> {
         'personalBest': 0,
         'stars': 0,
         'maxScore': 0,
-        'savedGame': null
+        'savedGame': null,
+        'isUnlocked': false,
       };
     }
   }
@@ -400,86 +403,94 @@ class StagesPageState extends State<StagesPage> {
                                       final stageStats = snapshot.data!;
                                       final stars = stageStats['stars'];
   
-                                      return Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          Column(
+                                      // Add unlock check here
+                                      bool isUnlocked = _gameSaveData?.canUnlockStage(
+                                        stageIndex, 
+                                        _selectedMode.toLowerCase()
+                                      ) ?? false;
+  
+                                      return GestureDetector(
+                                        onTap: isUnlocked ? () {
+                                          // Show stage dialog only if unlocked
+                                          showStageDialog(
+                                            context,
+                                            stageNumber,
+                                            {
+                                              'id': widget.category['id']!,
+                                              'name': widget.category['name']!,
+                                            },
+                                            stageStats['maxScore'], // Pass maxScore
+                                            _stages[stageIndex],
+                                            _selectedMode,
+                                            stageStats['personalBest'],
+                                            stars,
+                                            widget.selectedLanguage, // Pass selectedLanguage
+                                            _stageService, // Pass the StageService instance
+                                          );
+                                        } : null,  // Null makes it non-clickable
+                                        child: Opacity(
+                                          opacity: isUnlocked ? 1.0 : 0.5,  // Dim locked stages
+                                          child: Stack(
+                                            alignment: Alignment.center,
                                             children: [
-                                              GestureDetector(
-                                                onTap: () async {
-                                                  Map<String, dynamic> stageData = _stages[stageIndex];
-                                                  if (!mounted) return;
-                                                  showStageDialog(
-                                                    context,
-                                                    stageNumber,
-                                                    {
-                                                      'id': widget.category['id']!,
-                                                      'name': widget.category['name']!,
-                                                    },
-                                                    stageStats['maxScore'], // Pass maxScore
-                                                    stageData,
-                                                    _selectedMode,
-                                                    stageStats['personalBest'],
-                                                    stars,
-                                                    widget.selectedLanguage, // Pass selectedLanguage
-                                                    _stageService, // Pass the StageService instance
-                                                  );
-                                                },
-                                                child: Stack(
-                                                  alignment: Alignment.center,
-                                                  children: [
-                                                    SvgPicture.string(
-                                                      _getModifiedSvg(stageColor),
-                                                      width: 100,
-                                                      height: 100,
-                                                    ),
-                                                    Text(
-                                                      '$stageNumber',
-                                                      style: GoogleFonts.vt323(
-                                                        fontSize: 36,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.white,
+                                              Column(
+                                                children: [
+                                                  Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      SvgPicture.string(
+                                                        _getModifiedSvg(stageColor),
+                                                        width: 100,
+                                                        height: 100,
                                                       ),
-                                                      textAlign: TextAlign.center,
-                                                    ),
-                                                  ],
+                                                      Text(
+                                                        '$stageNumber',
+                                                        style: GoogleFonts.vt323(
+                                                          fontSize: 36,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.white,
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                ],
+                                              ),
+                                              Positioned(
+                                                bottom: 0,
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: List.generate(3, (index) {
+                                                    return Padding(
+                                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 0.0), // Add horizontal spacing
+                                                      child: Transform.translate(
+                                                        offset: Offset(0, index == 1 ? 10 : 0), // Lower the 2nd star
+                                                        child: SvgPicture.string(
+                                                          '''
+                                                          <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="36"
+                                                            height="36"
+                                                            viewBox="0 0 12 11"
+                                                          >
+                                                            <path
+                                                              d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                                                              fill="${stars > index ? '#F1B33A' : '#453958'}"
+                                                            />
+                                                          </svg>
+                                                          ''',
+                                                          width: 24,
+                                                          height: 24,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }),
                                                 ),
                                               ),
-                                              const SizedBox(height: 10),
                                             ],
                                           ),
-                                          Positioned(
-                                            bottom: 0,
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: List.generate(3, (index) {
-                                                return Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 0.0), // Add horizontal spacing
-                                                  child: Transform.translate(
-                                                    offset: Offset(0, index == 1 ? 10 : 0), // Lower the 2nd star
-                                                    child: SvgPicture.string(
-                                                      '''
-                                                      <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="36"
-                                                        height="36"
-                                                        viewBox="0 0 12 11"
-                                                      >
-                                                        <path
-                                                          d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-                                                          fill="${stars > index ? '#F1B33A' : '#453958'}"
-                                                        />
-                                                      </svg>
-                                                      ''',
-                                                      width: 24,
-                                                      height: 24,
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       );
                                     },
                                   );

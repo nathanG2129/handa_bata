@@ -210,7 +210,6 @@ class BadgeUnlockService {
       print('⭐ Current stage stars: $stars');
       print('📊 All stage stars: $allStageStars');
       
-      
       int stageNumber = int.parse(stageName.replaceAll(RegExp(r'[^0-9]'), '')) - 1;
       List<int> updatedStageStars = List<int>.from(allStageStars);
       if (stageNumber < updatedStageStars.length) {
@@ -278,6 +277,7 @@ class BadgeUnlockService {
               'allStageStars': allStageStars,
             },
           );
+        await unlockBadges(badgesToUnlock);  // Actually unlock the badges
         } else {
           print('🌐 Online mode: Unlocking badges directly');
           await unlockBadges(badgesToUnlock);  // Actually unlock the badges

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -935,19 +936,33 @@ class UserProfileService {
       // Handle array fields specifically
       if (field == 'unlockedBanner') {
         if (value is String) {
-          // Decode the string back to a proper List<int>
-          final decoded = jsonDecode(value) as Map<String, dynamic>;
-          if (decoded['type'] == 'badge_array') {
-            // Explicitly construct List<int> from the decoded data
-            value = (decoded['data'] as List).map((e) => e as int).toList();
-          }
+          final decoded = jsonDecode(value);
+          value = List<int>.from(decoded);  // Proper List<int> conversion
         }
+
+      // Ensure we don't lose unlocks
+      final currentProfile = await fetchUserProfile();
+      if (currentProfile != null) {
+        List<int> currentUnlocks = List<int>.from(currentProfile.unlockedBanner);
+        List<int> newUnlocks = List<int>.from(value);
+        
+        // Merge unlocks (keep 1s from both arrays)
+        for (int i = 0; i < currentUnlocks.length && i < newUnlocks.length; i++) {
+          newUnlocks[i] = currentUnlocks[i] | newUnlocks[i];
+        }
+        value = newUnlocks;
+      }
       } else if (field == 'unlockedBadge') {
         value = await _processBadgeArrayUpdate(value);
       }
       
       // Update profile
       await updateProfile(field, value);
+      
+      // Add this: Update total badge count if we're updating badges
+      if (field == 'unlockedBadge') {
+        await updateTotalBadgeCount();
+      }
       
       // Broadcast update
       final updatedProfile = await fetchUserProfile();
@@ -1018,6 +1033,7 @@ class UserProfileService {
     }
 
     print('📊 Final badge array length: ${mergedBadges.length}');
+    await updateTotalBadgeCount();
     return mergedBadges;
   } catch (e) {
     print('❌ Error processing badge array: $e');
@@ -1128,6 +1144,7 @@ Future<List<int>> _recoverBadgeUpdate(List<int> intendedUpdate) async {
       List<Map<String, dynamic>> badges = await _badgeService.fetchBadges();
       if (profile.unlockedBadge.length != badges.length) {
         await updateProfile('unlockedBadge', List<int>.filled(badges.length, 0));
+        await updateTotalBadgeCount();
       }
 
       // Sync with banner service
@@ -1156,6 +1173,125 @@ Future<List<int>> _recoverBadgeUpdate(List<int> intendedUpdate) async {
     } catch (e) {
       await _logOperation('sync_error', e.toString());
       rethrow;
+    }
+  }
+
+  Future<void> updateTotalBadgeCount() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) return;
+
+      // Get current profile using fetchUserProfile() instead of getUserProfile()
+      UserProfile? profile = await fetchUserProfile();
+      if (profile == null) return;
+
+      // Count badges
+      int totalBadges = profile.unlockedBadge.where((value) => value == 1).length;
+
+      // Update locally first
+      UserProfile updatedProfile = profile.copyWith(
+        totalBadgeUnlocked: totalBadges
+      );
+
+      // Use _saveProfileLocally() and _addToCache() which are internal methods
+      await _saveProfileLocally(user.uid, updatedProfile);
+      _updateCache(user.uid, updatedProfile);
+
+      // Update Firebase if online
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .update({'totalBadgeUnlocked': totalBadges});
+      }
+    } catch (e) {
+      print('Error updating badge count: $e');
+    }
+  }
+
+  Future<void> updateTotalStagesCleared() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) return;
+
+      // Get current profile
+      UserProfile? profile = await fetchUserProfile();
+      if (profile == null) return;
+
+      // Get all categories' game save data
+      List<String> categories = ['Quake', 'Storm', 'Volcanic', 'Drought', 'Tsunami', 'Flood'];
+      int totalCleared = 0;
+
+      // Check each category's stages from local storage first
+      for (String category in categories) {
+        print('🔍 Checking local stages for $category quest');
+        
+        // Try to get local save data first
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? saveDataJson = prefs.getString('game_save_data_$category');
+        
+        GameSaveData? saveData;
+        
+        if (saveDataJson != null) {
+          // Use local data if available
+          Map<String, dynamic> data = jsonDecode(saveDataJson);
+          saveData = GameSaveData.fromMap(data);
+        } else {
+          // Fallback to Firestore if online
+          var connectivityResult = await Connectivity().checkConnectivity();
+          if (connectivityResult != ConnectivityResult.none) {
+            DocumentSnapshot doc = await _firestore
+                .collection('User')
+                .doc(user.uid)
+                .collection('GameSaveData')
+                .doc(category)
+                .get();
+
+            if (doc.exists) {
+              saveData = GameSaveData.fromMap(doc.data() as Map<String, dynamic>);
+            }
+          }
+        }
+
+        if (saveData != null) {
+          // Count stages with stars > 0 in either mode
+          List<int> normalStars = saveData.normalStageStars;
+          List<int> hardStars = saveData.hardStageStars;
+
+          // Count unique cleared stages (stars > 0 in either mode)
+          for (int i = 0; i < normalStars.length; i++) {
+            if (normalStars[i] > 0 || hardStars[i] > 0) {
+              totalCleared++;
+            }
+          }
+        }
+      }
+
+      print('📊 Total stages cleared: $totalCleared');
+
+      // Update locally first
+      UserProfile updatedProfile = profile.copyWith(
+        totalStageCleared: totalCleared
+      );
+
+      await _saveProfileLocally(user.uid, updatedProfile);
+      _updateCache(user.uid, updatedProfile);
+
+      // Update Firebase if online
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .update({'totalStageCleared': totalCleared});
+      }
+    } catch (e) {
+      print('❌ Error updating total stages cleared: $e');
     }
   }
 }

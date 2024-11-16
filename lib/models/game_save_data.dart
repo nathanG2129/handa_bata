@@ -266,6 +266,11 @@ class GameSaveData {
       
       if (stars > list[stageIndex]) {
         list[stageIndex] = stars;
+        
+        // Add this: Unlock corresponding hard stage if normal stage gets stars
+        if (mode.toLowerCase() == 'normal' && stars > 0) {
+          unlockedHardStages[stageIndex] = true;
+        }
       }
     } catch (e) {
       if (e is GameSaveDataException) rethrow;
@@ -319,7 +324,7 @@ class GameSaveData {
       normalStageStars: List<int>.filled(stageCount + 1, 0),
       hardStageStars: List<int>.filled(stageCount + 1, 0),
       unlockedNormalStages: List.generate(stageCount + 1, (i) => i == 0),
-      unlockedHardStages: List.generate(stageCount + 1, (i) => i == 0),
+      unlockedHardStages: List<bool>.filled(stageCount + 1, false),
       hasSeenPrerequisite: List<bool>.filled(stageCount + 1, false),
     );
   }
@@ -413,25 +418,25 @@ class GameSaveData {
   /// Checks if a stage can be unlocked based on previous stage completion
   bool canUnlockStage(int index, String mode) {
     try {
-      // Don't try to unlock beyond total stages
       if (index >= unlockedNormalStages.length) return false;
-      
       if (!isValidStageIndex(index)) return false;
-      if (index == 0) return true;
-      
-      // For arcade stage (last index), check if all previous stages are unlocked
-      if (index == unlockedNormalStages.length - 1) {
-        final previousStages = mode.toLowerCase() == 'normal'
-            ? unlockedNormalStages.sublist(0, index)
-            : unlockedHardStages.sublist(0, index);
-        return !previousStages.contains(false);
+
+      if (mode.toLowerCase() == 'normal') {
+        // For normal mode:
+        // - First stage (index 0) is always unlocked
+        // - Other stages need previous stage unlocked
+        return index == 0 || unlockedNormalStages[index];
+      } else {
+        // For hard mode:
+        // - Need normal mode stars for current stage
+        // - Need previous hard stage unlocked (except first stage)
+        if (index == 0) {
+          return normalStageStars[0] > 0;
+        }
+        return unlockedHardStages[index - 1] && normalStageStars[index] > 0;
       }
-      
-      // For regular stages, just check the previous stage
-      final previousUnlocked = mode.toLowerCase() == 'normal'
-          ? unlockedNormalStages[index - 1]
-          : unlockedHardStages[index - 1];
-      return previousUnlocked;
+
+
     } catch (e) {
       throw GameSaveDataException('Error checking stage unlock: $e');
     }

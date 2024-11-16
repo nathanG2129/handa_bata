@@ -926,7 +926,7 @@ class AuthService {
         print('📊 Category $category: ${stages.length} adventure stages');
       });
       arcadeStages.forEach((category, _) {
-        print('��� Category $category: 1 arcade stage');
+        print(' Category $category: 1 arcade stage');
       });
 
       // Process arcade stages
@@ -968,7 +968,7 @@ class AuthService {
           .fold(0, (sum, stages) => sum + stages.length)
           + 1; 
 
-      // Calculate total stages including arcade
+      // Calculate total adventure stages (without arcade)
       int totalAdventureStages = adventureStages.values
           .fold(0, (sum, stages) => sum + stages.length);
 
@@ -979,7 +979,7 @@ class AuthService {
         normalStageStars: List<int>.filled(totalAdventureStages, 0),
         hardStageStars: List<int>.filled(totalAdventureStages, 0),
         unlockedNormalStages: List.generate(totalStages, (i) => i == 0),
-        unlockedHardStages: List.generate(totalStages, (i) => i == 0),
+        unlockedHardStages: List<bool>.filled(totalStages, false),
         hasSeenPrerequisite: List<bool>.filled(totalStages, false),
       );
     } catch (e) {

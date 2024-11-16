@@ -253,7 +253,7 @@ class SplashPageState extends State<SplashPage> {
               barrierDismissible: false,
               builder: (BuildContext context) {
                 return Container(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withOpacity(0.5),
                   child: const Center(
                     child: LoadingWidget(),
                   ),
@@ -568,7 +568,7 @@ class SplashPageState extends State<SplashPage> {
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withOpacity(0.5),
               child: const Center(
                 child: LoadingWidget(),
               ),

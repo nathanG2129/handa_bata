@@ -87,25 +87,27 @@ class ResultsPageState extends State<ResultsPage> {
       // Initialize soundpool
       _soundpool = Soundpool.fromOptions(
         options: const SoundpoolOptions(
-          streamType: StreamType.notification,
+          streamType: StreamType.music,
           maxStreams: 4,
         ),
       );
 
-      // Run tasks in parallel with error handling
+      // Load sounds first and ensure they're loaded
+      await _loadSounds();
+      print('🔊 Sounds loaded successfully');
+
+      // Run other tasks
       await Future.wait([
-        _loadSounds(),
         _updateProgress(),
         _cleanupGameSave(),
       ]).catchError((e) {
         print('⚠️ Error in initialization tasks: $e');
-        return [null, null, null];
+        return [null, null];
       });
 
-      // Play appropriate sound
-      if (mounted) {
-        _playSoundBasedOnStars(stars);
-      }
+      // Play sound only once and with a slight delay
+      await Future.delayed(const Duration(milliseconds: 100));
+      _playSoundBasedOnStars(stars);
 
       // Mark as initialized and update UI
       if (mounted) {
@@ -123,17 +125,20 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _loadSounds() async {
     try {
-      final sounds = await Future.wait([
-        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3')),
-        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3')),
-        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3')),
-        _soundpool.load(await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3')),
-      ]);
-
-      _soundIdFail = sounds[0];
-      _soundId1Star = sounds[1];
-      _soundId2Stars = sounds[2];
-      _soundId3Stars = sounds[3];
+      print('🎵 Loading result sounds...');
+      _soundIdFail = await _soundpool.load(
+        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3')
+      );
+      _soundId1Star = await _soundpool.load(
+        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3')
+      );
+      _soundId2Stars = await _soundpool.load(
+        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3')
+      );
+      _soundId3Stars = await _soundpool.load(
+        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3')
+      );
+      print('✅ All sounds loaded successfully');
     } catch (e) {
       print('❌ Error loading sounds: $e');
     }
@@ -141,6 +146,7 @@ class ResultsPageState extends State<ResultsPage> {
 
   void _playSoundBasedOnStars(int stars) {
     try {
+      print('🎵 Playing sound for $stars stars');
       switch (stars) {
         case 0:
           _soundpool.play(_soundIdFail);
@@ -156,7 +162,7 @@ class ResultsPageState extends State<ResultsPage> {
           break;
       }
     } catch (e) {
-      print('⚠️ Error playing sound: $e');
+      print('❌ Error playing sound: $e');
     }
   }
 
@@ -183,7 +189,10 @@ class ResultsPageState extends State<ResultsPage> {
 
   @override
   void dispose() {
-    _soundpool.dispose();
+    // Add delay before disposing soundpool
+    Future.delayed(const Duration(seconds: 1), () {
+      _soundpool.dispose();
+    });
     super.dispose();
   }
 
@@ -191,7 +200,12 @@ class ResultsPageState extends State<ResultsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: !_isInitialized
-          ? const Center(child: LoadingWidget())
+          ?         Container(
+          color: const Color(0xFF5E31AD), // Add purple background color
+          child: const Center(
+            child: LoadingWidget(),
+          ),
+        )
           : ResponsiveBreakpoints(
               breakpoints: const [
                 Breakpoint(start: 0, end: 450, name: MOBILE),

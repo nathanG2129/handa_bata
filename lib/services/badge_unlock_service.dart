@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
-import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/services/badge_service.dart';
@@ -30,7 +29,6 @@ class BadgeUnlockService {
   static final BadgeUnlockService _instance = BadgeUnlockService._internal();
   factory BadgeUnlockService() => _instance;
 
-  final AuthService _authService;
   final ConnectionManager _connectionManager = ConnectionManager();
   final BadgeService _badgeService = BadgeService();
   StreamSubscription? _connectivitySubscription;
@@ -46,7 +44,7 @@ class BadgeUnlockService {
 
   static const String PENDING_UNLOCKS_KEY = 'pending_badge_unlocks';
 
-  BadgeUnlockService._internal() : _authService = AuthService() {
+  BadgeUnlockService._internal() {
     _setupConnectionListener();
   }
 
@@ -125,7 +123,8 @@ class BadgeUnlockService {
       final quality = await _connectionManager.checkConnectionQuality();
       print('📡 Badge Service Connection: $quality');
 
-      UserProfile? profile = await _authService.getUserProfile();
+      final userProfileService = UserProfileService();
+      UserProfile? profile = await userProfileService.fetchUserProfile();
       if (profile == null) return;
 
       print('📊 Current Badge Array: ${profile.unlockedBadge}');
@@ -142,17 +141,10 @@ class BadgeUnlockService {
 
       print('📊 Updated Badge Array: $updatedUnlockedBadges');
 
-      // Convert to string representation for UserProfileService
-      final String encodedList = jsonEncode({
-        'type': 'badge_array',
-        'data': updatedUnlockedBadges,
-      });
-
       print('🔄 Sending to UserProfileService...');
-      final userProfileService = UserProfileService();
       await userProfileService.updateProfileWithIntegration(
         'unlockedBadge',
-        encodedList
+        updatedUnlockedBadges
       );
 
       if (quality == ConnectionQuality.OFFLINE) {

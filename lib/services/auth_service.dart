@@ -14,6 +14,34 @@ import '../services/banner_service.dart'; // Add this import
 import '../services/badge_service.dart'; // Add this import
 // For BuildContext and VoidCallback
 
+/// Represents a single entry in the offline changes queue
+class QueueEntry {
+  final String categoryId;
+  final Map<String, dynamic> gameData;
+  final DateTime timestamp;
+  
+  const QueueEntry({
+    required this.categoryId,
+    required this.gameData,
+    required this.timestamp,
+  });
+  
+  Map<String, dynamic> toMap() => {
+    'categoryId': categoryId,
+    'gameData': gameData,
+    'timestamp': timestamp.toIso8601String(),
+  };
+  
+  factory QueueEntry.fromMap(Map<String, dynamic> map) => QueueEntry(
+    categoryId: map['categoryId'],
+    gameData: Map<String, dynamic>.from(map['gameData']),
+    timestamp: DateTime.parse(map['timestamp']),
+  );
+
+  @override
+  String toString() => 'QueueEntry(categoryId: $categoryId, timestamp: $timestamp)';
+}
+
 /// Constants for game save error messages
 class GameSaveError {
   static const String SAVE_FAILED = 'Failed to save game data';
@@ -29,9 +57,33 @@ class GameStateKeys {
   static const String BACKUP_PREFIX = 'game_progress_backup_';
 }
 
+/// Constants for offline queue management
+class OfflineQueueKeys {
+  static const String QUEUE_KEY = 'offline_game_save_queue';
+  static const String LAST_SYNC_KEY = 'last_sync_timestamp';
+  static const String QUEUE_BACKUP_KEY = 'offline_queue_backup';
+}
+
+/// Constants for sync status
+class SyncStatus {
+  static const String PENDING = 'pending';
+  static const String SUCCESS = 'success';
+  static const String FAILED = 'failed';
+}
+
+/// Constants for sync retry settings
+class SyncRetryConfig {
+  static const int MAX_RETRIES = 3;
+  static const int BASE_DELAY_SECONDS = 2;
+  static const int MAX_QUEUE_SIZE = 100;
+}
+
 /// Service for handling authentication and user profile management.
 /// Supports both regular users and guest accounts with offline capabilities.
 class AuthService {
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+  
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final StageService _stageService = StageService(); // Initialize StageService
@@ -51,12 +103,8 @@ class AuthService {
   final Map<String, UserProfile> _userCache = {};
   int _currentCacheVersion = 0;
 
-  AuthService({this.defaultLanguage = 'en'}) {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      if (result != ConnectivityResult.none) {
-        syncProfiles();
-      }
-    });
+  AuthService._internal({this.defaultLanguage = 'en'}) {
+    Connectivity().onConnectivityChanged.listen(_handleConnectivityChange);
   }
 
   void startListening() {
@@ -811,32 +859,126 @@ class AuthService {
     }
   }
 
+  /// Tracks the sync status for each category
+  Future<void> updateSyncStatus(String categoryId, String status) async {
+    try {
+      print('📝 Updating sync status for $categoryId: $status');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      await prefs.setString('sync_status_$categoryId', status);
+      await prefs.setString(
+        OfflineQueueKeys.LAST_SYNC_KEY, 
+        DateTime.now().toIso8601String()
+      );
+      
+      print('✅ Sync status updated successfully');
+    } catch (e) {
+      print('❌ Error updating sync status: $e');
+    }
+  }
+
+  /// Modified save method with queue integration
   Future<void> saveGameSaveDataLocally(String categoryId, GameSaveData data) async {
     try {
-      print('💾 Saving game data for category: $categoryId');
+      print('💾 Starting save process for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Create backup of current data
+      print('📦 Creating backup...');
       String? existingData = prefs.getString('game_save_data_$categoryId');
       if (existingData != null) {
         await prefs.setString('game_save_data_backup_$categoryId', existingData);
-        print('📦 Backup created for category: $categoryId');
+        print('✅ Backup created successfully');
       }
 
-      // Save new data
+      // Save new data locally
+      print('💾 Saving new data...');
       String saveDataJson = jsonEncode(data.toMap());
       await prefs.setString('game_save_data_$categoryId', saveDataJson);
-      print('✅ Game data saved successfully');
+      
+      // Queue for sync and update status
+      print('🔄 Queueing for sync...');
+      await queueOfflineChange(categoryId, data);
+      await updateSyncStatus(categoryId, SyncStatus.PENDING);
       
       // Clear backup after successful save
       if (existingData != null) {
         await prefs.remove('game_save_data_backup_$categoryId');
         print('🧹 Backup cleared after successful save');
       }
+      
+      print('✅ Save process completed successfully');
+      
+      // Try to sync immediately if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        print('🌐 Online connection available, attempting immediate sync...');
+        try {
+          await syncCategoryData(categoryId);
+          await updateSyncStatus(categoryId, SyncStatus.SUCCESS);
+          await removeFromQueue(categoryId);
+          print('✅ Immediate sync successful');
+        } catch (syncError) {
+          print('⚠️ Immediate sync failed, will retry later: $syncError');
+          // Keep in queue for later sync
+        }
+      } else {
+        print('📱 Offline - changes queued for later sync');
+      }
+      
     } catch (e) {
-      print('❌ Error saving game data: $e');
+      print('❌ Error in save process: $e');
+      print('Stack trace: ${StackTrace.current}');
+      
+      // Attempt to restore from backup
       await _restoreGameSaveBackup(categoryId);
+      await updateSyncStatus(categoryId, SyncStatus.FAILED);
+      
       throw GameSaveDataException('${GameSaveError.SAVE_FAILED}: $e');
+    }
+  }
+
+  /// Get sync status for a category with detailed information
+  Future<Map<String, dynamic>> getSyncStatus(String categoryId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String status = prefs.getString('sync_status_$categoryId') ?? SyncStatus.SUCCESS;
+      
+      // Get queue information
+      List<QueueEntry> queue = await getOfflineQueue();
+      DateTime? lastSync = await getLastSyncTime();
+      
+      // Get pending changes for this category
+      int pendingChanges = queue.where((entry) => entry.categoryId == categoryId).length;
+      
+      return {
+        'status': status,
+        'pendingChanges': pendingChanges,
+        'lastSyncTime': lastSync?.toIso8601String(),
+        'hasFailedSync': status == SyncStatus.FAILED,
+        'isInQueue': queue.any((entry) => entry.categoryId == categoryId),
+      };
+    } catch (e) {
+      print('❌ Error getting sync status: $e');
+      return {
+        'status': SyncStatus.FAILED,
+        'pendingChanges': 0,
+        'lastSyncTime': null,
+        'hasFailedSync': true,
+        'isInQueue': false,
+      };
+    }
+  }
+
+  /// Get last sync timestamp
+  Future<DateTime?> getLastSyncTime() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? timestamp = prefs.getString(OfflineQueueKeys.LAST_SYNC_KEY);
+      return timestamp != null ? DateTime.parse(timestamp) : null;
+    } catch (e) {
+      print('❌ Error getting last sync time: $e');
+      return null;
     }
   }
 
@@ -1592,6 +1734,269 @@ class AuthService {
       throw GameSaveDataException('Failed to sync category data: $e');
     }
   }
+
+  // Method to add changes to queue
+  Future<void> queueOfflineChange(String categoryId, GameSaveData data) async {
+    try {
+      print('🔄 Queueing offline change for category: $categoryId');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get existing queue
+      List<QueueEntry> queue = await getOfflineQueue();
+      print('📊 Current queue size: ${queue.length}');
+      
+      // Create new entry
+      QueueEntry newEntry = QueueEntry(
+        categoryId: categoryId,
+        gameData: data.toMap(),
+        timestamp: DateTime.now(),
+      );
+      
+      // Add to queue (replace if exists)
+      queue.removeWhere((entry) => entry.categoryId == categoryId);
+      queue.add(newEntry);
+      print('➕ Added new entry for $categoryId at ${newEntry.timestamp}');
+      
+      // Save updated queue
+      await prefs.setString(
+        OfflineQueueKeys.QUEUE_KEY,
+        jsonEncode(queue.map((e) => e.toMap()).toList())
+      );
+      print('💾 Queue saved successfully');
+    } catch (e) {
+      print('❌ Error queueing offline change: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+  // Method to get queue entries
+  Future<List<QueueEntry>> getOfflineQueue() async {
+    try {
+      print('🔍 Retrieving offline queue');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get queue string
+      String? queueJson = prefs.getString(OfflineQueueKeys.QUEUE_KEY);
+      if (queueJson == null) {
+        print('ℹ️ No queue found, returning empty list');
+        return [];
+      }
+      
+      // Parse queue
+      List<dynamic> queueList = jsonDecode(queueJson);
+      List<QueueEntry> queue = queueList
+          .map((entry) => QueueEntry.fromMap(entry))
+          .toList();
+      
+      print('📊 Retrieved queue with ${queue.length} entries');
+      queue.forEach((entry) => 
+          print('📝 Queue entry: ${entry.toString()}'));
+      
+      return queue;
+    } catch (e) {
+      print('❌ Error getting offline queue: $e');
+      print('Stack trace: ${StackTrace.current}');
+      return [];
+    }
+  }
+
+  // Method to remove entry from queue
+  Future<void> removeFromQueue(String categoryId) async {
+    try {
+      print('🗑️ Removing category from queue: $categoryId');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get and update queue
+      List<QueueEntry> queue = await getOfflineQueue();
+      int sizeBefore = queue.length;
+      queue.removeWhere((entry) => entry.categoryId == categoryId);
+      print('📊 Queue size changed from $sizeBefore to ${queue.length}');
+      
+      // Save updated queue
+      await prefs.setString(
+        OfflineQueueKeys.QUEUE_KEY,
+        jsonEncode(queue.map((e) => e.toMap()).toList())
+      );
+      print('✅ Successfully removed $categoryId from queue');
+    } catch (e) {
+      print('❌ Error removing from queue: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+  // Method to backup queue before processing
+  Future<void> backupQueue() async {
+    try {
+      print('📦 Creating queue backup');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get current queue
+      String? currentQueue = prefs.getString(OfflineQueueKeys.QUEUE_KEY);
+      if (currentQueue == null) {
+        print('ℹ️ No queue to backup');
+        return;
+      }
+      
+      // Save backup
+      await prefs.setString(OfflineQueueKeys.QUEUE_BACKUP_KEY, currentQueue);
+      print('✅ Queue backup created successfully');
+    } catch (e) {
+      print('❌ Error backing up queue: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+  // Method to restore queue from backup
+  Future<bool> restoreQueueFromBackup() async {
+    try {
+      print('🔄 Attempting to restore queue from backup');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get backup
+      String? backupQueue = prefs.getString(OfflineQueueKeys.QUEUE_BACKUP_KEY);
+      if (backupQueue == null) {
+        print('⚠️ No backup found to restore');
+        return false;
+      }
+      
+      // Restore from backup
+      await prefs.setString(OfflineQueueKeys.QUEUE_KEY, backupQueue);
+      print('✅ Queue restored successfully from backup');
+      return true;
+    } catch (e) {
+      print('❌ Error restoring queue: $e');
+      print('Stack trace: ${StackTrace.current}');
+      return false;
+    }
+  }
+
+  /// Main method to process the offline sync queue
+  Future<void> processOfflineQueue({bool forceSync = false}) async {
+    try {
+      print('🔄 Starting offline queue processing');
+      
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        print('📡 No network connection available');
+        return;
+      }
+
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        print('👤 No user logged in');
+        return;
+      }
+
+      // Backup queue before processing
+      await backupQueue();
+      print('📦 Queue backup created');
+
+      // Get and sort queue by timestamp
+      List<QueueEntry> queue = await getOfflineQueue();
+      queue.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      
+      print('📊 Processing ${queue.length} queue entries');
+      
+      // Track sync progress
+      int successCount = 0;
+      int failureCount = 0;
+      DateTime syncStartTime = DateTime.now();
+
+      // Process each entry
+      for (var entry in queue) {
+        try {
+          print('🔄 Processing entry for category: ${entry.categoryId}');
+          
+          // Attempt sync with retry
+          bool syncSuccess = await _syncEntryWithRetry(
+            currentUser.uid, 
+            entry,
+            maxRetries: SyncRetryConfig.MAX_RETRIES
+          );
+
+          if (syncSuccess) {
+            successCount++;
+            await removeFromQueue(entry.categoryId);
+            await updateSyncStatus(entry.categoryId, SyncStatus.SUCCESS);
+          } else {
+            failureCount++;
+            await updateSyncStatus(entry.categoryId, SyncStatus.FAILED);
+          }
+        } catch (e) {
+          print('❌ Error processing entry: $e');
+          failureCount++;
+        }
+      }
+
+      // Log sync completion
+      Duration syncDuration = DateTime.now().difference(syncStartTime);
+      print('✅ Sync completed in ${syncDuration.inSeconds}s');
+      print('📊 Success: $successCount, Failures: $failureCount');
+
+    } catch (e) {
+      print('❌ Error processing offline queue: $e');
+      print('Stack trace: ${StackTrace.current}');
+      await restoreQueueFromBackup();
+      rethrow;
+    }
+  }
+
+  /// Sync a single queue entry with retry logic
+ Future<bool> _syncEntryWithRetry(
+  String userId, 
+  QueueEntry entry, 
+  {int maxRetries = SyncRetryConfig.MAX_RETRIES}
+) async {
+  int attempts = 0;
+  
+  while (attempts < maxRetries) {
+    try {
+      print('🔄 Sync attempt ${attempts + 1} for ${entry.categoryId}');
+      
+      // This code will never be reached in this test
+      await _firestore
+          .collection('User')
+          .doc(userId)
+          .collection('GameSaveData')
+          .doc(entry.categoryId)
+          .set(entry.gameData);
+      
+      print('✅ Sync successful for ${entry.categoryId}');
+      return true;
+    } catch (e) {
+      attempts++;
+      print('❌ Sync attempt $attempts failed: $e');
+      
+      if (attempts == maxRetries) {
+        print('⚠️ Max retry attempts reached for ${entry.categoryId}');
+        return false;
+      }
+      
+      int delaySeconds = SyncRetryConfig.BASE_DELAY_SECONDS * pow(2, attempts).toInt();
+      print('⏳ Waiting ${delaySeconds}s before next attempt');
+      await Future.delayed(Duration(seconds: delaySeconds));
+    }
+  }
+  
+  return false;
+}
+
+  /// Update NetworkStateHandler to use new sync process
+  void _handleConnectivityChange(ConnectivityResult result) async {
+    if (result != ConnectivityResult.none) {
+      print('🌐 Network connection restored');
+      await processOfflineQueue();
+    }
+  }
+
+  /// Add method for manual sync trigger
+  Future<void> triggerManualSync() async {
+    print('🔄 Manual sync triggered');
+    await processOfflineQueue(forceSync: true);
+  }
 }
 
 class SyncManager {
@@ -1637,32 +2042,16 @@ class SyncManager {
 }
 
 class NetworkStateHandler {
-  static final StreamController<ConnectivityResult> _connectivityController = 
-      StreamController<ConnectivityResult>.broadcast();
+  static final AuthService _authService = AuthService();
   
-  static Future<void> initialize() async {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      _connectivityController.add(result);
-      _handleConnectivityChange(result);
-    });
-  }
-
   static Future<void> _handleConnectivityChange(ConnectivityResult result) async {
     if (result != ConnectivityResult.none) {
-      // Get all pending syncs
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String> pendingSync = prefs.getStringList('pending_guest_sync') ?? [];
-
-      // Handle each sync with proper management
-      for (String tempId in pendingSync) {
-        await SyncManager.handleSync(tempId, () async {
-          await AuthService().syncOfflineGuests();
-        });
-      }
+      print('🌐 Network connection restored');
+      await _authService.processOfflineQueue();
     }
   }
 
   static void dispose() {
-    _connectivityController.close();
+    // No need to dispose anything in this implementation
   }
 }

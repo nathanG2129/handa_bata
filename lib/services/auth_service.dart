@@ -1206,11 +1206,11 @@ class AuthService {
     try {
       print('🎮 Updating game progress for ${isArcade ? 'arcade' : 'adventure'} mode');
       
-      // Get current game save data for this category only
+      // Get current game save data
       GameSaveData? localData = await getLocalGameSaveData(categoryId);
       if (localData == null) {
-        // Create new data if none exists
-        localData = GameSaveData.initial(isArcade ? 1 : 10);
+        print('📝 Creating new game save data');
+        localData = GameSaveData.initial(7); // 7 stages per quest
       }
 
       // Get the appropriate stage key
@@ -1223,27 +1223,28 @@ class AuthService {
         if (record == null) {
           throw GameSaveDataException('Record is required for arcade mode');
         }
+        print('🎯 Updating arcade record: $record');
         localData.updateArcadeRecord(stageKey, record);
       } else {
         // Update adventure mode progress
-        localData.updateScore(stageKey, score, mode);
+        print('🎯 Updating adventure progress:');
+        print('Score: $score, Stars: $stars, Mode: $mode');
+        
         int stageIndex = _getStageNumber(stageName) - 1;
+        localData.updateScore(stageKey, score, mode);
         localData.updateStars(stageIndex, stars, mode);
         
         // Unlock next stage if applicable
         if (stars > 0) {
+          print('🔓 Unlocking next stage');
           localData.unlockStage(stageIndex + 1, mode);
         }
       }
 
-      // Save locally
+      // Save updated data
       await saveGameSaveDataLocally(categoryId, localData);
       
-      // Sync with Firestore if online
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        await syncCategoryData(categoryId);
-      }
+      print('✅ Game progress updated successfully');
     } catch (e) {
       print('❌ Error updating game progress: $e');
       throw GameSaveDataException('Failed to update game progress: $e');

@@ -412,14 +412,21 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _checkBadgeUnlocks() async {
     try {
-      final badgeUnlockService = BadgeUnlockService();
+      print('\n🎮 Checking Badge Unlocks');
+      print('Game Mode: ${widget.gamemode}');
       
-      // Get local game save data first
+      final badgeUnlockService = BadgeUnlockService();
       GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
       
       if (widget.gamemode == 'arcade') {
         final recordParts = widget.record.split(':');
         final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
+        
+        print('\n🎯 Arcade Mode Stats:');
+        print('Total Time: $totalSeconds seconds');
+        print('Accuracy: ${(widget.accuracy * 100).toStringAsFixed(2)}%');
+        print('Streak: ${widget.streak}');
+        print('Avg Time per Question: ${widget.averageTimePerQuestion.toStringAsFixed(2)} seconds');
         
         await badgeUnlockService.checkArcadeBadges(
           totalTime: totalSeconds,
@@ -427,24 +434,31 @@ class ResultsPageState extends State<ResultsPage> {
           streak: widget.streak,
           averageTimePerQuestion: widget.averageTimePerQuestion,
         );
-      } else if (saveData != null) {
-        List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
-            ? saveData.normalStageStars 
-            : saveData.hardStageStars;
-        
-        await badgeUnlockService.checkAdventureBadges(
-          questName: widget.category['name'],
-          stageName: widget.stageName,
-          difficulty: widget.mode.toLowerCase(),
-          stars: _calculateStars(
-            widget.accuracy, 
-            widget.score, 
-            widget.stageData['maxScore'],
-            widget.isGameOver
-          ),
-          allStageStars: stageStars,
-        );
+      } else {
+        if (saveData != null) {
+          List<int> stageStars = widget.mode.toLowerCase() == 'normal' 
+              ? saveData.normalStageStars 
+              : saveData.hardStageStars;
+          
+          print('\n🎯 Adventure Mode Stats:');
+          print('Quest: ${widget.category['name']}');
+          print('Stage: ${widget.stageName}');
+          print('Difficulty: ${widget.mode}');
+          print('Stars: $stars');
+          print('All Stage Stars: $stageStars');
+          
+          await badgeUnlockService.checkAdventureBadges(
+            questName: widget.category['name'],
+            stageName: widget.stageName,
+            difficulty: widget.mode.toLowerCase(),
+            stars: stars,
+            allStageStars: stageStars,
+          );
+        } else {
+          print('⚠️ No save data found for badge checks');
+        }
       }
+      print('\n✅ Badge check completed');
     } catch (e) {
       print('❌ Error checking badge unlocks: $e');
     }

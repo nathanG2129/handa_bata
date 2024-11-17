@@ -1017,6 +1017,7 @@ class UserProfileService {
       print('\n🔄 PROFILE UPDATE INTEGRATION');
       print('Field: $field');
       print('New value: $value');
+      print('Connection: ${await Connectivity().checkConnectivity()}');
 
       // 1. Get current profile
       UserProfile? currentProfile = await fetchUserProfile();
@@ -1024,51 +1025,59 @@ class UserProfileService {
         throw Exception('No profile available for update');
       }
 
-      // 2. Prepare update
-      final updates = await _prepareProfileUpdate(
-        field: field,
-        value: value,
-        currentProfile: currentProfile,
-      );
+      // 2. For avatar updates, ensure the avatar is cached
+      if (field == 'avatarId') {
+        print('🎯 Pre-fetching avatar details');
+        final avatar = await _avatarService.getAvatarDetails(
+          value as int,
+          priority: LoadPriority.CRITICAL
+        );
+        if (avatar == null) {
+          throw Exception('Avatar not found');
+        }
+        print('✅ Avatar details cached');
+      }
 
-      // 3. Save locally first (important for offline)
+      // 3. Apply updates locally first
       User? user = _auth.currentUser;
       if (user == null) return;
       
+      final updates = {field: value};
       UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
+      
+      print('💾 Saving profile locally');
       await _saveProfileLocally(user.uid, updatedProfile);
       _updateCache(user.uid, updatedProfile);
+      
+      print('📢 Notifying UI listeners');
+      _profileUpdateController.add(updatedProfile);
 
-      // 4. Post-update operations (should run regardless of connection)
-      print('\n📊 POST-UPDATE OPERATIONS');
-      if (field == 'unlockedBadge') {
-        print('🎯 Updating total badge count');
-        await updateTotalBadgeCount();
-        print('✅ Badge count updated');
-      }
-
-      // 5. Online-only operations
+      // 4. Update Firestore if online
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        // Update Firestore
-        await _firestore
-            .collection('User')
-            .doc(user.uid)
-            .collection('ProfileData')
-            .doc(user.uid)
-            .update(updates);
-
-        // Notify services
-        print('📢 Notifying integrated services');
+        print('🌐 Updating Firestore');
+        await _retryOperation(() async {
+          await _firestore
+              .collection('User')
+              .doc(user.uid)
+              .collection('ProfileData')
+              .doc(user.uid)
+              .update(updates);
+        });
+        print('✅ Firestore updated');
+        
+        // Notify services only when online
         await notifyServices(field, value);
-        print('✅ Services notified');
       } else {
+        // Queue update for later sync
+        _queueUpdate(user.uid, updates);
         print('📱 Offline - updates queued for later sync');
       }
 
       print('✅ Profile update completed successfully\n');
     } catch (e) {
       print('❌ Error in profile update: $e');
+      await _logOperation('profile_update_error', e.toString());
       rethrow;
     }
   }

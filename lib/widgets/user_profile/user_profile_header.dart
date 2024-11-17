@@ -55,15 +55,17 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   String? _cachedAvatarPath;
   late StreamSubscription<Map<int, String>> _avatarSubscription;
   late StreamSubscription<ConnectionQuality> _connectionSubscription;
-  ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
   String? _cachedBannerPath;
   late StreamSubscription<List<Map<String, dynamic>>> _bannerSubscription;
+  int _currentAvatarId = 0;
 
   @override
   void initState() {
     super.initState();
+    
     // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
+      print('📱 UserProfileHeader received avatar update');
       if (mounted && updates.containsKey(widget.avatarId)) {
         setState(() {
           _cachedAvatarPath = updates[widget.avatarId];
@@ -74,7 +76,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     // Add connection quality listener
     _connectionSubscription = _avatarService.connectionQuality.listen((quality) {
       if (mounted) {
-        setState(() => _currentQuality = quality);
       }
     });
 
@@ -113,54 +114,32 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     }
   }
 
-  Future<void> _handleAvatarUpdate(int avatarId) async {
-    try {
-      await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating avatar: $e')),
-      );
-    }
-  }
-
   Future<String?> _getAvatarImage() async {
     try {
-      // Adapt behavior based on connection quality
-      switch (_currentQuality) {
-        case ConnectionQuality.OFFLINE:
-          // Only use cache in offline mode
-          if (_cachedAvatarPath != null) {
-            return _cachedAvatarPath;
-          }
-          break;
-          
-        case ConnectionQuality.POOR:
-          // Use longer timeout, prioritize cache
-          if (_cachedAvatarPath != null) {
-            // Fetch in background but return cached immediately
-            _avatarService.getAvatarDetails(
-              widget.avatarId,
-              priority: LoadPriority.CRITICAL
-            );
-            return _cachedAvatarPath;
-          }
-          break;
-          
-        default:
-          // Normal behavior for GOOD and EXCELLENT
-          final avatar = await _avatarService.getAvatarDetails(
-            widget.avatarId,
-            priority: LoadPriority.CRITICAL
-          );
-          if (mounted && avatar != null && avatar['img'] != _cachedAvatarPath) {
-            setState(() => _cachedAvatarPath = avatar['img']);
-          }
+      // Strong cache check
+      if (_cachedAvatarPath != null && widget.avatarId == _currentAvatarId) {
+        print('📦 Using cached avatar image');
+        return _cachedAvatarPath;
+      }
+
+      print('🔄 Getting avatar image for ID: ${widget.avatarId}');
+      
+      final avatar = await _avatarService.getAvatarDetails(
+        widget.avatarId,
+        priority: LoadPriority.HIGH,
+      );
+      
+      if (mounted && avatar != null) {
+        print('✅ Got new avatar image: ${avatar['img']}');
+        setState(() {
+          _cachedAvatarPath = avatar['img'];
+          _currentAvatarId = widget.avatarId;
+        });
       }
       return _cachedAvatarPath ?? 'Kladis.png';
     } catch (e) {
-      print('Error getting avatar image: $e');
-      return _cachedAvatarPath ?? 'Kladis.png';
+      print('❌ Error getting avatar image: $e');
+      return 'Kladis.png';
     }
   }
 

@@ -27,7 +27,7 @@ class CharacterPage extends StatefulWidget {
 
 class CharacterPageState extends State<CharacterPage> with SingleTickerProviderStateMixin {
   final AvatarService _avatarService = AvatarService();
-  final UserProfileService _userProfileService = UserProfileService();
+  final userProfileService = UserProfileService();
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   List<Map<String, dynamic>> _avatars = [];
@@ -143,17 +143,28 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
-      // Use CRITICAL priority for selected avatar
+      print('\n🎯 UPDATING AVATAR');
+      print('New Avatar ID: $avatarId');
+
+      // Pre-fetch avatar details to ensure it's in cache
       final avatar = await _avatarService.getAvatarDetails(
         avatarId,
         priority: LoadPriority.CRITICAL
       );
-      if (avatar == null) throw Exception('Avatar not found');
+      
+      if (avatar == null) {
+        throw Exception('Avatar not found');
+      }
 
-      await _userProfileService.updateProfileWithIntegration('avatarId', avatarId);
+      // Update profile through UserProfileService
+      await userProfileService.updateProfileWithIntegration('avatarId', avatarId);
+      
+      // Notify callback and close dialog
       widget.onAvatarSelected?.call(avatarId);
       _closeDialog();
+
     } catch (e) {
+      print('❌ Error updating avatar: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update avatar: $e')),

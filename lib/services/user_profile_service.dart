@@ -820,21 +820,31 @@ class UserProfileService {
       if (isXPUpdate) {
         print('\n💫 PROCESSING XP UPDATE');
         
-        // Calculate current total XP
-        int currentTotalXP = ((currentProfile.level - 1) * 100) + currentProfile.exp;
+        // 1. Calculate current total XP
+        int currentTotalXP = 0;
+        for (int i = 1; i < currentProfile.level; i++) {
+          currentTotalXP += i * 100;  // Add up XP required for previous levels
+        }
+        currentTotalXP += currentProfile.exp;  // Add current level's XP
         print('Current total XP: $currentTotalXP');
 
-        // Get the XP gain from updates
+        // 2. Add new XP gain
         int xpGain = updates['exp'] as int;
         print('XP gain: $xpGain');
-
-        // Add the gain to current total
         int newTotalXP = currentTotalXP + xpGain;
         print('New total XP: $newTotalXP');
 
-        // Calculate new level and exp
-        int newLevel = (newTotalXP ~/ 100) + 1;
-        int newExp = newTotalXP % 100;
+        // 3. Calculate new level and exp
+        int remainingXP = newTotalXP;
+        int newLevel = 1;
+        
+        // Keep checking if we have enough XP for next level
+        while (remainingXP >= (newLevel * 100)) {
+          remainingXP -= newLevel * 100;
+          newLevel++;
+        }
+
+        int newExp = remainingXP;
         int newExpCap = newLevel * 100;
 
         print('New level: $newLevel');

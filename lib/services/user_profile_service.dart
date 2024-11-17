@@ -1085,6 +1085,13 @@ class UserProfileService {
       }
 
       print('✅ Profile update completed successfully\n');
+
+      // Add this: Update total badge count when badges change
+      if (field == 'unlockedBadge') {
+        print('🎯 Updating total badge count');
+        await updateTotalBadgeCount();
+        print('✅ Badge count updated');
+      }
     } catch (e) {
       print('❌ Error in profile update: $e');
       await _logOperation('profile_update_error', e.toString());
@@ -2319,6 +2326,7 @@ Future<void> updateTotalStagesCleared() async {
   }
 }
 
+// Add this method to update total badge count
 Future<void> updateTotalBadgeCount() async {
   try {
     User? user = _auth.currentUser;

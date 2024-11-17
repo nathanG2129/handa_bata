@@ -475,11 +475,18 @@ class ResultsPageState extends State<ResultsPage> {
       // Calculate XP gained based on game mode and performance
       int xpGained;
       if (widget.gamemode == 'arcade') {
+        // For arcade mode: 500 XP for completion, 0 for game over
         xpGained = widget.isGameOver ? 0 : 500;
       } else {
-        int multiplier = widget.mode == 'Hard' ? 10 : 5;
+        // For adventure mode: score * multiplier (10 for hard, 5 for normal)
+        int multiplier = widget.mode.toLowerCase() == 'hard' ? 10 : 5;
         xpGained = widget.score * multiplier;
       }
+
+      print('\n💫 UPDATING PROGRESS');
+      print('Game Mode: ${widget.gamemode}');
+      print('Score: ${widget.score}');
+      print('XP Gained: $xpGained');
 
       // Send only the XP gain to batchUpdateProfile
       await userProfileService.batchUpdateProfile({
@@ -492,18 +499,13 @@ class ResultsPageState extends State<ResultsPage> {
           categoryId: widget.category['id'],
           stageName: widget.stageName,
           score: widget.score,
-          stars: _calculateStars(
-            widget.accuracy,
-            widget.score,
-            widget.stageData['maxScore'],
-            widget.isGameOver
-          ),
+          stars: stars,
           mode: widget.mode.toLowerCase(),
           record: widget.gamemode == 'arcade' ? _convertRecordToSeconds(widget.record) : null,
           isArcade: widget.gamemode == 'arcade',
         );
 
-        // Add this: Update total stages cleared after game progress is updated
+        // Update total stages cleared after game progress is updated
         await userProfileService.updateTotalStagesCleared();
 
         // Delete saved game state if exists
@@ -519,6 +521,7 @@ class ResultsPageState extends State<ResultsPage> {
 
       // Check for badge unlocks
       await _checkBadgeUnlocks();
+
     } catch (e) {
       print('❌ Error updating progress: $e');
     }

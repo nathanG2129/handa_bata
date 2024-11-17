@@ -789,117 +789,109 @@ class UserProfileService {
   final Map<String, DateTime> _lastPrefetchTime = {};
   
   // Add batch update method
- Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
-  try {
-    // Validate avatar if included in updates
-    if (updates.containsKey('avatarId')) {
-      final avatar = await _avatarService.getAvatarDetails(updates['avatarId']);
-      if (avatar == null) {
-        throw Exception('Invalid avatar ID in batch update');
-      }
-    }
+  Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
+    try {
+      print('\n🔄 BATCH PROFILE UPDATE');
+      print('Updates: $updates');
 
-    User? user = _auth.currentUser;
-    if (user == null) return;
+      User? user = _auth.currentUser;
+      if (user == null) return;
 
-    String userId = user.uid;
+      String userId = user.uid;
 
-    // Validate all updates first
-    for (var entry in updates.entries) {
-      ProfileField? field = _getProfileField(entry.key);
-      if (field == null) continue;
+      // Validate all updates first
+      for (var entry in updates.entries) {
+        ProfileField? field = _getProfileField(entry.key);
+        if (field == null) continue;
 
-      ValidationResult result = _validateField(field, entry.value);
-      if (!result.isValid) {
-        throw Exception('Invalid value for ${entry.key}: ${result.error}');
-      }
-    }
-
-    // Get current profile
-    UserProfile? currentProfile = await fetchUserProfile();
-    if (currentProfile == null) return;
-
-    // Handle XP updates
-    bool isXPUpdate = updates.containsKey('exp');
-
-    if (isXPUpdate) {
-      // Calculate current total XP
-      int currentTotalXP = 0;
-      for (int i = 1; i < currentProfile.level; i++) {
-        currentTotalXP += i * 100;  // Add up XP required for previous levels
-      }
-      currentTotalXP += currentProfile.exp;
-      print('Current total XP: $currentTotalXP');
-
-      // Get the XP gain from updates
-      int xpGain = updates['exp'] ?? 0;
-      print('XP gain: $xpGain');
-
-      // Add the gain to current total
-      int newTotalXP = currentTotalXP + xpGain;
-      print('New total XP: $newTotalXP');
-
-      // Calculate new level and exp
-      int remainingXP = newTotalXP;
-      int finalLevel = 1;
-      
-      // Keep checking if we have enough XP for next level
-      while (remainingXP >= (finalLevel * 100)) {
-          remainingXP -= finalLevel * 100;
-          finalLevel++;
-      }
-
-      int finalExp = remainingXP;
-      int finalExpCap = finalLevel * 100;
-
-      // Add banner unlock update if level changed or first banner not unlocked
-      if (finalLevel != currentProfile.level || currentProfile.unlockedBanner[0] != 1) {
-        print('🎯 Updating banner unlocks for level $finalLevel');
-        print('Previous unlock state: ${currentProfile.unlockedBanner}');
-        
-        List<int> newUnlockedBanner = List<int>.from(currentProfile.unlockedBanner);
-        for (int i = 0; i < finalLevel && i < newUnlockedBanner.length; i++) {
-          newUnlockedBanner[i] = 1;
+        ValidationResult result = _validateField(field, entry.value);
+        if (!result.isValid) {
+          throw Exception('Invalid value for ${entry.key}: ${result.error}');
         }
-        
-        print('New unlock state: $newUnlockedBanner');
-        updates['unlockedBanner'] = newUnlockedBanner;
       }
 
-      // Update the updates map
-      updates = {
-        ...updates,
-        'exp': finalExp,
-        'level': finalLevel,
-        'expCap': finalExpCap,
-      };
+      // Get current profile
+      UserProfile? currentProfile = await fetchUserProfile();
+      if (currentProfile == null) return;
+
+      // Handle XP updates
+      bool isXPUpdate = updates.containsKey('exp');
+
+      if (isXPUpdate) {
+        print('\n💫 PROCESSING XP UPDATE');
+        
+        // Calculate current total XP
+        int currentTotalXP = ((currentProfile.level - 1) * 100) + currentProfile.exp;
+        print('Current total XP: $currentTotalXP');
+
+        // Get the XP gain from updates
+        int xpGain = updates['exp'] as int;
+        print('XP gain: $xpGain');
+
+        // Add the gain to current total
+        int newTotalXP = currentTotalXP + xpGain;
+        print('New total XP: $newTotalXP');
+
+        // Calculate new level and exp
+        int newLevel = (newTotalXP ~/ 100) + 1;
+        int newExp = newTotalXP % 100;
+        int newExpCap = newLevel * 100;
+
+        print('New level: $newLevel');
+        print('New exp: $newExp');
+        print('New exp cap: $newExpCap');
+
+        // Check for banner unlocks on level up
+        if (newLevel > currentProfile.level || currentProfile.unlockedBanner[0] != 1) {
+          print('🎯 Updating banner unlocks for level $newLevel');
+          print('Previous unlock state: ${currentProfile.unlockedBanner}');
+          
+          List<int> newUnlockedBanner = List<int>.from(currentProfile.unlockedBanner);
+          for (int i = 0; i < newLevel && i < newUnlockedBanner.length; i++) {
+            newUnlockedBanner[i] = 1;
+          }
+          
+          print('New unlock state: $newUnlockedBanner');
+          updates['unlockedBanner'] = newUnlockedBanner;
+        }
+
+        // Update the updates map with new XP values
+        updates.addAll({
+          'exp': newExp,
+          'level': newLevel,
+          'expCap': newExpCap,
+        });
+      }
+
+      // Apply updates locally
+      UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
+      await _saveProfileLocally(userId, updatedProfile);
+      _updateCache(userId, updatedProfile);
+      _profileUpdateController.add(updatedProfile);
+
+      // Update Firestore if online
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.none) {
+        await _retryOperation(() async {
+          await _firestore
+              .collection('User')
+              .doc(userId)
+              .collection('ProfileData')
+              .doc(userId)
+              .update(updates);
+        });
+      } else {
+        _queueUpdate(userId, updates);
+      }
+
+      print('✅ Batch update completed successfully\n');
+
+    } catch (e) {
+      print('❌ Error in batchUpdateProfile: $e');
+      await _logOperation('batch_update_error', e.toString());
+      throw Exception('Failed to update profile: $e');
     }
-
-    // Apply updates locally
-    UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
-    await _saveProfileLocally(userId, updatedProfile);
-    _updateCache(userId, updatedProfile);
-    _profileUpdateController.add(updatedProfile);
-
-    // Update Firestore if online
-    var connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult != ConnectivityResult.none) {
-      await _retryOperation(() async {
-        await _firestore
-            .collection('User')
-            .doc(userId)
-            .collection('ProfileData')
-            .doc(userId)
-            .update(updates);
-      });
-    }
-
-  } catch (e) {
-    print('❌ Error in batchUpdateProfile: $e');
-    await _logOperation('batch_update_error', e.toString());
-    throw Exception('Failed to update profile: $e');
   }
-}
 
   // Add prefetching
   Future<void> prefetchProfile(String userId) async {
@@ -936,32 +928,32 @@ class UserProfileService {
   final AvatarService _avatarService = AvatarService();
 
   // Add integration methods
-Future<void> initializeIntegrations() async {
-  try {
-    print('🔄 Initializing service integrations');
-    
-    // Initialize service states
-    _updateServiceState(BADGE_SERVICE, isInitialized: true);
-    _updateServiceState(BANNER_SERVICE, isInitialized: true);
-    _updateServiceState(AVATAR_SERVICE, isInitialized: true);
+  Future<void> initializeIntegrations() async {
+    try {
+      print('🔄 Initializing service integrations');
+      
+      // Initialize service states
+      _updateServiceState(BADGE_SERVICE, isInitialized: true);
+      _updateServiceState(BANNER_SERVICE, isInitialized: true);
+      _updateServiceState(AVATAR_SERVICE, isInitialized: true);
 
-    // Initial sync
-    UserProfile? profile = await fetchUserProfile();
-    if (profile != null) {
-      await synchronizeServices();
+      // Initial sync
+      UserProfile? profile = await fetchUserProfile();
+      if (profile != null) {
+        await synchronizeServices();
+      }
+
+      print('✅ Service integrations initialized');
+    } catch (e) {
+      print('❌ Error initializing integrations: $e');
+      await _logProfileUpdate(
+        field: 'initialization',
+        oldValue: 'error',
+        newValue: 'failed',
+        details: 'Integration initialization failed: $e',
+      );
     }
-
-    print('✅ Service integrations initialized');
-  } catch (e) {
-    print('❌ Error initializing integrations: $e');
-    await _logProfileUpdate(
-      field: 'initialization',
-      oldValue: 'error',
-      newValue: 'failed',
-      details: 'Integration initialization failed: $e',
-    );
   }
-}
 
   // Add these fields after existing ones
   final Map<String, ServiceCallback> _serviceCallbacks = {};

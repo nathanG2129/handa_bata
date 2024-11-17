@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.handabatamae.app">
     <application
-        android:label="handabatamae"
+        android:label="Handa Bata Mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

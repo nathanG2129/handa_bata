@@ -329,6 +329,7 @@ class BadgeUnlockService {
             'averageTimePerQuestion': averageTimePerQuestion,
           },
         );
+      await unlockBadges(badgesToUnlock);  // Actually unlock the badges
       } else {
         await unlockBadges(badgesToUnlock);
       }

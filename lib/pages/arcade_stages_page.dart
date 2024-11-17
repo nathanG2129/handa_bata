@@ -105,19 +105,15 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<Map<String, dynamic>> _fetchStageStats(int stageIndex) async {
     try {
-      // Use cached game save data if available
       GameSaveData? saveData = _gameSaveData;
       
-      // Fallback to loading if not cached
       if (saveData == null) {
         saveData = await _authService.getLocalGameSaveData(widget.category['id']!);
-        _gameSaveData = saveData; // Cache for future use
+        _gameSaveData = saveData;
       }
 
-      // Get arcade key
       final arcadeKey = GameSaveData.getArcadeKey(widget.category['id']!);
 
-      // Get saved game state from GameSaveManager
       final savedGameState = await _gameSaveManager.getSavedGameState(
         categoryId: widget.category['id']!,
         stageName: arcadeKey,
@@ -125,17 +121,15 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       );
       
       if (saveData != null) {
-        // Get arcade stats from GameSaveData
         final stats = saveData.getStageStats(arcadeKey, 'normal');
-
-        // Get correct last index (number of normal stages)
-        final lastIndex = saveData.normalStageStars.length;  // This is the correct index
+        
+        final arcadeIndex = saveData.normalStageStars.length - 1;
 
         return {
           'bestRecord': stats['bestRecord'] ?? -1,
           'crntRecord': stats['crntRecord'] ?? -1,
           'savedGame': savedGameState?.toJson(),
-          'isUnlocked': saveData.canUnlockStage(lastIndex, 'normal'),  // Use correct index
+          'isUnlocked': saveData.canUnlockStage(arcadeIndex, 'normal'),
         };
       }
 

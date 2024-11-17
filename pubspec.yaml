@@ -66,7 +66,15 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
 
+flutter_launcher_icons:
+  android: true  # or "launcher_icon" if you want to specify the icon name
+  ios: false     # set to true if you need iOS icons
+  image_path: "assets/appicon/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#ffffff"  # or path to background image
+  adaptive_icon_foreground: "assets/appicon/app_icon.png"  # your icon with transparency
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -109,6 +117,7 @@ flutter:
     - assets/characters/KladisLearn.svg
     - assets/characters/KloudLearn.svg
     - assets/icons/stageicon.svg
+    - assets/appicon/app_icon.png
     - assets/instructions/FillinTheBlanks01.jpg
     - assets/instructions/FillinTheBlanks02.jpg
     - assets/instructions/FillinTheBlanks03.jpg

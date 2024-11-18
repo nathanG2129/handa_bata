@@ -1818,12 +1818,12 @@ class AuthService {
       if (localData != null) {
         // Sync only this category's data to Firestore
         await _firestore
-            .collection('User')
-            .doc(currentUser.uid)
-            .collection('GameSaveData')
-            .doc(categoryId)
-            .set(localData.toMap());
-            
+          .collection('User')
+          .doc(currentUser.uid)
+          .collection('GameSaveData')
+          .doc(categoryId)
+          .set(localData.toMap());
+          
         print('✅ Synced game data for category: $categoryId');
       }
     } catch (e) {
@@ -2233,6 +2233,127 @@ class AuthService {
       // Clear stored password on error
       _currentPassword = null;
       print('❌ Error updating email: $e');
+      rethrow;
+    }
+  }
+
+  // Add these new methods to your AuthService class
+
+  Future<void> sendPasswordResetOTP(String email) async {
+    try {
+      print('\n📧 SENDING PASSWORD RESET OTP');
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      
+      print('📤 Sending OTP to email: $email');
+      await functions
+          .httpsCallable('sendPasswordResetOTP')
+          .call({'email': email});
+      
+      print('✅ Password reset OTP sent successfully\n');
+    } catch (e) {
+      print('❌ Error sending password reset OTP: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> verifyAndResetPassword(String email, String otp, String newPassword) async {
+    try {
+      print('\n🔄 VERIFYING AND RESETTING PASSWORD');
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      
+      // First verify the OTP
+      print('🔍 Verifying OTP');
+      final result = await functions
+          .httpsCallable('verifyPasswordResetOTP')
+          .call({
+            'email': email,
+            'otp': otp
+          });
+
+      if (result.data['success']) {
+        // If OTP is valid, reset the password
+        print('🔐 Resetting password');
+        await _auth.sendPasswordResetEmail(email: email);
+        print('✅ Password reset email sent successfully\n');
+      } else {
+        throw Exception('Invalid verification code');
+      }
+    } catch (e) {
+      print('❌ Error resetting password: $e');
+      rethrow;
+    }
+  }
+
+  // Update these methods in AuthService
+
+  Future<void> verifyPasswordResetOTP(String email, String otp) async {
+    try {
+      print('\n🔍 VERIFYING PASSWORD RESET OTP');
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      
+      final result = await functions
+          .httpsCallable('verifyPasswordResetOTP')
+          .call({
+            'email': email,
+            'otp': otp
+          });
+
+      if (!result.data['success']) {
+        throw Exception('Invalid verification code');
+      }
+      
+      print('✅ OTP verified successfully\n');
+    } catch (e) {
+      print('❌ Error verifying OTP: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> resetPassword(String email, String newPassword) async {
+    try {
+      print('\n🔐 RESETTING PASSWORD');
+      
+      // Get user by email
+      var methods = await _auth.fetchSignInMethodsForEmail(email);
+      if (methods.isEmpty) {
+        throw Exception('No account found with this email');
+      }
+
+      try {
+        // Get custom token for temporary auth
+        final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+        print('🔑 Getting custom token for temporary auth');
+        final result = await functions
+            .httpsCallable('createCustomToken')
+            .call({'email': email});
+        
+        if (result.data == null || result.data['token'] == null) {
+          throw Exception('Failed to get authentication token');
+        }
+
+        // Sign in with custom token
+        print('🔄 Signing in temporarily');
+        await _auth.signInWithCustomToken(result.data['token']);
+        
+        // Update password
+        if (_auth.currentUser != null) {
+          print('🔐 Updating password');
+          await _auth.currentUser!.updatePassword(newPassword);
+          
+          // Sign out after password update
+          print('🚪 Signing out');
+          await _auth.signOut();
+          
+          print('✅ Password updated successfully\n');
+        } else {
+          throw Exception('Failed to authenticate for password reset');
+        }
+      } catch (e) {
+        print('❌ Error during password reset: $e');
+        rethrow;
+      }
+    } catch (e) {
+      print('❌ Error resetting password: $e');
       rethrow;
     }
   }

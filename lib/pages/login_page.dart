@@ -10,6 +10,8 @@ import '../widgets/text_with_shadow.dart';
 import '../styles/input_styles.dart';
 import '../localization/login/localization.dart'; // Import the localization file
 import '../widgets/loading_widget.dart';
+import '../widgets/dialogs/forgot_password_dialog.dart';
+import '../widgets/dialogs/password_reset_flow_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   final String selectedLanguage;
@@ -102,8 +104,33 @@ class LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _forgotPassword() {
-    // Handle forgot password
+  void _forgotPassword() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => ForgotPasswordDialog(
+        selectedLanguage: _selectedLanguage,
+        darkenColor: darkenColor,
+        onEmailSubmitted: (email) async {
+          Navigator.of(dialogContext).pop(); // Close email input dialog
+          
+          // Show the password reset flow dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => PasswordResetFlowDialog(
+              email: email,
+              selectedLanguage: _selectedLanguage,
+              onClose: () {
+                Navigator.of(context).pop();
+                _usernameController.clear();
+                _passwordController.clear();
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _changeLanguage(String language) {
@@ -119,6 +146,11 @@ class LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  Color darkenColor(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0)).toColor();
   }
 
   @override

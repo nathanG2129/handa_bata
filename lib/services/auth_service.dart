@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:handabatamae/services/avatar_service.dart';
+import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/game_save_data.dart'; // Add this import
@@ -389,9 +390,19 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      print('\n🚪 SIGNING OUT');
+      
+      // 1. Clear all local data first
+      print('🧹 Clearing local data...');
+      await clearAllLocalData();
+      
+      // 2. Sign out from Firebase Auth
+      print('🔑 Signing out from Firebase Auth...');
       await _auth.signOut();
-      await clearAllLocalData(); // Clear all local data, not just guest details
+      
+      print('✅ Sign out completed successfully\n');
     } catch (e) {
+      print('❌ Error during sign out: $e');
       rethrow;
     }
   }
@@ -440,24 +451,48 @@ class AuthService {
 
   Future<void> deleteUserAccount() async {
     try {
+      print('\n🗑️ DELETING USER ACCOUNT');
       User? user = _auth.currentUser;
-      if (user != null) {
-        String? role = await getUserRole(user.uid);
-        
-        // Delete from Firestore regardless of role
-        await _deleteFirestoreData(user.uid);
-
-        // For guest accounts, we need to delete the anonymous auth user
-        if (role == 'guest') {
-          await user.delete();  // Delete the anonymous auth user
-        } else {
-          // For regular users, reauthenticate if needed and then delete
-          await user.delete();
-        }
-
-        // Clear all local data
-        await clearAllLocalData();
+      if (user == null) {
+        throw Exception('No user found to delete');
       }
+
+      String? role = await getUserRole(user.uid);
+      print('👤 User role: $role');
+      
+      // 1. Delete Firestore data first
+      print('🗑️ Deleting Firestore data...');
+      await _deleteFirestoreData(user.uid);
+      print('✅ Firestore data deleted');
+
+      // 2. Delete local data
+      print('🗑️ Clearing local data...');
+      await clearAllLocalData();
+      print('✅ Local data cleared');
+
+      // 3. Delete Firebase Auth user
+      print('🗑️ Deleting Firebase Auth user...');
+      if (role == 'guest') {
+        // For guest accounts, just delete the anonymous auth user
+        await user.delete();
+      } else {
+        // For regular users, we need to reauthenticate first
+        try {
+          // Try to delete immediately first
+          await user.delete();
+        } catch (e) {
+          print('⚠️ Reauthentication required: $e');
+          throw Exception('Please reauthenticate to delete your account');
+        }
+      }
+      print('✅ Firebase Auth user deleted');
+
+      // 4. Sign out to clear any remaining auth state
+      print('🚪 Signing out...');
+      await signOut();
+      print('✅ User signed out');
+
+      print('✅ Account deletion completed successfully\n');
     } catch (e) {
       print('❌ Error deleting user account: $e');
       rethrow;
@@ -467,17 +502,20 @@ class AuthService {
   // Helper method to handle Firestore deletion
   Future<void> _deleteFirestoreData(String uid) async {
     try {
+      print('🗑️ Starting Firestore data deletion');
+      
       // Define all subcollections to delete
       List<String> subcollections = [
         'ProfileData', 
         'GameSaveData',
-        'GameProgress', // Add GameProgress to the list
+        'GameProgress',
       ];
       
       WriteBatch batch = _firestore.batch();
       
       // Delete all documents in each subcollection
       for (String subcollection in subcollections) {
+        print('🗑️ Deleting $subcollection collection');
         QuerySnapshot subcollectionDocs = 
           await _firestore.collection('User').doc(uid).collection(subcollection).get();
         
@@ -492,7 +530,7 @@ class AuthService {
       // Commit the batch
       await _executeBatchWithRetry(batch);
       
-      print('🗑️ Deleted all user data including GameProgress collection');
+      print('✅ All Firestore data deleted successfully');
     } catch (e) {
       print('❌ Error deleting Firestore data: $e');
       rethrow;
@@ -756,29 +794,46 @@ class AuthService {
   /// Returns the updated User object or null if conversion fails.
   Future<User?> convertGuestToUser(String email, String password, String username, String nickname, String birthday) async {
     try {
+      print('\n🔄 CONVERTING GUEST TO USER');
       User? currentUser = _auth.currentUser;
       if (currentUser == null) return null;
 
-      // Get current guest profile and game save data
+      // Get current guest profile
       UserProfile? guestProfile = await getLocalUserProfile();
       if (guestProfile == null) return null;
 
-      // Use the provided nickname or generate one if not provided
-      String finalNickname = nickname.isEmpty ? _generateRandomNickname() : nickname;
+      print('👤 Current profile:');
+      print('Username: ${guestProfile.username}');
+      print('Nickname: ${guestProfile.nickname}');
 
-      // Store conversion data for later use after OTP verification
+      // Create updated profile with new user data but keep existing nickname
+      UserProfile updatedProfile = guestProfile.copyWith(
+        username: username,  // Set new username
+        email: email,       // Set email
+        birthday: birthday, // Set birthday
+        // Keep existing nickname instead of overwriting
+        nickname: guestProfile.nickname // Keep the nickname user has set
+      );
+
+      print('👤 Updated profile:');
+      print('Username: ${updatedProfile.username}');
+      print('Nickname: ${updatedProfile.nickname}');
+
+      // Store conversion data
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('pending_conversion', jsonEncode({
         'email': email,
         'password': password,
         'username': username,
-        'nickname': finalNickname,
+        'nickname': updatedProfile.nickname, // Store existing nickname
         'birthday': birthday,
-        'guestProfile': guestProfile.toMap(),
+        'guestProfile': updatedProfile.toMap(),
       }));
 
+      print('✅ Guest conversion prepared\n');
       return currentUser;
     } catch (e) {
+      print('❌ Error preparing guest conversion: $e');
       rethrow;
     }
   }
@@ -786,75 +841,64 @@ class AuthService {
   // Add new method to complete the conversion after OTP verification
   Future<User?> completeGuestConversion() async {
     try {
+      print('\n🔄 COMPLETING GUEST CONVERSION');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pendingConversionData = prefs.getString('pending_conversion');
-      if (pendingConversionData == null) return null;
+      if (pendingConversionData == null) {
+        throw Exception('No pending conversion found');
+      }
 
       Map<String, dynamic> conversionData = jsonDecode(pendingConversionData);
       User? currentUser = _auth.currentUser;
-      if (currentUser == null) return null;
+      if (currentUser == null) {
+        throw Exception('No current user found');
+      }
 
-      // Get the guest profile data which includes the nickname
-      Map<String, dynamic> guestProfileData = conversionData['guestProfile'];
-      UserProfile guestProfile = UserProfile.fromMap(guestProfileData);
+      // Get the updated profile data
+      Map<String, dynamic> profileData = conversionData['guestProfile'];
+      UserProfile updatedProfile = UserProfile.fromMap(profileData);
 
-      // Create email/password credentials and link account
+      print('👤 Converting profile:');
+      print('Username: ${updatedProfile.username}');
+      print('Nickname: ${updatedProfile.nickname}');
+
+      // Link email/password to anonymous account
       AuthCredential credential = EmailAuthProvider.credential(
         email: conversionData['email'],
         password: conversionData['password'],
       );
       await currentUser.linkWithCredential(credential);
 
-      // Update profile data, keeping the original nickname
-      UserProfile updatedProfile = UserProfile(
-        profileId: currentUser.uid,
-        username: conversionData['username'],
-        nickname: guestProfile.nickname,  // Keep the original nickname
-        avatarId: guestProfile.avatarId,
-        badgeShowcase: guestProfile.badgeShowcase,
-        bannerId: guestProfile.bannerId,
-        exp: guestProfile.exp,
-        expCap: guestProfile.expCap,
-        hasShownCongrats: guestProfile.hasShownCongrats,
-        level: guestProfile.level,
-        totalBadgeUnlocked: guestProfile.totalBadgeUnlocked,
-        totalStageCleared: guestProfile.totalStageCleared,
-        unlockedBadge: guestProfile.unlockedBadge,
-        unlockedBanner: guestProfile.unlockedBanner,
-        email: conversionData['email'],
-        birthday: conversionData['birthday'],
-      );
+      // Use UserProfileService for consistent updates
+      final userProfileService = UserProfileService();
+      
+      // Update profile using UserProfileService
+      await userProfileService.batchUpdateProfile({
+        'username': updatedProfile.username,
+        'email': updatedProfile.email,
+        'birthday': updatedProfile.birthday,
+        // Don't update nickname as it should be preserved
+      });
 
       // Update Firestore if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
         WriteBatch batch = _firestore.batch();
         
+        // Update main user document
         batch.set(_firestore.collection('User').doc(currentUser.uid), {
           'email': conversionData['email'],
           'role': 'user'
         });
 
-        batch.set(
-          _firestore
-              .collection('User')
-              .doc(currentUser.uid)
-              .collection('ProfileData')
-              .doc(currentUser.uid),
-          updatedProfile.toMap()
-        );
-
         await _executeBatchWithRetry(batch);
+        print('✅ Firestore updated');
       }
 
-      // Save updated profile locally
-      await saveUserProfileLocally(updatedProfile);
-      
-      // Clear pending conversion data
-      await prefs.remove('pending_conversion');
-
+      print('✅ Guest conversion completed successfully\n');
       return currentUser;
     } catch (e) {
+      print('❌ Error completing guest conversion: $e');
       rethrow;
     }
   }

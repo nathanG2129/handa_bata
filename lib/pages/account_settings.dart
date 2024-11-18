@@ -115,20 +115,42 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   Future<void> _deleteAccount() async {
     AuthService authService = AuthService();
     try {
+      print('\n🗑️ DELETING ACCOUNT');
+      setState(() => _isLoading = true);
+
+      // Delete account
       await authService.deleteUserAccount();
-      await authService.signOut();
+      print('✅ Account deleted successfully');
 
       if (!mounted) return;
+
+      // Navigate to splash page and clear navigation stack
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)),
+        MaterialPageRoute(
+          builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)
+        ),
         (Route<dynamic> route) => false,
       );
     } catch (e) {
+      print('❌ Error deleting account: $e');
       if (!mounted) return;
+
+      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e')),
+        SnackBar(
+          content: Text(
+            e.toString().contains('reauthenticate') 
+              ? PlayLocalization.translate('reauthRequired', widget.selectedLanguage)
+              : '${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e'
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -141,15 +163,24 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
             _userRole == 'guest' ? 'deleteGuestAccount' : 'deleteAccount', 
             widget.selectedLanguage
           )),
-          content: Text(PlayLocalization.translate(
-            _userRole == 'guest' ? 'deleteGuestAccountConfirmation' : 'deleteAccountConfirmation', 
-            widget.selectedLanguage
-          )),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(PlayLocalization.translate(
+                _userRole == 'guest' ? 'deleteGuestAccountConfirmation' : 'deleteAccountConfirmation', 
+                widget.selectedLanguage
+              )),
+              const SizedBox(height: 10),
+              Text(
+                PlayLocalization.translate('deleteAccountWarning', widget.selectedLanguage),
+                style: const TextStyle(color: Colors.red),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text(PlayLocalization.translate('cancel', widget.selectedLanguage)),
             ),
             ElevatedButton(

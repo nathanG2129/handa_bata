@@ -2288,20 +2288,30 @@ Future<void> updateTotalStagesCleared() async {
       }
 
       if (saveData != null) {
-        // Count stages with stars > 0 in either mode
+        // Count stages with stars > 0 in both modes separately
         List<int> normalStars = saveData.normalStageStars;
         List<int> hardStars = saveData.hardStageStars;
 
-        // Count unique cleared stages (stars > 0 in either mode)
+        // Count stages that are cleared in each mode
         for (int i = 0; i < normalStars.length; i++) {
-          if (normalStars[i] > 0 || hardStars[i] > 0) {
+          // Count normal mode clears
+          if (normalStars[i] > 0) {
             totalCleared++;
+            print('📊 Stage ${i + 1} normal mode cleared:');
+            print('   Normal stars: ${normalStars[i]}');
+          }
+          
+          // Count hard mode clears
+          if (hardStars[i] > 0) {
+            totalCleared++;
+            print('📊 Stage ${i + 1} hard mode cleared:');
+            print('   Hard stars: ${hardStars[i]}');
           }
         }
       }
     }
 
-    print('📊 Total stages cleared: $totalCleared');
+    print('📊 Total stages cleared (including both modes): $totalCleared');
 
     // Update locally first
     UserProfile updatedProfile = profile.copyWith(
@@ -2321,6 +2331,8 @@ Future<void> updateTotalStagesCleared() async {
           .doc(user.uid)
           .update({'totalStageCleared': totalCleared});
     }
+
+    print('✅ Total stages cleared updated successfully');
   } catch (e) {
     print('❌ Error updating total stages cleared: $e');
   }

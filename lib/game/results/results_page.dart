@@ -173,9 +173,9 @@ class ResultsPageState extends State<ResultsPage> {
     // Otherwise calculate stars normally
     double scorePercent = (score / maxScore) * 100;
     
-    // Calculate stars based on both accuracy and score percentage
+    // Calculate stars based on and score percentage
     if (scorePercent >= 90) return 3;
-    if (scorePercent >= 75) return 2;
+    if (scorePercent >= 60) return 2;
     if (scorePercent >= 0) return 1;
     return 0;
   }

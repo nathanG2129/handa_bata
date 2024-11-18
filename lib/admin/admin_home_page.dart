@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/services/badge_service.dart';
 import 'admin_pages/stage/admin_stage_page.dart';
 import 'admin_pages/avatar/admin_avatar_page.dart';
 import 'admin_pages/badge/admin_badge_page.dart';
@@ -23,11 +24,14 @@ class AdminHomePage extends StatelessWidget {
     );
   }
 
-  void _navigateToBadgePage(BuildContext context) {
-    Navigator.push(
+  void _navigateToBadgePage(BuildContext context) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AdminBadgePage()),
     );
+    
+    final badgeService = BadgeService();
+    await badgeService.fetchBadges(isAdmin: true);
   }
 
   void _navigateToBannerPage(BuildContext context) {
@@ -39,58 +43,53 @@ class AdminHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        textTheme: GoogleFonts.vt323TextTheme().apply(bodyColor: Colors.white, displayColor: Colors.white),
-      ),
-      home: Scaffold(
-        backgroundColor: const Color(0xFF381c64),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: SvgPicture.asset(
-                'assets/backgrounds/background.svg',
-                fit: BoxFit.cover,
-              ),
+    return Scaffold(
+      backgroundColor: const Color(0xFF381c64),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
             ),
-            Column(
-              children: [
-                const NavBar(),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AdminButton(
-                            text: 'Manage Avatars',
-                            onPressed: () => _navigateToAvatarPage(context),
-                          ),
-                          const SizedBox(height: 20),
-                          AdminButton(
-                            text: 'Manage Badges',
-                            onPressed: () => _navigateToBadgePage(context),
-                          ),
-                          const SizedBox(height: 20),
-                          AdminButton(
-                            text: 'Manage Banners',
-                            onPressed: () => _navigateToBannerPage(context),
-                          ),
-                          const SizedBox(height: 20),
-                          AdminButton(
-                            text: 'Manage Stages',
-                            onPressed: () => _navigateToStagePage(context),
-                          ),
-                        ],
-                      ),
+          ),
+          Column(
+            children: [
+              const NavBar(),
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AdminButton(
+                          text: 'Manage Avatars',
+                          onPressed: () => _navigateToAvatarPage(context),
+                        ),
+                        const SizedBox(height: 20),
+                        AdminButton(
+                          text: 'Manage Badges',
+                          onPressed: () => _navigateToBadgePage(context),
+                        ),
+                        const SizedBox(height: 20),
+                        AdminButton(
+                          text: 'Manage Banners',
+                          onPressed: () => _navigateToBannerPage(context),
+                        ),
+                        const SizedBox(height: 20),
+                        AdminButton(
+                          text: 'Manage Stages',
+                          onPressed: () => _navigateToStagePage(context),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

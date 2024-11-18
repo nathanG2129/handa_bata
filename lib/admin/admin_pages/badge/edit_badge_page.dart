@@ -32,17 +32,41 @@ class EditBadgeDialogState extends State<EditBadgeDialog> {
     final String description = _descriptionController.text;
 
     if (imageUrl.isNotEmpty && title.isNotEmpty && description.isNotEmpty) {
-      final Map<String, dynamic> updatedBadge = {
-        'id': id,
-        'img': imageUrl,
-        'title': title,
-        'description': description,
-      };
-      await _badgeService.updateBadge(id, updatedBadge);
+      try {
+        final Map<String, dynamic> updatedBadge = {
+          'id': id,
+          'img': imageUrl,
+          'title': title,
+          'description': description,
+        };
+        await _badgeService.updateBadge(id, updatedBadge);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      Navigator.pop(context);
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error updating badge: $e',
+              style: GoogleFonts.vt323(fontSize: 20),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please fill in all fields',
+            style: GoogleFonts.vt323(fontSize: 20),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 

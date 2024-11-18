@@ -445,15 +445,34 @@ class BadgeService {
     try {
       final cacheKey = 'all_badges${isAdmin ? '_admin' : ''}';
       
-      // Check batch cache first
+      // For admin, always fetch from server to ensure fresh data
+      if (isAdmin) {
+        DocumentSnapshot snapshot = await _badgeDoc.get();
+        if (!snapshot.exists) return [];
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> badges = 
+            data['badges'] != null ? List<Map<String, dynamic>>.from(data['badges']) : [];
+            
+        // Update both caches
+        _batchCache[cacheKey] = CachedBadge({'badges': badges}, DateTime.now());
+        for (var badge in badges) {
+          _addToCache(badge['id'], badge);
+        }
+        
+        // Notify stream listeners
+        _badgeUpdateController.add(badges);
+        
+        return badges;
+      }
+
+      // Non-admin flow remains the same
       if (_batchCache.containsKey(cacheKey) && _batchCache[cacheKey]!.isValid) {
         return List<Map<String, dynamic>>.from(_batchCache[cacheKey]!.data['badges']);
       }
 
-      // Get from local storage first
       List<Map<String, dynamic>> localBadges = await _getBadgesFromLocal();
       
-      // If local storage is empty, try fetching from server
       if (localBadges.isEmpty) {
         var connectivityResult = await Connectivity().checkConnectivity();
         if (connectivityResult != ConnectivityResult.none) {
@@ -463,7 +482,6 @@ class BadgeService {
             localBadges = data['badges'] != null ? 
                 List<Map<String, dynamic>>.from(data['badges']) : [];
             
-            // Update caches and local storage
             _batchCache[cacheKey] = CachedBadge({'badges': localBadges}, DateTime.now());
             for (var badge in localBadges) {
               _addToCache(badge['id'], badge);
@@ -611,9 +629,12 @@ class BadgeService {
         'lastModified': FieldValue.serverTimestamp(),
       });
 
-      // Update cache
-      _addToCache(newId, badge);
-      _badgeUpdateController.add(badges);
+      // Clear all caches to force fresh fetch
+      _badgeCache.clear();
+      _batchCache.clear();
+      
+      // Notify stream with fresh data
+      _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
       print('Error adding badge: $e');
       rethrow;
@@ -642,9 +663,12 @@ class BadgeService {
         'lastModified': FieldValue.serverTimestamp(),
       });
 
-      // Update cache
-      _addToCache(id, updatedBadge);
-      _badgeUpdateController.add(badges);
+      // Clear all caches to force fresh fetch
+      _badgeCache.clear();  // Clear entire cache instead of just one entry
+      _batchCache.clear();
+      
+      // Notify stream with fresh data
+      _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
       print('Error updating badge: $e');
       rethrow;
@@ -669,10 +693,12 @@ class BadgeService {
         'lastModified': FieldValue.serverTimestamp(),
       });
 
-      // Update cache
-      _badgeCache.remove(id);
-      _batchCache.clear(); // Clear batch cache as it might contain deleted badge
-      _badgeUpdateController.add(badges);
+      // Clear all caches to force fresh fetch
+      _badgeCache.clear();  // Clear entire cache instead of just one entry
+      _batchCache.clear();
+      
+      // Notify stream with fresh data
+      _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
       print('Error deleting badge: $e');
       rethrow;
@@ -1078,5 +1104,16 @@ class BadgeService {
       print('Error getting current version: $e');
       return null;
     }
+  }
+
+  // Add this method to verify stream functionality
+  void debugStreamState() {
+    print('🔍 Stream has listeners: ${_badgeUpdateController.hasListener}');
+    print('🔍 Stream is closed: ${_badgeUpdateController.isClosed}');
+  }
+
+  // Make sure to close the stream controller
+  void dispose() {
+    _badgeUpdateController.close();
   }
 }

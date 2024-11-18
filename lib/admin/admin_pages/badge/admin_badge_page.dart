@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,25 +11,102 @@ class AdminBadgePage extends StatefulWidget {
   const AdminBadgePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _AdminBadgePageState createState() => _AdminBadgePageState();
 }
 
 class _AdminBadgePageState extends State<AdminBadgePage> {
   final BadgeService _badgeService = BadgeService();
   List<Map<String, dynamic>> _badges = [];
+  StreamSubscription? _badgeSubscription;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchBadges();
+    _initializeData();
   }
 
-  void _fetchBadges() async {
-    List<Map<String, dynamic>> badges = await _badgeService.fetchBadges(isAdmin: true);
+  Future<void> _initializeData() async {
     setState(() {
-      _badges = badges;
+      _isLoading = true;
     });
+
+    _setupBadgeStream();
+    
+    await _fetchBadges();
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _setupBadgeStream() {
+    _badgeSubscription?.cancel();
+    
+    _badgeSubscription = _badgeService.badgeUpdates.listen(
+      (updatedBadges) {
+        print('📝 Received badge update. Count: ${updatedBadges.length}');
+        if (mounted) {
+          setState(() {
+            _badges = List<Map<String, dynamic>>.from(updatedBadges);
+          });
+        }
+      },
+      onError: (error) {
+        print('❌ Error in badge stream: $error');
+      },
+    );
+
+    _badgeService.debugStreamState();
+  }
+
+  Future<void> _fetchBadges() async {
+    try {
+      final badges = await _badgeService.fetchBadges(isAdmin: true);
+      if (mounted) {
+        setState(() {
+          _badges = List<Map<String, dynamic>>.from(badges);
+        });
+      }
+    } catch (e) {
+      print('❌ Error fetching badges: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching badges: $e',
+                style: GoogleFonts.vt323(fontSize: 20)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _navigateToEditBadge(Map<String, dynamic> badge) async {
+    final result = await showDialog(
+      context: context,
+      builder: (BuildContext context) => EditBadgeDialog(badge: badge),
+    );
+
+    if (result == true) {
+      _badgeService.debugStreamState();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Badge updated successfully',
+                style: GoogleFonts.vt323(fontSize: 20)),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _badgeSubscription?.cancel();
+    super.dispose();
   }
 
   void _showAddBadgeDialog() {
@@ -36,17 +114,6 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
       context: context,
       builder: (BuildContext context) {
         return const AddBadgeDialog();
-      },
-    ).then((_) {
-      _fetchBadges();
-    });
-  }
-
-  void _navigateToEditBadge(Map<String, dynamic> badge) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return EditBadgeDialog(badge: badge);
       },
     ).then((_) {
       _fetchBadges();
@@ -63,29 +130,38 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        textTheme: GoogleFonts.vt323TextTheme().apply(bodyColor: Colors.white, displayColor: Colors.white),
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Manage Badges', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
-          backgroundColor: const Color(0xFF381c64),
-          iconTheme: const IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Manage Badges', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
         backgroundColor: const Color(0xFF381c64),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: SvgPicture.asset(
-                'assets/backgrounds/background.svg',
-                fit: BoxFit.cover,
-              ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _initializeData,
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFF381c64),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
             ),
+          ),
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+          else
             SingleChildScrollView(
               child: Column(
                 children: [
@@ -110,14 +186,14 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
                       backgroundColor: const Color(0xFF381c64),
                       shadowColor: Colors.transparent,
                     ),
-                    child: Text('Add Badge', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
+                    child: Text('Add Badge', 
+                        style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
                   ),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

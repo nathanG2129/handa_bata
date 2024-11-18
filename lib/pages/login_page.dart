@@ -9,6 +9,7 @@ import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '../styles/input_styles.dart';
 import '../localization/login/localization.dart'; // Import the localization file
+import '../widgets/loading_widget.dart';
 
 class LoginPage extends StatefulWidget {
   final String selectedLanguage;
@@ -27,6 +28,7 @@ class LoginPageState extends State<LoginPage> {
   String _selectedLanguage = 'en'; // Add language selection
   int _loginAttempts = 0;
   DateTime? _lastLoginAttempt;
+  bool _isLoading = false;
 
     @override
   void initState() {
@@ -48,15 +50,20 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
+    if (_isLoading) return; // Prevent multiple login attempts
+    
     if (_isRateLimited()) {
       _showRateLimitError();
       return;
     }
 
-    setState(() => _loginAttempts++);
-    _lastLoginAttempt = DateTime.now();
-    
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _loginAttempts++;
+      });
+      _lastLoginAttempt = DateTime.now();
+
       final username = _usernameController.text;
       final password = _passwordController.text;
 
@@ -70,6 +77,10 @@ class LoginPageState extends State<LoginPage> {
         }
       } catch (e) {
         _showSnackBar('Error: $e');
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -131,190 +142,199 @@ class LoginPageState extends State<LoginPage> {
     ).value;
 
     return Scaffold(
-      body: ResponsiveBreakpoints(
-        breakpoints: const [
-          Breakpoint(start: 0, end: 450, name: MOBILE),
-          Breakpoint(start: 451, end: 800, name: TABLET),
-          Breakpoint(start: 801, end: 1920, name: DESKTOP),
-          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-        ],
-        child: MaxWidthBox(
-          maxWidth: 1200,
-          child: ResponsiveScaledBox(
-            width: ResponsiveValue<double>(context, conditionalValues: [
-              const Condition.equals(name: MOBILE, value: 450),
-              const Condition.between(start: 800, end: 1100, value: 800),
-              const Condition.between(start: 1000, end: 1200, value: 1000),
-            ]).value,
-            child: Stack(
-              children: [
-                SvgPicture.asset(
-                  'assets/backgrounds/background.svg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(40.0),
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Column(
-                        children: [
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                const SizedBox(height: 120),
-                                TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
-                                Transform.translate(
-                                  offset: const Offset(0, -20.0),
-                                  child: Column(
-                                    children: [
-                                      TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
-                                      const SizedBox(height: 30),
-                                      Text(
-                                        LoginLocalization.translate('welcome', _selectedLanguage),
-                                        style: GoogleFonts.vt323(
-                                          fontSize: 30,
-                                          color: Colors.white,
-                                          shadows: [
-                                            const Shadow(
-                                              offset: Offset(0, 3.0),
-                                              blurRadius: 0.0,
-                                              color: Colors.black,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 40),
-                                TextFormField(
-                                  controller: _usernameController,
-                                  decoration: InputStyles.inputDecoration(LoginLocalization.translate('email', _selectedLanguage)),
-                                  style: const TextStyle(color: Colors.white), // Changed text color to white
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your username';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
-                                  style: const TextStyle(color: Colors.white), // Changed text color to white
-                                  obscureText: true,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          ResponsiveBreakpoints(
+            breakpoints: const [
+              Breakpoint(start: 0, end: 450, name: MOBILE),
+              Breakpoint(start: 451, end: 800, name: TABLET),
+              Breakpoint(start: 801, end: 1920, name: DESKTOP),
+              Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+            ],
+            child: MaxWidthBox(
+              maxWidth: 1200,
+              child: ResponsiveScaledBox(
+                width: ResponsiveValue<double>(context, conditionalValues: [
+                  const Condition.equals(name: MOBILE, value: 450),
+                  const Condition.between(start: 800, end: 1100, value: 800),
+                  const Condition.between(start: 1000, end: 1200, value: 1000),
+                ]).value,
+                child: Stack(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/backgrounds/background.svg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(40.0),
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Column(
+                            children: [
+                              Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
-                                    TextButton(
-                                      onPressed: _forgotPassword,
-                                      child: Text(
-                                        LoginLocalization.translate('forgot_password', _selectedLanguage),
-                                        style: const TextStyle(color: Colors.white),
+                                    const SizedBox(height: 120),
+                                    TextWithShadow(text: 'Handa Bata', fontSize: handaBataFontSize),
+                                    Transform.translate(
+                                      offset: const Offset(0, -20.0),
+                                      child: Column(
+                                        children: [
+                                          TextWithShadow(text: 'Mobile', fontSize: mobileFontSize),
+                                          const SizedBox(height: 30),
+                                          Text(
+                                            LoginLocalization.translate('welcome', _selectedLanguage),
+                                            style: GoogleFonts.vt323(
+                                              fontSize: 30,
+                                              color: Colors.white,
+                                              shadows: [
+                                                const Shadow(
+                                                  offset: Offset(0, 3.0),
+                                                  blurRadius: 0.0,
+                                                  color: Colors.black,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                    ),
+                                    const SizedBox(height: 40),
+                                    TextFormField(
+                                      controller: _usernameController,
+                                      decoration: InputStyles.inputDecoration(LoginLocalization.translate('email', _selectedLanguage)),
+                                      style: const TextStyle(color: Colors.white), // Changed text color to white
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter your username';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextFormField(
+                                      controller: _passwordController,
+                                      decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
+                                      style: const TextStyle(color: Colors.white), // Changed text color to white
+                                      obscureText: true,
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter your password';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        TextButton(
+                                          onPressed: _forgotPassword,
+                                          child: Text(
+                                            LoginLocalization.translate('forgot_password', _selectedLanguage),
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    CustomButton(
+                                      text: LoginLocalization.translate('login_button', _selectedLanguage),
+                                      color: const Color(0xFF351B61),
+                                      textColor: Colors.white,
+                                      onTap: _login,
+                                      width: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: MediaQuery.of(context).size.width * 0.8,
+                                        conditionalValues: [
+                                          Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
+                                          Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
+                                        ],
+                                      ).value,
+                                      height: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: 55,
+                                        conditionalValues: [
+                                          const Condition.smallerThan(name: MOBILE, value: 45),
+                                          const Condition.largerThan(name: MOBILE, value: 65),
+                                        ],
+                                      ).value,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    CustomButton(
+                                      text: LoginLocalization.translate('sign_up', _selectedLanguage),
+                                      color: const Color(0xFFF1B33A),
+                                      textColor: Colors.black,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => RegistrationPage(selectedLanguage: _selectedLanguage)),
+                                        );
+                                      },
+                                      width: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: MediaQuery.of(context).size.width * 0.8,
+                                        conditionalValues: [
+                                          Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
+                                          Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
+                                        ],
+                                      ).value,
+                                      height: ResponsiveValue<double>(
+                                        context,
+                                        defaultValue: 55,
+                                        conditionalValues: [
+                                          const Condition.smallerThan(name: MOBILE, value: 45),
+                                          const Condition.largerThan(name: MOBILE, value: 65),
+                                        ],
+                                      ).value,
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
-                                CustomButton(
-                                  text: LoginLocalization.translate('login_button', _selectedLanguage),
-                                  color: const Color(0xFF351B61),
-                                  textColor: Colors.white,
-                                  onTap: _login,
-                                  width: ResponsiveValue<double>(
-                                    context,
-                                    defaultValue: MediaQuery.of(context).size.width * 0.8,
-                                    conditionalValues: [
-                                      Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
-                                      Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                    ],
-                                  ).value,
-                                  height: ResponsiveValue<double>(
-                                    context,
-                                    defaultValue: 55,
-                                    conditionalValues: [
-                                      const Condition.smallerThan(name: MOBILE, value: 45),
-                                      const Condition.largerThan(name: MOBILE, value: 65),
-                                    ],
-                                  ).value,
-                                ),
-                                const SizedBox(height: 20),
-                                CustomButton(
-                                  text: LoginLocalization.translate('sign_up', _selectedLanguage),
-                                  color: const Color(0xFFF1B33A),
-                                  textColor: Colors.black,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => RegistrationPage(selectedLanguage: _selectedLanguage)),
-                                    );
-                                  },
-                                  width: ResponsiveValue<double>(
-                                    context,
-                                    defaultValue: MediaQuery.of(context).size.width * 0.8,
-                                    conditionalValues: [
-                                      Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.7),
-                                      Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                    ],
-                                  ).value,
-                                  height: ResponsiveValue<double>(
-                                    context,
-                                    defaultValue: 55,
-                                    conditionalValues: [
-                                      const Condition.smallerThan(name: MOBILE, value: 45),
-                                      const Condition.largerThan(name: MOBILE, value: 65),
-                                    ],
-                                  ).value,
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  top: 60,
-                  right: 35,
-                  child: DropdownButton<String>(
-                    icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
-                    underline: Container(), // Remove underline
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'en',
-                        child: Text('English'),
+                    Positioned(
+                      top: 60,
+                      right: 35,
+                      child: DropdownButton<String>(
+                        icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
+                        underline: Container(), // Remove underline
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text('English'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'fil',
+                            child: Text('Filipino'),
+                          ),
+                        ],
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            _changeLanguage(newValue);
+                          }
+                        },
                       ),
-                      DropdownMenuItem(
-                        value: 'fil',
-                        child: Text('Filipino'),
-                      ),
-                    ],
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        _changeLanguage(newValue);
-                      }
-                    },
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_isLoading)
+            Container(
+              color: Colors.black54,
+              child: const LoadingWidget(),
+            ),
+        ],
       ),
     );
   }

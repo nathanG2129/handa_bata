@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/register_page.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/widgets/dialogs/change_password_dialog.dart';
 import '../localization/play/localization.dart';
+import 'package:handabatamae/services/auth_service.dart';
 
 class AccountSettingsContent extends StatelessWidget {
   final UserProfile userProfile;
@@ -45,19 +47,47 @@ class AccountSettingsContent extends StatelessWidget {
   }
 
   Future<void> _handlePasswordChange(BuildContext context) async {
-    try {
-      print('\n🔄 CHANGING PASSWORD');
-      // Password change logic will be implemented later
-      print('⚠️ Password change not implemented yet');
-    } catch (e) {
-      print('❌ Error changing password: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(
-            '${PlayLocalization.translate('errorChangingPassword', selectedLanguage)} $e'
-          )),
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return ChangePasswordDialog(
+          selectedLanguage: selectedLanguage,
+          onPasswordChanged: (currentPassword, newPassword) => 
+              _updatePassword(context, currentPassword, newPassword),
+          darkenColor: darkenColor,
         );
-      }
+      },
+    );
+  }
+
+  Future<void> _updatePassword(BuildContext context, String currentPassword, String newPassword) async {
+    try {
+      print('\n🔄 UPDATING PASSWORD');
+      AuthService authService = AuthService();
+      await authService.changePassword(currentPassword, newPassword);
+      
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            PlayLocalization.translate('passwordChangeSuccess', selectedLanguage)
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+      print('✅ Password update completed\n');
+    } catch (e) {
+      print('❌ Error updating password: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${PlayLocalization.translate('errorChangingPassword', selectedLanguage)} $e'
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

@@ -377,8 +377,52 @@ class AuthService {
       }
 
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return result.user;
+      User? user = result.user;
+      
+      if (user != null) {
+        print('🔄 Fetching game save data after login');
+        
+        // Get categories and fetch game save data for each
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+        
+        for (var category in categories) {
+          String categoryId = category['id'];
+          print('📥 Fetching game save data for category: $categoryId');
+          
+          try {
+            // Get game save data from Firestore
+            DocumentSnapshot saveDoc = await _firestore
+                .collection('User')
+                .doc(user.uid)
+                .collection('GameSaveData')
+                .doc(categoryId)
+                .get();
+
+            if (saveDoc.exists) {
+              // Convert and save locally
+              GameSaveData gameSaveData = GameSaveData.fromMap(
+                saveDoc.data() as Map<String, dynamic>
+              );
+              await saveGameSaveDataLocally(categoryId, gameSaveData);
+              print('✅ Saved game data for category: $categoryId');
+            } else {
+              print('⚠️ No existing game data for category: $categoryId');
+              // Create initial game save data
+              List<Map<String, dynamic>> stages = 
+                  await _stageService.fetchStages(defaultLanguage, categoryId);
+              GameSaveData initialData = await _createInitialGameSaveData(stages);
+              await saveGameSaveDataLocally(categoryId, initialData);
+              print('✅ Created initial game data for category: $categoryId');
+            }
+          } catch (e) {
+            print('❌ Error fetching game data for $categoryId: $e');
+          }
+        }
+      }
+
+      return user;
     } catch (e) {
+      print('❌ Error during sign in: $e');
       return null;
     }
   }
@@ -2045,6 +2089,35 @@ class AuthService {
   Future<void> triggerManualSync() async {
     print('🔄 Manual sync triggered');
     await processOfflineQueue(forceSync: true);
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    try {
+      print('\n🔐 CHANGING PASSWORD');
+      User? user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No user found or user has no email');
+      }
+
+      // Create credentials with current password
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // Reauthenticate
+      print('🔄 Reauthenticating user');
+      await user.reauthenticateWithCredential(credential);
+
+      // Change password
+      print('🔄 Updating password');
+      await user.updatePassword(newPassword);
+      
+      print('✅ Password changed successfully\n');
+    } catch (e) {
+      print('❌ Error changing password: $e');
+      rethrow;
+    }
   }
 }
 

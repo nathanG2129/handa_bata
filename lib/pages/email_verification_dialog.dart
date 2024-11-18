@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../pages/main/main_page.dart';
 import '../widgets/buttons/button_3d.dart';
 import '../widgets/loading_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   final String email;
@@ -119,29 +120,64 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
             });
 
         if (result.data['success']) {
-          final user = await _authService.registerWithEmailAndPassword(
-            widget.email,
-            widget.password!,
-            widget.username!,
-            '',
-            widget.birthday!,
-          );
+          try {
+            // Check if this is a guest conversion
+            User? currentUser = FirebaseAuth.instance.currentUser;
+            
+            if (currentUser != null) {
+              String? role = await _authService.getUserRole(currentUser.uid);
+              
+              if (role == 'guest') {
+                // Convert guest to regular user
+                await _authService.convertGuestToUser(
+                  widget.email,
+                  widget.password!,
+                  widget.username!,
+                  '',  // Nickname will be preserved from guest profile
+                  widget.birthday!,
+                );
+              }
+            } else {
+              // Create new user account
+              final user = await _authService.registerWithEmailAndPassword(
+                widget.email,
+                widget.password!,
+                widget.username!,
+                '',  // Empty nickname, will be generated
+                widget.birthday!,
+              );
+              
+              if (user == null) {
+                throw Exception('Failed to create account');
+              }
+            }
 
-          if (user != null && mounted) {
+            if (!mounted) return;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
               ),
             );
+          } catch (e) {
+            // Handle specific errors
+            if (e.toString().contains('Username is already taken')) {
+              throw Exception('This username is no longer available. Please go back and choose another.');
+            }
+            rethrow;
           }
+        } else {
+          throw Exception('Invalid verification code');
         }
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

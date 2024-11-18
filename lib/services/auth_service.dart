@@ -126,7 +126,17 @@ class AuthService {
 
   Future<User?> registerWithEmailAndPassword(String email, String password, String username, String nickname, String birthday, {String role = 'user'}) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      // Check username availability first
+      bool isTaken = await isUsernameTaken(username);
+      if (isTaken) {
+        throw Exception('Username is already taken');
+      }
+
+      // Create the user in Firebase Auth first
+      UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email, 
+        password: password
+      );
       User? user = result.user;
 
       if (user != null) {
@@ -138,6 +148,7 @@ class AuthService {
         int bannerCount = banners.length;
         int badgeCount = badges.length;
         
+        // Create user profile
         UserProfile userProfile = UserProfile(
           profileId: user.uid,
           username: username,
@@ -151,41 +162,53 @@ class AuthService {
           level: 1,
           totalBadgeUnlocked: 0,
           totalStageCleared: 0,
-          unlockedBadge: List<int>.filled(badgeCount, 0), // Dynamic size based on badge count
+          unlockedBadge: List<int>.filled(badgeCount, 0),
           unlockedBanner: List<int>.filled(bannerCount, 0),
           email: email,
           birthday: birthday,
         );
 
-        await _firestore.collection('User').doc(user.uid).collection('ProfileData').doc(user.uid).set(userProfile.toMap());
-
-        // Fetch categories and create gameSaveData documents
-        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
-        CollectionReference gameSaveDataRef = _firestore.collection('User').doc(user.uid).collection('GameSaveData');
-        
-        for (Map<String, dynamic> category in categories) {
-          // Fetch stages for the category
-          List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
-          
-          // Create initial GameSaveData using the new structure
-          GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
-          
-          // Save to Firestore
-          await gameSaveDataRef.doc(category['id']).set(gameSaveData.toMap());
-        }
-
+        // Create user document in Firestore
         await _firestore.collection('User').doc(user.uid).set({
           'email': email,
           'role': role,
         });
 
-        // Save user profile locally
-        await saveUserProfileLocally(userProfile);
-      }
+        // Create profile data
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .set(userProfile.toMap());
 
-      return user;
-    } catch (e) {
+        // Save profile locally
+        await saveUserProfileLocally(userProfile);
+
+        // Initialize game save data for each category
+        List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+        for (var category in categories) {
+          List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
+          GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
+          
+          // Save to Firestore
+          await _firestore
+              .collection('User')
+              .doc(user.uid)
+              .collection('GameSaveData')
+              .doc(category['id'])
+              .set(gameSaveData.toMap());
+            
+          // Save locally
+          await saveGameSaveDataLocally(category['id'], gameSaveData);
+        }
+
+        return user;
+      }
       return null;
+    } catch (e) {
+      print('Error in registerWithEmailAndPassword: $e');
+      rethrow;
     }
   }
 
@@ -850,6 +873,12 @@ class AuthService {
       User? currentUser = _auth.currentUser;
       if (currentUser == null) return null;
 
+      // Check username availability first
+      bool isTaken = await isUsernameTaken(username);
+      if (isTaken) {
+        throw Exception('Username is already taken');
+      }
+
       // Get current guest profile
       UserProfile? guestProfile = await getLocalUserProfile();
       if (guestProfile == null) return null;
@@ -1356,13 +1385,17 @@ class AuthService {
   /// Checks if a username is already taken
   Future<bool> isUsernameTaken(String username) async {
     try {
+      print('🔍 Checking if username "$username" is taken');
       QuerySnapshot querySnapshot = await _firestore
           .collectionGroup('ProfileData')
           .where('username', isEqualTo: username)
           .get();
       
-      return querySnapshot.docs.isNotEmpty;
+      bool isTaken = querySnapshot.docs.isNotEmpty;
+      print(isTaken ? '❌ Username is taken' : '✅ Username is available');
+      return isTaken;
     } catch (e) {
+      print('❌ Error checking username availability: $e');
       rethrow;
     }
   }

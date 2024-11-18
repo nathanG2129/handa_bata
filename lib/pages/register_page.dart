@@ -11,7 +11,6 @@ import '../widgets/buttons/custom_button.dart'; // Import the CustomButton
 import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -55,6 +54,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
     if (_formKey.currentState!.validate() && _isPrivacyPolicyAccepted) {
       try {
+        // Check if username is taken first
         bool isUsernameTaken = await AuthService().isUsernameTaken(_usernameController.text);
         
         if (isUsernameTaken) {
@@ -71,18 +71,6 @@ class RegistrationPageState extends State<RegistrationPage> {
             );
           }
           return;
-        }
-
-        String? role = await AuthService().getUserRole(FirebaseAuth.instance.currentUser?.uid ?? '');
-        
-        if (role == 'guest') {
-          await AuthService().convertGuestToUser(
-            _emailController.text,
-            _passwordController.text,
-            _usernameController.text,
-            '',
-            _birthdayController.text,
-          );
         }
 
         setState(() => _isRegistering = false);

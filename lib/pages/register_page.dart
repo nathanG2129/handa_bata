@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/email_verification_dialog.dart';
+import 'package:handabatamae/pages/main/main_page.dart';
 import '../helpers/validation_helpers.dart'; // Import the validation helpers
 import '../helpers/widget_helpers.dart'; // Import the widget helpers
 import '../helpers/date_helpers.dart'; // Import the date helpers
@@ -12,6 +13,7 @@ import '../widgets/text_with_shadow.dart'; // Import the TextWithShadow
 import 'package:responsive_framework/responsive_framework.dart';
 import '../localization/register/localization.dart'; // Import the localization file
 import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String selectedLanguage; // Add this line
@@ -44,6 +46,36 @@ class RegistrationPageState extends State<RegistrationPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage; // Initialize with the passed language
+    _checkUserStatus();
+  }
+
+  Future<void> _checkUserStatus() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        String? role = await AuthService().getUserRole(currentUser.uid);
+        
+        // If user is already registered (not a guest), redirect to main page
+        if (role != 'guest') {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => MainPage(selectedLanguage: _selectedLanguage),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error checking user status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _register() async {

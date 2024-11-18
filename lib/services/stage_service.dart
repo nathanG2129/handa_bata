@@ -240,7 +240,14 @@ final Map<String, CachedStage> _categoryCache = {};
         print('📦 Memory cache expired for $cacheKey');
       }
 
-      // Then check local storage
+      // Add this check for prefetch
+      bool isPrefetching = StackTrace.current.toString().contains('_prefetchData');
+      if (isPrefetching) {
+        print('🔄 Prefetch detected, forcing fresh data fetch');
+        return await _fetchFreshStages(language, categoryId);
+      }
+
+      // Rest of the existing code...
       print('🔍 Checking local storage for stages');
       List<Map<String, dynamic>> localStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
       if (localStages.isNotEmpty) {
@@ -256,48 +263,13 @@ final Map<String, CachedStage> _categoryCache = {};
         return localStages;
       }
       
-      // Only fetch from server if we have no local data
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult != ConnectivityResult.none) {
-        print('🌐 Fetching stages from server');
-        QuerySnapshot snapshot = await _firestore
-            .collection('Game')
-            .doc('Stage')
-            .collection(language)
-            .doc(categoryId)
-            .collection('stages')
-            .get();
-
-        List<Map<String, dynamic>> stages = snapshot.docs.map((doc) {
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          return {
-            'stageName': doc.id,
-            ...data,
-          };
-        }).toList();
-
-        // Update both caches
-        _stageCache[cacheKey] = CachedStage(
-          data: {'stages': stages},
-          timestamp: DateTime.now(),
-          priority: StagePriority.HIGH
-        );
-        
-        await _storeStagesLocally(stages, categoryId);
-        print('✅ Cached ${stages.length} stages in memory and local storage');
-        
-        return stages;
-      }
-
-      // If offline and no local data
-      print('⚠️ No stages available - offline and no local cache');
-      return [];
+      return await _fetchFreshStages(language, categoryId);
     } catch (e) {
       print('❌ Error in fetchStages: $e');
-      // Final fallback to local storage
       return await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
     }
   }
+
 
   // Add these constants at the top of StageService
   static const String LOCAL_STORAGE_VERSION = 'stage_storage_v1_';
@@ -812,60 +784,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     _categoryUpdateController.close();
   }
 
-  // Admin Methods
-  Future<void> addStage(String language, String categoryId, String stageName, Map<String, dynamic> stageData) async {
-    try {
-      // Validate stage data
-      if (!_validateStageData(stageData)) {
-        throw Exception('Invalid stage data');
-      }
-
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        // Add stage to Firestore
-        await _firestore
-            .collection('Game')
-            .doc('Stage')
-            .collection(language)
-            .doc(categoryId)
-            .collection('stages')
-            .doc(stageName)
-            .set({
-          ...stageData,
-          'lastModified': FieldValue.serverTimestamp(),
-        });
-
-        // Update local cache
-        String cacheKey = '${language}_${categoryId}_stages';
-        if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
-          stages.add({
-            'stageName': stageName,
-            ...stageData,
-          });
-          _stageCache[cacheKey] = CachedStage(
-            data: {'stages': stages},
-            timestamp: DateTime.now(),
-            priority: StagePriority.HIGH
-          );
-        }
-
-        await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
-      } else {
-        // Queue for offline sync
-        await addOfflineChange('add', {
-          'language': language,
-          'categoryId': categoryId,
-          'stageName': stageName,
-          'data': stageData,
-        });
-      }
-    } catch (e) {
-      print('Error adding stage: $e');
-      await _logStageOperation('add_stage_error', categoryId, e.toString());
-      rethrow;
-    }
-  }
 
   bool _validateStageData(Map<String, dynamic> data) {
     // Debug print to see what data we're getting
@@ -878,108 +796,28 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
            data.containsKey('totalQuestions');     // Total questions might be updated separately
   }
 
-  Future<void> updateStage(String language, String categoryId, String stageName, Map<String, dynamic> updatedData) async {
+  Future<void> updateCategory(String language, String categoryId, Map<String, dynamic> updatedData) async {
     try {
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (!_validateCategoryData(updatedData)) {
+        throw Exception('Invalid category data');
+      }
+
+      var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
         // Update in Firestore
-        await _firestore
-            .collection('Game')
-            .doc('Stage')
+        await _stageDoc
             .collection(language)
             .doc(categoryId)
-            .collection('stages')
-            .doc(stageName)
             .update({
           ...updatedData,
           'lastModified': FieldValue.serverTimestamp(),
         });
 
-        // Update local cache
-        String cacheKey = '${language}_${categoryId}_stages';
-        if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
-          int index = stages.indexWhere((s) => s['stageName'] == stageName);
-          if (index != -1) {
-            stages[index] = {
-              ...stages[index],
-              ...updatedData,
-            };
-            _stageCache[cacheKey] = CachedStage(
-              data: {'stages': stages},
-              timestamp: DateTime.now(),
-              priority: StagePriority.HIGH
-            );
-          }
-        }
-
-        await _logStageOperation('update_stage', categoryId, 'Updated stage: $stageName');
-      } else {
-        // Queue for offline sync
-        await addOfflineChange('update', {
-          'language': language,
-          'categoryId': categoryId,
-          'stageName': stageName,
-          'data': updatedData,
-        });
-      }
-    } catch (e) {
-      print('Error updating stage: $e');
-      await _logStageOperation('update_stage_error', categoryId, e.toString());
-      rethrow;
-    }
-  }
-
-  Future<void> deleteStage(String language, String categoryId, String stageName) async {
-    try {
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        // Delete from Firestore
+        // Update server timestamp for sync checking
         await _firestore
             .collection('Game')
             .doc('Stage')
-            .collection(language)
-            .doc(categoryId)
-            .collection('stages')
-            .doc(stageName)
-            .delete();
-
-        // Update local cache
-        String cacheKey = '${language}_${categoryId}_stages';
-        if (_stageCache.containsKey(cacheKey)) {
-          List<Map<String, dynamic>> stages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
-          stages.removeWhere((s) => s['stageName'] == stageName);
-          _stageCache[cacheKey] = CachedStage(
-            data: {'stages': stages},
-            timestamp: DateTime.now(),
-            priority: StagePriority.HIGH
-          );
-        }
-
-        await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
-      } else {
-        // Queue for offline sync
-        await addOfflineChange('delete', {
-          'language': language,
-          'categoryId': categoryId,
-          'stageName': stageName,
-        });
-      }
-    } catch (e) {
-      print('Error deleting stage: $e');
-      await _logStageOperation('delete_stage_error', categoryId, e.toString());
-      rethrow;
-    }
-  }
-
-  Future<void> updateCategory(String language, String categoryId, Map<String, dynamic> updatedData) async {
-    try {
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        await _stageDoc
-            .collection(language)
-            .doc(categoryId)
-            .update(updatedData);
+            .update({'lastModified': FieldValue.serverTimestamp()});
 
         // Update local cache
         if (_categoryCache.containsKey(language)) {
@@ -990,16 +828,25 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
             categories[index] = {
               ...categories[index],
               ...updatedData,
+              'lastModified': DateTime.now().millisecondsSinceEpoch,
             };
+            
             // Update cache with new CachedStage
             _categoryCache[language] = CachedStage(
               data: {'categories': categories},
               timestamp: DateTime.now(),
               priority: StagePriority.HIGH
             );
+
+            // Update local storage
+            await _storeCategoriesLocally(categories, language);
           }
         }
 
+        // Update admin timestamps
+        await updateLastAdminUpdateTimestamp();
+        
+        print('✅ Category updated successfully: $categoryId');
         await _logStageOperation('update_category', categoryId, 'Updated category');
       } else {
         // Queue for offline sync
@@ -1010,41 +857,59 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         });
       }
     } catch (e) {
-      print('Error updating category: $e');
+      print('❌ Error updating category: $e');
       await _logStageOperation('update_category_error', categoryId, e.toString());
+      rethrow;
     }
   }
 
   bool _validateCategoryData(Map<String, dynamic> data) {
-    return data.containsKey('name') &&
-           data.containsKey('description');
+    print('🔍 Validating category data: $data');
+    
+    // Required fields
+    if (!data.containsKey('name') || data['name'].toString().trim().isEmpty) {
+      print('❌ Missing or empty name field');
+      return false;
+    }
+    
+    if (!data.containsKey('description') || data['description'].toString().trim().isEmpty) {
+      print('❌ Missing or empty description field');
+      return false;
+    }
+
+    // Optional fields with defaults
+    if (data.containsKey('color') && data['color'].toString().trim().isEmpty) {
+      print('⚠️ Empty color field, will use default');
+      data['color'] = 'defaultColor';
+    }
+
+    if (data.containsKey('position') && (data['position'] == null || data['position'] < 0)) {
+      print('⚠️ Invalid position, will use default');
+      data['position'] = 0;
+    }
+
+    print('✅ Category data validation passed');
+    return true;
   }
 
   Future<List<Map<String, dynamic>>> fetchQuestions(String language, String categoryId, String stageName) async {
     try {
-      // Check cache first
-      String cacheKey = '${language}_${categoryId}_${stageName}_questions';
-      if (_stageCache.containsKey(cacheKey)) {
-        final cachedData = _stageCache[cacheKey]!;
-        if (cachedData.data.containsKey('questions')) {
-          return List<Map<String, dynamic>>.from(cachedData.data['questions']);
-        }
-      }
-
-      // Get the stage document first
+      // Get the full stage document which includes questions
       Map<String, dynamic> stageDoc = await fetchStageDocument(language, categoryId, stageName);
       
       if (stageDoc.isNotEmpty && stageDoc.containsKey('questions')) {
         List<Map<String, dynamic>> questions = List<Map<String, dynamic>>.from(stageDoc['questions']);
-        // Cache the questions
+        
+        // Update questions cache
+        String cacheKey = '${language}_${categoryId}_${stageName}_questions';
         _stageCache[cacheKey] = CachedStage(
           data: {'questions': questions},
           timestamp: DateTime.now(),
           priority: StagePriority.HIGH
         );
+        
         return questions;
       }
-
       return [];
     } catch (e) {
       print('Error fetching questions: $e');
@@ -1055,16 +920,8 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
   Future<Map<String, dynamic>> fetchStageDocument(String language, String categoryId, String stageName) async {
     try {
-      // Check cache first
-      String cacheKey = '${language}_${categoryId}_${stageName}_doc';
-      if (_stageCache.containsKey(cacheKey)) {
-        final cachedData = _stageCache[cacheKey];
-        if (cachedData != null) {
-          return Map<String, dynamic>.from(cachedData.data);
-        }
-      }
-
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      // Always try to get fresh data from Firestore first
+      var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
         DocumentSnapshot doc = await _firestore
             .collection('Game')
@@ -1077,33 +934,81 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
         if (doc.exists) {
           Map<String, dynamic> stageData = doc.data() as Map<String, dynamic>;
-          // Cache the document
-          _stageCache[cacheKey] = CachedStage(
+          
+          // Update both caches
+          String cacheKey = '${language}_${categoryId}_stages';
+          
+          // Update stage list cache
+          List<Map<String, dynamic>> currentStages = [];
+          if (_stageCache.containsKey(cacheKey)) {
+            currentStages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
+            int index = currentStages.indexWhere((s) => s['stageName'] == stageName);
+            if (index != -1) {
+              currentStages[index] = stageData;
+            }
+            _stageCache[cacheKey] = CachedStage(
+              data: {'stages': currentStages},
+              timestamp: DateTime.now(),
+              priority: StagePriority.HIGH
+            );
+          }
+
+          // Update individual stage cache
+          String stageKey = '${language}_${categoryId}_${stageName}_doc';
+          _stageCache[stageKey] = CachedStage(
             data: stageData,
             timestamp: DateTime.now(),
             priority: StagePriority.HIGH
           );
+
+          // Update local storage
+          await _storeStagesLocally(currentStages, categoryId);
           await _storeStageDocumentLocally(language, categoryId, stageName, stageData);
+          
+          print('✅ Stage document fetched and cached: $stageName');
           return stageData;
         }
       }
 
-      // If offline or not found, try local storage
+      // If offline or document doesn't exist, try cache
+      String stageKey = '${language}_${categoryId}_${stageName}_doc';
+      if (_stageCache.containsKey(stageKey)) {
+        return Map<String, dynamic>.from(_stageCache[stageKey]!.data);
+      }
+
+      // Finally, try local storage
       return await _getStageDocumentFromLocal(language, categoryId, stageName);
     } catch (e) {
       print('Error fetching stage document: $e');
-      return await _getStageDocumentFromLocal(language, categoryId, stageName);
+      await _logStageOperation('fetch_stage_doc_error', categoryId, e.toString());
+      return {};
     }
   }
 
   Future<void> _storeStageDocumentLocally(String language, String categoryId, String stageName, Map<String, dynamic> stageData) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String key = '${STAGES_CACHE_KEY_PREFIX}doc_$language.$categoryId.$stageName';
-      String stageJson = jsonEncode(stageData);
-      await prefs.setString(key, stageJson);
+      
+      // Store individual stage document
+      String docKey = '${STAGES_CACHE_KEY_PREFIX}doc_$language.$categoryId.$stageName';
+      await prefs.setString(docKey, jsonEncode(stageData));
+
+      // Update stage in the list
+      String listKey = '${STAGES_CACHE_KEY}_$categoryId';
+      String? stagesJson = prefs.getString(listKey);
+      if (stagesJson != null) {
+        List<dynamic> stages = jsonDecode(stagesJson);
+        int index = stages.indexWhere((s) => s['stageName'] == stageName);
+        if (index != -1) {
+          stages[index] = stageData;
+          await prefs.setString(listKey, jsonEncode(stages));
+        }
+      }
+
+      print('✅ Stage document stored locally: $stageName');
     } catch (e) {
       print('Error storing stage document locally: $e');
+      await _logStageOperation('store_stage_doc_error', categoryId, e.toString());
     }
   }
 
@@ -1830,5 +1735,324 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     }
     
     return data;
+  }
+
+  // Add these constants at the top of the class
+  static const String LAST_ADMIN_UPDATE_KEY = 'last_admin_update';
+  static const String LAST_PREFETCH_KEY = 'last_prefetch';
+
+  // Add these methods to track admin updates and prefetch timing
+  Future<void> updateLastAdminUpdateTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(LAST_ADMIN_UPDATE_KEY, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<int> getLastAdminUpdateTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(LAST_ADMIN_UPDATE_KEY) ?? 0;
+  }
+
+  Future<void> updateLastPrefetchTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(LAST_PREFETCH_KEY, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<int> getLastPrefetchTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(LAST_PREFETCH_KEY) ?? 0;
+  }
+
+  Future<void> clearLocalCache() async {
+    print('🧹 Clearing local stage cache');
+    _stageCache.clear();
+    _categoryCache.clear();
+    
+    final prefs = await SharedPreferences.getInstance();
+    for (String key in prefs.getKeys()) {
+      if (key.startsWith(STAGES_CACHE_KEY) || 
+          key.startsWith(CATEGORIES_CACHE_KEY) ||
+          key.startsWith(LOCAL_STORAGE_VERSION)) {
+        await prefs.remove(key);
+      }
+    }
+  }
+
+  // Add these constants at the top of the class
+  static const String SERVER_TIMESTAMP_KEY = 'server_stage_timestamp';
+  static const String LOCAL_TIMESTAMP_KEY = 'local_stage_timestamp';
+
+  // Add method to get server timestamp
+  Future<int> getServerTimestamp() async {
+    try {
+      DocumentSnapshot doc = await _stageDoc.get();
+      if (doc.exists) {
+        Timestamp? timestamp = doc.get('lastModified') as Timestamp?;
+        if (timestamp != null) {
+          return timestamp.millisecondsSinceEpoch;
+        }
+      }
+      return 0;
+    } catch (e) {
+      print('Error getting server timestamp: $e');
+      return 0;
+    }
+  }
+
+  // Add method to check if server has newer data
+  Future<bool> hasServerUpdates() async {
+    try {
+      print('🔍 Checking for server updates...');
+      
+      // Get server timestamp
+      int serverTimestamp = await getServerTimestamp();
+      
+      // Get local timestamp
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int localTimestamp = prefs.getInt(LOCAL_TIMESTAMP_KEY) ?? 0;
+      
+      print('📊 Server timestamp: $serverTimestamp');
+      print('📊 Local timestamp: $localTimestamp');
+      
+      return serverTimestamp > localTimestamp;
+    } catch (e) {
+      print('❌ Error checking server updates: $e');
+      return true; // Force refresh on error to be safe
+    }
+  }
+
+  // Update this method to store the server timestamp after successful fetch
+  Future<List<Map<String, dynamic>>> _fetchFreshStages(String language, String categoryId) async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult != ConnectivityResult.none) {
+      print('🌐 Fetching fresh stages from server');
+      
+      // Get server timestamp first
+      int serverTimestamp = await getServerTimestamp();
+      
+      QuerySnapshot snapshot = await _firestore
+          .collection('Game')
+          .doc('Stage')
+          .collection(language)
+          .doc(categoryId)
+          .collection('stages')
+          .get();
+
+      List<Map<String, dynamic>> stages = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        return {
+          'stageName': doc.id,
+          ...data,
+        };
+      }).toList();
+
+      // Update both caches
+      String cacheKey = '${language}_${categoryId}_stages';
+      _stageCache[cacheKey] = CachedStage(
+        data: {'stages': stages},
+        timestamp: DateTime.now(),
+        priority: StagePriority.HIGH
+      );
+      
+      await _storeStagesLocally(stages, categoryId);
+      
+      // Store the server timestamp
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(LOCAL_TIMESTAMP_KEY, serverTimestamp);
+      
+      print('✅ Cached ${stages.length} fresh stages with timestamp: $serverTimestamp');
+      
+      return stages;
+    }
+    
+    print('📡 Offline - cannot fetch fresh data');
+    return [];
+  }
+
+  // Update these methods to update server timestamp
+  Future<void> addStage(String language, String categoryId, String stageName, Map<String, dynamic> stageData) async {
+    try {
+      // Validate stage data
+      if (!_validateStageData(stageData)) {
+        throw Exception('Invalid stage data');
+      }
+
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        // Add stage to Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .set({
+          ...stageData,
+          'lastModified': FieldValue.serverTimestamp(),
+        });
+
+        // Update local cache and storage
+        String cacheKey = '${language}_${categoryId}_stages';
+        List<Map<String, dynamic>> currentStages = [];
+        
+        // Get current stages from cache or storage
+        if (_stageCache.containsKey(cacheKey)) {
+          currentStages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
+        } else {
+          currentStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+        }
+
+        // Add new stage
+        currentStages.add({
+          'stageName': stageName,
+          ...stageData,
+        });
+
+        // Update cache
+        _stageCache[cacheKey] = CachedStage(
+          data: {'stages': currentStages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+
+        // Update local storage
+        await _storeStagesLocally(currentStages, categoryId);
+        print('✅ Stage added and cached successfully');
+
+        await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
+      } else {
+        // Queue for offline sync
+        await addOfflineChange('add', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+          'data': stageData,
+        });
+      }
+    } catch (e) {
+      print('Error adding stage: $e');
+      await _logStageOperation('add_stage_error', categoryId, e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> updateStage(String language, String categoryId, String stageName, Map<String, dynamic> updatedData) async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        // Update in Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .update({
+          ...updatedData,
+          'lastModified': FieldValue.serverTimestamp(),
+        });
+
+        // Update local cache and storage
+        String cacheKey = '${language}_${categoryId}_stages';
+        List<Map<String, dynamic>> currentStages = [];
+        
+        // Get current stages from cache or storage
+        if (_stageCache.containsKey(cacheKey)) {
+          currentStages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
+        } else {
+          currentStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+        }
+
+        // Update the stage
+        int index = currentStages.indexWhere((s) => s['stageName'] == stageName);
+        if (index != -1) {
+          currentStages[index] = {
+            ...currentStages[index],
+            ...updatedData,
+          };
+        }
+
+        // Update cache
+        _stageCache[cacheKey] = CachedStage(
+          data: {'stages': currentStages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+
+        // Update local storage
+        await _storeStagesLocally(currentStages, categoryId);
+        print('✅ Stage updated and cache refreshed');
+
+        await _logStageOperation('update_stage', categoryId, 'Updated stage: $stageName');
+      } else {
+        // Queue for offline sync
+        await addOfflineChange('update', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+          'data': updatedData,
+        });
+      }
+    } catch (e) {
+      print('Error updating stage: $e');
+      await _logStageOperation('update_stage_error', categoryId, e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> deleteStage(String language, String categoryId, String stageName) async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        // Delete from Firestore
+        await _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId)
+            .collection('stages')
+            .doc(stageName)
+            .delete();
+
+        // Update local cache and storage
+        String cacheKey = '${language}_${categoryId}_stages';
+        List<Map<String, dynamic>> currentStages = [];
+        
+        // Get current stages from cache or storage
+        if (_stageCache.containsKey(cacheKey)) {
+          currentStages = List<Map<String, dynamic>>.from(_stageCache[cacheKey]!.data['stages']);
+        } else {
+          currentStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+        }
+
+        // Remove the stage
+        currentStages.removeWhere((s) => s['stageName'] == stageName);
+
+        // Update cache
+        _stageCache[cacheKey] = CachedStage(
+          data: {'stages': currentStages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+
+        // Update local storage
+        await _storeStagesLocally(currentStages, categoryId);
+        print('✅ Stage deleted and cache updated');
+
+        await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
+      } else {
+        // Queue for offline sync
+        await addOfflineChange('delete', {
+          'language': language,
+          'categoryId': categoryId,
+          'stageName': stageName,
+        });
+      }
+    } catch (e) {
+      print('Error deleting stage: $e');
+      await _logStageOperation('delete_stage_error', categoryId, e.toString());
+      rethrow;
+    }
   }
 }

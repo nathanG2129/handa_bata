@@ -137,21 +137,52 @@ class EditStagePageState extends State<EditStagePage> {
   }
 
   void _saveStage() async {
-    final stageName = _stageNameController.text;
-    final stageDescription = _stageDescriptionController.text;
-    if (stageName.isNotEmpty && _questions.isNotEmpty) {
-      await _stageService.updateStage(widget.language, widget.category, stageName, {
-        'stageName': stageName,
-        'stageDescription': stageDescription,
-        'questions': _questions,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stage updated successfully.')));
-        Navigator.pop(context); // Go back to the previous page
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a stage name and add at least one question.')));
+    if (_formKey.currentState!.validate()) {
+      try {
+        final stageName = _stageNameController.text;
+        final stageDescription = _stageDescriptionController.text;
+        
+        if (stageName.isEmpty || _questions.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter a stage name and add at least one question.'))
+          );
+          return;
+        }
+
+        // Create a complete stage data object
+        final Map<String, dynamic> stageData = {
+          'stageName': stageName,
+          'stageDescription': stageDescription,
+          'questions': _questions,
+          'totalQuestions': _questions.length,
+          'maxScore': _questions.length, // Assuming 1 point per question
+          'lastModified': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        // Update the stage with complete data
+        await _stageService.updateStage(
+          widget.language,
+          widget.category,
+          stageName,
+          stageData,
+        );
+
+        // Force refresh the stage list in AdminStagePage
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Stage updated successfully.'))
+        );
+
+        // Pop and return true to indicate successful update
+        Navigator.pop(context, true);
+      } catch (e) {
+        print('Error saving stage: $e');
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving stage: $e'))
+        );
       }
     }
   }

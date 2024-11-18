@@ -155,15 +155,36 @@ class _AdminStagePageState extends State<AdminStagePage> {
 
   void _navigateToEditStage(String stageName) async {
     print('Navigating to edit stage: $stageName');
-    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(_selectedLanguage, _selectedCategory, stageName);
-    Map<String, dynamic> stageData = await _stageService.fetchStageDocument(_selectedLanguage, _selectedCategory, stageName);
+    List<Map<String, dynamic>> questions = await _stageService.fetchQuestions(
+      _selectedLanguage, 
+      _selectedCategory, 
+      stageName
+    );
+    Map<String, dynamic> stageData = await _stageService.fetchStageDocument(
+      _selectedLanguage, 
+      _selectedCategory, 
+      stageName
+    );
+    
     if (!mounted) return;
-    Navigator.push(
+    
+    final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditStagePage(language: _selectedLanguage, category: _selectedCategory, stageName: stageName, questions: questions, stageData: stageData)),
-    ).then((_) {
-      _fetchStages();
-    });
+      MaterialPageRoute(
+        builder: (context) => EditStagePage(
+          language: _selectedLanguage,
+          category: _selectedCategory,
+          stageName: stageName,
+          questions: questions,
+          stageData: stageData
+        ),
+      ),
+    );
+
+    // If the stage was updated successfully, refresh the stage list
+    if (result == true) {
+      await _fetchStages(); // Refresh the stage list
+    }
   }
 
   void _deleteStage(String stageName) async {

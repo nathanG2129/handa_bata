@@ -16,6 +16,7 @@ class EditBannerDialogState extends State<EditBannerDialog> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   final BannerService _bannerService = BannerService();
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -25,24 +26,39 @@ class EditBannerDialogState extends State<EditBannerDialog> {
     _descriptionController = TextEditingController(text: widget.banner['description']);
   }
 
-  void _updateBanner() async {
-    final int id = widget.banner['id'];
-    final String imageUrl = _imageUrlController.text;
-    final String title = _titleController.text;
-    final String description = _descriptionController.text;
+  Future<void> _updateBanner() async {
+    if (_isUpdating) return;
 
-    if (imageUrl.isNotEmpty && title.isNotEmpty && description.isNotEmpty) {
-      final Map<String, dynamic> updatedBanner = {
-        'id': id,
-        'img': imageUrl,
-        'title': title,
-        'description': description,
-      };
-      await _bannerService.updateBanner(id, updatedBanner);
+    try {
+      setState(() => _isUpdating = true);
 
+      final int id = widget.banner['id'];
+      final String imageUrl = _imageUrlController.text;
+      final String title = _titleController.text;
+      final String description = _descriptionController.text;
+
+      if (imageUrl.isNotEmpty && title.isNotEmpty && description.isNotEmpty) {
+        final Map<String, dynamic> updatedBanner = {
+          'id': id,
+          'img': imageUrl,
+          'title': title,
+          'description': description,
+        };
+        
+        await _bannerService.updateBanner(id, updatedBanner);
+
+        if (!mounted) return;
+        Navigator.pop(context, true); // Return true to indicate successful update
+      }
+    } catch (e) {
       if (!mounted) return;
-
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating banner: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdating = false);
+      }
     }
   }
 
@@ -78,12 +94,18 @@ class EditBannerDialogState extends State<EditBannerDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, false),
           child: Text('Cancel', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
         ),
         TextButton(
-          onPressed: _updateBanner,
-          child: Text('Save', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
+          onPressed: _isUpdating ? null : _updateBanner,
+          child: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text('Save', style: GoogleFonts.vt323(color: Colors.black, fontSize: 20)),
         ),
       ],
     );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,18 +19,36 @@ class AdminBannerPage extends StatefulWidget {
 class _AdminBannerPageState extends State<AdminBannerPage> {
   final BannerService _bannerService = BannerService();
   List<Map<String, dynamic>> _banners = [];
+  StreamSubscription? _bannerSubscription;
 
   @override
   void initState() {
     super.initState();
+    _setupBannerListener();
     _fetchBanners();
   }
 
-  void _fetchBanners() async {
-    List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
-    setState(() {
-      _banners = banners;
+  void _setupBannerListener() {
+    _bannerSubscription = _bannerService.bannerUpdates.listen((banners) {
+      if (mounted) {
+        setState(() => _banners = banners);
+      }
     });
+  }
+
+  Future<void> _fetchBanners() async {
+    try {
+      List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
+      if (mounted) {
+        setState(() => _banners = banners);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching banners: $e')),
+        );
+      }
+    }
   }
 
   void _showAddBannerDialog() {
@@ -43,14 +63,16 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
   }
 
   void _navigateToEditBanner(Map<String, dynamic> banner) async {
-    showDialog(
+    final result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return EditBannerDialog(banner: banner);
       },
-    ).then((_) {
-      _fetchBanners();
-    });
+    );
+
+    if (result == true) {
+      _fetchBanners(); // Refresh the list after successful update
+    }
   }
 
   void _deleteBanner(int id) async {
@@ -59,6 +81,12 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
       await _bannerService.deleteBanner(id);
       _fetchBanners();
     }
+  }
+
+  @override
+  void dispose() {
+    _bannerSubscription?.cancel();
+    super.dispose();
   }
 
   @override

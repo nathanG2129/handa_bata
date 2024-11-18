@@ -719,43 +719,58 @@ class BannerService {
         if (snapshot.exists) {
           Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
           serverBanners = List<Map<String, dynamic>>.from(data['banners'] ?? []);
+          
+          // Get server revision
+          int serverRevision = snapshot.get('revision');
+          int? localRevision = await _getLocalRevision();
+          
+          print('📊 Server revision: $serverRevision, Local revision: ${localRevision ?? "none"}');
+          
+          // Only check for repairs if server revision is newer
+          if (localRevision == null || serverRevision > localRevision) {
+            bool needsRepair = false;
+            
+            // 1. Check for duplicate IDs
+            Set<int> seenIds = {};
+            for (var banner in serverBanners) {
+              int id = banner['id'];
+              if (seenIds.contains(id)) {
+                print('⚠️ Found duplicate banner ID: $id');
+                needsRepair = true;
+                break;
+              }
+              seenIds.add(id);
+            }
+
+            // 2. Validate required fields
+            for (var banner in serverBanners) {
+              if (!_validateBannerData(banner)) {
+                print('⚠️ Invalid banner data found: ${banner['id']}');
+                needsRepair = true;
+                break;
+              }
+            }
+
+            // Don't treat count mismatch as an error if we have valid server data
+            if (serverBanners.length != localBanners.length) {
+              print('ℹ️ Banner count changed - Server: ${serverBanners.length}, Local: ${localBanners.length}');
+            }
+
+            // Repair if needed
+            if (needsRepair) {
+              print('🔧 Repairing banner data');
+              await resolveConflicts(serverBanners, localBanners);
+              await _logBannerOperation('integrity_repair', -1, 'Data repaired');
+            } else {
+              // Update local storage with server data
+              print('📥 Updating local storage with server data');
+              await _storeBannersLocally(serverBanners);
+              await _storeLocalRevision(serverRevision);
+            }
+          } else {
+            print('✅ Local data is up to date');
+          }
         }
-      }
-
-      bool needsRepair = false;
-      
-      // 1. Check for duplicate IDs
-      Set<int> seenIds = {};
-      for (var banner in localBanners) {
-        int id = banner['id'];
-        if (seenIds.contains(id)) {
-          print('⚠️ Found duplicate banner ID: $id');
-          needsRepair = true;
-          break;
-        }
-        seenIds.add(id);
-      }
-
-      // 2. Validate required fields
-      for (var banner in localBanners) {
-        if (!_validateBannerData(banner)) {
-          print('⚠️ Invalid banner data found: ${banner['id']}');
-          needsRepair = true;
-          break;
-        }
-      }
-
-      // 3. Compare with server data if available
-      if (serverBanners.isNotEmpty && serverBanners.length != localBanners.length) {
-        print('⚠️ Data mismatch: Server has ${serverBanners.length} banners, local has ${localBanners.length}');
-        needsRepair = true;
-      }
-
-      // Repair if needed
-      if (needsRepair) {
-        print('🔧 Repairing banner data');
-        await resolveConflicts(serverBanners, localBanners);
-        await _logBannerOperation('integrity_repair', -1, 'Data repaired');
       }
 
       // Verify unlock state
@@ -827,23 +842,22 @@ class BannerService {
         }
       }
       
-      // Then merge local banners, keeping newer versions
+      // Then merge local banners, keeping newer versions based on timestamp
       for (var localBanner in localBanners) {
         if (!localBanner.containsKey('id')) continue;
         
         int id = localBanner['id'];
-        if (!mergedBanners.containsKey(id) || 
-            (localBanner['lastModified'] ?? 0) > (mergedBanners[id]!['lastModified'] ?? 0)) {
+        int localTimestamp = localBanner['lastModified'] ?? 0;
+        int serverTimestamp = mergedBanners[id]?['lastModified'] ?? 0;
+        
+        if (!mergedBanners.containsKey(id) || localTimestamp > serverTimestamp) {
           mergedBanners[id] = localBanner;
         }
       }
       
       // Convert back to list and ensure all required fields exist
       List<Map<String, dynamic>> resolvedBanners = mergedBanners.values
-          .where((banner) => 
-              banner.containsKey('id') && 
-              banner.containsKey('img') && 
-              banner.containsKey('title'))
+          .where((banner) => _validateBannerData(banner))
           .toList();
       
       // Sort by ID to maintain consistent order
@@ -861,8 +875,10 @@ class BannerService {
       
       // Notify listeners of the changes
       _bannerUpdateController.add(resolvedBanners);
+      
+      print('✅ Banner conflicts resolved successfully');
     } catch (e) {
-      print('Error resolving conflicts: $e');
+      print('❌ Error resolving conflicts: $e');
       await _logBannerOperation('conflict_resolution_error', -1, e.toString());
     }
   }
@@ -915,15 +931,27 @@ class BannerService {
 
   Future<void> updateBanner(int id, Map<String, dynamic> updatedBanner) async {
     try {
+      // Fetch current banners
       List<Map<String, dynamic>> banners = await fetchBanners();
       int index = banners.indexWhere((b) => b['id'] == id);
+      
       if (index != -1) {
         // Store old data for logging
         final oldBanner = banners[index];
+        
+        // Update timestamp
+        updatedBanner['lastModified'] = DateTime.now().millisecondsSinceEpoch;
         banners[index] = updatedBanner;
         
+        // Update both local storage and server
         await _storeBannersLocally(banners);
         await _updateServerBanners(banners);
+        
+        // Clear cache for this banner
+        clearBannerCache(id);
+        
+        // Notify listeners of the update
+        _bannerUpdateController.add(banners);
 
         // Log admin update with changes
         await _logBannerOperation(
@@ -950,8 +978,25 @@ class BannerService {
       final deletedBanner = banners.firstWhere((b) => b['id'] == id);
       banners.removeWhere((b) => b['id'] == id);
       
+      // Update timestamp for the change
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      
+      // Update both local storage and server with new revision
       await _storeBannersLocally(banners);
-      await _updateServerBanners(banners);
+      await _bannerDoc.update({
+        'banners': banners,
+        'revision': FieldValue.increment(1),
+        'lastModified': timestamp,
+        'deletedBanners': FieldValue.arrayUnion([{
+          'id': id,
+          'deletedAt': timestamp,
+          'data': deletedBanner
+        }])
+      });
+      
+      // Clear cache and notify listeners
+      clearBannerCache(id);
+      _bannerUpdateController.add(banners);
 
       // Log admin deletion
       await _logBannerOperation(
@@ -960,10 +1005,11 @@ class BannerService {
         'Banner deleted',
         metadata: {
           'deletedBanner': deletedBanner,
+          'timestamp': timestamp
         }
       );
     } catch (e) {
-      print('Error deleting banner: $e');
+      print('❌ Error deleting banner: $e');
       await _logBannerOperation('delete_error', id, e.toString());
       rethrow;
     }

@@ -34,7 +34,7 @@ void showStageDialog(
     barrierDismissible: true,
     barrierLabel: '',
     barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 300),
+    transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (context, anim1, anim2) {
       return const SizedBox.shrink();
     },
@@ -52,7 +52,7 @@ void showStageDialog(
 
           return ScaleTransition(
             scale: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+              CurvedAnimation(parent: anim1, curve: Curves.linear),
             ),
             child: Dialog(
               shape: RoundedRectangleBorder(

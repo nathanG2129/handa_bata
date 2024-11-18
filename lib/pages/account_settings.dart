@@ -5,6 +5,7 @@ import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
+import 'package:handabatamae/widgets/dialogs/reauth_dialog.dart';
 import 'splash_page.dart'; // Import SplashPage
 import '../localization/play/localization.dart'; // Import the localization file
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
@@ -12,6 +13,7 @@ import 'package:responsive_framework/responsive_framework.dart'; // Import Respo
 import 'account_settings_content.dart'; // Import the new file
 // Import FavoriteBadges
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/widgets/dialogs/account_deletion_dialog.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -25,6 +27,7 @@ class AccountSettings extends StatefulWidget {
 
 class AccountSettingsState extends State<AccountSettings> with TickerProviderStateMixin {
   final UserProfileService _userProfileService = UserProfileService();
+  
   bool _isLoading = true;
   UserProfile? _userProfile;
   String _userRole = 'user';
@@ -144,9 +147,38 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
     AuthService authService = AuthService();
     try {
       print('\n🗑️ DELETING ACCOUNT');
+      
+      // Show confirmation dialog first
+      bool confirmed = await AccountDeletionDialog.show(
+        context,
+        widget.selectedLanguage,
+        _userRole,
+      );
+      
+      if (!confirmed) {
+        print('❌ Deletion cancelled by user');
+        return;
+      }
+
+      // For non-guest users, require reauthentication before any deletion
+      if (_userRole != 'guest') {
+        bool? reauthSuccess = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => ReauthenticationDialog(
+            selectedLanguage: widget.selectedLanguage,
+          ),
+        );
+
+        if (reauthSuccess != true) {
+          print('❌ Reauthentication cancelled or failed');
+          return;
+        }
+      }
+
       setState(() => _isLoading = true);
 
-      // Delete account
+      // Now proceed with account deletion
       await authService.deleteUserAccount();
       print('✅ Account deleted successfully');
 
@@ -161,16 +193,13 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         (Route<dynamic> route) => false,
       );
     } catch (e) {
-      print('❌ Error deleting account: $e');
+      print('❌ Error during account deletion: $e');
       if (!mounted) return;
-
-      // Show error message
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.toString().contains('reauthenticate') 
-              ? PlayLocalization.translate('reauthRequired', widget.selectedLanguage)
-              : '${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e'
+            '${PlayLocalization.translate('errorDeletingAccount', widget.selectedLanguage)} $e'
           ),
           backgroundColor: Colors.red,
         ),
@@ -180,51 +209,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  void _showDeleteAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(PlayLocalization.translate(
-            _userRole == 'guest' ? 'deleteGuestAccount' : 'deleteAccount', 
-            widget.selectedLanguage
-          )),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(PlayLocalization.translate(
-                _userRole == 'guest' ? 'deleteGuestAccountConfirmation' : 'deleteAccountConfirmation', 
-                widget.selectedLanguage
-              )),
-              const SizedBox(height: 10),
-              Text(
-                PlayLocalization.translate('deleteAccountWarning', widget.selectedLanguage),
-                style: const TextStyle(color: Colors.red),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(PlayLocalization.translate('cancel', widget.selectedLanguage)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteAccount();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: Text(PlayLocalization.translate('delete', widget.selectedLanguage)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _logout() async {
@@ -286,6 +270,11 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   Future<void> _closeDialog() async {
     await _animationController.reverse();
     widget.onClose();
+  }
+
+  void _showDeleteAccountDialog() async {
+    // Call _deleteAccount directly since we now handle the confirmation dialog there
+    await _deleteAccount();
   }
 
   @override

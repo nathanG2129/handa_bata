@@ -105,6 +105,14 @@ class AuthService {
   int _currentCacheVersion = 0;
 
   AuthService._internal({this.defaultLanguage = 'en'}) {
+    // Set persistence to LOCAL to maintain auth state
+    _auth.setPersistence(Persistence.LOCAL);
+    
+    // Listen to auth state changes
+    _auth.authStateChanges().listen((User? user) {
+      print('🔐 Auth state changed: ${user?.uid ?? 'No user'}');
+    });
+    
     Connectivity().onConnectivityChanged.listen(_handleConnectivityChange);
   }
 
@@ -460,34 +468,30 @@ class AuthService {
       String? role = await getUserRole(user.uid);
       print('👤 User role: $role');
       
-      // 1. Delete Firestore data first
+      // For regular users, require reauthentication FIRST before any deletion
+      if (role != 'guest') {
+        try {
+          // Just check if token is fresh
+          await user.reload();
+        } catch (e) {
+          // Always require reauthentication for account deletion
+          throw Exception('Please reauthenticate to delete your account');
+        }
+      }
+
+      // Now proceed with deletion in correct order
       print('🗑️ Deleting Firestore data...');
       await _deleteFirestoreData(user.uid);
       print('✅ Firestore data deleted');
 
-      // 2. Delete local data
       print('🗑️ Clearing local data...');
       await clearAllLocalData();
       print('✅ Local data cleared');
 
-      // 3. Delete Firebase Auth user
       print('🗑️ Deleting Firebase Auth user...');
-      if (role == 'guest') {
-        // For guest accounts, just delete the anonymous auth user
-        await user.delete();
-      } else {
-        // For regular users, we need to reauthenticate first
-        try {
-          // Try to delete immediately first
-          await user.delete();
-        } catch (e) {
-          print('⚠️ Reauthentication required: $e');
-          throw Exception('Please reauthenticate to delete your account');
-        }
-      }
+      await user.delete();
       print('✅ Firebase Auth user deleted');
 
-      // 4. Sign out to clear any remaining auth state
       print('🚪 Signing out...');
       await signOut();
       print('✅ User signed out');

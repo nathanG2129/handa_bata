@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
@@ -10,6 +11,7 @@ import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // 
 import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
 import 'account_settings_content.dart'; // Import the new file
 // Import FavoriteBadges
+import 'package:handabatamae/services/user_profile_service.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -22,17 +24,41 @@ class AccountSettings extends StatefulWidget {
 }
 
 class AccountSettingsState extends State<AccountSettings> with TickerProviderStateMixin {
+  final UserProfileService _userProfileService = UserProfileService();
   bool _isLoading = true;
   UserProfile? _userProfile;
-  bool _showEmail = false;
   String _userRole = 'user';
 
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late StreamSubscription<UserProfile> _profileSubscription;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimation();
+    
+    // Listen to profile updates
+    _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+          // Keep role unchanged as it's managed separately
+        });
+      }
+    });
+
+    _fetchUserProfileAndRole();
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription.cancel();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _initializeAnimation() {
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -44,34 +70,35 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    _fetchUserProfileAndRole();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _closeDialog() async {
-    await _animationController.reverse();
-    widget.onClose();
   }
 
   Future<void> _fetchUserProfileAndRole() async {
-    AuthService authService = AuthService();
     try {
-      UserProfile? userProfile = await authService.getUserProfile();
-      String? role = await authService.getUserRole(userProfile?.profileId ?? '');
+      print('\n🔍 FETCHING USER PROFILE AND ROLE');
+      
+      // 1. Get profile first
+      UserProfile? profile = await _userProfileService.fetchUserProfile();
+      if (profile == null) {
+        throw Exception('No profile found');
+      }
+      print('✅ Profile fetched - ID: ${profile.profileId}');
+
+      // 2. Then get role using the profile's ID
+      AuthService authService = AuthService();
+      String? role = await authService.getUserRole(profile.profileId);
+      print('👤 User role: ${role ?? 'guest'}');
       
       if (!mounted) return;
       setState(() {
-        _userProfile = userProfile ?? UserProfile.guestProfile;
+        _userProfile = profile;
         _userRole = role ?? 'guest';
         _isLoading = false;
         _animationController.forward();
       });
+      
+      print('✅ Profile and role fetch completed\n');
     } catch (e) {
+      print('❌ Error fetching profile and role: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)} $e')),
@@ -83,16 +110,17 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   }
 
   Future<void> _updateNickname(String newNickname) async {
-    AuthService authService = AuthService();
     try {
-      await authService.updateUserProfile('nickname', newNickname);
-      await _fetchUserProfileAndRole(); // Refresh the user profile
-      _onNicknameChanged(); // Call the callback
+      print('\n🔄 UPDATING NICKNAME');
+      await _userProfileService.updateProfileWithIntegration('nickname', newNickname);
+      print('✅ Nickname update completed\n');
     } catch (e) {
+      print('❌ Error updating nickname: $e');
       if (!mounted) return;
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${PlayLocalization.translate('errorUpdatingNickname', widget.selectedLanguage)} $e')),
+        SnackBar(content: Text(
+          '${PlayLocalization.translate('errorUpdatingNickname', widget.selectedLanguage)} $e'
+        )),
       );
     }
   }
@@ -231,22 +259,39 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   }
 
   String _redactEmail(String email) {
-    List<String> parts = email.split('@');
-    if (parts.length != 2) return email;
-    String username = parts[0];
-    String domain = parts[1];
-    String redactedUsername = username.length > 2 ? username[0] + '*' * (username.length - 2) + username[username.length - 1] : username;
-    return '$redactedUsername@$domain';
+    try {
+      print('\n🔒 REDACTING EMAIL');
+      List<String> parts = email.split('@');
+      if (parts.length != 2) {
+        print('⚠️ Invalid email format');
+        return email;
+      }
+
+      String username = parts[0];
+      String domain = parts[1];
+
+      // Keep first 3 letters, add fixed number of asterisks (5)
+      String redactedUsername = username.length > 3 
+        ? '${username.substring(0, 3)}***********'
+        : username;
+      
+      print('✅ Email redacted successfully\n');
+      return '$redactedUsername@$domain';
+    } catch (e) {
+      print('❌ Error redacting email: $e');
+      return email;
+    }
+  }
+
+  Future<void> _closeDialog() async {
+    await _animationController.reverse();
+    widget.onClose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_userProfile == null) {
-      return Center(child: Text(PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)));
     }
 
     return WillPopScope(
@@ -266,37 +311,40 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110), // Update this line
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
                     shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
-                      borderRadius: BorderRadius.zero, // Purely rectangular
+                      side: BorderSide(color: Colors.black, width: 1),
+                      borderRadius: BorderRadius.zero,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          child: UserProfileHeader(
-                            nickname: _userProfile!.nickname, // Pass nickname
-                            username: _userProfile!.username, // Pass username
-                            avatarId: _userProfile!.avatarId,
-                            level: _userProfile!.level,
-                            currentExp: _userProfile!.exp,
-                            maxExp: _userProfile!.expCap,
-                            textStyle: GoogleFonts.rubik(
-                              color: Colors.white,
-                              fontSize: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 16,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 14),
-                                  const Condition.largerThan(name: MOBILE, value: 18),
-                                ],
-                              ).value,
-                            ),
-                            selectedLanguage: widget.selectedLanguage, bannerId: _userProfile!.bannerId, // White font color for username and level
-                            badgeShowcase: _userProfile!.badgeShowcase,
-                          ),
+                          color: const Color(0xFF760a6b),
+                          child: _userProfile != null
+                              ? UserProfileHeader(
+                                  nickname: _userProfile!.nickname,
+                                  username: _userProfile!.username,
+                                  avatarId: _userProfile!.avatarId,
+                                  level: _userProfile!.level,
+                                  currentExp: _userProfile!.exp,
+                                  maxExp: _userProfile!.expCap,
+                                  textStyle: GoogleFonts.rubik(
+                                    color: Colors.white,
+                                    fontSize: ResponsiveValue<double>(
+                                      context,
+                                      defaultValue: 16,
+                                      conditionalValues: [
+                                        const Condition.smallerThan(name: MOBILE, value: 14),
+                                        const Condition.largerThan(name: MOBILE, value: 18),
+                                      ],
+                                    ).value,
+                                  ),
+                                  selectedLanguage: widget.selectedLanguage,
+                                  bannerId: _userProfile!.bannerId,
+                                  badgeShowcase: _userProfile!.badgeShowcase,
+                                )
+                              : const SizedBox.shrink(),
                         ),
                         Flexible(
                           child: SingleChildScrollView(
@@ -312,13 +360,7 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                                 ).value,
                               ),
                               child: AccountSettingsContent(
-                                userProfile: _userProfile!,
-                                showEmail: _showEmail,
-                                onToggleEmailVisibility: () {
-                                  setState(() {
-                                    _showEmail = !_showEmail;
-                                  });
-                                },
+                                userProfile: _userProfile ?? UserProfile.guestProfile,
                                 onShowChangeNicknameDialog: _showChangeNicknameDialog,
                                 onLogout: _logout,
                                 onShowDeleteAccountDialog: _showDeleteAccountDialog,

@@ -1,33 +1,46 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../services/auth_service.dart';
 import '../pages/main/main_page.dart';
-import 'dart:ui';
 import '../widgets/buttons/button_3d.dart';
 import '../widgets/loading_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   final String email;
   final String selectedLanguage;
-  final String username;
-  final String password;
-  final String birthday;
   final VoidCallback onClose;
+  
+  // Optional parameters for registration
+  final String? username;
+  final String? password;
+  final String? birthday;
+  
+  // Optional parameters for email change
+  final bool isEmailChange;
+  final Function(String)? onVerify;
 
   const EmailVerificationDialog({
     super.key,
     required this.email,
     required this.selectedLanguage,
-    required this.username,
-    required this.password,
-    required this.birthday,
     required this.onClose,
-  });
+    // Make these optional but required for registration
+    this.username,
+    this.password,
+    this.birthday,
+    // Add email change parameters
+    this.isEmailChange = false,
+    this.onVerify,
+  }) : assert(
+    (!isEmailChange && username != null && password != null && birthday != null) ||
+    (isEmailChange && onVerify != null),
+    'For registration, provide username, password, and birthday. For email change, provide onVerify.'
+  );
 
   @override
   EmailVerificationDialogState createState() => EmailVerificationDialogState();
@@ -45,7 +58,9 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
   @override
   void initState() {
     super.initState();
-    _sendOTP();
+    if (!widget.isEmailChange) {
+      _sendOTP();
+    }
     _startTimer();
     _animationController = AnimationController(
       vsync: this,
@@ -68,21 +83,6 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
     super.dispose();
   }
 
-  Future<void> _sendOTP() async {
-    try {
-      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
-      await functions
-          .httpsCallable('sendVerificationOTP')
-          .call({'email': widget.email});
-    } catch (e) {
-      if (!mounted) return;
-      // Add logging
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending OTP: $e')),
-      );
-    }
-  }
-
   void _startTimer() {
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
@@ -101,42 +101,40 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
     setState(() => _isLoading = true);
 
     try {
-      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
-      final result = await functions
-          .httpsCallable('verifyOTP')
-          .call({
-            'email': widget.email,
-            'otp': _otpController.text
-          });
-
-      if (result.data['success']) {
-        User? user;
-        
-        // Check if this is a guest conversion
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        bool isGuestConversion = prefs.containsKey('pending_conversion');
-
-        if (isGuestConversion) {
-          user = await _authService.completeGuestConversion();
-        } else {
-          user = await _authService.registerWithEmailAndPassword(
-            widget.email,
-            widget.password,
-            widget.username,
-            '',
-            widget.birthday,
-            role: 'user',
-          );
+      if (widget.isEmailChange) {
+        // Handle email change verification
+        if (widget.onVerify != null) {
+          await widget.onVerify!(_otpController.text);
         }
+        if (!mounted) return;
+        Navigator.of(context).pop();
+      } else {
+        // Handle registration verification
+        final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+        final result = await functions
+            .httpsCallable('verifyOTP')
+            .call({
+              'email': widget.email,
+              'otp': _otpController.text
+            });
 
-        if (user != null) {
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
-            ),
+        if (result.data['success']) {
+          final user = await _authService.registerWithEmailAndPassword(
+            widget.email,
+            widget.password!,
+            widget.username!,
+            '',
+            widget.birthday!,
           );
+
+          if (user != null && mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -153,25 +151,28 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
     widget.onClose();
   }
 
-  Future<void> _verifyOTPWithRetry() async {
-    int attempts = 0;
-    const maxAttempts = 3;
-
-    while (attempts < maxAttempts) {
-      try {
-        await _verifyOTP();
-        return;
-      } catch (e) {
-        attempts++;
-        if (attempts == maxAttempts) rethrow;
-        await Future.delayed(Duration(seconds: attempts));
-      }
+  Future<void> _sendOTP() async {
+    try {
+      setState(() => _canResend = false); // Disable resend button immediately
+      
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      await functions
+          .httpsCallable(widget.isEmailChange ? 'sendEmailChangeOTP' : 'sendVerificationOTP')
+          .call({'email': widget.email});
+      
+      // Reset timer after successful resend
+      setState(() {
+        _timeLeft = 300;
+        _startTimer();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending OTP: $e')),
+      );
+      // Re-enable resend button on error
+      setState(() => _canResend = true);
     }
-  }
-
-  Future<bool> _canResendOTP() async {
-    // Implement rate limiting logic
-    return _canResend;
   }
 
   @override
@@ -227,8 +228,8 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const TextWithShadow(
-                                      text: 'Verify Email',
+                                    TextWithShadow(
+                                      text: widget.isEmailChange ? 'Verify New Email' : 'Verify Email',
                                       fontSize: 48,
                                     ),
                                     const SizedBox(height: 12),
@@ -287,7 +288,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                       onPressed: _verifyOTP,
                                       height: 45,
                                       child: Text(
-                                        'Sign Up',
+                                        widget.isEmailChange ? 'Verify' : 'Sign Up',
                                         style: GoogleFonts.vt323(
                                           fontSize: 20,
                                           color: Colors.white,

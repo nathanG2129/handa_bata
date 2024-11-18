@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/pages/email_verification_dialog.dart';
 import 'package:handabatamae/pages/register_page.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/dialogs/change_password_dialog.dart';
 import '../localization/play/localization.dart';
 import 'package:handabatamae/services/auth_service.dart';
+import 'package:handabatamae/widgets/dialogs/change_email_dialog.dart';
 
 class AccountSettingsContent extends StatelessWidget {
   final UserProfile userProfile;
@@ -31,16 +33,92 @@ class AccountSettingsContent extends StatelessWidget {
 
   Future<void> _handleEmailChange(BuildContext context) async {
     try {
-      print('\n🔄 CHANGING EMAIL');
-      // Email change logic will be implemented later
-      print('⚠️ Email change not implemented yet');
+      print('\n🔄 INITIATING EMAIL CHANGE');
+      final authService = AuthService();
+      
+      // Show initial dialog for new email and current password
+      if (!context.mounted) return;
+      await showDialog<Map<String, String>>(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return ChangeEmailDialog(
+            currentEmail: userProfile.email,
+            selectedLanguage: selectedLanguage,
+            onEmailChanged: (newEmail, currentPassword) async {
+              try {
+                // Initiate email change and send OTP
+                await authService.changeEmail(newEmail, currentPassword);
+                
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop(); // Close email dialog only after successful OTP send
+                
+                if (!context.mounted) return;
+                
+                // Show OTP verification dialog
+                await showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext verifyContext) => EmailVerificationDialog(
+                    email: newEmail,
+                    selectedLanguage: selectedLanguage,
+                    isEmailChange: true,
+                    onVerify: (otp) async {
+                      try {
+                        await authService.verifyAndUpdateEmail(newEmail, otp);
+                        if (!verifyContext.mounted) return;
+                        Navigator.of(verifyContext).pop(); // Close verification dialog
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              PlayLocalization.translate('emailChangeSuccess', selectedLanguage)
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (e) {
+                        if (!verifyContext.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${PlayLocalization.translate('errorVerifyingEmail', selectedLanguage)} $e'
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    onClose: () => Navigator.of(context).pop(),
+                  ),
+                );
+              } catch (e) {
+                if (!dialogContext.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '${PlayLocalization.translate('errorChangingEmail', selectedLanguage)} $e'
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            darkenColor: darkenColor,
+          );
+        },
+      );
+      
+      print('✅ Email change process completed\n');
     } catch (e) {
-      print('❌ Error changing email: $e');
+      print('❌ Error in email change process: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(
-            '${PlayLocalization.translate('errorChangingEmail', selectedLanguage)} $e'
-          )),
+          SnackBar(
+            content: Text(
+              '${PlayLocalization.translate('errorChangingEmail', selectedLanguage)} $e'
+            ),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

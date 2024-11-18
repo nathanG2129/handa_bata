@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -103,6 +104,9 @@ class AuthService {
 
   final Map<String, UserProfile> _userCache = {};
   int _currentCacheVersion = 0;
+
+  // Add this variable at class level to store current password temporarily
+  String? _currentPassword;
 
   AuthService._internal({this.defaultLanguage = 'en'}) {
     // Set persistence to LOCAL to maintain auth state
@@ -2116,6 +2120,119 @@ class AuthService {
       print('✅ Password changed successfully\n');
     } catch (e) {
       print('❌ Error changing password: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> changeEmail(String newEmail, String currentPassword) async {
+    try {
+      print('\n🔄 CHANGING EMAIL');
+      User? user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No user found or user has no email');
+      }
+
+      // Store the password for later use
+      _currentPassword = currentPassword;
+
+      // Create credentials with current password
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // Reauthenticate
+      print('🔄 Reauthenticating user');
+      await user.reauthenticateWithCredential(credential);
+
+      // Send OTP to new email
+      print('📧 Sending verification code to new email');
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      await functions
+          .httpsCallable('sendEmailChangeOTP')
+          .call({'email': newEmail});
+
+      print('✅ Verification code sent successfully\n');
+    } catch (e) {
+      print('❌ Error initiating email change: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> verifyAndUpdateEmail(String newEmail, String otp) async {
+    try {
+      print('\n🔄 VERIFYING AND UPDATING EMAIL');
+      User? user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No user found or user has no email');
+      }
+
+      if (_currentPassword == null) {
+        throw Exception('Authentication required');
+      }
+
+      // Verify OTP
+      print('🔍 Verifying OTP');
+      print('📤 Sending verification request with:');
+      print('   Email: $newEmail');
+      print('   OTP: $otp');
+      
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+      final result = await functions
+          .httpsCallable('verifyEmailChangeOTP')
+          .call({
+            'email': newEmail,
+            'otp': otp
+          });
+
+      print('📥 Received verification result: ${result.data}');
+
+      if (result.data['success']) {
+        // Reauthenticate again before updating email
+        print('🔄 Reauthenticating user');
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentPassword!,
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // First verify the new email
+        print('📧 Verifying new email');
+        await user.updateEmail(newEmail);
+
+        // Update email in main User document
+        print('💾 Updating email in User document');
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .update({'email': newEmail});
+
+        // Update email in ProfileData document
+        print('💾 Updating email in ProfileData');
+        await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .update({'email': newEmail});
+
+        // Initialize and update local profile
+        final userProfileService = UserProfileService();
+        await userProfileService.batchUpdateProfile({
+          'email': newEmail
+        });
+
+        // Clear stored password
+        _currentPassword = null;
+
+        print('✅ Email updated successfully in all locations\n');
+      } else {
+        throw Exception('Verification failed');
+      }
+    } catch (e) {
+      // Clear stored password on error
+      _currentPassword = null;
+      print('❌ Error updating email: $e');
       rethrow;
     }
   }

@@ -48,6 +48,8 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
           _userProfile = profile;
           // Keep role unchanged as it's managed separately
         });
+        // Force a refresh when profile updates
+        _fetchUserProfileAndRole();
       }
     });
 

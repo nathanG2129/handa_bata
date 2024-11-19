@@ -195,6 +195,10 @@ flutter:
     - assets/hotlines/DSWD.png
     - assets/hotlines/NDRRMC.png
     - assets/hotlines/PRC.png
+    - assets/members/Andrea.png
+    - assets/members/Charles.png
+    - assets/members/John.png
+    - assets/members/Margaret.png
     - assets/sprite-sheets/AdvSpriteSheet.png
     - assets/sprite-sheets/Idle.png
 

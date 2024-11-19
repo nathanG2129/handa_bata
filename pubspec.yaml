@@ -166,6 +166,24 @@ flutter:
     - assets/badges/quake-quest/NormalStage05.png
     - assets/badges/quake-quest/NormalStage06.png
     - assets/badges/quake-quest/NormalStage07.png
+    - assets/badges/storm-quest/HardComplete.png
+    - assets/badges/storm-quest/HardFullClear.png
+    - assets/badges/storm-quest/HardStage01.png
+    - assets/badges/storm-quest/HardStage02.png
+    - assets/badges/storm-quest/HardStage03.png
+    - assets/badges/storm-quest/HardStage04.png
+    - assets/badges/storm-quest/HardStage05.png
+    - assets/badges/storm-quest/HardStage06.png
+    - assets/badges/storm-quest/HardStage07.png
+    - assets/badges/storm-quest/NormalComplete.png
+    - assets/badges/storm-quest/NormalFullClear.png
+    - assets/badges/storm-quest/NormalStage01.png
+    - assets/badges/storm-quest/NormalStage02.png
+    - assets/badges/storm-quest/NormalStage03.png
+    - assets/badges/storm-quest/NormalStage04.png
+    - assets/badges/storm-quest/NormalStage05.png
+    - assets/badges/storm-quest/NormalStage06.png
+    - assets/badges/storm-quest/NormalStage07.png
     - assets/gifs/Walking.gif
 
     # Audios / SFX

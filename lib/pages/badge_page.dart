@@ -309,6 +309,15 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     print('Total badges: ${badges.length}');
     print('Unlocked badges array: $_unlockedBadges');
 
+    // Add handling for allBadges filter
+    if (filter == BadgeFilter.allBadges) {
+      // Queue all badges with MEDIUM priority
+      for (var badge in badges) {
+        _badgeService.queueBadgeLoad(badge['id'], BadgePriority.MEDIUM);
+      }
+      return badges; // Return all badges without filtering
+    }
+
     if (filter == BadgeFilter.myCollection) {
       // Queue unlocked badges with HIGH priority
       for (var badge in badges) {

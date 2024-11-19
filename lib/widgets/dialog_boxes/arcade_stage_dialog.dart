@@ -6,6 +6,8 @@ import 'package:handabatamae/localization/stages/localization.dart';
 import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
+import 'package:handabatamae/utils/category_text_utils.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 
 String formatTime(int seconds) {
   final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -33,6 +35,9 @@ void showArcadeStageDialog(
   print('📊 Current Record: ${formatTime(crntRecord)}');
   
   stageService.debugCacheState();
+  
+  // Get the category text using the shared utility
+  final categoryText = getCategoryText(category['name']!, selectedLanguage);
   
   showGeneralDialog(
     context: context,
@@ -71,23 +76,14 @@ void showArcadeStageDialog(
                   children: [
                     Center(
                       child: Text(
-                        'Stage $stageNumber',
+                        categoryText['name']!,
                         style: GoogleFonts.vt323(
                           fontSize: 48,
-                          fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      stageData['stageDescription'] ?? '',
-                      style: GoogleFonts.vt323(
-                        fontSize: 36,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     Column(
                       children: [
                         Text(
@@ -122,7 +118,11 @@ void showArcadeStageDialog(
                       ],
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
+                    Button3D(
+                      width: 200,
+                      height: 50,
+                      backgroundColor: const Color(0xFF351B61),
+                      borderColor: const Color(0xFF1A0D30),
                       onPressed: () async {
                         try {
                           await _handleOfflineArcadeStart(
@@ -160,18 +160,11 @@ void showArcadeStageDialog(
                           }
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: const Color(0xFF351B61), // Set the background color to #351b61
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero, // Set sharp corners
-                        ),
-                      ),
                       child: Text(
-                        StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization
+                        StageDialogLocalization.translate('play_now', selectedLanguage),
                         style: GoogleFonts.vt323(
                           fontSize: 24,
+                          color: Colors.white,
                         ),
                       ),
                     ),

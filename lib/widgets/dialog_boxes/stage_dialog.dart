@@ -9,6 +9,7 @@ import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/game_state.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 
 void showStageDialog(
   BuildContext context,
@@ -69,7 +70,6 @@ void showStageDialog(
                       'Stage $stageNumber',
                       style: GoogleFonts.vt323(
                         fontSize: 48,
-                        fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                       ),
@@ -125,7 +125,11 @@ void showStageDialog(
                         builder: (context) {
                           final savedState = GameState.fromJson(snapshot.data!);
                           if (!savedState.completed && !savedState.isGameOver) {
-                            return ElevatedButton(
+                            return Button3D(
+                              width: 200,
+                              height: 50,
+                              backgroundColor: const Color(0xFF32C067),
+                              borderColor: const Color(0xFF28A757), // Darker shade for border
                               onPressed: () async {
                                 try {
                                   await _handleOfflineStageStart(
@@ -165,17 +169,12 @@ void showStageDialog(
                                   }
                                 }
                               },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: const Color(0xFF32C067),
-                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero,
-                                ),
-                              ),
                               child: Text(
                                 'Resume Game',
-                                style: GoogleFonts.vt323(fontSize: 24),
+                                style: GoogleFonts.vt323(
+                                  fontSize: 24,
+                                  color: Colors.white,
+                                ),
                               ),
                             );
                           }
@@ -184,7 +183,11 @@ void showStageDialog(
                       ),
                     ],
                     const SizedBox(height: 20),
-                    ElevatedButton(
+                    Button3D(
+                      width: 200,
+                      height: 50,
+                      backgroundColor: const Color(0xFF351B61),
+                      borderColor: const Color(0xFF1A0D30), // Darker shade for border
                       onPressed: () async {
                         try {
                           // Delete any existing saves first
@@ -229,18 +232,11 @@ void showStageDialog(
                           }
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: const Color(0xFF351B61), // Set the background color to #351b61
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero, // Set sharp corners
-                        ),
-                      ),
                       child: Text(
-                        StageDialogLocalization.translate('play_now', selectedLanguage), // Use localization
+                        StageDialogLocalization.translate('play_now', selectedLanguage),
                         style: GoogleFonts.vt323(
                           fontSize: 24,
+                          color: Colors.white,
                         ),
                       ),
                     ),

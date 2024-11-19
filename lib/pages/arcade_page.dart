@@ -16,6 +16,7 @@ import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
 import 'package:handabatamae/models/game_save_data.dart'; // Import GameSaveData
 import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
+import 'package:handabatamae/utils/category_text_utils.dart';
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -195,29 +196,6 @@ class ArcadePageState extends State<ArcadePage> {
     return hslDark.toColor();
   }
 
-  Map<String, String> _getCategoryText(String categoryName) {
-    if (categoryName.contains('Quake')) {
-      return {
-        'name': 'Shake',
-        'description': _selectedLanguage == 'fil'
-            ? 'Patunayan ang iyong lakas ng loob laban sa makapangyarihang pagyanig ng lupa!'
-            : 'Prove your courage against the earth\'s mighty tremors!',
-      };
-    } else if (categoryName.contains('Storm')) {
-      return {
-        'name': 'Rumble',
-        'description': _selectedLanguage == 'fil'
-            ? 'Subukin ang iyong katapangan laban sa galit ng rumaragasang bagyo!'
-            : 'Challenge your bravery against the fury of a raging typhoon!',
-      };
-    } else {
-      return {
-        'name': categoryName,
-        'description': '',
-      };
-    }
-  }
-
   void _sortCategories() {
     const order = ['Quake', 'Storm', 'Volcano', 'Drought', 'Flood', 'Tsunami'];
     _categories.sort((a, b) {
@@ -332,7 +310,7 @@ class ArcadePageState extends State<ArcadePage> {
                                               : Column(
                                                   children: _categories.map((category) {
                                                     final buttonColor = _getButtonColor(category['name']);
-                                                    final categoryText = _getCategoryText(category['name']);
+                                                    final categoryText = getCategoryText(category['name'], _selectedLanguage);
                                                     final isUnlocked = _isCategoryUnlocked(category['id']);
                                                     
                                                     return Padding(
@@ -498,7 +476,7 @@ class ArcadePageState extends State<ArcadePage> {
         const SizedBox(height: 30),
         ..._categories.map((category) {
           final buttonColor = _getButtonColor(category['name']);
-          final categoryText = _getCategoryText(category['name']);
+          final categoryText = getCategoryText(category['name'], _selectedLanguage);
           final isUnlocked = _isCategoryUnlocked(category['id']);
           
           return Padding(

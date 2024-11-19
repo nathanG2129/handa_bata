@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
@@ -61,8 +62,86 @@ class SplashPageState extends State<SplashPage> {
       if (hasUpdates) {
         print('🔄 Server has newer data, forcing fresh fetch');
         await stageService.clearLocalCache();
-      } else {
-        print('✅ Local data is up to date with server');
+        
+        // Fetch fresh data - English first since we'll use it for maxScore
+        final enCategories = await stageService.fetchCategories('en');
+        final filCategories = await stageService.fetchCategories('fil');
+        
+        // Fetch all English stages first
+        Map<String, List<Map<String, dynamic>>> allEnStages = {};
+        for (var category in enCategories) {
+          allEnStages[category['id']] = await stageService.fetchStages('en', category['id']);
+        }
+
+        // Fetch Filipino stages (but don't use for maxScore)
+        for (var category in filCategories) {
+          await stageService.fetchStages('fil', category['id']);
+        }
+
+        // Get current user and their game save data
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          print('👤 User found, updating maxScores...');
+          // Update maxScore for each category based on English stages
+          for (var entry in allEnStages.entries) {
+            String categoryId = entry.key;
+            List<Map<String, dynamic>> stages = entry.value;
+            
+            // Get current game save data for this category
+            GameSaveData? currentSave = await authService.getLocalGameSaveData(categoryId);
+            if (currentSave != null) {
+              // Create new game save data to get fresh maxScores
+              GameSaveData freshSave = await authService.createInitialGameSaveData(stages);
+              
+              // Update existing save data with new maxScores but keep progress
+              Map<String, StageDataEntry> updatedStageData = {};
+              currentSave.stageData.forEach((key, value) {
+                if (freshSave.stageData.containsKey(key)) {
+                  if (value is AdventureStageData) {
+                    // Clamp scores to new maxScore if it decreased
+                    int newMaxScore = freshSave.stageData[key]!.maxScore;
+                    int clampedNormalScore = value.scoreNormal > newMaxScore ? newMaxScore : value.scoreNormal;
+                    int clampedHardScore = value.scoreHard > newMaxScore ? newMaxScore : value.scoreHard;
+                    
+                    updatedStageData[key] = AdventureStageData(
+                      maxScore: newMaxScore,
+                      scoreNormal: clampedNormalScore,
+                      scoreHard: clampedHardScore,
+                    );
+                    
+                    // Log if scores were clamped
+                    if (value.scoreNormal > newMaxScore || value.scoreHard > newMaxScore) {
+                      print('⚠️ Scores clamped for stage $key:');
+                      print('Normal: ${value.scoreNormal} -> $clampedNormalScore');
+                      print('Hard: ${value.scoreHard} -> $clampedHardScore');
+                    }
+                  } else if (value is ArcadeStageData) {
+                    // Arcade scores don't need clamping since they're time-based
+                    updatedStageData[key] = ArcadeStageData(
+                      maxScore: freshSave.stageData[key]!.maxScore,
+                      bestRecord: value.bestRecord,
+                      crntRecord: value.crntRecord,
+                    );
+                  }
+                }
+              });
+
+              // Create updated save data
+              GameSaveData updatedSave = GameSaveData(
+                stageData: updatedStageData,
+                normalStageStars: currentSave.normalStageStars,
+                hardStageStars: currentSave.hardStageStars,
+                unlockedNormalStages: currentSave.unlockedNormalStages,
+                unlockedHardStages: currentSave.unlockedHardStages,
+                hasSeenPrerequisite: currentSave.hasSeenPrerequisite,
+              );
+
+              // Save updated data
+              await authService.saveGameSaveDataLocally(categoryId, updatedSave);
+              print('✅ Updated maxScores for category: $categoryId');
+            }
+          }
+        }
       }
 
       // More thorough cache check

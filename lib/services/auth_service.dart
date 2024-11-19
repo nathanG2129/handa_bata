@@ -189,7 +189,7 @@ class AuthService {
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
         for (var category in categories) {
           List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
-          GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
+          GameSaveData gameSaveData = await createInitialGameSaveData(stages);
           
           // Save to Firestore
           await _firestore
@@ -259,7 +259,7 @@ class AuthService {
     List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
     for (Map<String, dynamic> category in categories) {
       List<Map<String, dynamic>> stages = await _stageService.fetchStages(defaultLanguage, category['id']);
-      GameSaveData gameSaveData = await _createInitialGameSaveData(stages);
+      GameSaveData gameSaveData = await createInitialGameSaveData(stages);
       
       // Save locally first
       await saveGameSaveDataLocally(category['id'], gameSaveData);
@@ -437,7 +437,7 @@ class AuthService {
               // Create initial game save data
               List<Map<String, dynamic>> stages = 
                   await _stageService.fetchStages(defaultLanguage, categoryId);
-              GameSaveData initialData = await _createInitialGameSaveData(stages);
+              GameSaveData initialData = await createInitialGameSaveData(stages);
               await saveGameSaveDataLocally(categoryId, initialData);
               print('✅ Created initial game data for category: $categoryId');
             }
@@ -1146,7 +1146,7 @@ class AuthService {
     }
   }
 
-  Future<GameSaveData> _createInitialGameSaveData(List<Map<String, dynamic>> stages) async {
+  Future<GameSaveData> createInitialGameSaveData(List<Map<String, dynamic>> stages) async {
     try {
       print('🎮 Creating initial game data');
       Map<String, StageDataEntry> stageData = {};

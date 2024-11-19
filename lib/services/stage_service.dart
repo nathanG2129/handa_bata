@@ -1940,18 +1940,45 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     try {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        // Update in Firestore
-        await _firestore
+        // Start a batch write
+        WriteBatch batch = _firestore.batch();
+
+        // 1. Update the stage document
+        DocumentReference stageRef = _firestore
             .collection('Game')
             .doc('Stage')
             .collection(language)
             .doc(categoryId)
             .collection('stages')
-            .doc(stageName)
-            .update({
+            .doc(stageName);
+
+        batch.update(stageRef, {
           ...updatedData,
           'lastModified': FieldValue.serverTimestamp(),
         });
+
+        // 2. Update the category document timestamp
+        DocumentReference categoryRef = _firestore
+            .collection('Game')
+            .doc('Stage')
+            .collection(language)
+            .doc(categoryId);
+
+        batch.update(categoryRef, {
+          'lastModified': FieldValue.serverTimestamp(),
+        });
+
+        // 3. Update the root Stage document timestamp
+        DocumentReference rootRef = _firestore
+            .collection('Game')
+            .doc('Stage');
+
+        batch.update(rootRef, {
+          'lastModified': FieldValue.serverTimestamp(),
+        });
+
+        // Commit all updates atomically
+        await batch.commit();
 
         // Update local cache and storage
         String cacheKey = '${language}_${categoryId}_stages';
@@ -1964,18 +1991,27 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           currentStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
         }
 
-        // Update the stage
+        // Update the stage in the list
         int index = currentStages.indexWhere((s) => s['stageName'] == stageName);
         if (index != -1) {
           currentStages[index] = {
             ...currentStages[index],
             ...updatedData,
+            'lastModified': DateTime.now().millisecondsSinceEpoch,
           };
         }
 
-        // Update cache
+        // Update cache with new data
         _stageCache[cacheKey] = CachedStage(
           data: {'stages': currentStages},
+          timestamp: DateTime.now(),
+          priority: StagePriority.HIGH
+        );
+
+        // Update individual stage cache
+        String stageKey = '${language}_${categoryId}_${stageName}_doc';
+        _stageCache[stageKey] = CachedStage(
+          data: {...updatedData, 'lastModified': DateTime.now().millisecondsSinceEpoch},
           timestamp: DateTime.now(),
           priority: StagePriority.HIGH
         );

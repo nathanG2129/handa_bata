@@ -920,13 +920,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                           children: [
                             Text(
                               '${currentQuestionIndex + 1} of $_totalQuestions',
-                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white), // Increased font size and set color to white
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.volume_up, color: Colors.white),
-                              onPressed: () {
-                                // Handle mute/unmute
-                              },
+                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
                             ),
                             IconButton(
                               icon: const Icon(Icons.settings, color: Colors.white),

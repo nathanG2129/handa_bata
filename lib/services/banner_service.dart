@@ -912,6 +912,9 @@ class BannerService {
       await _storeBannersLocally(banners);
       await _updateServerBanners(banners);
 
+      // Notify listeners of the update
+      _bannerUpdateController.add(banners);
+
       // Log admin creation
       await _logBannerOperation(
         'admin_create',

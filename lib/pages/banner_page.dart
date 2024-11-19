@@ -70,11 +70,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
   }
 
   Future<List<Map<String, dynamic>>> _initializeBanners() async {
-    final userLevel = await _userLevelFuture;
-    return _bannerService.fetchBannersWithLevel(
-      priority: BannerPriority.HIGH,
-      userLevel: userLevel
-    );
+    return _bannerService.getLocalBanners();
   }
 
   @override

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Stack(
         children: [
           Card(
@@ -12,37 +12,40 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
             ),
             color: Colors.white,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 20.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(width: 56), // Space for the correctness container
+                  const SizedBox(width: 64), // Space for the correctness container
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           question['question'],
-                          style: GoogleFonts.rubik(fontSize: 18),
+                          style: GoogleFonts.rubik(fontSize: 20),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         ...question['options'].map<Widget>((option) {
                           bool isCorrect = option == question['correctAnswer'];
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('• ', style: TextStyle(fontSize: 18)), // Bullet point
-                              Expanded(
-                                child: Text(
-                                  option,
-                                  style: GoogleFonts.rubik(
-                                    fontSize: 16,
-                                    color: isCorrect ? Colors.green : Colors.black,
-                                    fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('• ', style: TextStyle(fontSize: 20)), // Bullet point
+                                Expanded(
+                                  child: Text(
+                                    option,
+                                    style: GoogleFonts.rubik(
+                                      fontSize: 18,
+                                      color: isCorrect ? Colors.green : Colors.black,
+                                      fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           );
                         }).toList(),
                       ],
@@ -57,7 +60,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
             bottom: 3,
             left: 2,
             child: Container(
-              width: 40,
+              width: 48,
               decoration: BoxDecoration(
                 color: question['isCorrect'] ? Colors.green : Colors.red,
                 borderRadius: BorderRadius.circular(0),
@@ -65,7 +68,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
               child: Center(
                 child: Text(
                   '${index + 1}', // Placeholder for question number
-                  style: GoogleFonts.rubik(fontSize: 18, color: Colors.white),
+                  style: GoogleFonts.rubik(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

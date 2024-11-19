@@ -7,6 +7,7 @@ import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/stages_page.dart';
 import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeStagesPage
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
@@ -63,7 +64,6 @@ class ResultsPageState extends State<ResultsPage> {
   late int _soundId3Stars;
   bool _isInitialized = false;
   int stars = 0;
-  int _xpGained = 0;
   final AuthService _authService = AuthService();
 
   @override
@@ -250,7 +250,7 @@ class ResultsPageState extends State<ResultsPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                ElevatedButton(
+                                Button3D(
                                   onPressed: () {
                                     if (widget.gamemode == 'arcade') {
                                       Navigator.pushReplacement(
@@ -282,22 +282,20 @@ class ResultsPageState extends State<ResultsPage> {
                                       );
                                     }
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: const Color(0xFF351b61),
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(0)),
+                                  backgroundColor: const Color(0xFF351b61),
+                                  borderColor: const Color(0xFF1A0D30),
+                                  width: 120,
+                                  height: 50,
+                                  child: Text(
+                                    'Back',
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.white,
+                                      fontSize: 20,
                                     ),
-                                    side: const BorderSide(
-                                      color: Color(0xFF1A0D30),
-                                      width: 4,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                                   ),
-                                  child: const Text('Back'),
                                 ),
                                 const SizedBox(width: 25),
-                                ElevatedButton(
+                                Button3D(
                                   onPressed: () {
                                     // Delete any existing saved game first
                                     _gameSaveManager.deleteSavedGame(
@@ -325,19 +323,17 @@ class ResultsPageState extends State<ResultsPage> {
                                       ),
                                     );
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.black,
-                                    backgroundColor: const Color(0xFFF1B33A),
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(0)),
+                                  backgroundColor: const Color(0xFFF1B33A),
+                                  borderColor: const Color(0xFF8B5A00),
+                                  width: 120,
+                                  height: 50,
+                                  child: Text(
+                                    'Play Again',
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.black,
+                                      fontSize: 20,
                                     ),
-                                    side: const BorderSide(
-                                      color: Color(0xFF8B5A00),
-                                      width: 4,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                                   ),
-                                  child: const Text('Play Again'),
                                 ),
                               ],
                             ),
@@ -349,19 +345,6 @@ class ResultsPageState extends State<ResultsPage> {
                             const SizedBox(height: 10),
                             _buildAnsweredQuestionsWidget(context),
                             const SizedBox(height: 50),
-                            if (_xpGained > 0)
-                              Column(
-                                children: [
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    'XP Gained: $_xpGained',
-                                    style: GoogleFonts.vt323(
-                                      fontSize: 24,
-                                      color: Colors.yellow,
-                                    ),
-                                  ),
-                                ],
-                              ),
                           ],
                         ),
                       ),
@@ -375,7 +358,7 @@ class ResultsPageState extends State<ResultsPage> {
 
   Widget _buildAnsweredQuestionsWidget(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.75,
+      width: MediaQuery.of(context).size.width * 0.85,
       child: Column(
         children: widget.answeredQuestions.asMap().entries.map((entry) {
           int index = entry.key;
@@ -510,13 +493,6 @@ class ResultsPageState extends State<ResultsPage> {
 
         // Delete saved game state if exists
         await _cleanupGameSave();
-      }
-
-      // Update state for UI
-      if (mounted) {
-        setState(() {
-          _xpGained = xpGained;
-        });
       }
 
       // Check for badge unlocks

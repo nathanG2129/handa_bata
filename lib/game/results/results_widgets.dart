@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 Widget buildReactionWidget(int stars) {
-  String message = stars == 0 ? 'Game Over!' : 
-                  stars == 1 ? 'Good Effort!' :
-                  stars == 2 ? 'Well Done!' : 'Perfect!';
+  String message = stars == 0 ? 'Nice Try!' : 
+                  stars == 1 ? 'Good Job!' :
+                  stars == 2 ? 'Impressive!' : 'Outstanding!';
                   
   return Column(
     children: [

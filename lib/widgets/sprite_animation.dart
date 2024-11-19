@@ -137,10 +137,6 @@ class _SpritePainter extends CustomPainter {
     final Paint paint = Paint()
       ..filterQuality = FilterQuality.none;  // For pixel perfect rendering
 
-    // Add debug print to verify frame calculations
-    print('🎨 Drawing frame $frameIndex at row $row');
-    print('🎨 Source rect: x=${frameIndex * frameWidth}, y=${row * frameHeight}');
-
     final Rect src = Rect.fromLTWH(
       (frameIndex + startFrame) * frameWidth,
       row * frameHeight,

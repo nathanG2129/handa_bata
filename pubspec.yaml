@@ -117,6 +117,8 @@ flutter:
     - assets/characters/KladisLearn.svg
     - assets/characters/KloudLearn.svg
     - assets/icons/check.svg
+    - assets/icons/plus.svg
+    - assets/icons/minus.svg
     - assets/icons/stageicon.svg
     - assets/icons/menu.svg
     - assets/icons/language_switcher.svg
@@ -165,8 +167,6 @@ flutter:
     - assets/badges/quake-quest/NormalStage06.png
     - assets/badges/quake-quest/NormalStage07.png
     - assets/gifs/Walking.gif
-    - assets/icons/language_switcher.svg
-    - assets/icons/check.svg
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

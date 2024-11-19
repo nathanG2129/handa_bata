@@ -5,6 +5,7 @@ import 'package:handabatamae/pages/splash_page.dart';
 import 'package:handabatamae/pages/register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/pages/play_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -24,6 +25,10 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   String _userRole = 'guest';
+  
+  // Add these ValueNotifiers to track expansion state
+  final ValueNotifier<bool> _learnExpanded = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _resourcesExpanded = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -58,6 +63,9 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
 
   @override
   void dispose() {
+    // Clean up the notifiers
+    _learnExpanded.dispose();
+    _resourcesExpanded.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -91,6 +99,16 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
       context,
       MaterialPageRoute(
         builder: (context) => RegistrationPage(selectedLanguage: widget.selectedLanguage),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        height: 1,
+        color: Colors.white,
       ),
     );
   }
@@ -140,21 +158,23 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 );
                                 _closeDrawer();
                               }),
+                              _buildDivider(),
                               _buildExpandableMenuItem('Learn', [
-                                'Earthquake',
-                                'Storm',
-                                'Flood',
-                                'Tsunami',
-                                'Volcano',
-                                'Drought',
-                              ]),
+                                'About Earthquakes',
+                                'Disastrous Earthquakes in the Philippines',
+                                'Preparing for Earthquakes',
+                              ], isEarthquakes: true),
+                              _buildDivider(),
                               _buildExpandableMenuItem('Resources', [
                                 'Resource 1',
                                 'Resource 2',
                                 'Resource 3',
                               ]),
+                              _buildDivider(),
                               _buildMenuItem('Hotlines', onTap: () {}),
+                              _buildDivider(),
                               _buildMenuItem('About', onTap: () {}),
+                              _buildDivider(),
                               const SizedBox(height: 8),
                               _buildMenuItem(
                                 _userRole == 'guest' ? 'Register' : 'Log out',
@@ -193,7 +213,10 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildExpandableMenuItem(String title, List<String> items) {
+  Widget _buildExpandableMenuItem(String title, List<String> items, {bool isEarthquakes = false}) {
+    // Use the appropriate ValueNotifier based on the title
+    final expandedNotifier = title == 'Learn' ? _learnExpanded : _resourcesExpanded;
+    
     return Theme(
       data: Theme.of(context).copyWith(
         dividerColor: Colors.transparent,
@@ -206,19 +229,48 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
             fontSize: 20,
           ),
         ),
-        iconColor: Colors.white,
-        collapsedIconColor: Colors.white,
-        children: items.map((item) {
-          return Padding(
-            padding: const EdgeInsets.only(left: 16.0),
-            child: _buildMenuItem(
-              item,
-              onTap: () {
-                // Handle submenu item tap
-              },
-            ),
-          );
-        }).toList(),
+        trailing: ValueListenableBuilder<bool>(
+          valueListenable: expandedNotifier,
+          builder: (context, isExpanded, _) {
+            return SvgPicture.asset(
+              isExpanded ? 'assets/icons/minus.svg' : 'assets/icons/plus.svg',
+              width: 24,
+              height: 24,
+              color: Colors.white,
+            );
+          },
+        ),
+        onExpansionChanged: (expanded) {
+          expandedNotifier.value = expanded;
+        },
+        children: [
+          if (isEarthquakes) ...[
+            _buildSubmenuItem('About Earthquakes'),
+            _buildSubmenuItem('Disastrous Earthquakes in the Philippines'),
+            _buildSubmenuItem('Preparing for Earthquakes'),
+          ] else ...[
+            ...items.map((item) => _buildSubmenuItem(item)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmenuItem(String title) {
+    return InkWell(
+      onTap: () {
+        // Handle submenu item tap
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.only(left: 36, right: 20, top: 12, bottom: 12),
+        child: Text(
+          title,
+          style: GoogleFonts.vt323(
+            color: Colors.white,
+            fontSize: 18,
+          ),
+        ),
       ),
     );
   }

@@ -166,14 +166,19 @@ class GameplayPageState extends State<GameplayPage> {
 
   Future<void> _playBackgroundMusic() async {
     try {
-      await _audioPlayer.setLoopMode(LoopMode.one); // Loop the background music
-      await _audioPlayer.setAsset('assets/sound/bgm/AdvBGM.mp3'); // Set the audio source
+      await _audioPlayer.setLoopMode(LoopMode.one);
+      // Choose music based on gamemode
+      String musicFile = widget.gamemode == 'arcade' 
+          ? 'assets/sound/bgm/ArcBGM.mp3'
+          : 'assets/sound/bgm/AdvBGM.mp3';
+      await _audioPlayer.setAsset(musicFile);
       setState(() {
         _bgMusicLoaded = true;
       });
-      await _audioPlayer.setVolume(_musicVolume); // Set the volume
-      await _audioPlayer.play(); // Play the background music
+      await _audioPlayer.setVolume(_musicVolume);
+      await _audioPlayer.play();
     } catch (e) {
+      print('❌ Error playing background music: $e');
     }
   }
 
@@ -505,6 +510,13 @@ void readCurrentQuestion() {
       _selectedOptionIndex = index;
       _isCorrect = isCorrect;
       
+      if (widget.gamemode == 'arcade') {
+        _updateAnimationsForArcade(isCorrect);
+        _questionsAnswered++;
+        _totalTimeInSeconds = _stopwatchSeconds;
+        _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
+      }
+
       // Update arcade stats
       if (widget.gamemode == 'arcade') {
         _questionsAnswered++;
@@ -1059,9 +1071,39 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                             ),
                           ),
                           if (widget.gamemode == 'arcade')
-                            Text(
-                              _stopwatchTime,
-                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 25.0),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // Kladis on the left
+                                      SizedBox(
+                                        width: _isGameOver ? 128 : 64,
+                                        height: 64,
+                                        child: _kladisAnimation!,
+                                      ),
+                                      const SizedBox(width: 20), // Add more spacing
+                                      // Stopwatch in the middle
+                                      Text(
+                                        _stopwatchTime,
+                                        style: GoogleFonts.vt323(
+                                          fontSize: 32, 
+                                          color: Colors.white
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20), // Add more spacing
+                                      // Kloud on the right
+                                      SizedBox(
+                                        width: _isGameOver ? 128 : 64,
+                                        height: 64,
+                                        child: _kloudAnimation!,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           if (widget.gamemode != 'arcade') 
                             Padding(
@@ -1192,6 +1234,29 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   void _showDeathAnimation() {
     setState(() {
+    });
+  }
+
+  // Update the animation handling for arcade mode
+  void _updateAnimationsForArcade(bool isCorrect) {
+    setState(() {
+      if (isCorrect) {
+        _kladisAnimation = const KladisCorrect();
+        _kloudAnimation = const KloudCorrect();
+      } else {
+        _kladisAnimation = const KladisWrong();
+        _kloudAnimation = const KloudWrong();
+      }
+    });
+
+    // Reset to idle after animation
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _kladisAnimation = const KladisIdle();
+          _kloudAnimation = const KloudIdle();
+        });
+      }
     });
   }
 }

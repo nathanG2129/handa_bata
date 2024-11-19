@@ -200,6 +200,7 @@ flutter:
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3
+    - assets/sound/bgm/ArcBGM.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_short_tone_001.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_positive.mp3
     - assets/sound/ingame/zapsplat_multimedia_game_retro_musical_negative_001.mp3

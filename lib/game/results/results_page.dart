@@ -58,11 +58,12 @@ class ResultsPage extends StatefulWidget {
 class ResultsPageState extends State<ResultsPage> {
   final GameSaveManager _gameSaveManager = GameSaveManager();
   late Soundpool _soundpool;
-  late int _soundIdFail;
-  late int _soundId1Star;
-  late int _soundId2Stars;
-  late int _soundId3Stars;
+  int? _soundIdFail;
+  int? _soundId1Star;
+  int? _soundId2Stars;
+  int? _soundId3Stars;
   bool _isInitialized = false;
+  bool _isSoundLoaded = false;
   int stars = 0;
   final AuthService _authService = AuthService();
 
@@ -84,17 +85,8 @@ class ResultsPageState extends State<ResultsPage> {
         widget.isGameOver
       );
 
-      // Initialize soundpool
-      _soundpool = Soundpool.fromOptions(
-        options: const SoundpoolOptions(
-          streamType: StreamType.music,
-          maxStreams: 4,
-        ),
-      );
-
-      // Load sounds first and ensure they're loaded
+      // Load sounds first
       await _loadSounds();
-      print('🔊 Sounds loaded successfully');
 
       // Run other tasks
       await Future.wait([
@@ -105,9 +97,11 @@ class ResultsPageState extends State<ResultsPage> {
         return [null, null];
       });
 
-      // Play sound only once and with a slight delay
-      await Future.delayed(const Duration(milliseconds: 100));
-      _playSoundBasedOnStars(stars);
+      // Play sound only if loaded successfully
+      if (_isSoundLoaded) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        _playSoundBasedOnStars(stars);
+      }
 
       // Mark as initialized and update UI
       if (mounted) {
@@ -126,39 +120,59 @@ class ResultsPageState extends State<ResultsPage> {
   Future<void> _loadSounds() async {
     try {
       print('🎵 Loading result sounds...');
-      _soundIdFail = await _soundpool.load(
-        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3')
+      _soundpool = Soundpool.fromOptions(
+        options: const SoundpoolOptions(
+          streamType: StreamType.music,
+          maxStreams: 4,
+        ),
       );
-      _soundId1Star = await _soundpool.load(
-        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3')
-      );
-      _soundId2Stars = await _soundpool.load(
-        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3')
-      );
-      _soundId3Stars = await _soundpool.load(
-        await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3')
-      );
+
+      // Load all sounds in parallel
+      final results = await Future.wait([
+        _soundpool.load(
+          await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_descend_fail_negative.mp3')
+        ),
+        _soundpool.load(
+          await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_001.mp3')
+        ),
+        _soundpool.load(
+          await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_004.mp3')
+        ),
+        _soundpool.load(
+          await rootBundle.load('assets/sound/result/zapsplat_multimedia_game_retro_musical_level_complete_007.mp3')
+        ),
+      ]);
+
+      _soundIdFail = results[0];
+      _soundId1Star = results[1];
+      _soundId2Stars = results[2];
+      _soundId3Stars = results[3];
+      
+      _isSoundLoaded = true;
       print('✅ All sounds loaded successfully');
     } catch (e) {
       print('❌ Error loading sounds: $e');
+      _isSoundLoaded = false;
     }
   }
 
   void _playSoundBasedOnStars(int stars) {
+    if (!_isSoundLoaded) return;
+    
     try {
       print('🎵 Playing sound for $stars stars');
       switch (stars) {
         case 0:
-          _soundpool.play(_soundIdFail);
+          if (_soundIdFail != null) _soundpool.play(_soundIdFail!);
           break;
         case 1:
-          _soundpool.play(_soundId1Star);
+          if (_soundId1Star != null) _soundpool.play(_soundId1Star!);
           break;
         case 2:
-          _soundpool.play(_soundId2Stars);
+          if (_soundId2Stars != null) _soundpool.play(_soundId2Stars!);
           break;
         case 3:
-          _soundpool.play(_soundId3Stars);
+          if (_soundId3Stars != null) _soundpool.play(_soundId3Stars!);
           break;
       }
     } catch (e) {
@@ -189,10 +203,10 @@ class ResultsPageState extends State<ResultsPage> {
 
   @override
   void dispose() {
-    // Add delay before disposing soundpool
-    Future.delayed(const Duration(seconds: 1), () {
+    // Ensure proper cleanup
+    if (_isSoundLoaded) {
       _soundpool.dispose();
-    });
+    }
     super.dispose();
   }
 
@@ -251,7 +265,15 @@ class ResultsPageState extends State<ResultsPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Button3D(
-                                  onPressed: () {
+                                  onPressed: () async {
+                                    // Cleanup sounds before navigation
+                                    if (_isSoundLoaded) {
+                                      _soundpool.dispose();
+                                      _isSoundLoaded = false;
+                                    }
+
+                                    if (!mounted) return;
+
                                     if (widget.gamemode == 'arcade') {
                                       Navigator.pushReplacement(
                                         context,
@@ -296,9 +318,17 @@ class ResultsPageState extends State<ResultsPage> {
                                 ),
                                 const SizedBox(width: 25),
                                 Button3D(
-                                  onPressed: () {
+                                  onPressed: () async {
+                                    // Cleanup sounds before navigation
+                                    if (_isSoundLoaded) {
+                                      _soundpool.dispose();
+                                      _isSoundLoaded = false;
+                                    }
+
+                                    if (!mounted) return;
+
                                     // Delete any existing saved game first
-                                    _gameSaveManager.deleteSavedGame(
+                                    await _gameSaveManager.deleteSavedGame(
                                       categoryId: widget.category['id'],
                                       stageName: widget.stageName,
                                       mode: widget.mode,

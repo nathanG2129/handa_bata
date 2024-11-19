@@ -195,6 +195,8 @@ flutter:
     - assets/hotlines/DSWD.png
     - assets/hotlines/NDRRMC.png
     - assets/hotlines/PRC.png
+    - assets/localization/learn/en.json
+    - assets/localization/learn/fil.json
     - assets/members/Andrea.png
     - assets/members/Charles.png
     - assets/members/John.png

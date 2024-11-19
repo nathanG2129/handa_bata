@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import the new button widget
+import 'package:handabatamae/pages/learn_page.dart'; // Add this import
 
 class LearnMoreSection extends StatelessWidget {
   final String selectedLanguage;
@@ -62,7 +63,16 @@ class LearnMoreSection extends StatelessWidget {
           const SizedBox(height: 50),
           Button3D(
             onPressed: () {
-              // Add navigation to Learn About Preparedness page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LearnPage(
+                    selectedLanguage: selectedLanguage,
+                    category: 'Earthquakes',
+                    title: 'About Earthquakes',
+                  ),
+                ),
+              );
             },
             width: 225,
             height: 65,

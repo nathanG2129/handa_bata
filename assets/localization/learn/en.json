@@ -1,0 +1,899 @@
+{
+  "References": "References",
+  "Earthquakes": {
+    "About Earthquakes": {
+      "title": "About Earthquakes",
+      "content": [
+        {
+          "heading": "What is an Earthquake?",
+          "description": "<p>An <b>earthquake</b> is a weak to violent shaking of the ground produced by the sudden movement of rock materials below the earth’s surface. Earthquakes occur along tectonic plate boundaries and active faults.</p>"
+        },
+        {
+          "heading": "Did you know?",
+          "description": "The Philippines is situated in the “Pacific Ring of Fire” where numerous earthquakes and volcanic eruptions occur."
+        },
+        {
+          "heading": "What are the different types of earthquake?",
+          "description": "There are two types of earthquakes: tectonic and volcanic earthquakes.",
+          "list": [
+            "A <b>tectonic earthquakes</b> occurs when there is a movement under the earth’s crust. It is felt over a wider area compared to a volcanic earthquake.",
+            "A <b>volcanic earthquakes</b> is an earthquake caused by volcanic eruptions. It is commonly felt only in areas around an erupting volcano."
+          ]
+        },
+        {
+          "heading": "How can we measure the strength of an earthquake?",
+          "description": "The strength of an earthquake can be measured in two ways: magnitude and intensity.",
+          "list": [
+            {
+              "description": "<b>Magnitude</b> is the energy released by an earthquake at the focus.",
+              "sublist": [
+                "It is calculated from earthquakes recorded by an instrument called a seismograph. It is represented by Arabic Numbers (ex. 2.0, 6.8)."
+              ]
+            },
+            {
+              "description": "<b>Intensity</b> is the strength of an earthquake perceived and felt by people in a certain locality. Intensity is generally higher near the epicenter.",
+              "sublist": [
+                "It is a numerical rating based on the relative effects of an earthquake to people, objects, environment, and structures in the surrounding. It is represented by Roman Numerals (ex. II, IV, IX).",
+                "In the Philippines, the intensity of an earthquake is determined using the <a href='/Learn/Other%20Information/Earthquake%20Intensity%20Scale'>PHIVOLCS Earthquake Intensity Scale</a>."
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Did you know?",
+          "description": "In the Philippines, about 20 earthquakes are recorded each day. However, most of these earthquakes are not felt and can only be detected using a seismograph."
+        },
+        {
+          "heading": "What are the effects of an earthquake?",
+          "description": "<p>Earthquakes are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img width='100%' height='100%' src='/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy' /><figcaption><p>The effect of Luzon Earthquake on the Hyatt Terraces Hotel in Baguio City, Philippines.</p><p class='text-xs'>Photo from the Philippine Institute of Volcanology and Seismology</p></figcaption></figure><p>Here are some of the many dangers that earthquakes bring:</p>",
+          "list": [
+            "<b>Ground rupture</b> – This is the deformation on the ground that marks the intersection of the fault with the earth’s surface. It can cause fissuring and displacement of the ground due to movement of the fault.",
+            "<b>Ground Shaking</b> – This is the disruptive up, down, and sideways vibration of the ground during an earthquake. It can cause the following falling down of household items, damage and collapse of various structures, structural collapse due to severe shaking, and other hazards such as liquefaction and landslides.",
+            "<b>Liquefaction</b> - This is the phenomenon wherein sediments, especially near bodies of water, behave like liquid similar to a quicksand. It can cause sinking and/or tilting of structure above it, sandboil, and fissuring.",
+            "<b>Landslide</b> - This is the down slope movement of rocks, soil, and other debris. It can cause erosion, damming, and burial and blockage of roads and rivers.",
+            "<b>Tsunami</b> - This is a series of waves caused commonly by an earthquake under the sea. It can cause flooding, coastal erosion, drowning of people, and damage to properties."
+          ]
+        },
+        {
+          "heading": "Did you know?",
+          "description": "<p>As of December 2020, there are 108 seismic monitoring stations all over the Philippines. These stations, operated by the Philippine Institute of Volcanology and Seismology (PHIVOLCS), are equipped with seismometers that detect and report earthquakes.</p><p>The data collected from these stations is sent to the PHIVOLCS Data Receiving Center (DRC) to determine earthquake parameters such as magnitude, depth of focus, and epicenter. Once these data are determined, <a href='https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-information3'>information about the earthquake</a> is released by PHIVOLCS  on their website along with the reported felt intensities of the affected area (if there is any).</p>"
+        }
+      ],
+      "references": [
+        "<i>Ang Lindol</i> [PDF]. (2001). Bureau of Nonformal Education Department of Education, Culture and Sports. https://drive.google.com/file/d/165PXr8Uz9x8tBtab7AjmuJVFcMEEj7Yv/view",
+        "<i>Earthquake</i> [PDF]. (2001). Bureau of Nonformal Education Department of Education, Culture and Sports. https://drive.google.com/file/d/1CcqPY0o8CS3X-OpKgj2B6jbATWOCdFRI/view",
+        "<i>Hyatt Terraces Hotel in Baguio City collapsed during the 16 July 1990 Luzon Earthquake</i> [Photo]. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-hazards",
+        "<i>Introduction to Earthquake</i>. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/introduction-to-earthquake",
+        "Philippine Institute of Volcanology and Seismology. (2015, November). <i>Earthquake and its Hazards </i>[Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXRzdCZlJKbEd5OUE/view?resourcekey=0-Zm5M6vSjWqkvX3d7pMMZJQ</i>",
+        "Philippine Institute of Volcanology and Seismology. (2021, May 11). <i>ALAMIN ang pagkakaiba ng MAGNITUDE vs INTENSITY: Ang MAGNITUDE ay sukat ng enerhiya ng lindol mula sa focus. Ito ay kinakalkula </i>[Status update]. Facebook. https://www.facebook.com/PHIVOLCS/posts/alamin-ang-pagkakaiba-ng-magnitude-vs-intensityang-magnitude-ay-sukat-ng-enerhiy/3782385691870301/",
+        "Philippine Institute of Volcanology and Seismology. (2023, August). <i>Lindol at Mga Panganib Nito </i>(JPerez, Trans.) [Flyer]. PHIVOLCS. https://www.phivolcs.dost.gov.ph/vault/IEC-Materials/Flyer-Lindol-At-Mga-Panganib-Nito-7Aug2023.pdf"
+      ]
+    },
+    "Disastrous Earthquakes in the Philippines": {
+      "title": "Disastrous Earthquakes in the Philippines",
+      "content": [
+        {
+          "heading": "Moro Gulf Earthquake",
+          "description": "The devastation left behind by this earthquake resulted in immense property damage and loss of lives. The reports claimed that there were officially 8,000 deaths or missing, 10,000 injured, and 90,000 were left homeless. Moreover, the high-scale magnitude also triggered a tsunami measuring about 9 meters high. Based on survey reports, the tsunami resulted in 85% of the casualties, 65% incapacitated, and 95% missing. Many people were also left homeless, and the damage was estimated to be worth six billion pesos of infrastructure and agriculture.",
+          "json": {
+            "Year of Event": 1976,
+            "Magnitude": 8.1,
+            "Intensity": "II, IV, V, VI, VII"
+          }
+        },
+        {
+          "heading": "Luzon Earthquake",
+          "description": "One of the most devastating earthquakes to strike Northern and Central Luzon was the 1990 Luzon earthquake. The horrifying events of its occurrence serve as a wake-up call to implement a proper and stricter disaster management response of the government and other organizations. The bizarre effects of this earthquake resulted in 11 casualties and 574 sustained injuries. Its damage also extends to infrastructure loss, which is estimated to be 1.6 billion pesos. Aside from the earthquake, the report claims that liquefaction was observed in the water channels in Abra and Ilocos Sur. Moreover, the coastal areas of Ilocos Sur and La Union suffered from sea level disturbances. The earthquake also triggered landslides in the mountainous region of Abra, Ilocos Sur, Mountain Province, Kalinga, and Benguet.",
+          "json": {
+            "Year of Event": 1990,
+            "Magnitude": 7.8,
+            "Intensity": "VIII to IX"
+          }
+        },
+        {
+          "heading": "Casirugan Earthquake",
+          "description": "The catastrophic events of the Casiguran earthquake were one of the most challenging times for Filipinos. The Casirugan earthquake has claimed the lives of 270 individuals, and 261 were left incapacitated. This seismic event was strong enough to be felt in the whole archipelago of Luzon. Many buildings have collapsed, which was the leading cause of casualty,  as property damage reached 369 million dollars  across the island. Moreover, extensive landslides and fissures were observed in the mountain area near the epicenter.",
+          "json": {
+            "Year of Event": 1968,
+            "Magnitude": 7.3,
+            "Intensity": "III to VIII"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/687083189?et=CYTocimHTdpELnUygMWAfw&tld=com&sig=9-nHe_XIZUHU1S_0zJqyOTpKv3FnZ2NWUeJyVxwyiEc=&caption=true&ver=1"
+          ]
+        },
+        {
+          "heading": "Bohol Earthquake",
+          "description": "The infamous earthquake of the recent century, the Bohol earthquake, had a strong impact capable of affecting over 1.2 million people. Based on reports, there were 222 casualties, 797 were incapacitated, and eight people were missing. Many individuals struggled during this calamity as it was also notorious for its structural damage to over 79,000 buildings, resulting in over 340,000 displaced inhabitants. Its property damage reached over two billion pesos of infrastructure. As of writing this website, affected individuals are still recovering with the help of organizations like the World Health Organization (WHO) and the Department of Health(DOH). Reports also claimed that they are also training their local staff to strengthen the disaster preparedness of people and ensure their health and safety.",
+          "json": {
+            "Year of Event": 2013,
+            "Magnitude": 7.2,
+            "Intensity": "VIII"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/482522357?et=XpY9F8jSTDNNPXPkzgTsKg&tld=com&sig=MB9Ivu9i1NFUsHcKpy9Is65NPejB5obI1Aeab-HYtw4=&caption=true&ver=1"
+          ]
+        },
+        {
+          "heading": "Panay Earthquake",
+          "description": "The dreadsome impact of the Panay earthquake was felt in the vicinity of Culasi, Antique. Many people were affected and reports claim that there were eight casualties and 41 sustained injuries. The fearsome strength of the earthquake caused significant damage on Panay Island, several affected areas suffered from structural damage and collapsed. Structures include houses, buildings, bridges, and churches. After the earthquake, landslides, sandboil, and fissures were also observed. Its destruction was estimated to be 30 million pesos.",
+          "json": {
+            "Year of Event": 1994,
+            "Magnitude": 7.1,
+            "Intensity": "II to VII"
+          }
+        }
+      ],
+      "references": [
+        "Bangsamoro Information Office. (2022, August 17). <i>1976 Midnight Killer: Remembering the deadly 8-magnitude quake in Mindanao.</i> Bangsamoro Autonomous Region in Muslim Mindanao. Retrieved December 28, 2023, from https://bangsamoro.gov.ph/news/latest-news/1976-midnight-killer-remembering-the-deadly-8-magnitude-quake-in-mindanao/",
+        "Malaya, B. (2019, October 21). <i>Looking Back: The 1976 Moro Gulf Earthquake. WhatALife! Retrieved December 28, 2023,</i> from https://whatalife.ph/looking-back-what-filipinos-learned-from-the-1976-moro-gulf-earthquake/",
+        "National Disaster Risk Reduction and Management Council. (2013, October 30). <i>NDRRMC Situation Report on the effects of the Earthquake in Bohol,</i> October 30, 2013 (6:00 a.m.). Official Gazette. Retrieved December 28, 2023, from https://www.officialgazette.gov.ph/2013/10/30/ndrrmc-situation-report-on-the-effects-of-the-earthquake-in-bohol-october-30-2013-600-a-m/",
+        "<i>Philippine Institute of Volcanology and Seismology.</i> (n.d.). 1990 July 16 Ms7.8 Luzon Earthquake. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/212-1990-july-16-ms7-9-luzon-earthquake",
+        "<i>Philippine Institute of Volcanology and Seismology.</i> (n.d.). PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/17-earthquake/34-1990-june-14-panay-earthquake",
+        "Philippine Institute of Volcanology and Seismology. (n.d.). <i>1976 August 17 Mw8.1 Moro Gulf Earthquake.</i> PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/208-1976-august-17-ms7-9-moro-gulf-earthquak",
+        "Philippine Institute of Volcanology and Seismology. (n.d.). <i>1968 August 02 Ms7.3 Casiguran Earthquake.</i> PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/206-1968-august-02-ms7-3-casiguran-earthquake",
+        "World Health Organization Philippines. (2017, July 17). <i>Bohol Earthquake: One year on.</i> WHO. Retrieved December 28, 2023, from https://www.who.int/philippines/news/feature-stories/detail/bohol-earthquake-one-year-on/",
+        "Ong, A. K. S., Zulvia, F. E., & Prasetyo, Y. T. (2023). <i>\"The Big One\" Earthquake Preparedness Assessment among Younger Filipinos Using a Random Forest Classifier and an Artificial Neural Network.</i> Sustainability, 15(1), 679. https://doi.org/10.3390/su15010679"
+      ]
+    },
+    "Preparing for Earthquakes": {
+      "title": "Preparing for Earthquakes",
+      "content": [
+        {
+          "heading": "Before an Earthquake",
+          "list": [
+            {
+              "subheading": "Be prepared",
+              "list": [
+                {
+                  "title": "Make your home safe.",
+                  "sublist": [
+                    "Make sure that the construction of your house is solid. It should conform to the correct and recommended “safe engineering practice” stated in the National Building Code of the Philippines and National Structural Code of the Philippines.<p>You can answer the <a href='https://howsafeismyhouse.phivolcs.dost.gov.ph/' class='underline text-blue-100'>“How Safe Is My House?”</a> of Philippine Institute of Volcanology and Seismology (PHIVOLCS) to check the structural soundness of your house against earthquakes.</p>",
+                    "Strap or bolt heavy furnitures and/or cabinets to the wall.",
+                    "Check the stability of hanging objects such as ceiling fans and chandeliers.",
+                    "Breakable items, harmful chemicals, and flammable materials should be placed or stored in the lowest and safest part of the shelves.",
+                    "Always turn off the gas tanks when not in use."
+                  ]
+                },
+                {
+                  "title": "Prepare your family from earthquakes and emergencies.",
+                  "sublist": [
+                    "Be aware of the different earthquake hazards in your area.",
+                    "Prepare an <a href='/Learn/Other%20Information/Emergency%20Go%20Bag'>emergency go bag</a> and learn how to perform first aid.",
+                    "Conduct and participate in regular earthquake drills.",
+                    "Familiarize yourself with the exit routes of your home. Lay out pathways for children, pregnant women, the elderly, and people with disabilities during evacuation.",
+                    "Know where to find and learn to use fire extinguishers, alarms, and emergency exits."
+                  ]
+                }
+              ]
+            },
+            {
+              "subheading": "Be informed",
+              "list": [
+                "Know the various <a href='/Hotline'>national emergency hotlines and numbers</a> in the Philippines. Write these down on a piece of paper or include them in your cellphone's contacts.",
+                "Be familiar with the <a href='/Learn/Other%20Information/Earthquake%20Intensity%20Scale'>PHIVOLCS Earthquake Intensity Scale</a>."
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "During an Earthquake",
+          "list": [
+            {
+              "subheading": "If you are indoors",
+              "list": [
+                "Stay calm.",
+                "Do not leave the house or building during an earthquake. Do the <a href='https://youtu.be/zo_UqtlDt7E?feature=shared' class='underline text-blue-100' target='_blank'>Duck, Cover, and Hold</a> in the safest place you can find (ex. under a sturdy table) and stay there until the shaking stops. If there is no table, protect your head and nape with your hands.",
+                "Stay away from glass windows, shelves, cabinets, and other heavy objects.",
+                "Beware of falling objects. Be alert and keep your eyes open."
+              ]
+            },
+            {
+              "subheading": "If you are outdoors",
+              "list": [
+                "Stay calm and move to an open area.",
+                "Stay away from trees, powerlines, posts, and other structures that may collapse or fall down.",
+                "Move away from steep slopes which may be affected by landslides.",
+                "If you’re in a moving vehicle, stop and get out. Do not attempt to cross bridges, overpasses, or flyovers which may have been damaged",
+                "If you’re near the shore and feel an earthquake, especially if it’s too strong, move quickly to higher grounds. There could be a tsunami."
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "After an Earthquake",
+          "list": [
+            "Do not panic. Stay calm.",
+            "Be prepared for aftershocks. Once the shaking stops, take the fastest and safest way out of the building.",
+            "Do not use elevators, enter damaged buildings, and use telephones unless necessary.",
+            "Check yourself and others for injuries.",
+            "Check water and electrical lines for damage.",
+            "Check for spills of chemical, toxic and flammable materials.",
+            "Check and control fires which may spread.",
+            "If you need to evacuate your home, leave a message stating where you are going and bring your emergency go bag.",
+            "Stay updated on the announcements and warnings of your barangay or local government unit."
+          ]
+        }
+      ],
+      "references": [
+        "<i>Earthquake!!! Are You Prepared? </i>[Poster]. (2015, September). Philippine Institute of Volcanology and Seismology. https://drive.google.com/file/d/0B8_KPQhbpktXcGhXcTh0VlRTV3M/view?resourcekey=0-0TBOZVh9XjRmoCSgnA6B1Q",
+        "<i>Lindol… Handa Ka Ba? </i>[Poster]. (2015, December). Philippine Institute of Volcanology and Seismology. https://drive.google.com/file/d/0B8_KPQhbpktXTE9vY0FDYjk3dFE/view?resourcekey=0-E55_Ket2V3cyt_YyAFtAGw",
+        "<i>Ready ba ang pamilya in case of emergencies and disasters? </i>(n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters#Earthquake-preparedness"
+      ]
+    }
+  },
+  "Typhoons": {
+    "About Typhoons": {
+      "title": "About Typhoons",
+      "content": [
+        {
+          "heading": "What are typhoons?",
+          "description": "<p>A <b>tropical cyclone</b>, commonly known as “typhoon” or “bagyo” in the Philippines, is a system of thunderstorms moving in a circular direction.</p><figure><img src='/images/learn/TropicalCyclone.jpg' alt='' loading='lazy' /><figcaption>A tropical cyclone as seen from above.</figcaption></figure><p>In different parts of the world, tropical cyclones are known by various names. In the Western North Pacific Ocean, they are called \"typhoons.\" In the North Atlantic, Eastern North Pacific, and South Pacific Ocean, they are called \"hurricanes.\" In the Bay of Bengal, Arabian Sea, and Western South Indian Ocean, they are called \"cyclones.\" And in the Eastern South Indian Ocean, they are called \"willy-willies.\"</p><p>Tropical cyclones can last for a few days or up to two weeks, with most lasting about six days before making landfall. If a typhoon makes landfall, it means that the center or eye of the typhoon has hit any landmass in the country.</p>"
+        },
+        {
+          "heading": "Did you know?",
+          "description": "Located along the \"Pacific typhoon belt\", the Philippines is prone to typhoons. Each year, about 20 typhoons enter or form in the Philippine Area of Responsibility (PAR) and 8 or 9 of these typhoons make landfall."
+        },
+        {
+          "heading": "What are the types of typhoons?",
+          "description": "In the Philippines, a typhoon is categorized according to its wind strength:",
+          "list": [
+            "<b>Tropical Depression</b> (TD) - typhoon with a wind speed of up to 61 kilometers per hour or less",
+            "<b>Tropical Storm</b> (TS) - typhoon with wind speed of 62 to 88 kilometers per hour",
+            "<b>Typhoon</b> (TY) - typhoon with wind speed of 89 to 117 kilometers per hour",
+            "<b>Severe Tropical Storm</b> (STS) - typhoon with wind speed of 118 to 184 kilometers per hour",
+            "<b>Super Typhoon</b> (STS) - typhoon with wind speed exceeding 184 kilometers per hour"
+          ]
+        },
+        {
+          "heading": "Did you know?",
+          "description": "The strongest typhoon to hit the Philippines was Super Typhoon Yolanda. It had a wind strength of up to 315 kilometers per hour."
+        },
+        {
+          "heading": "What are the dangers of typhoons?",
+          "description": "<p>Typhoons are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img src='/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy' /><figcaption>The effects of Super Typhoon Odette in Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Here are some of the many dangers that typhoons bring:</p>",
+          "list": [
+            "<b>Strong winds</b> that may reach 250 kilometers per hour. It can destroy homes and knock down trees, poles, and other structures.",
+            "<b>Flooding</b> due to heavy and persistent rains. Severe flooding can damage crops and structures. It can also contaminate drinking water and carry diseases such as Leptospirosis.",
+            "<b>Storm Surge</b> that causes high and strong waves and flooding in areas near the sea.",
+            "<b>Landslides</b> and <b>mudslides</b> caused by heavy and persistent rains in mountainous and arid areas."
+          ]
+        }
+      ],
+      "references": [
+        "<i>About Tropical Cyclones</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/information/about-tropical-cyclone",
+        "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+        "<i>Frequently Asked Questions (FAQ) / Trivia</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/faqs-and-trivias",
+        "Kho, C. (2022, January 8). <i>A group of people walking down a street next to power lines</i> [Photo]. Unsplash. https://unsplash.com/photos/a-group-of-people-walking-down-a-street-next-to-power-lines-XZaYzBVpFzI?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash",
+        "<i>Mga dapat gawin bago, habang at pagkatapos ng bagyo</i>. (2022, October 29). Philippine Information Agency. https://pia.gov.ph/infographics/2022/10/29/mga-dapat-gawin-bago-habang-at-pagkatapos-ng-bagyo",
+        "NASA. (2016, February 7). <i>Typhoon</i> [Photo]. Unsplash. https://unsplash.com/photos/typhoon-i9w4Uy1pU-s"
+      ]
+    },
+    "Disastrous Typhoons in the Philippines": {
+      "title": "Disastrous Typhoons in the Philippines",
+      "content": [
+        {
+          "heading": "Super Typhoon Yolanda",
+          "description": "The unprecedented strength of Super Typhoon Yolanda was one of the most overwhelming times for Filipinos. At the time of writing this website, this typhoon was known to be the strongest typhoon in history. Super Typhoon Yolanda had a devastating impact on the Philippines. During the storm, there were about 16 million people that were affected by the typhoon, and some of these individuals have yet to recover from its impact. Based on reports, there were 6,300 casualties, 28,688 incapacitated, and 1062 were missing. Its damage was estimated to be around Php 86.9 billion pesos. With such an outcome, many organizations are still providing financial and humanitarian assistance to those affected by the typhoon.",
+          "json": {
+            "International Name": "Typhoon Haiyan",
+            "Year of Event": 2013,
+            "Magnitude": "315 km/h",
+            "Intensity": "380 km/h"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/187751019?et=bqNeEc0-SIFi99Aw7Ey2xQ&tld=com&sig=v4Q1pkxe7EP8GV69NjcuUgkuN0j2Rv4IkCtG1OQoLCM=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/187746767?et=9AasfiofTM9lOHrQp_etqg&tld=com&sig=hBAjG2Cg06jN-n4BuExconv-7kYS0Uc92N7aA7lfUbo=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/187746562?et=YxSeUuEKRX5sOKqDSGpZ-Q&tld=com&sig=rOCvsfjBL-mPQAsdIkB02Nl2wBQAj-_G5sW8gVlJwyo=&caption=true&ver=1"
+          ]
+        },
+        {
+          "heading": "Super Typhoon Ompong",
+          "description": "The devastation of the Super Typhoon Ompong was by no means immeasurable. One of the most affected areas, the province of Cagayan, suffered a massive blow with strength capable of destroying homes and agriculture in Regions 1,2,3, CALABARZON, and CAR. Based on statistics, there were 3 million people affected, 82 casualties, 138 incapacitated, and two were missing. With such a destructive typhoon, the damage easily reached Php 33.9 billion pesos. During its occurrence, landslides and flooding were observed in typhoon-prone areas.",
+          "json": {
+            "International Name": "Typhoon Mangkhut",
+            "Year of Event": 2018,
+            "Magnitude": "205 km/h",
+            "Intensity": "225 km/h"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/1033532704?et=5iJnjnlaRWpex8T2iOGXXw&tld=com&sig=7nkgClRp5pYMgbQGtkGqZ9bRP0VsNMN9QmmfPCUqnMA=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1033575308?et=5OmDzaK4SvhZn-LXq-tR_g&tld=com&sig=oLOEVHiXzj94ecMBsmMRAPMACwKfiPdcy92UlqPlK3Y=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1033576332?et=s7zblnQ8Ru9URP63O1TEbw&tld=com&sig=OSOeBdLKZh2AbcaUUykwOJB4hE8w1UGmhNMQ_gOl2No=&caption=true&ver=1"
+          ]
+        },
+        {
+          "heading": "Super Typhoon Quinta",
+          "description": "In 2020, the incident of Super Typhoon Quinta struck a devastating blow in the province of the Bicol region. Statistics have shown that the storm was massive enough to affect 338,229 individuals in Region 1, Region 2, Region 3, Region 6, Region 8, CAR, and NCR. There were four casualties in these regions, and only one was left incapacitated. Unfortunately, the damage was estimated to be ₱473,240,000 worth of infrastructure, agriculture, and fisheries.",
+          "json": {
+            "International Name": "Typhoon Molave",
+            "Year of Event": 2020,
+            "Magnitude": "185 km/h",
+            "Intensity": "250 km/h"
+          }
+        },
+        {
+          "heading": "Super Typhoon Goni",
+          "description": "Bago maganap ang Super Typhoon Goni, isa na namang Super Typhoon ang tumama sa Pilipinas. Ang Super Typhoon Goni ay kilala sa pinakamalakas na bagyo noong 2020. Base sa statistics, 24 million na tao ang naapektuhan ng bagyo, kung saan 24 ang namatay, 399 ang hindi makagalaw, at 130,266 ang nawalan ng tirahan. Ang pinsala nito ay umabot sa halagang Php 11.3 billion na istraktura at pinsala sa kalsada. Sinasabi rin sa mga ulat na na obserbahan din ang pagbaha sa baybayin sa lalawigan ng Albay.",
+          "json": {
+            "International Name": "Typhoon Rolly",
+            "Year of Event": 2020,
+            "Magnitude": "225 km/h",
+            "Intensity": "310 km/h"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/1229431130?et=BzXVftqeTI9QSOn2V2AVGQ&tld=com&sig=-gATax9BlnIG6KRqYh50SJQf51ZpEHjDWGko1wnqG20=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1229431104?et=9ad3Ss0UTRRK4lN3aJJ8jw&tld=com&sig=vSOanc7xDyzF98pCkOCKxjYRtAusPXiRLPe5VluTGI0=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1229430931?et=21Qyq0N8SfldBYWU1aMVgQ&tld=com&sig=JrqGFbNvnRrEXyrpwP0scrnAljGyCzO7c-Z8S-bbpnU=&caption=true&ver=1"
+          ]
+        },
+        {
+          "heading": "Super Typhoon Ulysses",
+          "description": "Following the earlier typhoons, another Super Typhoon emerged in less than two weeks, known as Super Typhoon Ulysses. The Super typhoon affected 5,184,824 people found in 7,827 barangays of Region I, II, III, V, CALABARZON, MIMAROPA, NCR and CAR. Reports have shown 101 casualties, 85 incapacitated, and ten missing individuals. Moreover, its immense strength also resulted in landslides and flash floods, especially in the provinces of Catanduanes and Camarines Sur.",
+          "json": {
+            "International Name": "Typhoon Vamco",
+            "Year of Event": 2020,
+            "Magnitude": "150 km/h",
+            "Intensity": "205 km/h"
+          },
+          "list": [
+            "https://embed.gettyimages.com/embed/1229610914?et=todS0qBfTfVqoSvKdHR5XQ&tld=com&sig=TG4fwgiEkeUowFiBTMmeghwsIDmzUvl8qK_7tv0IPpU=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1229610875?et=CbRrMby2RQdBj2ZJEUEoEg&tld=com&sig=mnp_qACmOr8ZKprwZ0QdidW470nNlcJF1b0LeOMtjK4=&caption=true&ver=1",
+            "https://embed.gettyimages.com/embed/1229611050?et=cc2rv0v4Sex-lCKqWEQPDg&tld=com&sig=-7mSHbLm-QiMP29kksK4yw4ZXRepH9hlSe9OKvAwVig=&caption=true&ver=1"
+          ]
+        }
+      ],
+      "references": [
+        "Deiparine, C. (2020, November 1). 'Yolanda' and 'Rolly': Super typhoons 7 years apart to hit the Philippines. <i>Philippine Star</i>. https://www.philstar.com/headlines/2020/11/01/2053891/yolanda-and-rolly-super-typhoons-7-years-apart-hit-philippines",
+        "<i>Flash Update: No. 02 – Typhoon Molave, Philippines, Viet Nam – 27 Oct 2020.</i> (2020, October 27). ReliefWeb. https://reliefweb.int/report/philippines/flash-update-no-02-typhoon-molave-philippines-viet-nam-27-oct-2020",
+        "National Disaster Risk Reduction and Management Council. (2022, June 13). <i>Situational Report for TC QUINTA (2020)</i>. https://monitoring-dashboard.ndrrmc.gov.ph/assets/uploads/situations/SitRep_No__12_for_Typhoon_Quinta_Whole_Report.pdf",
+        "<i>NDRRMC Update: Sitrep No. 29 re Preparedness Measures and Effects for Typhoon \"Ulysses\" (I.N. Vamco), 13 January 2020, 08:00AM</i>. (2021, January 14). ReliefWeb. ",
+        "<i>Over 700,000 children among the most affected as super typhoon Rolly/Goni hit the Philippines</i>. (2020, November 2). UNICEF Philippines. https://www.unicef.org/philippines/stories/over-700000-children-among-most-affected-super-typhoon-rollygoni-hit-philippines",
+        "Philippine Atmospheric, Geophysical and Astronomical Services Administration. (2018, September 20). <i>Typhoon Ompong (Mangkhut / 1822) Summary Report</i>. https://pubfiles.pagasa.dost.gov.ph/tamss/weather/tc_summary/TY_Ompong_MANGKHUT_2018.pdf",
+        "<i>Philippines: Super Typhoon Goni (Rolly) Humanitarian Needs and Priorities (Nov 2020 - April 2021)</i>. (2020, November 9). ReliefWeb. https://reliefweb.int/report/philippines/philippines-super-typhoon-goni-rolly-humanitarian-needs-and-priorities-nov-2020",
+        "<i>Philippines: Typhoon Vamco (Ulysses) Snapshot (As of 12 November 2020)</i>. (2020, November 12). ReliefWeb. https://reliefweb.int/report/philippines/philippines-typhoon-vamco-ulysses-snapshot-12-november-2020",
+        "Reid, K. (2023, October 17). <i>Typhoon Haiyan: Facts, FAQs, and how to help</i>. World Vision. https://www.worldvision.org/disaster-relief-news-stories/2013-typhoon-haiyan-facts",
+        "<i>Relief Efforts Stepped Up as Super Typhoon Rolly Devastates Philippines’ Bicol Region</i>. (2020, November 2). ReliefWeb. https://reliefweb.int/report/philippines/relief-efforts-stepped-super-typhoon-rolly-devastates-philippines-bicol-region",
+        "<i>Rolly’s damage to public infra now at P5.76-B</i>. (2020, November 3). DPWH. https://www.dpwh.gov.ph/dpwh/news/20776",
+        "<i>Typhoon Ompong (Mangkhut) in the Philippines</i>. (2018, September 18). World Health Organization (WHO). https://www.who.int/westernpacific/emergencies/typhoon-ompong"
+      ]
+    },
+    "Preparing for Typhoons": {
+      "title": "Preparing for Typhoons",
+      "content": [
+        {
+          "heading": "Before a Typhoon",
+          "list": [
+            {
+              "subheading": "Be prepared",
+              "list": [
+                {
+                  "title": "Make your home safe",
+                  "sublist": [
+                    "Inspect the house for damage to doors, windows, ceilings, roofs, and so forth. If they are damaged, have them repaired immediately",
+                    "If your house is prone to flooding during a typhoon, immediately move important furniture and items such as electronic appliances to the upper floor or place them on sturdy tables.",
+                    "Bring outdoor furniture and other things inside the house.",
+                    "Tie down roofs and other objects that can be blown away by strong winds.",
+                    "Cut off branches from trees near your home that may fall.",
+                    "Clean up debris in waterways and canals."
+                  ]
+                },
+                {
+                  "title": "Prepare your family from typhoons and emergencies.",
+                  "sublist": [
+                    "Be aware of the different earthquake hazards in your area.",
+                    "Prepare an <a href='/Learn/Other%20Information/Emergency%20Go%20Bag'>emergency go bag</a> and learn how to perform first aid.",
+                    "Participate in community flood preparedness actions and drills.",
+                    "Know the flood early warning and evacuation plan of your barangay or local government unit (LGU). When an order is received, immediately evacuate to higher and safer grounds or to the designated evacuation area."
+                  ]
+                }
+              ]
+            },
+            {
+              "subheading": "Be Informed",
+              "list": [
+                "Know the various <a href='/Hotline'>national emergency hotlines and numbers</a> in the Philippines. Write these down on a piece of paper or include them in your cellphone's contacts.",
+                "Be familiar with the <a href='/Learn/Other%20Information/Tropical%20Cyclone%20Warning%20Systems'>Tropical Cyclone Warning System</a> and <a href='/Learn/Other%20Information/Rainfall%20Warning%20System'>Rainfall Warning System</a>"
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "During a Typhoon",
+          "list": [
+            {
+              "list": [
+                "Stay calm and stay indoors.",
+                "Stay tuned for the latest news and weather updates. Prepare your emergency go bag for a possible evacuation if the situation worsens.",
+                "Do not touch electrical equipment if you are wet or standing in floodwater.",
+                "Do not go swimming or boating in swollen rivers",
+                "Do not cross streams when water level is already above the knee.",
+                "Do not walk or drive through flooded areas.",
+                "If you are trapped because of flooding, go to the highest level of your house or building. Do not climb into a closed space. You may become trapped by rising flood water.",
+                {
+                  "title": "If evacuation is necessary, do the following:",
+                  "sublist": [
+                    "Turn off all main switches of electricity, water, and LPG tanks.",
+                    "Close the windows and lock the doors.",
+                    "Take your pets with you when evacuating."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "After a Typhoon",
+          "list": [
+            "Stay updated on the news and announcements or warnings of your barangay or LGU.",
+            "Leave the evacuation area only when authorities say it is safe to return home.",
+            "Report fallen trees and electric posts or water and telephone lines to proper authorities",
+            "Before turning on electricity, check for wet or submerged electrical outlets and appliances.",
+            "Check your house for possible damages and repair as necessary.",
+            "Make sure that the food and water for drinking are not contaminated by flood water.",
+            "Throw away rainwater in cans, pots, and tires to prevent breeding of mosquitoes."
+          ]
+        }
+      ],
+      "references": [
+        "<i>Flooding. (n.d.). MMDA. https://mmda.gov.ph/mmdrrmc/20-faq/5501-disaster-awareness-flooding-faq.html</i>",
+        "<i>Hurricanes. (n.d.). Ready.gov. https://www.ready.gov/hurricanes</i>",
+        "<i>Ready ba ang pamilya in case of emergencies and disasters?</i> (n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters#Typhoon-preparedness"
+      ]
+    }
+  },
+  "Other Information": {
+    "Earthquake Intensity Scale": {
+      "title": "Earthquake Intensity Scale",
+      "content": [
+        {
+          "heading": "Magnitude vs Intensity",
+          "list": [
+            "<b>Magnitude</b> is the energy released by an earthquake at the focus. It is calculated from earthquakes recorded by an instrument called a seismograph.",
+            "<b>Intensity</b> is the strength of an earthquake perceived and felt by people in a certain locality. Intensity is generally higher near the epicenter."
+          ]
+        },
+        {
+          "heading": "PHIVOLCS Earthquake Intensity Scale",
+          "description": "The PHIVOLCS Institute of Volcanology and Seismology Earthquake Intensity Scale (PEIS) is a scale used to measure the intensity of an earthquake at a specific location. It is based on the relative effects of an earthquake on structures and surroundings.The PEIS is represented by Roman numerals, with Intensity I being the weakest and Intensity X being the strongest. It was developed by the Philippine Institute of Volcanology and Seismology (PHIVOLCS) and has been in use since 1996.",
+          "table": {
+            "headers": ["Intensity", "Description"],
+            "rows": [
+              {
+                "Intensity": "I",
+                "Shaking": "Scarcely perceptible",
+                "Description": [
+                  "Perceptible to people under favorable circumstances.",
+                  "Delicately balanced objects are disturbed slightly.",
+                  "Still water in containers oscillates slowly."
+                ]
+              },
+              {
+                "Intensity": "II",
+                "Shaking": "Slightly felt",
+                "Description": [
+                  "Felt by a few individuals at rest indoors.",
+                  "Hanging objects swing slightly.",
+                  "Still water in containers oscillates noticeably."
+                ]
+              },
+              {
+                "Intensity": "III",
+                "Shaking": "Weak",
+                "Description": [
+                  "Felt by many people indoors especially in the upper floors of buildings. Vibration is felt like the passing of a light truck. Dizziness and nausea are experienced by some people.",
+                  "Hanging objects swing moderately.",
+                  "Still water in containers oscillates moderately."
+                ]
+              },
+              {
+                "Intensity": "IV",
+                "Shaking": "Moderately strong",
+                "Description": [
+                  "Felt generally by people indoors and some people outdoors. Light sleepers are awakened. Vibration is felt like the passing of a heavy truck.",
+                  "Hanging objects swing considerably. Dinner, plates, glasses, windows, and doors rattle. Floors and walls of wood framed building creak. Standing motor cars may rock slightly.",
+                  "Water in containers oscillates strongly.",
+                  "Rumbling sound may sometimes be heard."
+                ]
+              },
+              {
+                "Intensity": "V",
+                "Shaking": "Strong",
+                "Description": [
+                  "Generally felt by most people indoors and outdoors. Many sleeping people awakened. Some are frightened; some run outdoors. Strong shaking and rocking are felt throughout the building.",
+                  "Hanging objects swing violently. Dining utensils clatter and clink; some are broken. Small, light and unstable objects may fall or overturn. Standing vehicles rock noticeably.",
+                  "Liquids spill from filled open containers.",
+                  "Shaking of leaves and twigs of trees is noticeable."
+                ]
+              },
+              {
+                "Intensity": "VI",
+                "Shaking": "Very strong",
+                "Description": [
+                  "Many people are frightened; many run outdoors. Some people lose their balance. Motorists feel like driving in flat tires.",
+                  "Heavy objects and furniture move or may be shifted. Small church bells may ring. Wall plaster may crack. Very old or poorly built houses and man-made structures are slightly damaged though well-built structures are not affected.",
+                  "Limited rockfalls and rolling boulders occur in hilly to mountainous areas and escarpments. Trees are noticeably shaken."
+                ]
+              },
+              {
+                "Intensity": "VII",
+                "Shaking": "Destructive",
+                "Description": [
+                  "Most people are frightened and run outdoors. People find it difficult to stand in upper floors.",
+                  "Heavy objects and furniture overturn or topple. Big church bells may ring. Old or poorly built structures suffer considerable damage. Some well-built structures are slightly damaged. Some cracks may appear on dikes, fish ponds, road surface, or concrete hollow block walls.",
+                  "Limited liquefaction, lateral spreading and landslides are observed. Trees are shaken strongly."
+                ]
+              },
+              {
+                "Intensity": "VIII",
+                "Shaking": "Very Destructive",
+                "Description": [
+                  "People are panicky. People find it difficult to stand even outdoors.",
+                  "Many well-built buildings are considerably damaged. Concrete dikes and foundation of bridges are destroyed by ground settling or toppling. Railway tracks are bent or broken.",
+                  "Tombstones may be displaced, twisted or overturned. Utility posts, towers and monuments may tilt or topple. Water and sewer pipes may be bent, twisted or broken.",
+                  "Liquefaction and lateral spreading cause man- made structure to sink, tilt or topple. Numerous landslides and rockfalls occur in mountainous and hilly areas. Boulders are thrown out from their positions particularly near the epicenter. Fissures and faults rapture may be observed. Trees are violently shaken. Water splashes or slops over dikes or banks of rivers."
+                ]
+              },
+              {
+                "Intensity": "IX",
+                "Shaking": "Devastating",
+                "Description": [
+                  "People are forcibly thrown to the ground. Many cry and shake with fear.",
+                  "Most buildings are totally damaged. Bridges and elevated concrete structures are toppled or destroyed.",
+                  "Numerous utility posts, towers and monuments are tilted, toppled or broken. Water sewer pipes are bent, twisted or broken.",
+                  "Landslides and liquefaction with lateral spreading and sandboils are widespread. The ground is distorted into undulations. Trees are shaken very violently with some toppled or broken. Boulders are commonly thrown out. River water splashes violently or slops over dikes and banks."
+                ]
+              },
+              {
+                "Intensity": "X",
+                "Shaking": "Completely devastating",
+                "Description": [
+                  "Practically all man-made structures are destroyed. ",
+                  "Massive landslides and liquefaction, large scale subsidence and uplifting of landforms and many ground fissures are observed. Changes in river courses and destructive seiches in lakes occur. Many trees are toppled, broken or uprooted."
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "references": [
+        "<i>Making sense of the PHIVOLCS earthquake intensity levels</i>. (n.d.). Official Gazette. https://www.officialgazette.gov.ph/laginghanda/phivolcs-earthquake-intensity-scale/",
+        "Philippine Institute of Volcanology and Seismology. (2009, June). <i>PHIVOLCS Earthquake Intensity Scale</i> [Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXMTd3LTJIRUlWcHM/view?resourcekey=0-UlimhljmNAZFDgbSmu9PZw",
+        "Philippine Institute of Volcanology and Seismology. (2012, January). <i>PHIVOLCS Earthquake Intensity Scale</i> [Poster]. https://drive.google.com/file/d/0B8_KPQhbpktXNkFmeTFHX3dFOFk/view?resourcekey=0-xTqmcTii52_6tOQq_hAr4A",
+        "Philippine Institute of Volcanology and Seismology. (2015, September). <i>PHIVOLCS Earthquake Intensity Scale (Panukat ng Pagyanig ng Lindol)</i> [Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXODZUQXdJSGNRdzA/view?resourcekey=0-XGV11cIRYJlWNpwmPlfCxw",
+        "Philippine Institute of Volcanology and Seismology (PHIVOLCS-DOST). (2021, May 11). <i>ALAMIN ang pagkakaiba ng MAGNITUDE vs INTENSITY: Ang MAGNITUDE ay sukat ng enerhiya ng lindol mula sa focus. Ito ay kinakalkula </i>[Status update]. Facebook. https://www.facebook.com/PHIVOLCS/posts/alamin-ang-pagkakaiba-ng-magnitude-vs-intensityang-magnitude-ay-sukat-ng-enerhiy/3782385691870301/",
+        "<i>PHIVOLCS Earthquake Intensity Scale (PEIS)</i>. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-intensity-scale"
+      ]
+    },
+    "Tropical Cyclone Warning Systems": {
+      "title": "Tropical Cyclone Warning Systems",
+      "content": [
+        {
+          "description": "<p>The Tropical Cyclone Warning System (TCWS) has five (5) wind signal levels, with Wind Signal No. 1 being the lowest and Wind Signal No. 5 being the highest.",
+          "list": [
+            {
+              "img": "/images/learn/WindSignal1.png",
+              "details": [
+                {
+                  "title": "Wind Signal No. 1",
+                  "description": "Tropical Depression (TD)"
+                },
+                {
+                  "title": "Wind Speed",
+                  "description": "39-61 km/h"
+                },
+                {
+                  "title": "Minimal to Minor",
+                  "description": "threat to life and property"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/WindSignal2.png",
+              "details": [
+                {
+                  "title": "Wind Signal No. 2",
+                  "description": "Tropical Storm (TS)"
+                },
+                {
+                  "title": "Wind Speed",
+                  "description": "62-88 km/h"
+                },
+                {
+                  "title": "Minor to Moderate",
+                  "description": "threat to life and property"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/WindSignal3.png",
+              "details": [
+                {
+                  "title": "Wind Signal No. 3",
+                  "description": "Severe Tropical Storm (STS)"
+                },
+                {
+                  "title": "Wind Speed",
+                  "description": "89-117 km/h"
+                },
+                {
+                  "title": "Moderate to Significant",
+                  "description": "threat to life and property"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/WindSignal4.png",
+              "details": [
+                {
+                  "title": "Wind Signal No. 4",
+                  "description": "Typhoon (TY)"
+                },
+                {
+                  "title": "Wind Speed",
+                  "description": "118-184 km/h"
+                },
+                {
+                  "title": "Significant to Severe",
+                  "description": "threat to life and property"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/WindSignal5.png",
+              "details": [
+                {
+                  "title": "Wind Signal No. 5",
+                  "description": "Super Typhoon (STY)"
+                },
+                {
+                  "title": "Wind Speed",
+                  "description": "185 km/h or higher"
+                },
+                {
+                  "title": "Extreme Threat",
+                  "description": "to life and property"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+        "<i>Legend</i>. (n.d.). PAGASA. https://bagong.pagasa.dost.gov.ph/learnings/legend",
+        "<i>Publications</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/publication",
+        "<i>Tropical Cyclone Wind Signal</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learning-tools/tropical-cyclone-wind-signal"
+      ]
+    },
+    "Rainfall Warning System": {
+      "title": "Rainfall Warning System",
+      "content": [
+        {
+          "description": "<p>The <b>Rainfall Warning System (RWS)</b> is developed by the Philippine Atmospheric, Geophysical, and Astronomical Services Administration (PAGASA) to alert concerned communities and emergency managers about heavy rainfall events that would cause flooding. There are two types of warnings issued under the RWS: the Thunderstorm Warning System and the Heavy Rainfall Warning System.</p>"
+        },
+        {
+          "heading": "Thunderstorm Warning System",
+          "description": "<p>The <b>Thunderstorm Warning System (TSTM-WS)</b> is a warning issued by PAGASA when there is short duration rainfall. In TSTM-WS, there are three types of thunderstorm warnings: the Thunderstorm Advisory, the Thunderstorm Watch, and the Thunderstorm Information.</p>",
+          "list": [
+            {
+              "img": "/images/learn/ThunderstormAdvisory.png",
+              "details": [
+                {
+                  "title": "Thunderstorm Advisory"
+                },
+                {
+                  "title": "Thunderstorm Threatens",
+                  "description": "specific area within the next 2 hours"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/ThunderstormWatch.png",
+              "details": [
+                {
+                  "title": "Thunderstorm Watch"
+                },
+                {
+                  "title": "Thunderstorm is Likely",
+                  "description": "to occur within the next 12 hours"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/ThunderstormInformation.png",
+              "details": [
+                {
+                  "title": "Thunderstorm Information"
+                },
+                {
+                  "title": "Thunderstorm is Less Likely",
+                  "description": "to occur within the next 12 hours"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Heavy Rainfall Warning System",
+          "description": "<p>The <b>Heavy Rainfall Warning System (HR-WS)</b> is a warning issued by PAGASA when there is long duration rainfall. In HR-WS, there are three types of color-coded heavy rainfall warnings: the Yellow Rainfall Warning, the Orange Rainfall Warning, and the Red Rainfall Warning.</p>",
+          "list": [
+            {
+              "img": "/images/learn/YellowRainfallWarning.png",
+              "details": [
+                {
+                  "title": "Yellow Rainfall Warning"
+                },
+                {
+                  "title": "Flooding is Possible",
+                  "description": "in low-lying areas and near river channels"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/OrangeRainfallWarning.png",
+              "details": [
+                {
+                  "title": "Orange Rainfall Warning"
+                },
+                {
+                  "title": "Flooding is Threatening",
+                  "description": "in low-lying areas and near river channels"
+                }
+              ]
+            },
+            {
+              "img": "/images/learn/RedRainfallWarning.png",
+              "details": [
+                {
+                  "title": "Red Rainfall Warning"
+                },
+                {
+                  "title": "Severe Flooding is Expected",
+                  "description": "in low-lying areas and near river channels"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "",
+          "description": "The Red Rainfall Warning indicates the most severe flooding conditions. When PAGASA issues a Red Rainfall Warning, residents of the affected area should be ready to evacuate to safety."
+        },
+        {
+          "heading": "Did you know?",
+          "description": "In case of flooding, each local government unit (LGU) has designated evacuation areas to be used. These are the barangay multi-purpose court, selected barangay halls, and public elementary and high schools."
+        }
+      ],
+      "references": [
+        "<i>Ang gamit ng color-coded rainfall advisories ng PAGASA.</i> (n.d.). Official Gazette. https://www.officialgazette.gov.ph/ang-gamit-ng-color-coded-warning-signal-ng-pagasa/",
+        "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+        "<i>Legend</i>. (n.d.). PAGASA. https://bagong.pagasa.dost.gov.ph/learnings/legend",
+        "<i>Publications</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/publication"
+      ]
+    },
+    "Guidelines on the Cancellation or Suspension of Classes": {
+      "title": "Guidelines on the Cancellation or Suspension of Classes",
+      "content": [
+        {
+          "description": "According to DepEd Order No. 37, s. 2022 issued by the Department of Education (DepEd), here are the following guidelines on the cancellation or suspension of classes and work in schools in the event of a typhoon, heavy rainfall, flood, or earthquake:"
+        },
+        {
+          "heading": "Typhoon",
+          "description": "<p>In-person, online classes and work from Kindergarten to Grade 12 and Alternative Learning System (ALS) are automatically canceled in schools situated in LGUs issued with Tropical Cyclone Wind Signals (TCWS) 1, 2, 3, 4 or 5 by the PAGASA.</p><p>If the TCWS is issued at a time when classes have already begun, the school shall immediately suspend the classes and work and send everyone home, it is safe to do so. However, schools are obligated to keep the students and personnel safely in school if traveling has become unsafe.</p><p>Local Chief Executives shall decide on the cancellation or suspension of classes in cases where there are strong winds in specific or all areas of the LGU but is not issued a TCWS.</p>"
+        },
+        {
+          "heading": "Heavy Rainfall",
+          "description": "<p>In-person, online classes and work from Kindergarten to Grade 12 and Alternative Learning System (ALS) are automatically canceled in schools situated in LGUs issued with Orange and Red rainfall Warning by the PAGASA.</p><p>If the Warning is issued at a time when classes have already begun, the school shall immediately suspend the classes and work and send everyone home, it is safe to do so. However, schools are obligated to keep the students and personnel safely in school if traveling has become unsafe.</p><p>Local Chief Executives shall decide on the cancellation or suspension of classes if their LGU is issued a Yellow Rainfall Warning by PAGASA or in cases when there are torrential rains in specific or all areas of the LGU but is not issued an Alert by PAGASA.</p>"
+        },
+        {
+          "heading": "Flood",
+          "description": "<p>In-person, online classes and work from Kindergarten to Grade 12 and Alternative Learning System (ALS) are automatically canceled in schools situated in LGUs issued with a Flood Warning by the PAGASA.</p><p>If the Flood Warning is issued at a time when classes have already begun, the school shall immediately suspend the classes and work and send everyone home, it is safe to do so. However, schools are obligated to keep the students and personnel safely in school if traveling has become unsafe.</p><p>Local Chief Executives shall decide on the cancellation or suspension of classes in cases where there is flooding in specific or all areas of the LGU but it is not issued a Flood Warning by PAGASA.</p>"
+        },
+        {
+          "heading": "Earthquake",
+          "description": "<p>In-person, online classes and work from Kindergarten to Grade 12 and Alternative Learning System (ALS) are automatically canceled in schools situated in LGUs where the PHIVOLCS declare an earthquake with PHIVOLCS Earthquake Intensity Scale (PEIS) V or above.</p><p>Local Chief Executives shall decide on the cancellation or suspension of classes in cases where the PEIS is IV and below.</p><p>School Principals can cancel classes at any Intensity Scale if in their assessment, building and other structures are seen to be in danger of collapsing or is found to have major damage.</p><p>The School Disaster Risk Reduction and Management (DRRM) Team Head should clear the return of students and personnel in buildings and other structures.</p>"
+        },
+        {
+          "heading": "Adjustments to Learning Delivery Due to Suspensions or Cancellations of Classes",
+          "description": "<p>In the event of canceled or suspended classes, modular distance learning, performance tasks, projects or make up classes shall be implemented to ensure that learning competencies and objectives are still met.</p><p>In adherence to the provision of DepEd Order No. 14, s. 2021, learners who miss learning activities due to class suspensions brought about by various disruptions like disasters and/or emergencies due to natural or human-induced hazards shall be accorded due consideration in their attendance and the completion of their learning tasks.</p>"
+        },
+        {
+          "heading": "Responsibility of Parents or Guardians",
+          "description": "<p>The DepEd still maintains that parents or guardians have the ultimate responsibility for determining whether their children should attend classes in consideration of their physical and/or mental health during disaster and calamities. This applies even if no order for cancellation or suspension of classes has been issued.</p><p>Nonetheless, it shall also be the responsibility of the parents or guardians to ensure that their child is able to catch up with the needed competencies that the learners should master.</p><p>To learn more about the guidelines on the cancellation or suspension of classes and work in schools in the event of power outages or power interruptions and other calamities, click this link <a href='https://www.deped.gov.ph/wp-content/uploads/2022/09/DO_s2022_037.pdf?fbclid=IwAR07atV721M2VBQ_Ie_vknh1qdeAGpUeZcMQQJGNc-KsAB2_nzsCk6XMXpA'>here</a>.</p>"
+        },
+        {
+          "heading": "Glossary of Acronyms",
+          "list": [
+            "LGUs - Local Government Units",
+            "PAGASA - Philippine Atmospheric, Geophysical, and Astronomical Services Administration",
+            "PHIVOLCS - Philippine Institute of Volcanology and Seismology"
+          ]
+        }
+      ],
+      "references": [
+        "<i>Guidelines on the Cancellation or Suspension of Classes and Work in Schools in the Event of Natural Disasters, Power Outages/Power Interruptions, and Other Calamities. </i>(2022, September 1). DepEd. https://www.deped.gov.ph/2022/09/01/september-1-2022-do-037-s-2022-guidelines-on-the-cancellation-or-suspension-of-classes-and-work-in-schools-in-the-event-of-natural-disasters-power-outages-power-interruptions-and-other/"
+      ]
+    },
+    "Emergency Go Bag": {
+      "title": "Emergency Go Bag",
+      "content": [
+        {
+          "description": "In a disaster or calamity, we may need to survive on our own for several days, so it's essential to have an emergency go bag that can last for at least 72 hours. Here are the important items you need in your emergency go bag."
+        },
+        {
+          "heading": "Food and Water",
+          "list": [
+            "Ready-to-eat food such as biscuits, crackers, cookies, cereals, and canned goods (at least a three-day supply)",
+            "Water in sealed containers (one gallon per person per day for at least three days, for drinking and sanitation)",
+            "Instant coffee and tea",
+            "Infant formula and baby bottles (for babies)",
+            "Pet food and extra water (for pets)",
+            "Eating utensils such as a spoon, fork, and plate",
+            "Plastic bag"
+          ]
+        },
+        {
+          "heading": "Clothes and Toiletries",
+          "list": [
+            "Clothes (can last for two to three days)",
+            "Toothbrush, toothpaste, and mouthwash",
+            "Soap, shampoo, and conditioner",
+            "Hand sanitizer and alcohol",
+            "Insect repellant",
+            "Sunblock",
+            "Menstrual pads (for females)",
+            "Diapers and wet wipes (for babies)"
+          ]
+        },
+        {
+          "heading": "First Aid Kit",
+          "list": [
+            "Band-aids, sterile gauze, and micropore tape)",
+            "Alcohol, povidone-iodine, and ointment for wounds",
+            "Tweezer",
+            "Thermometer",
+            "Surgical gloves",
+            "Dust and N95 masks",
+            "Medicines for fever, cough, cold, diarrhea, and others",
+            "Maintenance medication (if applicable)"
+          ]
+        },
+        {
+          "heading": "Survival Kit",
+          "list": [
+            "Pocket knife with can opener",
+            "Flashlight",
+            "Candles and matches or lighter (put the lighter in a zip lock bag)",
+            "Rope",
+            "Raincoat and poncho",
+            "Whistle or anything that can create sound (to signal for help)",
+            "Portable radio",
+            "Extra batteries",
+            "Cellular phone with charger and power bank",
+            "Extension cord",
+            "Notebook and pencil",
+            "Sleeping bags or mats and blankets",
+            "List of national and local emergency numbers"
+          ]
+        },
+        {
+          "heading": "Important Documents and Cash",
+          "list": [
+            "Emergency cash, including coins",
+            "Government-issued IDs or IDs with blood type and emergency contact information",
+            "Important documents such as birth and marriage certificates, property and insurance documents, passports, and medical records. Enclose them in a waterproof and/or fireproof envelope."
+          ]
+        }
+      ],
+      "references": [
+        "<i>Build A Kit</i>. (2023, August 4). Ready.gov. https://www.ready.gov/kit",
+        "Department of Health Philippines. (2021, December 15). <i>Ang #PamilyangHealthyPamilyangReady! Paghandaan ang #OdettePH, i-ready niyo na ang inyong Emergency Go Bag o ang E-balde! Alamin dito kung anu-ano</i> [Image attached] [Tweet]. Twitter. https://twitter.com/DOHgovph/status/1471042353616015363",
+        "Luci-Atienza, C. (2021, July 3). Is your emergency go bag ready for the new normal? <i>Manila Bulletin</i>. https://mb.com.ph/2021/7/3/is-your-emergency-go-bag-ready-for-the-new-normal",
+        "Ombay, G. (2023, July 5). DOH stresses importance of having a ‘go bag’ in case of disasters. <i>GMA Network</i>. https://www.gmanetwork.com/news/lifestyle/healthandwellness/874893/doh-stresses-importance-of-having-a-go-bag-in-case-of-disasters/story/",
+        "<i>Ready ba ang pamilya in case of emergencies and disasters?</i> (n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters"
+      ]
+    }
+  }
+}
+

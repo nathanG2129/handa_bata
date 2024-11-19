@@ -8,6 +8,7 @@ import 'package:handabatamae/pages/play_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/hotlines_page.dart';
 import 'package:handabatamae/pages/about_page.dart';
+import 'package:handabatamae/pages/learn_page.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -31,6 +32,9 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
   // Add these ValueNotifiers to track expansion state
   final ValueNotifier<bool> _learnExpanded = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _resourcesExpanded = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _earthquakesExpanded = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _typhoonsExpanded = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _otherInfoExpanded = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -68,6 +72,9 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     // Clean up the notifiers
     _learnExpanded.dispose();
     _resourcesExpanded.dispose();
+    _earthquakesExpanded.dispose();
+    _typhoonsExpanded.dispose();
+    _otherInfoExpanded.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -159,13 +166,13 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                               _closeDrawer();
                             }),
                             _buildDivider(),
-                            _buildExpandableMenuItem('Learn', [
-                              'About Earthquakes',
-                              'Disastrous Earthquakes in the Philippines',
-                              'Preparing for Earthquakes',
-                            ], isEarthquakes: true),
+                            _buildExpandableMenuItem(
+                              'Learn', items:
+                              [], // Empty list since we're using isLearn
+                              isLearn: true,
+                            ),
                             _buildDivider(),
-                            _buildExpandableMenuItem('Resources', [
+                            _buildExpandableMenuItem('Resources', items: [
                               'Resource 1',
                               'Resource 2',
                               'Resource 3',
@@ -232,9 +239,13 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildExpandableMenuItem(String title, List<String> items, {bool isEarthquakes = false}) {
-    // Use the appropriate ValueNotifier based on the title
-    final expandedNotifier = title == 'Learn' ? _learnExpanded : _resourcesExpanded;
+  Widget _buildExpandableMenuItem(String title, {
+    bool isLearn = false,
+    List<String>? items,
+    ValueNotifier<bool>? expandedNotifier,
+    List<Widget>? children,
+  }) {
+    final notifier = expandedNotifier ?? (title == 'Learn' ? _learnExpanded : _resourcesExpanded);
     
     return Theme(
       data: Theme.of(context).copyWith(
@@ -249,7 +260,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
           ),
         ),
         trailing: ValueListenableBuilder<bool>(
-          valueListenable: expandedNotifier,
+          valueListenable: notifier,
           builder: (context, isExpanded, _) {
             return SvgPicture.asset(
               isExpanded ? 'assets/icons/minus.svg' : 'assets/icons/plus.svg',
@@ -260,14 +271,43 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
           },
         ),
         onExpansionChanged: (expanded) {
-          expandedNotifier.value = expanded;
+          notifier.value = expanded;
         },
-        children: [
-          if (isEarthquakes) ...[
-            _buildSubmenuItem('About Earthquakes'),
-            _buildSubmenuItem('Disastrous Earthquakes in the Philippines'),
-            _buildSubmenuItem('Preparing for Earthquakes'),
-          ] else ...[
+        children: children ?? [
+          if (isLearn) ...[
+            // Earthquakes section
+            _buildExpandableMenuItem(
+              'Earthquakes',
+              expandedNotifier: _earthquakesExpanded,
+              children: [
+                _buildSubmenuItem('About Earthquakes'),
+                _buildSubmenuItem('Disastrous Earthquakes in the Philippines'),
+                _buildSubmenuItem('Preparing for Earthquakes'),
+                _buildSubmenuItem('Earthquake Intensity Scale'),
+              ],
+            ),
+            // Typhoons section
+            _buildExpandableMenuItem(
+              'Typhoons',
+              expandedNotifier: _typhoonsExpanded,
+              children: [
+                _buildSubmenuItem('About Typhoons'),
+                _buildSubmenuItem('Disastrous Typhoons in the Philippines'),
+                _buildSubmenuItem('Preparing for Typhoons'),
+                _buildSubmenuItem('Tropical Cyclone Warning Systems'),
+                _buildSubmenuItem('Rainfall Warning System'),
+              ],
+            ),
+            // Other Information section
+            _buildExpandableMenuItem(
+              'Other Information',
+              expandedNotifier: _otherInfoExpanded,
+              children: [
+                _buildSubmenuItem('Guidelines on the Cancellation or Suspension of Classes'),
+                _buildSubmenuItem('Emergency Go Bag'),
+              ],
+            ),
+          ] else if (items != null) ...[
             ...items.map((item) => _buildSubmenuItem(item)),
           ],
         ],
@@ -276,9 +316,53 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
   }
 
   Widget _buildSubmenuItem(String title) {
+    String getCategory(String title) {
+      // First, map the display title to the JSON key
+      // ignore: unused_local_variable
+      String jsonTitle = title;
+      switch (title) {
+        case 'Earthquake Intensity Scale':
+          jsonTitle = 'Other Information/Earthquake Intensity Scale';
+          return 'Other Information';
+        case 'Rainfall Warning System':
+          jsonTitle = 'Other Information/Rainfall Warning System';
+          return 'Other Information';
+        case 'Tropical Cyclone Warning Systems':
+          jsonTitle = 'Other Information/Tropical Cyclone Warning Systems';
+          return 'Other Information';
+        case 'About Earthquakes':
+        case 'Disastrous Earthquakes in the Philippines':
+        case 'Preparing for Earthquakes':
+          return 'Earthquakes';
+        case 'About Typhoons':
+        case 'Disastrous Typhoons in the Philippines':
+        case 'Preparing for Typhoons':
+          return 'Typhoons';
+        case 'Guidelines on the Cancellation or Suspension of Classes':
+        case 'Emergency Go Bag':
+          return 'Other Information';
+        default:
+          print('⚠️ Warning: No category mapping for title: $title');
+          return 'Other Information';
+      }
+    }
+
     return InkWell(
       onTap: () {
-        // Handle submenu item tap
+        final category = getCategory(title);
+        print('🔍 Navigating to Learn page with category: $category, title: $title');
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LearnPage(
+              selectedLanguage: widget.selectedLanguage,
+              category: category,
+              title: title,
+            ),
+          ),
+        );
+        _closeDrawer();
       },
       child: Container(
         width: double.infinity,

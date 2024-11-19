@@ -1,0 +1,906 @@
+{
+    "References": "Mga Sanggunian",
+    "Earthquakes": {
+      "About Earthquakes": {
+        "title": "Tungkol sa Lindol",
+        "content": [
+          {
+            "heading": "Ano ang lindol?",
+            "description": "<p>Ang <b>lindol</b> ay ang mahina hanggang sa malakas na pagyanig dahil sa biglaang paggalaw ng mga bato sa ilalim ng lupa. Nagaganap ang mga lindol sa hangganan <i>(boundary)</i> ng mga tectonic plate at mga <i>active fault</i>.</p>"
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "Ang Pilipinas ay matatagpuan sa “Pacific Ring of Fire” kung saan maraming lindol at pagputok ng bulkan ang nagaganap."
+          },
+          {
+            "heading": "Ano ang mga uri ng lindol?",
+            "description": "<p>May dalawang uri ng lindol: ang lindol na <i>tectonic</i> at <i>volcanic</i>.</p>",
+            "list": [
+              "Ang <b>lindol na tectonic</b> ay nagaganap kapag may paggalaw sa ilalim ng <i>crust</i> ng mundo. Ito ay nadarama sa mas malawak na lugar kumpara sa isang lindol na volcanic.",
+              "Ang <b>lindol na volcanic</b> ay isang lindol na dulot ng pagsabog ng mga bulkan. Ito ay karaniwang nararamdaman lamang sa mga lugar sa paligid ng isang bulkan na sumasabog."
+            ]
+          },
+          {
+            "heading": "Paano natin masusukat ang lakas ng lindol?",
+            "description": "<p>Ang lakas ng isang lindol ay maaaring masukat sa dalawang paraan: ang <i>magnitude</i> at <i>intensity</i>.</p>",
+            "list": [
+              {
+                "description": "Ang <b>magnitude</b> ay sukat ng enerhiya ng lindol mula sa focus.",
+                "sublist": [
+                  "Ito ay kinakalkula mula sa mga lindol na naitala ng instrumentong tinatawag na seismograph. Ito ay nilalarawan gamit ang mga <i>Arabic Number</i> (hal. 2.0, 6.8)."
+                ]
+              },
+              {
+                "description": "Ang <b>intensity</b> ay lakas ng lindol na nararamdaman at nakikita ng mga tao sa isang lugar. Ang intensity ay kadalasang higit na mataas malapit sa epicenter.",
+                "sublist": [
+                  "Ito ay isang <i>numerical rating</i> batay sa magkakaugnay na epekto ng lindol sa mga tao, mga bagay, kapaligiran, at mga istruktura sa paligid. Ito ay nilalarawan gamit ang mga <i>Roman Numeral</i> (hal. III, VI, IX).",
+                  "Sa Pilipinas, ang intensity ng isang lindol ay tinutukoy gamit ang <a href='/Learn/Other%20Information/Earthquake%20Intensity%20Scale' class='underline text-blue-100'>PHIVOLCS Earthquake Intensity Scale</a>."
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "Sa Pilipinas, humigit-kumulang 20 na lindol ang naitatala bawat araw. Gayunpaman, karamihan sa mga lindol na ito ay hindi nararamdaman at maaari lamang matukoy gamit ang isang seismograph."
+          },
+          {
+            "heading": "Ano ang mga epekto ng lindol?",
+            "description": "<p>Ang mga lindol ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy'/><figcaption>Ang epekto ng Luzon Earthquake sa Hyatt Terraces Hotel sa Baguio City, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga lindol:</p>",
+            "list": [
+              "<b>Pagbitak ng lupa</b> – Ito ay ang karaniwang mahabang bitak sa lupa dulot ng paggalaw ng active fault. Maaari itong magdulot ng pagkasira ng istrukturang direktang nasa ibabaw ng active fault.",
+              "<b>Pagyanig ng lupa</b> – Ito ay ang taas-baba at pahalang na paggalaw ng lupa kapag may lindol. Maaari itong magdulot ng pagbagsak ng mga gamit sa bahay, pagkasira at pagbagsak ng iba’t ibang istruktura, pagguho ng istruktura dahil sa matinding pagyanig, at iba pang panganib tulad ng <i>liquefaction</i> at <i>pagguho ng lupa (landslide)</i>.",
+              "<b>Liquefaction</b> – Ito ay ang umaastang parang likido ang lupa na parang kumunoy <i>(quicksand)</i>. Nagaganap ito sa mga lugar na malapit sa anyong tubig. Maaari itong magdulot ng paglubog at/o pagtagilid ng mga istruktura, <i>sandboil</i>, at pagbitak ng lupa <i>(fissuring)</i>.",
+              "<b>Pagguho ng lupa</b> – Ito ay ang pagguho ng lupa, bato, o putik sa dalisdis ng bundok. Maaari itong magdulot ng <i>erosion</i>, pagtabon ng lupa <i>(damming)</i>, at bato, at pagbara sa mga kalsada at ilog.",
+              "<b>Tsunami</b> – Ito ay sunud-sunod na alon na karaniwang likha ng malakas na lindol sa ilalim o malapit sa dagat. Maaari itong magdulot ng pagbaha, <i>coastal erosion</i>, pagkalunod ng mga tao, at pinsala sa mga ari-arian."
+            ]
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "<p>Mula noong Disyembre 2020, may 108 seismic monitoring stations sa buong Pilipinas. Ang mga istasyon na ito, na pinamamahalaan ng Philippine Institute of Volcanology and Seismology (PHIVOLCS), ay may mga seismometer na nakakakita at nakakatala ng mga lindol.</p><p>Ang mga datos na nakolekta mula sa mga istasyong ito ay ipinapadala sa PHIVOLCS Data Receiving Center (DRC) upang matukoy ang mga parameter ng lindol tulad ng magnitude, depth of focus, at epicenter. Kapag natukoy na ang mga datos na ito, ang <a href='https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-information3' class='underline text-blue-100' target='_blank'>impormasyon tungkol sa lindol</a> ay ilalabas ng PHIVOLCS sa kanilang website kasama ang mga naiulat na naramdamang intensidad ng apektadong lugar (kung mayroon man).</p>"
+          }
+        ],
+        "references": [
+          "<i>Ang Lindol</i> [PDF]. (2001). Bureau of Nonformal Education Department of Education, Culture and Sports. https://drive.google.com/file/d/165PXr8Uz9x8tBtab7AjmuJVFcMEEj7Yv/view",
+          "<i>Earthquake</i> [PDF]. (2001). Bureau of Nonformal Education Department of Education, Culture and Sports. https://drive.google.com/file/d/1CcqPY0o8CS3X-OpKgj2B6jbATWOCdFRI/view",
+          "<i>Hyatt Terraces Hotel in Baguio City collapsed during the 16 July 1990 Luzon Earthquake</i> [Photo]. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-hazards",
+          "<i>Introduction to Earthquake</i>. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/introduction-to-earthquake",
+          "Philippine Institute of Volcanology and Seismology. (2015, November). <i>Earthquake and its Hazards </i>[Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXRzdCZlJKbEd5OUE/view?resourcekey=0-Zm5M6vSjWqkvX3d7pMMZJQ</i>",
+          "Philippine Institute of Volcanology and Seismology. (2021, May 11). <i>ALAMIN ang pagkakaiba ng MAGNITUDE vs INTENSITY: Ang MAGNITUDE ay sukat ng enerhiya ng lindol mula sa focus. Ito ay kinakalkula </i>[Status update]. Facebook. https://www.facebook.com/PHIVOLCS/posts/alamin-ang-pagkakaiba-ng-magnitude-vs-intensityang-magnitude-ay-sukat-ng-enerhiy/3782385691870301/",
+          "Philippine Institute of Volcanology and Seismology. (2023, August). <i>Lindol at Mga Panganib Nito </i>(JPerez, Trans.) [Flyer]. PHIVOLCS. https://www.phivolcs.dost.gov.ph/vault/IEC-Materials/Flyer-Lindol-At-Mga-Panganib-Nito-7Aug2023.pdf"
+        ]
+      },
+      "Disastrous Earthquakes in the Philippines": {
+        "title": "Mga Mapaminsalang Lindol sa Pilipinas",
+        "content": [
+          {
+            "heading": "Moro Gulf Earthquake",
+            "description": "Ang pinsalang iniwan ng lindol ay nagresulta ng pagkasira ng maraming pagmamay-ari at pagkawala ng buhay. Batay sa mga ulat, umabot sa 8,000 ang namatay o nawala, 10,000 ang sugatan, at 90,000 ang tuluyan na nawalan ng tirahan. Bukod dito, ang high-scale magnitude na lindol ay nagdulot din ng tsunami na may sukat na umabot ng nine meters high. Base sa mga survey reports, ang tsunami ang nagdulot ng 85% ng mga namatayan, 65% na hindi kayang kumilos, 95% ang nawawala. Marami din ang nawalan ng tirahan, at ang pinsala ay umabot ng halagang six bilyon pesos ng agrikultura at imprastraktura.",
+            "json": {
+              "Taon ng Pangyayari": 1976,
+              "Magnitude": 8.1,
+              "Intensity": "II, IV, V, VI, VII"
+            }
+          },
+          {
+            "heading": "Luzon Earthquake",
+            "description": "Isa sa mga pinakamatinding lindol na tumama sa Hilaga at Gitnang Luzon ay ang 1990 Luzon earthquake. Ang mga nakakakilabot na pangyayari sa paglitaw nito ay nagsisilbing pagkagising ng gobyerno at iba pang organisasyon para ipatupad ang epektibong pagtugon sa disaster management response. Ang malubhang epekto ng lindol ay nagresulta sa 11 na nasawi at 574 ang nasugatan. Ang pinsala nito ay umaabot din sa pagkasira ng imprastraktura na umaabot sa halagang 1.6 bilyong pesos. Bukod sa lindol, na obserbahan din ang liquefaction sa mga water channels sa Abra at Ilocus Sur ayon sa mga ulat. Ang mga baybayin din ng Ilocus Sur at La Union ay nakaranas ng sea level disturbances.  Nagdulot din ng pagguho ng lupa ang lindol sa bulubunduking rehiyon ng Abra, Ilocos Sur, Mountain Province, Kalinga, at Benguet.",
+            "json": {
+              "Taon ng Pangyayari": 1990,
+              "Magnitude": 7.8,
+              "Intensity": "VIII hanggang IX"
+            }
+          },
+          {
+            "heading": "Casirugan Earthquake",
+            "description": "Ang malubhang sakuna dulot ng Casirugan earthquake ay isa sa pinakamahirap na panahon para sa mga Filipino. Ang Casirugan earthquake ay nagresulta ng kamatayan sa 270 na tao, at 261 ang nawalan ng kakayahan gumalaw. Ito ay may sapat na lakas upang maramdaman ng buong kapuluan ng Luzon. Maraming gusali ang gumuho na naging pangunahing sanhi ng kamatayan. Ang mga pinsala sa pagmamay-ari ay umabot ng 369 milyong dolyar sa buong isla ng Pilipinas. Bukod dito, mayroon din na malawak na pagguho ng lupa at may mga bitak na na obserbahan sa bulubunduking lugar malapit sa sentro ng lindol.",
+            "json": {
+              "Taon ng Pangyayari": 1968,
+              "Magnitude": 7.3,
+              "Intensity": "III hanggang VIII"
+            },
+  
+            "list": [
+              "https://embed.gettyimages.com/embed/687083189?et=CYTocimHTdpELnUygMWAfw&tld=com&sig=9-nHe_XIZUHU1S_0zJqyOTpKv3FnZ2NWUeJyVxwyiEc=&caption=true&ver=1"
+            ]
+          },
+          {
+            "heading": "Bohol Earthquake",
+            "description": "Ang pinakakilalang mabigat na lindol sa ika-21 na siglo ay ang Bohol earthquake. Ito ay mayroong malakas na epekto na nararamdaman ng mahigit sa 1.2 milyong tao. Batay sa mga ulat, maraming indibidwal ang naapektuhan at umabot sa 222 ang nasawi, 797 ang nawalan ng kakayahan gumalaw, at walong tao ang nawawala. Sa panahon na ito, maraming tao ang nahihirapan dahil sa pagkasira ng mga istraktura na humigit sa 79,000 na gusali. Ito ay nagdulot na mahigit 340,000 na katauhan na nawalan ng tirahan. Umabot sa halagang 2 milyon pesos ang pinsala ng pagmamay-ari. At habang sinusulat pa lamang ang website na ito, nagpapagaling pa rin ang mga apektadong tao sa tulong ng mga organisasyon tulad ng World Health Organization (WHO) at Department of Health (DOH). Ayon sa mga ulat, sinasanay na din ang mga lokal na kawani upang maihanda ang mga tao sa kalamidad at mapasirugado ang kanilang kaligtasan at kalusugan.",
+            "json": {
+              "Taon ng Pangyayari": 2013,
+              "Magnitude": 7.2,
+              "Intensity": "VIII"
+            },
+  
+            "list": [
+              "https://embed.gettyimages.com/embed/482522357?et=XpY9F8jSTDNNPXPkzgTsKg&tld=com&sig=MB9Ivu9i1NFUsHcKpy9Is65NPejB5obI1Aeab-HYtw4=&caption=true&ver=1"
+            ]
+          },
+          {
+            "heading": "Panay Earthquake",
+            "description": "Ang masamang epekto ng Panay earthquake ay malubhang makikita sa Culasi, Antique. Maraming tao ang naapektuhan at ayon sa mga ulat, walo ang namatay at 41 ang nasugatan. Ang nakakatakot nitong lakas ay nagdulot ng malaking pinsala sa Panay Island, ilan sa mga apektadong lugar ang dumanas ng pinsala sa istraktura at tuluyang gumuho. Kasama sa mga nasirang istruktura ang mga bahay, gusali, tulay, at simbahan. At pagkatapos ng lindol, na obserbahan ang pagguho ng lupa, sandboil, at mga bitak ng lupa. Ang pinsalang ito ay umabot sa halagang 30 milyon pesos.",
+            "json": {
+              "Taon ng Pangyayari": 1994,
+              "Magnitude": 7.1,
+              "Intensity": "II hanggang VII"
+            }
+          }
+        ],
+        "references": [
+          "Bangsamoro Information Office. (2022, August 17). <i>1976 Midnight Killer: Remembering the deadly 8-magnitude quake in Mindanao.</i> Bangsamoro Autonomous Region in Muslim Mindanao. Retrieved December 28, 2023, from https://bangsamoro.gov.ph/news/latest-news/1976-midnight-killer-remembering-the-deadly-8-magnitude-quake-in-mindanao/",
+          "Malaya, B. (2019, October 21). <i>Looking Back: The 1976 Moro Gulf Earthquake. WhatALife! Retrieved December 28, 2023,</i> from https://whatalife.ph/looking-back-what-filipinos-learned-from-the-1976-moro-gulf-earthquake/",
+          "National Disaster Risk Reduction and Management Council. (2013, October 30). <i>NDRRMC Situation Report on the effects of the Earthquake in Bohol,</i> October 30, 2013 (6:00 a.m.). Official Gazette. Retrieved December 28, 2023, from https://www.officialgazette.gov.ph/2013/10/30/ndrrmc-situation-report-on-the-effects-of-the-earthquake-in-bohol-october-30-2013-600-a-m/",
+          "<i>Philippine Institute of Volcanology and Seismology.</i> (n.d.). 1990 July 16 Ms7.8 Luzon Earthquake. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/212-1990-july-16-ms7-9-luzon-earthquake",
+          "<i>Philippine Institute of Volcanology and Seismology.</i> (n.d.). PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/17-earthquake/34-1990-june-14-panay-earthquake",
+          "Philippine Institute of Volcanology and Seismology. (n.d.). <i>1976 August 17 Mw8.1 Moro Gulf Earthquake.</i> PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/208-1976-august-17-ms7-9-moro-gulf-earthquak",
+          "Philippine Institute of Volcanology and Seismology. (n.d.). <i>1968 August 02 Ms7.3 Casiguran Earthquake.</i> PHIVOLCS. Retrieved December 28, 2023, from https://www.phivolcs.dost.gov.ph/index.php/earthquake/destructive-earthquake-of-the-philippines/2-uncategorised/206-1968-august-02-ms7-3-casiguran-earthquake",
+          "World Health Organization Philippines. (2017, July 17). <i>Bohol Earthquake: One year on.</i> WHO. Retrieved December 28, 2023, from https://www.who.int/philippines/news/feature-stories/detail/bohol-earthquake-one-year-on/",
+          "Ong, A. K. S., Zulvia, F. E., & Prasetyo, Y. T. (2023). <i>\"The Big One\" Earthquake Preparedness Assessment among Younger Filipinos Using a Random Forest Classifier and an Artificial Neural Network.</i> Sustainability, 15(1), 679. https://doi.org/10.3390/su15010679"
+        ]
+      },
+  
+      "Preparing for Earthquakes": {
+        "title": "Paghahanda para sa Lindol",
+        "content": [
+          {
+            "heading": "Bago ang Lindol",
+            "list": [
+              {
+                "subheading": "Maging handa",
+                "list": [
+                  {
+                    "title": "Gawing ligtas ang iyong tahanan.",
+                    "sublist": [
+                      "Siguraduhin na ang pagkakagawa ng iyong bahay ay matatag. Ito ay dapat umaayon sa tama at iminumungkahing “safe engineering practice” na nakasaad sa <i>National Building Code of the Philippines at National Structural Code of the Philippines</i>. <p>Maaari mong sagutan ang <a href='https://howsafeismyhouse.phivolcs.dost.gov.ph/' class='underline text-blue-100' target='_blank'>“How Safe Is My House?”</a> ng Philippine Institute of Volcanology and Seismology (PHIVOLCS) upang suriin ang katatagan ng istruktura ng iyong bahay laban sa mga lindol.</p>",
+                      "Itali o ikabit ng mahigpit ang mga mabibigat na muwebles at/o mga cabinet sa dingding.",
+                      "Tiyakin ang katatagan ng mga nakasabit na bagay tulad ng mga ceiling fan at chandelier.",
+                      "Ang mga babasagin na mga bagay, mga nakakalasong kemikal, at mga bagay na madaling magliyab ay dapat ilagay o itago sa pinakababa at pinakaligtas na bahagi ng mga istante.",
+                      "Palaging patayin ang mga tangke ng gas kapag hindi ginagamit."
+                    ]
+                  },
+                  {
+                    "title": "Ihanda ang iyong pamilya sa mga lindol at mga emergency.",
+                    "sublist": [
+                      "Alamin ang iba’t ibang panganib ng lindol sa inyong lugar.",
+                      "Maghanda ng <a href='/Learn/Other%20Information/Emergency%20Go%20Bag' class='underline text-blue-100' target='_blank'>emergency go bag</a> at matuto kung paano magsagawa ng pangunang lunas.",
+                      "Regular na magsagawa at makilahok sa mga earthquake drill.",
+                      "Maging pamilyar sa mga <i>exit route</i> ng iyong bahay. Maglagay ng mga daanan para sa mga bata, buntis, matatatanda, at taong may kapansanan para sa panahon ng paglikas.",
+                      "Alamin kung saan matatagpuan at matutong gamitin ang mga <i>fire extinguisher</i>, mga <i>alarm</i>, at mga <i>emergency exit</i>."
+                    ]
+                  }
+                ]
+              },
+              {
+                "subheading": "Maging informed",
+                "list": [
+                  "Alamin ang iba't ibang <a href='/Hotline' class='underline text-blue-100' target='_blank'>pambansang <i>emergency hotline<i> at numero</a> sa Pilipinas. Isulat ang mga ito sa isang piraso ng papel o isama ang mga ito sa mga contact ng iyong cellphone.",
+                  "Maging pamilyar sa <a href='Learn/Disaster%20Preparedness/Earthquake%20Intensity%20Scale' class='underline text-blue-100' target='_blank'>PHIVOLCS Earthquake Intensity Scale</a>"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Habang Lumilindol",
+            "list": [
+              {
+                "subheading": "Kung ikaw ay nasa loob ng bahay",
+                "list": [
+                  "Manatiling kalmado.",
+                  "Huwag lumabas ng bahay o gusali habang lumilindol. Gawin ang <a href='https://youtu.be/zo_UqtlDt7E?feature=shared' class='underline text-blue-100' target='_blank'>Duck, Cover, and Hold</a> sa pinakaligtas na lugar na mahahanap mo (hal. sa ilalim ng matibay na mesa) at manatili doon hanggang sa tumigil ang pagyanig. Kung walang mesa, takpan ng mga kamay ang ulo at batok.",
+                  "Lumayo sa babasagin na mga bintana, mga istante, mga kabinet, at iba pang mabibigat na mga bagay.",
+                  "Mag-ingat sa maaaring bumagsak na mga bagay. Maging alerto at mapagmasid sa kapaligiran."
+                ]
+              },
+              {
+                "subheading": "Kung ikaw ay nasa labas",
+                "list": [
+                  "Manatiling kalmado at pumunta sa isang open na area.",
+                  "Lumayo sa mga puno, mga linya ng kuryente, mga poste, at iba pang mga istruktura na maaaring bumagsak o matumba.",
+                  "Lumayo sa gilid at dalisdis ng mga bundok na maaaring gumuho.",
+                  "Kung ikaw ay nagmamaneho, ihinto ang sasakyan at lumabas. Huwag magtangkang tumawid sa tulay, overpass, o flyover dahil maaaring napinsala ito ng lindol.",
+                  "Kung nasa tabing dagat at nakaramdam ng malakas na lindol, mabilis na lumikas sa mas mataas na lugar. Maaaring magkaroon ng <i>tsunami</i>."
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Pagkatapos ng Lindol",
+            "list": [
+              "Huwag mag-panic. Manatiling kalmado.",
+              "Maging handa sa <i>aftershocks</i>. Matapos ang pagyanig, piliin ang pinakaligtas at pinakamabilis na daan palabas ng bahay o gusali.",
+              "Huwag gumamit ng elevator, pumasok sa mga gusaling may sira, at gumamit ng telepono maliban na lang kung kinakailangan.",
+              "Suriin ang sarili at mga kasama kung nagtamo ng pinsala.",
+              "Suriin ang mga linya ng tubig at kuryente kung nagkaroon ng sira.",
+              "Suriin kung may natapong nakakalason at madaling magliyab na mga kemikal.",
+              "Suriin kung may sunog, agad itong kontrolin at puksain.",
+              "Kung kinakailangang lisanin ang iyong tahanan, mag-iwan ng mensahe na nakasaad ang lugar na patutunguhan at dalhin ang iyong emergency go bag.",
+              "Manatiling naka-update sa mga anunsyo at babala ng iyong barangay o <i>local government unit</i>."
+            ]
+          }
+        ],
+        "references": [
+          "<i>Earthquake!!! Are You Prepared? </i>[Poster]. (2015, September). Philippine Institute of Volcanology and Seismology. https://drive.google.com/file/d/0B8_KPQhbpktXcGhXcTh0VlRTV3M/view?resourcekey=0-0TBOZVh9XjRmoCSgnA6B1Q",
+          "<i>Lindol… Handa Ka Ba? </i>[Poster]. (2015, December). Philippine Institute of Volcanology and Seismology. https://drive.google.com/file/d/0B8_KPQhbpktXTE9vY0FDYjk3dFE/view?resourcekey=0-E55_Ket2V3cyt_YyAFtAGw",
+          "<i>Ready ba ang pamilya in case of emergencies and disasters? </i>(n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters#Earthquake-preparedness"
+        ]
+      }
+    },
+    "Typhoons": {
+      "About Typhoons": {
+        "title": "Tungkol sa Bagyo",
+        "content": [
+          {
+            "heading": "Ano ang bagyo?",
+            "description": "<p>Ang <b>tropical cyclone</b>,  karaniwang kilala bilang \"typhoon\" o \"bagyo\" sa Pilipinas, ay sistema ng mga <i>thunderstorm</i> na gumagalaw sa pabilog na direksyon</p><figure class='flex flex-col items-center'><img src='/images/learn/TropicalCyclone.jpg' alt='' loading='lazy'/><figcaption>Isang tropical cyclone na nakikita mula sa itaas.</figcaption></figure><p>Sa iba't ibang bahagi ng mundo, ang mga tropical cyclone ay kilala sa iba't ibang pangalan. Sa Kanlurang Hilagang Karagatang Pasipiko, sila ay tinatawag na mga \"typhoon.\" Sa Hilagang Atlantiko, Silangang Hilagang Pasipiko, at Timog Pasipiko, sila ay tinatawag na mga \"hurricane.\" Sa Bay of Bengal, Dagat ng Arabia, at Kanlurang Timog Karagatang India, sila ay tinatawag na mga \"cyclone.\" At sa Silangang Timog Karagatang India, tinatawag silang mga \"willy-willy.\"</p><p>Ang mga tropical cyclone ay maaaring tumagal ng ilang araw o hanggang dalawang linggo, at ang karamihan ay tumatagal ng anim na araw bago mag-<i>landfall</i>. Kung ang isang bagyo ay nag-landfall, nangangahulugan ito na ang sentro o mata ng bagyo ay tumama sa anumang kalupaan ng bansa.</p>"
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "Matatagpuan sa kahabaan ng “Pacific typhoon belt,” ang Pilipinas ay madalas makaranas ng mga bagyo. Bawat taon, humigit-kumulang 20 na bagyo ang pumapasok o namumuo sa Philippine Area of Responsibility (PAR) at 8 o 9 sa mga bagyong ito ang nagla-landfall."
+          },
+          {
+            "heading": "Ano ang mga uri ng bagyo?",
+            "description": "Sa Pilipinas, ang bagyo ay kinakategorya ayon sa taglay nitong lakas ng hangin:",
+            "list": [
+              "<b>Tropical Depression</b> (TD) - bagyong may bilis ng hangin na hanggang sa 61 kilometro kada oras o mas mababa",
+              "<b>Tropical Storm</b> (TS) - bagyong may bilis ng hangin na 62 hanggang 88 kilometro kada oras",
+              "<b>Typhoon</b> (TY) - bagyong may bilis ng hangin na 89 hanggang 117 kilometro kada oras",
+              "<b>Severe Tropical Storm</b> (STS) - bagyong may bilis ng hangin na 118 hanggang 184 kilometro kada oras",
+              "<b>Super Typhoon</b> (STS) - bagyong may bilis ng hangin na higit sa 184 kilometro kada oras"
+            ]
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "Ang pinakamalakas na bagyong naranasan ng Pilipinas ay ang Super Typhoon Yolanda. Ang taglay nitong lakas ng hangin ay umabot sa 315 kilometro kada oras."
+          },
+          {
+            "heading": "Ano ang mga epekto ng bagyo?",
+            "description": "<p>Ang mga bagyo ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy'/><figcaption>Ang mga epekto ng Super Typhoon Odette sa Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga bagyo:</p>",
+            "list": [
+              "<b>Malakas na hangin</b> na posibleng umabot sa 250 kilometro kada oras. Kaya nitong makasira ng kabahayan at makabuwal ng mga puno, poste, at iba pang istruktura.",
+              "<b>Pagbaha</b> dahil sa malakas at tuloy-tuloy na pag-ulan. Ang matinding pagbaha ay maaaring makapinsala ng mga pananim at istruktura. Maaari ring makontamina nito ang mga inuming tubig at magdala ng mga sakit tulad ng Leptospirosis.",
+              "<b>Daluyong ng bagyo</b> na nagdudulot ng matataas at malalakas na alon at pagbaha sa mga lugar na malapit sa dagat.",
+              "<b>Pagguho ng lupa</b> at <b>pag-agos ng putik</b> dahil sa malakas at tuloy-tuloy na pag-ulan sa mga bulubundukin at matatarik na lugar."
+            ]
+          }
+        ],
+        "references": [
+          "<i>About Tropical Cyclones</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/information/about-tropical-cyclone",
+          "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+          "<i>Frequently Asked Questions (FAQ) / Trivia</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/faqs-and-trivias",
+          "Kho, C. (2022, January 8). <i>A group of people walking down a street next to power lines</i> [Photo]. Unsplash. https://unsplash.com/photos/a-group-of-people-walking-down-a-street-next-to-power-lines-XZaYzBVpFzI?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash",
+          "<i>Mga dapat gawin bago, habang at pagkatapos ng bagyo</i>. (2022, October 29). Philippine Information Agency. https://pia.gov.ph/infographics/2022/10/29/mga-dapat-gawin-bago-habang-at-pagkatapos-ng-bagyo",
+          "NASA. (2016, February 7). <i>Typhoon</i> [Photo]. Unsplash. https://unsplash.com/photos/typhoon-i9w4Uy1pU-s"
+        ]
+      },
+      "Disastrous Typhoons in the Philippines": {
+        "title": "Mga Mapaminsalang Bagyo sa Pilipinas",
+        "content": [
+          {
+            "heading": "Super Typhoon Yolanda",
+            "description": "Ang walang katulad na lakas ng Super Typhoon Yolanda ay isa sa mga pinakamabigat na panahon para sa mga Pilipino. Sa oras ng pagsulat ng aming website, ang bagyong na ito ay kilala bilang sa pinakamalakas na typhoon sa buong kasaysayan ng mundo. Ang Super Typhoon Yolanda ay may mapaminsalang epekto sa Pilipinas. Sa panahong nito, humigit 16 million tao ang naapektuhan ng bagyo, ilan sa mga ito ay hindi pa rin nakakabangon sa mga epekto nito. Batay sa mga ulat, mayroong 6,300 taong namatay, 28,688 ang hindi makagalaw, at 1,062 ang nawawala. Ang pinsala nito ay umabot malapit sa Php 86.9 billion pesos. Dahil sa kinalabasan nito, maraming organisasyon ang patuloy pa rin nagbibigay ng financial at humanitarian assistance para sa mga naapektuhan ng bagyo.",
+            "json": {
+              "Pagtatalagang Pandaigdig": "Typhoon Haiyan",
+              "Taon ng Pangyayari": 2013,
+              "Bilis ng Hangin": "315 km/h",
+              "Bilis ng Bugso ng Hangin": "380 km/h"
+            },
+            "list": [
+              "https://embed.gettyimages.com/embed/187751019?et=bqNeEc0-SIFi99Aw7Ey2xQ&tld=com&sig=v4Q1pkxe7EP8GV69NjcuUgkuN0j2Rv4IkCtG1OQoLCM=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/187746767?et=9AasfiofTM9lOHrQp_etqg&tld=com&sig=hBAjG2Cg06jN-n4BuExconv-7kYS0Uc92N7aA7lfUbo=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/187746562?et=YxSeUuEKRX5sOKqDSGpZ-Q&tld=com&sig=rOCvsfjBL-mPQAsdIkB02Nl2wBQAj-_G5sW8gVlJwyo=&caption=true&ver=1"
+            ]
+          },
+          {
+            "heading": "Super Typhoon Ompong",
+            "description": "Ang pinsala ng Super Typhoon Ompong ay walang kasukatan. Isa sa mga apektadong lugar ay ang probinsya ng Cagayan, ito ay dumanas ng malubhang dagok sa lakas na may kakayahang sumira ng bahay at agrikultura sa mga Region 1, 2, 3, CALABARZON, at CAR. Batay sa statistics, 3 million na tao ang apektado, 82 ang nasawi, 138 ang hindi makagalaw at dalawa ay nawawala. Sa malakas na pinsala ng bagyo, inabot agad ng Php 33.9 billion pesos ang mga napinsala. Sa panahon ng lindol, na obserbahan ang pagguho ng lupa at pagbaha sa mga typhoon-prone areas.",
+            "json": {
+              "Pagtatalagang Pandaigdig": "Typhoon Mangkhut",
+              "Taon ng Pangyayari": 2018,
+              "Bilis ng Hangin": "205 km/h",
+              "Bilis ng Bugso ng Hangin": "225 km/h"
+            },
+            "list": [
+              "https://embed.gettyimages.com/embed/1033532704?et=5iJnjnlaRWpex8T2iOGXXw&tld=com&sig=7nkgClRp5pYMgbQGtkGqZ9bRP0VsNMN9QmmfPCUqnMA=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1033575308?et=5OmDzaK4SvhZn-LXq-tR_g&tld=com&sig=oLOEVHiXzj94ecMBsmMRAPMACwKfiPdcy92UlqPlK3Y=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1033576332?et=s7zblnQ8Ru9URP63O1TEbw&tld=com&sig=OSOeBdLKZh2AbcaUUykwOJB4hE8w1UGmhNMQ_gOl2No=&caption=true&ver=1"
+            ]
+          },
+          {
+            "heading": "Super Typhoon Quinta",
+            "description": "Noong 2020, ang insidente ng Super Typhoon Quinta ay malubhang tinamaan ang lalawigan ng Bicol region. Lumalabas sa statistics na ang bigat ng bagyo ay sapat para maapektuhan ang 338,229 na tao Region 1, Region 2, Region 3, Region 6, Region 8, CAR, and NCR. Mayroong apat na nasawi sa rehiyong ito at iisa ang hindi makagalaw. Sa kasawiang palad, ang pinsala nito ay umabot sa halagang ₱473,240,000 sa imprastraktura, agrikultura, at pangisdaan.",
+            "json": {
+              "Pagtatalagang Pandaigdig": "Typhoon Molave",
+              "Taon ng Pangyayari": 2020,
+              "Bilis ng Hangin": "185 km/h",
+              "Bilis ng Bugso ng Hangin": "250 km/h"
+            }
+          },
+          {
+            "heading": "Super Typhoon Goni",
+            "description": "The devastation left behind by this earthquake resulted in immense property damage and loss of lives. The reports claimed that there were officially 8,000 deaths or missing, 10,000 injured, and 90,000 were left homeless. Moreover, the high-scale magnitude also triggered a tsunami measuring about 9 meters high. Based on survey reports, the tsunami resulted in 85% of the casualties, 65% incapacitated, and 95% missing. Many people were also left homeless, and the damage was estimated to be worth six billion pesos of infrastructure and agriculture.",
+            "json": {
+              "Pagtatalagang Pandaigdig": "Typhoon Rolly",
+              "Taon ng Pangyayari": 2020,
+              "Bilis ng Hangin": "225 km/h",
+              "Bilis ng Bugso ng Hangin": "310 km/h"
+            },
+            "list": [
+              "https://embed.gettyimages.com/embed/1229431130?et=BzXVftqeTI9QSOn2V2AVGQ&tld=com&sig=-gATax9BlnIG6KRqYh50SJQf51ZpEHjDWGko1wnqG20=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1229431104?et=9ad3Ss0UTRRK4lN3aJJ8jw&tld=com&sig=vSOanc7xDyzF98pCkOCKxjYRtAusPXiRLPe5VluTGI0=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1229430931?et=21Qyq0N8SfldBYWU1aMVgQ&tld=com&sig=JrqGFbNvnRrEXyrpwP0scrnAljGyCzO7c-Z8S-bbpnU=&caption=true&ver=1"
+            ]
+          },
+          {
+            "heading": "Super Typhoon Ulysses",
+            "description": "Sa kasunod ng mga naunang bagyo, isa na namang Super Typhoon ang lumitaw sa loob ng wala pang dalawang linggo, ito ay kilala bilang Super Typhoon Ulysses. Ang Super Typhoon na ito ay naapektuhan ang 5,184,824 na tao na makikita sa 7,827 barangays ng Region 1, II, III, V, CALABARZON, MIMAROPA, NCR, at CAR. Ang mga ulat ay nagpakita ng 101 na nasawi, 85 na hindi makagalaw, at sampung tao ang nawawala. Bukod dito, ang napakalawak na lakas nito ay nagresulta ng pagguho ng lupa at flash floods, lalo sa mga lalawigan ng Catanduanes at Camarines Sur.",
+            "json": {
+              "Pagtatalagang Pandaigdig": "Typhoon Vamco",
+              "Taon ng Pangyayari": 2020,
+              "Bilis ng Hangin": "150 km/h",
+              "Bilis ng Bugso ng Hangin": "205 km/h"
+            },
+            "list": [
+              "https://embed.gettyimages.com/embed/1229610914?et=todS0qBfTfVqoSvKdHR5XQ&tld=com&sig=TG4fwgiEkeUowFiBTMmeghwsIDmzUvl8qK_7tv0IPpU=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1229610875?et=CbRrMby2RQdBj2ZJEUEoEg&tld=com&sig=mnp_qACmOr8ZKprwZ0QdidW470nNlcJF1b0LeOMtjK4=&caption=true&ver=1",
+              "https://embed.gettyimages.com/embed/1229611050?et=cc2rv0v4Sex-lCKqWEQPDg&tld=com&sig=-7mSHbLm-QiMP29kksK4yw4ZXRepH9hlSe9OKvAwVig=&caption=true&ver=1"
+            ]
+          }
+        ],
+        "references": [
+          "Deiparine, C. (2020, November 1). 'Yolanda' and 'Rolly': Super typhoons 7 years apart to hit the Philippines. <i>Philippine Star</i>. https://www.philstar.com/headlines/2020/11/01/2053891/yolanda-and-rolly-super-typhoons-7-years-apart-hit-philippines",
+          "<i>Flash Update: No. 02 – Typhoon Molave, Philippines, Viet Nam – 27 Oct 2020.</i> (2020, October 27). ReliefWeb. https://reliefweb.int/report/philippines/flash-update-no-02-typhoon-molave-philippines-viet-nam-27-oct-2020",
+          "National Disaster Risk Reduction and Management Council. (2022, June 13). <i>Situational Report for TC QUINTA (2020)</i>. https://monitoring-dashboard.ndrrmc.gov.ph/assets/uploads/situations/SitRep_No__12_for_Typhoon_Quinta_Whole_Report.pdf",
+          "<i>NDRRMC Update: Sitrep No. 29 re Preparedness Measures and Effects for Typhoon \"Ulysses\" (I.N. Vamco), 13 January 2020, 08:00AM</i>. (2021, January 14). ReliefWeb. ",
+          "<i>Over 700,000 children among the most affected as super typhoon Rolly/Goni hit the Philippines</i>. (2020, November 2). UNICEF Philippines. https://www.unicef.org/philippines/stories/over-700000-children-among-most-affected-super-typhoon-rollygoni-hit-philippines",
+          "Philippine Atmospheric, Geophysical and Astronomical Services Administration. (2018, September 20). <i>Typhoon Ompong (Mangkhut / 1822) Summary Report</i>. https://pubfiles.pagasa.dost.gov.ph/tamss/weather/tc_summary/TY_Ompong_MANGKHUT_2018.pdf",
+          "<i>Philippines: Super Typhoon Goni (Rolly) Humanitarian Needs and Priorities (Nov 2020 - April 2021)</i>. (2020, November 9). ReliefWeb. https://reliefweb.int/report/philippines/philippines-super-typhoon-goni-rolly-humanitarian-needs-and-priorities-nov-2020",
+          "<i>Philippines: Typhoon Vamco (Ulysses) Snapshot (As of 12 November 2020)</i>. (2020, November 12). ReliefWeb. https://reliefweb.int/report/philippines/philippines-typhoon-vamco-ulysses-snapshot-12-november-2020",
+          "Reid, K. (2023, October 17). <i>Typhoon Haiyan: Facts, FAQs, and how to help</i>. World Vision. https://www.worldvision.org/disaster-relief-news-stories/2013-typhoon-haiyan-facts",
+          "<i>Relief Efforts Stepped Up as Super Typhoon Rolly Devastates Philippines’ Bicol Region</i>. (2020, November 2). ReliefWeb. https://reliefweb.int/report/philippines/relief-efforts-stepped-super-typhoon-rolly-devastates-philippines-bicol-region",
+          "<i>Rolly’s damage to public infra now at P5.76-B</i>. (2020, November 3). DPWH. https://www.dpwh.gov.ph/dpwh/news/20776",
+          "<i>Typhoon Ompong (Mangkhut) in the Philippines</i>. (2018, September 18). World Health Organization (WHO). https://www.who.int/westernpacific/emergencies/typhoon-ompong"
+        ]
+      },
+      "Preparing for Typhoons": {
+        "title": "Paghahanda para sa Bagyo",
+        "content": [
+          {
+            "heading": "Bago ang Bagyo",
+            "list": [
+              {
+                "subheading": "Maging Handa",
+                "list": [
+                  {
+                    "title": "Gawing ligtas ang iyong tahanan.",
+                    "sublist": [
+                      "Suriin ang bahay kung may sira ang pinto, bintana, kisame, bubong at iba pa. Kung mayroong sira ang mga ito, ipaayos agad.",
+                      "Kung ang iyong bahay ay madaling pasukan ng tubig kapag bumabagyo, ilipat na agad ang mga mahahalagang kagamitan tulad ng mga <i>electronic appliance</i> sa itaas na palapag o ilagay ang mga ito sa ibabaw ng mga matitibay na mesa.",
+                      "Ipasok sa loob ng bahay ang mga <i>furniture</i> at iba pang mga kagamitan na nasa labas ng bahay.",
+                      "Itali nang mahigpit ang mga bubong at iba pang mga bagay na maaaring liparin ng malakas na hangin.",
+                      "Putulin ang mga sanga ng mga punong malapit sa iyong bahay na maaaring bumagsak.",
+                      "Linisin ang mga kalat sa mga daluyan ng tubig at mga kanal."
+                    ]
+                  },
+                  {
+                    "title": "Ihanda ang iyong pamilya sa mga bagyo at mga emergency.",
+                    "sublist": [
+                      "Alamin ang iba’t ibang panganib ng lindol sa inyong lugar.",
+                      "Monitor the news for weather updates, warnings and advisories.",
+                      "Maghanda ng <a href='/Learn/Other%20Information/Emergency%20Go%20Bag' class='underline text-blue-100' target='_blank'>emergency go bag</a> at matuto kung paano magsagawa ng pangunang lunas.",
+                      "Makilahok sa mga pagsasanay at paghahanda ng komunidad sa baha.",
+                      "Alamin ang plano ng iyong barangay o <i>local government unit</i> (LGU) sa pagbibigay-babala at paglikas dahil sa baha. Kapag inabisuhan ng kinauukulan, mabilis na lumikas sa mataas at ligtas na lugar o sa itinakdang <i>evacuation area</i>."
+                    ]
+                  }
+                ]
+              },
+              {
+                "subheading": "Maging informed",
+                "list": [
+                  "Alamin ang iba't ibang <a href='/Hotline' class='underline text-blue-100' target='_blank'>pambansang <i>emergency hotline</i> at numero</a> sa Pilipinas. Isulat ang mga ito sa isang piraso ng papel o isama ang mga ito sa mga contact ng iyong cellphone.",
+                  "Maging pamilyar sa <a href='/Learn/Other%20Information/Tropical%20Cyclone%20Warning%20Systems' class='underline text-blue-100' target='_blank'>Tropical Cyclone Warning System</a> at <a href='/Learn/Other%20Information/Rainfall%20Warning%20System' class='underline text-blue-100' target='_blank'>Rainfall Warning System</a>"
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Habang Bumabagyo",
+            "list": [
+              {
+                "list": [
+                  "Manatiling kalmado at manatili sa loob ng bahay.",
+                  "Patuloy na makinig sa ulat ng panahon. Ihanda ang iyong emergency go bag para sa posibleng paglikas kung lumala ang sitwasyon.",
+                  "Huwag hawakan ang mga kagamitang de kuryente kung ikaw ay basa o nakatayo sa tubig baha.",
+                  "Huwag lumangoy o mamangka sa umaapaw na ilog.",
+                  "Huwag tumawid ng sapa o ilog kung lagpas tuhod na ang tubig.",
+                  "Huwag maglakad o magmaneho sa lugar na baha.",
+                  "Kung ikaw ay nakulong dahil sa pagbaha, pumunta sa pinakamataas na bahagi ng iyong bahay o ng gusali. Huwag umakyat sa isang saradong espasyo. Maaari kang ma-trap ng tumataas na tubig baha.",
+                  {
+                    "title": "Kung kailangan lumikas, gawin ang mga sumusunod:",
+                    "sublist": [
+                      "Patayin ang lahat ng mga main switch ng kuryente, tubig, at tangke ng LPG.",
+                      "Isarado ang mga bintana at i-lock ang mga pinto.",
+                      "Isama ang iyong mga alagang hayop sa paglikas."
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Pagkatapos ng Bagyo",
+            "list": [
+              "Manatiling naka-update sa mga balita at anunsyo o babala ng iyong barangay o LGU.",
+              "Lisanin lamang ang evacuation area kapag ligtas na ayon sa kinauukulan.",
+              "Ipagbigay-alam sa kinauukulan ang mga natumbang puno at poste ng kuryente o mga linya ng tubig at telepono.",
+              "Bago buksan ang linya ng kuryente, siguraduhing walang basa o nakababad na outlet o kagamitan.",
+              "Suriin ang bahay kung may mga nasira at ipaayos ang mga ito kung kailangan.",
+              "Siguraduhing malinis ang pagkain at inuming tubig.",
+              "Itapon ang mga naipong tubig sa mga lata, paso, at gulong upang hindi pamahayan ng lamok."
+            ]
+          }
+        ],
+        "references": [
+          "<i>Flooding. (n.d.). MMDA. https://mmda.gov.ph/mmdrrmc/20-faq/5501-disaster-awareness-flooding-faq.html</i>",
+          "<i>Hurricanes. (n.d.). Ready.gov. https://www.ready.gov/hurricanes</i>",
+          "<i>Ready ba ang pamilya in case of emergencies and disasters?</i> (n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters#Typhoon-preparedness"
+        ]
+      }
+    },
+    "Other Information": {
+      "Earthquake Intensity Scale": {
+        "title": "Panukat ng Pagyanig ng Lindol",
+        "content": [
+          {
+            "heading": "Magnitude vs Intensity",
+            "list": [
+              "Ang <b>magnitude</b> ay sukat ng enerhiya ng lindol mula sa focus. Ito ay kinakalkula mula sa mga lindol na naitala ng instrumentong tinatawag na <i>seismograph</i>.",
+              "Ang <b>Intensity</b>  ay lakas ng lindol na nararamdaman at nakikita ng mga tao sa isang lugar. Ang intensity ay kadalasang higit na mataas malapit sa <i>epicenter</i>."
+            ]
+          },
+          {
+            "heading": "PHIVOLCS Earthquake Intensity Scale",
+            "description": "Ang PHIVOLCS Earthquake Intensity Scale (PEIS) ay isang batayan kung paano naramdaman ang lindol sa isang lugar. Ito ay batay sa magkakaugnay na epekto ng lindol sa mga bagay, tao, istraktura at kapaligiran. <p>Ang PEIS ay nilalarawan gamit ang mga <i>Roman Numeral</i>, kung saan ang Intensity I ang pinakamahina at ang Intensity X ang pinakamalakas. Ito ay binuo ng Philippine Institute of Volcanology and Seismology (PHIVOLCS) at ginagamit mula pa noong 1996.</p>",
+            "table": {
+              "headers": ["Intensity", "Description"],
+              "rows": [
+                {
+                  "Intensity": "I",
+                  "Shaking": "Napakahina",
+                  "Description": [
+                    "Naramdaman lamang ng mga tao na nasa mainam na kalagayan.",
+                    "Ang mga kasangkapang nasa alanganing posisyon ay bahagyang nagagalaw.",
+                    "Ang tubig sa mga sisidlan ay bahagyang natitinag."
+                  ]
+                },
+                {
+                  "Intensity": "II",
+                  "Shaking": "Bahagyang naramdaman",
+                  "Description": [
+                    "Naramdaman ng mga taong namamahinga sa loob ng bahay o gusali.",
+                    "Bahagyang gumagalaw ang mga nakabiting bagay.",
+                    "Kapansin pansin ang paggalaw ng tubig sa mga sisidlan."
+                  ]
+                },
+                {
+                  "Intensity": "III",
+                  "Shaking": "Mahina",
+                  "Description": [
+                    "Naramdaman ng nakararaming taong nasa loob ng bahay o gusali lalo’t higit ang mga nasa mataas na palapag. Ang pagyanig ay tulad ng pagdaan ng maliit na “truck.” Ang ilan ay nakaramdam ng pagkahilo o pagkalula.",
+                    "Mahinang gumagalaw ang mga nakabiting bagay.",
+                    "Katamtamang lakas ang pag-imbayog ng tubig sa mga sisidlan."
+                  ]
+                },
+                {
+                  "Intensity": "IV",
+                  "Shaking": "Bahagyang malakas",
+                  "Description": [
+                    "Naramdaman ng halos lahat ng mga taong nasa loob ng bahay o gusali at ng ibang nasa labas. Nagigising ang mga taong mababaw ang tulog. Ang pagyanig ay tulad ng pagdaan ng isang mabigat na \"truck.\"",
+                    "Malakas na gumagalaw ang mga nakabiting bagay. Mahinang kumakalantog ang mga plato, baso, pinto, at bintana. Bahagyang lumalangitngit ang sahig at dingding ng mga bahay na kahoy. Bahagyang umuuga ang mga nakatigil na sasakyan.",
+                    "Malakas na pag-imbayog ng tubig sa mga sisidlan.",
+                    "Maaaring may marinig na mahinang ugong o dagundong mula sa kapaligiran."
+                  ]
+                },
+                {
+                  "Intensity": "V",
+                  "Shaking": "Malakas",
+                  "Description": [
+                    "Naramdaman ng halos lahat ng tao sa loob at labas ng bahay o gusali. Marami ang nagigising at nagugulantang. Ang iba ay natatakot at tumatakbong palabas ng bahay o gusali. Malakas na pagyanig ang naramdaman sa buong bahay o gusali.",
+                    "Napakalakas na gumagalaw ang mga nakabiting bagay. Malakas na kumakalantog ang mga plato at baso; at ang iba ay nababasag. Ang magagaan at maliliit na kasangkapan ay nahuhulog o tumutumba. Kapansin-pansin ang pag-uga ng mga nakatigil na sasakyan.",
+                    "Natatapon o umaawas ang tubig sa mga bukas at punong sisidlan.",
+                    "Kapansin-pansin ang pagyugyog ng mga sanga at dahon ng mga halaman o punongkahoy."
+                  ]
+                },
+                {
+                  "Intensity": "VI",
+                  "Shaking": "Napakalakas",
+                  "Description": [
+                    "Marami ang natatakot; marami ang tumatakbong palabas ng bahay o gusali. Ang iba ay nawawalan ng panimbang. Ang mga nagmamaneho ng sasakyan ay nakararamdam ng tila may “flat” na mga gulong.",
+                    "Ang mga mabibigat na bagay at kasangkapan ay natitinag o nalilipat ng kinalalagyan. Maaaring tumunog ang mga maliliit na kampana ng simbahan. Maaaring magbitak ang mga palitada ng pader. Ang mga luma o mahihinang bahay at iba pang istraktura ay bahagyang napipinsala ngunit ang mga matitibay ay hindi naaapektuhan.",
+                    "May mangilan-ngilang <i>landslide</i>, pagbagsak at paggulong ng malalaking bato sa mga maburol at bulubunduking lugar. Kapansin-pansin ang pagyugyog ng mga halaman at punongkahoy."
+                  ]
+                },
+                {
+                  "Intensity": "VII",
+                  "Shaking": "Mapaminsala",
+                  "Description": [
+                    "Halos lahat ng tao ay natatakot at tumatakbong palabas ng bahay at gusali. Nahihirapan sa pagtayo ang mga taong nasa matataas na palapag.",
+                    "Bumabagsak o natutumba ang mga mabibigat na bagay at kasangkapan. Maaaring tumunog ang malalaking kampana ng simbahan. Nagkakaroon ng malaking pinsala ang mga luma at mahihinang istraktura at bahagyang pinsala naman sa mga bago at matitibay. Maaaring magbitak ang mga dike, palaisdaan, konkretong daan at pader.",
+                    "May mangilan-ngilang <i>liquefaction, lateral spreading</i> at landslide o pagguho ang magaganap. Malakas na yumuyugyog ang mga halaman at punongkahoy."
+                  ]
+                },
+                {
+                  "Intensity": "VIII",
+                  "Shaking": "Lubusang mapaminsala",
+                  "Description": [
+                    "Nagkakagulo at natatakot ang mga tao. Nahihirapang makatayo kahit sa labas ng bahay.",
+                    "Maraming malalaki at matitibay na gusali ang malubhang napipinsala. Nasisira ang mga dike at bumabagsak ang mga tulay dahil sa paglubog ng lupa. Bumabaluktot o nababali ang mga riles ng tren.",
+                    "Ang mga puntod ay natitinag, napipilipit o natutumba. Maaaring tumagilid o tumumba ang mga poste, tore at monumento. Ang tubo ng tubig at kanal ay maaaring bumaluktot, pumilipit o mabasag.",
+                    "Ang mga istraktura ay lumulubog, tumatagilid o natutumba dahil sa liquefaction at lateral spreading. Maraming landslides ang nagaganap sa bulubundukin at maburol na mga lugar. Ang mga malalaking bato ay maaaring humagis palayo mula sa kinalalagyan nito. Maaaring makakita ng mga bitak sa lupa at <i>fault rupture</i>. Napakalakas ang pagyugyog ng mga halaman at punongkahoy. Humahampas at umaapaw ang tubig sa mga dike at tabing-ilog."
+                  ]
+                },
+                {
+                  "Intensity": "IX",
+                  "Shaking": "Mapanalanta",
+                  "Description": [
+                    "Sapilitang tumutumba ang mga tao sa sahig o sa lupa. Laganap ang pagkatakot at pagkakagulo.",
+                    "Karamihan sa mga gusali ay gumuguho o malubhang napipinsala ng mga tulay ay bumabagsak at nawawasak.",
+                    "Karamihan sa mga poste, tore at monumento ay tumatagilid, tumutumba, o nababasag. Ang mga tubo ng tubig at kanal ay nababaluktot, pumi-pilitpit o nababasag.",
+                    "Malawakang mga landslides at liquefaction na may kasamang lateral spreading at <i>sandboil</i>. Nababago ang anyo ng lupa bunga ng pag-aalun-alon nito. Malakas na nayuyugyog ang mga halaman at punongkahoy kaya’t ang iba ay tumutumba o nababali. Ang mga malalaking tipak ng bato ay karaniwang nahahagis. Napakalakas ang paghampas o pag-apaw ng tubig sa mga dike at tabing-ilog."
+                  ]
+                },
+                {
+                  "Intensity": "X",
+                  "Shaking": "Lubusang mapanalanta",
+                  "Description": [
+                    "Lubusan ang pagkasira ng lahat ng estrukturang gawa ng tao.",
+                    "Malawakang mga landslides at liquefaction, malakihang paglubog at pag-angat ng lupa, at napakaraming bitak ang mapapansin. Nag-iiba ang daloy ng tubig sa mga ilog. Nagkakaroon ng malalaki at mapaminsalang alon sa mga lawa <i>(seiches)</i>. Ang mga punongkahoy at natutumba, nababali o nabubunot sa lupa."
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "references": [
+          "<i>Making sense of the PHIVOLCS earthquake intensity levels</i>. (n.d.). Official Gazette. https://www.officialgazette.gov.ph/laginghanda/phivolcs-earthquake-intensity-scale/",
+          "Philippine Institute of Volcanology and Seismology. (2009, June). <i>PHIVOLCS Earthquake Intensity Scale</i> [Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXMTd3LTJIRUlWcHM/view?resourcekey=0-UlimhljmNAZFDgbSmu9PZw",
+          "Philippine Institute of Volcanology and Seismology. (2012, January). <i>PHIVOLCS Earthquake Intensity Scale</i> [Poster]. https://drive.google.com/file/d/0B8_KPQhbpktXNkFmeTFHX3dFOFk/view?resourcekey=0-xTqmcTii52_6tOQq_hAr4A",
+          "Philippine Institute of Volcanology and Seismology. (2015, September). <i>PHIVOLCS Earthquake Intensity Scale (Panukat ng Pagyanig ng Lindol)</i> [Flyer]. https://drive.google.com/file/d/0B8_KPQhbpktXODZUQXdJSGNRdzA/view?resourcekey=0-XGV11cIRYJlWNpwmPlfCxw",
+          "Philippine Institute of Volcanology and Seismology (PHIVOLCS-DOST). (2021, May 11). <i>ALAMIN ang pagkakaiba ng MAGNITUDE vs INTENSITY: Ang MAGNITUDE ay sukat ng enerhiya ng lindol mula sa focus. Ito ay kinakalkula </i>[Status update]. Facebook. https://www.facebook.com/PHIVOLCS/posts/alamin-ang-pagkakaiba-ng-magnitude-vs-intensityang-magnitude-ay-sukat-ng-enerhiy/3782385691870301/",
+          "<i>PHIVOLCS Earthquake Intensity Scale (PEIS)</i>. (n.d.). PHIVOLCS. https://www.phivolcs.dost.gov.ph/index.php/earthquake/earthquake-intensity-scale"
+        ]
+      },
+      "Tropical Cyclone Warning Systems": {
+        "title": "Tropical Cyclone Warning System",
+        "content": [
+          {
+            "description": "<p>Ang Tropical Cyclone Warning System (TCWS) ay may limang (5) mga <i>wind signal level</i>, kung saan ang Wind Signal No. 1 ang pinakamahina at Wind Signal No. 5 ang pinakamalakas.</p>",
+            "list": [
+              {
+                "img": "/images/learn/WindSignal1.png",
+                "details": [
+                  {
+                    "title": "Wind Signal No. 1",
+                    "description": "Tropical Depression (TD)"
+                  },
+                  {
+                    "title": "Bilis ng Hangin",
+                    "description": "39-61 km/h"
+                  },
+                  {
+                    "title": "Wala o Banayad",
+                    "description": "na panganib sa buhay at ari-arian"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/WindSignal2.png",
+                "details": [
+                  {
+                    "title": "Wind Signal No. 2",
+                    "description": "Tropical Storm (TS)"
+                  },
+                  {
+                    "title": "Bilis ng Hangin",
+                    "description": "62-88 km/h"
+                  },
+                  {
+                    "title": "Banayad hanggang Katamtaman",
+                    "description": "na panganib sa buhay at ari-arian"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/WindSignal3.png",
+                "details": [
+                  {
+                    "title": "Wind Signal No. 3",
+                    "description": "Severe Tropical Storm (STS)"
+                  },
+                  {
+                    "title": "Bilis ng Hangin",
+                    "description": "89-117 km/h"
+                  },
+                  {
+                    "title": "Katamtaman hanggang Malubha",
+                    "description": "na panganib sa buhay at ari-arian"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/WindSignal4.png",
+                "details": [
+                  {
+                    "title": "Wind Signal No. 4",
+                    "description": "Typhoon (TY)"
+                  },
+                  {
+                    "title": "Bilis ng Hangin",
+                    "description": "118-184 km/h"
+                  },
+                  {
+                    "title": "Malubha hanggang sa Napakalubha",
+                    "description": "na panganib sa buhay at ari-arian"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/WindSignal5.png",
+                "details": [
+                  {
+                    "title": "Wind Signal No. 5",
+                    "description": "Super Typhoon (STY)"
+                  },
+                  {
+                    "title": "Bilis ng Hangin",
+                    "description": "185 km/h o pataas"
+                  },
+                  {
+                    "title": "Napakalubha at Malawak",
+                    "description": "na panganib sa buhay at ari-arian"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "references": [
+          "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+          "<i>Legend</i>. (n.d.). PAGASA. https://bagong.pagasa.dost.gov.ph/learnings/legend",
+          "<i>Publications</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/publication",
+          "<i>Tropical Cyclone Wind Signal</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learning-tools/tropical-cyclone-wind-signal"
+        ]
+      },
+      "Rainfall Warning System": {
+        "title": "Rainfall Warning System",
+        "content": [
+          {
+            "description": "<p>Ang <b>Rainfall Warning System (RWS)</b> ay binuo ng Philippine Atmospheric, Geophysical, and Astronomical Services Administration (PAGASA) upang alertuhan ang mga <i>concerned community</i> at mga <i>emergency manager</i> tungkol sa malakas na pag-ulan na maaaring magdulot ng pagbaha. Mayroong dalawang uri ng babala na inilabas sa ilalim ng RWS: ang <i>Thunderstorm Warning System</i> at ang <i>Heavy Rainfall Warning System</i>.</p>"
+          },
+          {
+            "heading": "Thunderstorm Warning System",
+            "description": "<p>Ang <b>Thunderstorm Warning System (TSTM-WS)</b> ay isang babala na itinataas ng PAGASA kapag may <i>short duration rainfall</i>. Sa TSTM-WS, may tatlong uri ng mga thunderstorm warning: ang Thunderstorm Advisory, ang Thunderstorm Watch, at ang Thunderstorm Information.</p>",
+            "list": [
+              {
+                "img": "/images/learn/ThunderstormAdvisory.png",
+                "details": [
+                  {
+                    "title": "Thunderstorm Advisory"
+                  },
+                  {
+                    "title": "Thunderstorm Threatens",
+                    "description": "specific area within the next 2 hours"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/ThunderstormWatch.png",
+                "details": [
+                  {
+                    "title": "Thunderstorm Watch"
+                  },
+                  {
+                    "title": "Thunderstorm is Likely",
+                    "description": "to occur within the next 12 hours"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/ThunderstormInformation.png",
+                "details": [
+                  {
+                    "title": "Thunderstorm Information"
+                  },
+                  {
+                    "title": "Thunderstorm is Less Likely",
+                    "description": "to occur within the next 12 hours"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "Heavy Rainfall Warning System",
+            "description": "<p>Ang <b>Heavy Rainfall Warning System (HR-WS)</b> ay isang babala na itinataas ng PAGASA kapag may <i>long duration rainfall</i>. Sa TSTM-WS, may tatlong uri ng mga <i>color-coded</i> heavy rainfall warning: ang Yellow Rainfall Warning, ang Orange Rainfall Warning, at ang Red Rainfall Warning. </p>",
+            "list": [
+              {
+                "img": "/images/learn/YellowRainfallWarning.png",
+                "color": "bg-yellow-100",
+                "details": [
+                  {
+                    "title": "Yellow Rainfall Warning"
+                  },
+                  {
+                    "title": "Maaaring magkaroon ng Pagbaha",
+                    "description": "sa mabababang lugar at mga malapit sa daluyan ng tubig"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/OrangeRainfallWarning.png",
+                "color": "bg-orange-100",
+                "details": [
+                  {
+                    "title": "Orange Rainfall Warning"
+                  },
+                  {
+                    "title": "Nagbabadyang Pagbaha",
+                    "description": "sa mabababang lugar at mga malapit sa daluyan ng tubig"
+                  }
+                ]
+              },
+              {
+                "img": "/images/learn/RedRainfallWarning.png",
+                "color": "bg-pink-100",
+                "details": [
+                  {
+                    "title": "Red Rainfall Warning"
+                  },
+                  {
+                    "title": "Matinding Pagbaha",
+                    "description": "sa mabababang lugar at mga malapit sa daluyan ng tubig"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "heading": "",
+            "description": "Ang Red Rainfall Warning ay nagpapahiwatig ng pinakamatinding kondisyon ng pagbaha. Kapag itinaas ang PAGASA ang Red Rainfall Warning, ang mga residente ng apektadong lugar ay dapat handang lumikas tungo sa mas ligtas na lugar."
+          },
+          {
+            "heading": "Alam mo ba?",
+            "description": "<p>Sakaling bumaha, ang bawat <i>local government unit</i> (LGU) ay may nakatalagang mga <i>evacuation area</i> na gagamitin. Ito ay ang mga <i>multi-purpose center</i> ng barangay, piling mga barangay hall, at mga pampublikong paaralan sa elementarya at high school.</p>"
+          }
+        ],
+        "references": [
+          "<i>Ang gamit ng color-coded rainfall advisories ng PAGASA.</i> (n.d.). Official Gazette. https://www.officialgazette.gov.ph/ang-gamit-ng-color-coded-warning-signal-ng-pagasa/",
+          "Austria, K. S. (2023, April 12). <i>#LigtasPilipinas sa panganib ng bagyo</i>. Philippine Information Agency. https://pia.gov.ph/features/2023/04/12/ligtaspilipinas-sa-panganib-ng-bagyo",
+          "<i>Legend</i>. (n.d.). PAGASA. https://bagong.pagasa.dost.gov.ph/learnings/legend",
+          "<i>Publications</i>. (n.d.). PAGASA. https://www.pagasa.dost.gov.ph/learnings/publication"
+        ]
+      },
+      "Guidelines on the Cancellation or Suspension of Classes": {
+        "title": "Mga Alituntunin sa Pagkansela or Pagsuspinde ng Klase",
+        "content": [
+          {
+            "description": "Ayon sa DepEd Order No. 37, s. 2022 na inilabas ng Department of Education (DepEd), narito ang mga sumusunod na alituntunin sa pagkansela o pagsuspinde ng mga klase at trabaho sa mga paaralan sa kaganapan ng isang bagyo, malakas na pag-ulan, baha, o lindol:"
+          },
+          {
+            "heading": "Bagyo",
+            "description": "<p>Ang <i>in-person, online</i> na mga klase at trabaho mula Kindergarten hanggang Grade 12 at Alternative Learning System (ALS) ay awtomatikong kanselado sa mga paaralan na kabilang sa mga LGU na tinaasan ng mga Tropical Cyclone Wind Signal (TCWS) 1, 2, 3, 4 or 5 ng PAGASA.</p><p>Kung ang TCWS ay itinaas sa oras na nagsimula na ang mga klase, dapat agad na ihinto ng paaralan ang mga klase at trabaho at pauwiin ang lahat sa bahay, kung ligtas na gawin ito.</p><p>Ang mga Local Chief Executive ay dapat magdesisyon sa pagkansela o pagsuspinde ng klase sa mga sakaling mayroong malakas na hangin sa partikular o lahat ng lugar ng LGU ngunit hindi tinaasan ng TCWS.</p>"
+          },
+          {
+            "heading": "Malakas na Pag-ulan",
+            "description": "<p>Ang in-person, online na mga klase at trabaho mula Kindergarten hanggang Grade 12 at Alternative Learning System (ALS) ay awtomatikong kanselado sa mga paaralan na kabilang sa mga LGU na tinaasan ng Orange at Red rainfall Warning ng PAGASA.</p><p>Kung ang Warning ay itinaas sa oras na nagsimula na ang mga klase, dapat agad na ihinto ng paaralan ang mga klase at trabaho at pauwiin ang lahat sa bahay, kung ligtas na gawin ito.</p><p>Ang mga Local Chief Executive ay dapat magdesisyon sa pagkansela o pagsuspinde ng klase kung ang kanilang LGU ay tinaasan ng Yellow Rainfall Warning ng PAGASA o sa mga sakaling mayroong malakas na pag-ulan sa partikular o lahat ng lugar ng LGU ngunit hindi tinaasan ng Alert ng PAGASA.</p>"
+          },
+          {
+            "heading": "Baha",
+            "description": "<p>Ang in-person, online na mga klase at trabaho mula Kindergarten hanggang Grade 12 at Alternative Learning System (ALS) ay awtomatikong kanselado sa mga paaralan na kabilang sa mga LGU na tinaasan ng Flood Warning ng PAGASA.</p><p>Kung ang Flood Warning ay itinaas sa oras na nagsimula na ang mga klase, dapat agad na ihinto ng paaralan ang mga klase at trabaho at pauwiin ang lahat sa bahay, kung ligtas na gawin ito.</p><p>Ang mga Local Chief Executive ay dapat magdesisyon sa pagkansela o pagsuspinde ng klase sa mga sakaling mayroong pagbaha sa partikular o lahat ng lugar ng LGU ngunit hindi tinaasan ng Flood Warning ng PAGASA.</p>"
+          },
+          {
+            "heading": "Lindol",
+            "description": "<p>Ang in-person, online na mga klase at trabaho mula Kindergarten hanggang Grade 12 at Alternative Learning System (ALS) ay awtomatikong kanselado sa mga paaralan na kabilang sa mga LGU kung saan ang PHIVOLCS ay nagdeklara ng lindol na may PHIVOLCS Earthquake Intensity Scale (PEIS) V o mas mataas.</p><p>Ang mga Local Chief Executive ay dapat magdesisyon sa pagkansela o pagsuspinde ng klase sa mga sakaling ang PEIS ay IV at mas mababa.</p><p>Ang mga School Principal ay maaaring magkansela ng mga klase sa anumang Intensity Scale kung sa kanilang pagsusuri, ang gusali at iba pang mga istraktura ay nakikitang nanganganib na gumuho o natagpuang may malaking pinsala.</p><p>Dapat i-clear ng School Disaster Risk Reduction and Management (DRRM) Team Head ang pagbabalik ng mag-aaral at tauhan sa mga gusali at iba pang mga istraktura.</p>"
+          },
+          {
+            "heading": "Mga Adjustment sa Learning Delivery Dahil sa mga Pagsuspinde o Pagkansela ng mga Klase",
+            "description": "<p>Sa kaganapan na kanselado o suspendido ang mga klase, ang <i>modular distance learning</i>, mga <i>performance task</i>, proyekto o mga <i>make up class</i> ay dapat ipatupad upang matiyak na ang mga <i>learning competency at objective</i> ay natutugunan pa rin.</p><p>Bilang pagsunod sa probisyon ng DepEd Order No. 14, s. 2021, ang mga mag-aaral na nakaligtaan ang mga learning activity dahil sa mga suspensyon ng klase dulot ng iba't ibang mga pagkagambala tulad ng mga sakuna at/o mga <i>emergency</i> dahil sa mga panganib na natural o dulot ng tao ay dapat bigyan ng nararapat na konsiderasyon sa kanilang attendance at pagkumpleto ng kanilang mga <i>learning task.</i></p>"
+          },
+          {
+            "heading": "Responsibilidad ng mga Magulang o Guardian",
+            "description": "<p>Naninindigan pa rin ang DepEd na ang mga magulang o guardian ay may sukdulang responsibilidad sa pagtukoy kung ang kanilang mga anak ay dapat pumasok sa mga klase bilang pagsasaalang-alang sa kanilang pisikal at/o mental na kalusugan sa panahon ng mga sakuna at kalamidad. Ito ay naaangkop kahit na walang utos para sa pagkansela o pag-suspinde ng mga klase ang inisyu.</p><p>Gayunpaman, magiging responsibilidad din ng mga magulang o guardian na tiyakin na ang kanilang anak ay kayang humabol sa mga kinakailangang <i>competency</i> na dapat i-master ng mga mag-aaral.</p><p><i>Para sa karagdagang kaalaman tungkol sa mga alituntunin sa pagkansela o pagsuspinde ng mga klase at trabaho sa mga paaralan sa kaganapan ng mga power outages o power interruptions at iba pang mga kalamidad, i-click ang link na <a href='https://www.deped.gov.ph/wp-content/uploads/2022/09/DO_s2022_037.pdf?fbclid=IwAR07atV721M2VBQ_Ie_vknh1qdeAGpUeZcMQQJGNc-KsAB2_nzsCk6XMXpA' class='underline text-blue-100' target='_blank'>ito</a></i>.</p>"
+          },
+          {
+            "heading": "Glossary ng mga Acronym",
+            "list": [
+              "LGUs - Local Government Units",
+              "PAGASA - Philippine Atmospheric, Geophysical, and Astronomical Services Administration",
+              "PHIVOLCS - Philippine Institute of Volcanology and Seismology"
+            ]
+          }
+        ],
+        "references": [
+          "<i>Guidelines on the Cancellation or Suspension of Classes and Work in Schools in the Event of Natural Disasters, Power Outages/Power Interruptions, and Other Calamities. </i>(2022, September 1). DepEd. https://www.deped.gov.ph/2022/09/01/september-1-2022-do-037-s-2022-guidelines-on-the-cancellation-or-suspension-of-classes-and-work-in-schools-in-the-event-of-natural-disasters-power-outages-power-interruptions-and-other/"
+        ]
+      },
+      "Emergency Go Bag": {
+        "title": "Emergency Go Bag",
+        "content": [
+          {
+            "description": "Sa isang sakuna o kalamidad, maaaring kailanganin nating mabuhay nang mag-isa sa loob ng ilang araw, kaya mahalagang magkaroon ng isang emergency go bag na maaaring tumagal ng hindi bababa sa 72 oras. Naririto ang mga mahahalagang bagay na kailangan mo sa iyong emergency go bag."
+          },
+          {
+            "heading": "Pagkain at Tubig",
+            "list": [
+              "Mga pagkaing handa nang kainin tulad ng mga biskwit, crackers, cookies, cereal, at mga de-lata (hindi bababa sa tatlong araw na suplay)",
+              "Tubig sa mga selyadong lalagyan (isang galon bawat tao kada araw sa loob ng hindi bababa sa tatlong araw, para sa inumin at sanitasyon)",
+              "Instant coffee o tsaa",
+              "Infant formula at mga baby bottle (para sa mga sanggol)",
+              "Pagkain para sa alagang hayop at dagdag na tubig (para sa mga alagang hayop)",
+              "Mga kagamitan na pangkain tulad ng kutsara, tinidor, at plato",
+              "Plastik na bag"
+            ]
+          },
+          {
+            "heading": "Mga Damit at Toiletries",
+            "list": [
+              "Mga damit (maaaring tumagal ng dalawa hanggang tatlong araw)",
+              "Toothbrush, toothpaste, at mouthwash",
+              "Sabon, shampoo, at conditioner",
+              "Hand sanitizer at alcohol",
+              "Insect repellant",
+              "Sunblock",
+              "Mga menstrual pad (para sa mga babae)",
+              "Mga diaper at wet wipes (para sa mga sanggol)"
+            ]
+          },
+          {
+            "heading": "First Aid Kit",
+            "list": [
+              "Mga band-aid, sterile gauze, at micropore tape",
+              "Alcohol, povidone-iodine, at ointment para sa mga sugat",
+              "Tweezer",
+              "Thermometer",
+              "Surgical gloves",
+              "Mga dust at N95 mask",
+              "Mga gamot para sa lagnat, ubo, sipon, diarrhea, at iba pa",
+              "Maintenance medication (kung naaangkop)"
+            ]
+          },
+          {
+            "heading": "Survival Kit",
+            "list": [
+              "Pocket knife na may pambukas ng lata",
+              "Flashlight",
+              "Mga kandila at posporo o lighter (ilagay ang lighter sa isang zip lock bag)",
+              "Lubid",
+              "Kapote at poncho",
+              "Pito o anumang bagay na maaaring lumikha ng tunog (pang-signal ng tulong)",
+              "Portable na radyo",
+              "Mga dagdag na baterya",
+              "Cellular phone na may charger at power bank",
+              "Extension cord",
+              "Notebook at lapis",
+              "Mga sleeping bag o mat at kumot",
+              "Listahan ng mga nasyunal at lokal na mga emergency number"
+            ]
+          },
+          {
+            "heading": "Mga Importanteng Dokumento at Pera",
+            "list": [
+              "Pang-emergency na pera, kasama na ang mga barya",
+              "Mga government-issued ID o mga ID na may blood type at emergency contact information",
+              "Mga mahahalagang dokumento gaya ng mga sertipiko ng kapanganakan at kasal, mga dokumento tungkol sa ari-arian at seguro, mga pasaporte, at mga medical record. Ilagay ang mga ito sa isang waterproof at/o fireproof na sobre."
+            ]
+          }
+        ],
+        "references": [
+          "<i>Build A Kit</i>. (2023, August 4). Ready.gov. https://www.ready.gov/kit",
+          "Department of Health Philippines. (2021, December 15). <i>Ang #PamilyangHealthyPamilyangReady! Paghandaan ang #OdettePH, i-ready niyo na ang inyong Emergency Go Bag o ang E-balde! Alamin dito kung anu-ano</i> [Image attached] [Tweet]. Twitter. https://twitter.com/DOHgovph/status/1471042353616015363",
+          "Luci-Atienza, C. (2021, July 3). Is your emergency go bag ready for the new normal? <i>Manila Bulletin</i>. https://mb.com.ph/2021/7/3/is-your-emergency-go-bag-ready-for-the-new-normal",
+          "Ombay, G. (2023, July 5). DOH stresses importance of having a ‘go bag’ in case of disasters. <i>GMA Network</i>. https://www.gmanetwork.com/news/lifestyle/healthandwellness/874893/doh-stresses-importance-of-having-a-go-bag-in-case-of-disasters/story/",
+          "<i>Ready ba ang pamilya in case of emergencies and disasters?</i> (n.d.). UNICEF. https://www.unicef.org/philippines/ready-ba-ang-pamilya-case-emergencies-and-disasters"
+        ]
+      }
+    }
+  }
+  

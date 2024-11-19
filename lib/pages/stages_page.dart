@@ -12,7 +12,8 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/dialog_boxes/stage_dialog.dart';
 import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
-import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
+import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget 
+import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
 
 // ignore: must_be_immutable
 class StagesPage extends StatefulWidget {
@@ -216,6 +217,22 @@ class StagesPageState extends State<StagesPage> {
     ''';
   }
 
+  String _getLockSvg() {
+    return '''
+      <svg
+        width="24"
+        height="24"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M15 2H9v2H7v4H4v14h16V8h-3V4h-2V2zm0 2v4H9V4h6zm-6 6h9v10H6V10h3zm4 3h-2v4h2v-4z"
+          fill="#737373"
+        />
+      </svg>
+    ''';
+  }
+
   void _toggleUserProfile() {
     setState(() {
       _isUserProfileVisible = !_isUserProfileVisible;
@@ -313,54 +330,50 @@ class StagesPageState extends State<StagesPage> {
                                         const SizedBox(width: 20), // Add spacing between text and buttons
                                         Column(
                                           children: [
-                                            ElevatedButton(
+                                            Button3D(
                                               onPressed: () {
                                                 setState(() {
                                                   _selectedMode = 'Normal';
                                                 });
                                               },
-                                              style: ElevatedButton.styleFrom(
-                                                foregroundColor: _selectedMode == 'Normal' ? Colors.white : Colors.black, // Text color
-                                                backgroundColor: _selectedMode == 'Normal' ? const Color(0xFF32c067) : const Color(0xFFD9D9D9), // Background color
-                                                shape: const RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                ),
-                                                side: BorderSide(
-                                                  color: _selectedMode == 'Normal' ? darken(const Color(0xFF32c067), 0.2) : const Color(0xFF1A0D30), // Darker border color
-                                                  width: 4, // Thicker border width for bottom
-                                                ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                                              ),
+                                              backgroundColor: _selectedMode == 'Normal' 
+                                                ? const Color(0xFF32c067) 
+                                                : const Color(0xFF351b61),
+                                              borderColor: _selectedMode == 'Normal'
+                                                ? darken(const Color(0xFF32c067))
+                                                : const Color(0xFF1A0D30),
+                                              width: 120,
+                                              height: 60,
                                               child: Text(
-                                                'Normal',
+                                                'NORMAL',
                                                 style: GoogleFonts.rubik(
-                                                  color: _selectedMode == 'Normal' ? Colors.white : Colors.black,
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(height: 15), // Add spacing between buttons
-                                            ElevatedButton(
+                                            const SizedBox(height: 15),
+                                            Button3D(
                                               onPressed: () {
                                                 setState(() {
                                                   _selectedMode = 'Hard';
                                                 });
                                               },
-                                              style: ElevatedButton.styleFrom(
-                                                foregroundColor: _selectedMode == 'Hard' ? Colors.white : Colors.black, // Text color
-                                                backgroundColor: _selectedMode == 'Hard' ? Colors.red : const Color(0xFFD9D9D9), // Background color
-                                                shape: const RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.all(Radius.circular(0)), // Sharp corners
-                                                ),
-                                                side: BorderSide(
-                                                  color: _selectedMode == 'Hard' ? darken(Colors.red, 0.2) : const Color(0xFF1A0D30), // Darker border color
-                                                  width: 4, // Thicker border width for bottom
-                                                ),
-                                                padding: const EdgeInsets.symmetric(horizontal: 39, vertical: 15),
-                                              ),
+                                              backgroundColor: _selectedMode == 'Hard' 
+                                                ? Colors.red 
+                                                : const Color(0xFF351b61),
+                                              borderColor: _selectedMode == 'Hard'
+                                                ? darken(Colors.red)
+                                                : const Color(0xFF1A0D30),
+                                              width: 120,
+                                              height: 60,
                                               child: Text(
-                                                'Hard',
+                                                'HARD',
                                                 style: GoogleFonts.rubik(
-                                                  color: _selectedMode == 'Hard' ? Colors.white : Colors.black,
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
                                             ),
@@ -428,21 +441,20 @@ class StagesPageState extends State<StagesPage> {
                                             _stageService, // Pass the StageService instance
                                           );
                                         } : null,  // Null makes it non-clickable
-                                        child: Opacity(
-                                          opacity: isUnlocked ? 1.0 : 0.5,  // Dim locked stages
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              Column(
-                                                children: [
-                                                  Stack(
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      SvgPicture.string(
-                                                        _getModifiedSvg(stageColor),
-                                                        width: 100,
-                                                        height: 100,
-                                                      ),
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    SvgPicture.string(
+                                                      _getModifiedSvg(isUnlocked ? stageColor : const Color(0xFFD9D9D9)), // Use gray for locked stages
+                                                      width: 100,
+                                                      height: 100,
+                                                    ),
+                                                    if (isUnlocked)
                                                       Text(
                                                         '$stageNumber',
                                                         style: GoogleFonts.vt323(
@@ -451,45 +463,50 @@ class StagesPageState extends State<StagesPage> {
                                                           color: Colors.white,
                                                         ),
                                                         textAlign: TextAlign.center,
+                                                      )
+                                                    else
+                                                      SvgPicture.string(
+                                                        _getLockSvg(),
+                                                        width: 50,
+                                                        height: 50,
                                                       ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 10),
-                                                ],
-                                              ),
-                                              Positioned(
-                                                bottom: 0,
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: List.generate(3, (index) {
-                                                    return Padding(
-                                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 0.0), // Add horizontal spacing
-                                                      child: Transform.translate(
-                                                        offset: Offset(0, index == 1 ? 10 : 0), // Lower the 2nd star
-                                                        child: SvgPicture.string(
-                                                          '''
-                                                          <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            width="36"
-                                                            height="36"
-                                                            viewBox="0 0 12 11"
-                                                          >
-                                                            <path
-                                                              d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-                                                              fill="${stars > index ? '#F1B33A' : '#453958'}"
-                                                            />
-                                                          </svg>
-                                                          ''',
-                                                          width: 24,
-                                                          height: 24,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }),
+                                                  ],
                                                 ),
+                                                const SizedBox(height: 10),
+                                              ],
+                                            ),
+                                            Positioned(
+                                              bottom: 0,
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: List.generate(3, (index) {
+                                                  return Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                                    child: Transform.translate(
+                                                      offset: Offset(0, index == 1 ? 10 : 0),
+                                                      child: SvgPicture.string(
+                                                        '''
+                                                        <svg
+                                                          xmlns="http://www.w3.org/2000/svg"
+                                                          width="36"
+                                                          height="36"
+                                                          viewBox="0 0 12 11"
+                                                        >
+                                                          <path
+                                                            d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                                                            fill="${isUnlocked && stars > index ? '#F1B33A' : '#453958'}"
+                                                          />
+                                                        </svg>
+                                                        ''',
+                                                        width: 24,
+                                                        height: 24,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
                                       );
                                     },

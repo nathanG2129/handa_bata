@@ -128,27 +128,23 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
               String? role = await _authService.getUserRole(currentUser.uid);
               
               if (role == 'guest') {
-                // Convert guest to regular user
-                await _authService.convertGuestToUser(
+                print('🔄 Completing guest conversion...');
+                // Complete the conversion process
+                await _authService.completeGuestConversion();
+                print('✅ Guest conversion completed');
+              } else {
+                // Create new user account
+                final user = await _authService.registerWithEmailAndPassword(
                   widget.email,
                   widget.password!,
                   widget.username!,
-                  '',  // Nickname will be preserved from guest profile
+                  '',  // Empty nickname, will be generated
                   widget.birthday!,
                 );
-              }
-            } else {
-              // Create new user account
-              final user = await _authService.registerWithEmailAndPassword(
-                widget.email,
-                widget.password!,
-                widget.username!,
-                '',  // Empty nickname, will be generated
-                widget.birthday!,
-              );
-              
-              if (user == null) {
-                throw Exception('Failed to create account');
+                
+                if (user == null) {
+                  throw Exception('Failed to create account');
+                }
               }
             }
 
@@ -160,6 +156,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
               ),
             );
           } catch (e) {
+            print('❌ Error during account creation/conversion: $e');
             // Handle specific errors
             if (e.toString().contains('Username is already taken')) {
               throw Exception('This username is no longer available. Please go back and choose another.');

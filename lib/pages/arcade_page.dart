@@ -231,6 +231,30 @@ class ArcadePageState extends State<ArcadePage> {
     });
   }
 
+  String _getLockSvg() {
+    return '''
+      <svg
+        width="24"
+        height="24"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M15 2H9v2H7v4H4v14h16V8h-3V4h-2V2zm0 2v4H9V4h6zm-6 6h9v10H6V10h3zm4 3h-2v4h2v-4z"
+          fill="white"
+        />
+      </svg>
+    ''';
+  }
+
+  bool _isCategoryUnlocked(String categoryId) {
+    final saveData = _categorySaveData[categoryId];
+    if (saveData == null) return false;
+    
+    // Check if all normal stages have stars (same as arcade_stages_page.dart)
+    return !saveData.normalStageStars.contains(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -309,38 +333,62 @@ class ArcadePageState extends State<ArcadePage> {
                                                   children: _categories.map((category) {
                                                     final buttonColor = _getButtonColor(category['name']);
                                                     final categoryText = _getCategoryText(category['name']);
+                                                    final isUnlocked = _isCategoryUnlocked(category['id']);
+                                                    
                                                     return Padding(
-                                                      padding: const EdgeInsets.only(bottom: 30), // Apply margin only to the bottom
+                                                      padding: const EdgeInsets.only(bottom: 30),
                                                       child: Align(
                                                         alignment: Alignment.center,
                                                         child: Button3D(
                                                           width: 350,
-                                                          height: 150,
-                                                          onPressed: () => _onCategoryPressed(category),
-                                                          backgroundColor: buttonColor,
-                                                          borderColor: _darkenColor(buttonColor),
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.all(8.0),
-                                                            child: Column(
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: [
-                                                                Text(
-                                                                  categoryText['name']!,
-                                                                  style: GoogleFonts.vt323(
-                                                                    fontSize: 30, // Larger font size
-                                                                    color: Colors.white, // Text color
+                                                          height: 175,
+                                                          onPressed: () {
+                                                            if (isUnlocked) {
+                                                              _onCategoryPressed(category);
+                                                            }
+                                                          },
+                                                          backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
+                                                          borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
+                                                          child: Stack(
+                                                            children: [
+                                                              Padding(
+                                                                padding: const EdgeInsets.all(8.0),
+                                                                child: Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  children: [
+                                                                    Text(
+                                                                      categoryText['name']!,
+                                                                      style: GoogleFonts.vt323(
+                                                                        fontSize: 30,
+                                                                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(height: 10),
+                                                                    Text(
+                                                                      isUnlocked 
+                                                                        ? categoryText['description']!
+                                                                        : _selectedLanguage == 'fil'
+                                                                          ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
+                                                                          : 'Complete ${category["name"]} at Adventure to unlock this game mode.',
+                                                                      style: GoogleFonts.vt323(
+                                                                        fontSize: 22,
+                                                                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              if (!isUnlocked)
+                                                                Positioned(
+                                                                  right: 5,
+                                                                  top: 10,
+                                                                  child: SvgPicture.string(
+                                                                    _getLockSvg(),
+                                                                    width: 40,
+                                                                    height: 40,
                                                                   ),
                                                                 ),
-                                                                const SizedBox(height: 10),
-                                                                Text(
-                                                                  categoryText['description']!,
-                                                                  style: GoogleFonts.vt323(
-                                                                    fontSize: 22,
-                                                                    color: Colors.white, // Text color
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ),
@@ -451,6 +499,8 @@ class ArcadePageState extends State<ArcadePage> {
         ..._categories.map((category) {
           final buttonColor = _getButtonColor(category['name']);
           final categoryText = _getCategoryText(category['name']);
+          final isUnlocked = _isCategoryUnlocked(category['id']);
+          
           return Padding(
             padding: const EdgeInsets.only(bottom: 30),
             child: Align(
@@ -458,31 +508,53 @@ class ArcadePageState extends State<ArcadePage> {
               child: Button3D(
                 width: 350,
                 height: 150,
-                onPressed: () => _onCategoryPressed(category),
-                backgroundColor: buttonColor,
-                borderColor: _darkenColor(buttonColor),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        categoryText['name']!,
-                        style: GoogleFonts.vt323(
-                          fontSize: 30,
-                          color: Colors.white,
+                onPressed: () {
+                  if (isUnlocked) {
+                    _onCategoryPressed(category);
+                  }
+                },
+                backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
+                borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.7),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            categoryText['name']!,
+                            style: GoogleFonts.vt323(
+                              fontSize: 30,
+                              color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            isUnlocked 
+                              ? categoryText['description']!
+                              : _selectedLanguage == 'fil'
+                                ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ito.'
+                                : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                            style: GoogleFonts.vt323(
+                              fontSize: 22,
+                              color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!isUnlocked)
+                      Positioned(
+                        right: 20,
+                        top: 20,
+                        child: SvgPicture.string(
+                          _getLockSvg(),
+                          width: 40,
+                          height: 40,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        categoryText['description']!,
-                        style: GoogleFonts.vt323(
-                          fontSize: 22,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),

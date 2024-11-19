@@ -47,6 +47,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
   // ignore: unused_field
   ConnectionQuality _currentQuality = ConnectionQuality.GOOD;
 
+  bool _isMenuOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -131,9 +133,22 @@ class HeaderWidgetState extends State<HeaderWidget> {
     super.dispose();
   }
 
-
-
-
+  String _getCloseMenuSvg() {
+    return '''
+      <svg
+        width="100%"
+        height="100%"
+        fill="white"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z"
+          fill="currentColor"
+        />
+      </svg>
+    ''';
+  }
 
   void _showUserProfile() {
     showDialog(
@@ -325,9 +340,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
     );
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -439,13 +451,29 @@ class HeaderWidgetState extends State<HeaderWidget> {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: SvgPicture.asset(
-                    'assets/icons/menu.svg',
+                  icon: SvgPicture.string(
+                    _isMenuOpen ? _getCloseMenuSvg() : '''
+                      <svg
+                        width="32"
+                        height="32"
+                        fill="white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm16 5H4v2h16v-2z"
+                          fill="white"
+                        />
+                      </svg>
+                    ''',
                     width: 40,
                     height: 40,
                     color: Colors.white,
                   ),
                   onPressed: () {
+                    setState(() {
+                      _isMenuOpen = true;
+                    });
                     showDialog(
                       context: context,
                       barrierDismissible: true,
@@ -453,12 +481,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
                       builder: (BuildContext context) {
                         return MenuDrawer(
                           onClose: () {
+                            setState(() {
+                              _isMenuOpen = false;
+                            });
                             Navigator.of(context).pop();
                           },
                           selectedLanguage: widget.selectedLanguage,
                         );
                       },
-                    );
+                    ).then((_) {
+                      // This ensures the icon changes back when dialog is dismissed by tapping outside
+                      setState(() {
+                        _isMenuOpen = false;
+                      });
+                    });
                   },
                 ),
               ),

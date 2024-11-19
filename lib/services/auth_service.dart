@@ -935,46 +935,48 @@ class AuthService {
         throw Exception('No current user found');
       }
 
-      // Get the updated profile data
-      Map<String, dynamic> profileData = conversionData['guestProfile'];
-      UserProfile updatedProfile = UserProfile.fromMap(profileData);
-
-      print('👤 Converting profile:');
-      print('Username: ${updatedProfile.username}');
-      print('Nickname: ${updatedProfile.nickname}');
-
+      print('👤 Converting guest to regular user...');
+      
       // Link email/password to anonymous account
       AuthCredential credential = EmailAuthProvider.credential(
         email: conversionData['email'],
         password: conversionData['password'],
       );
-      await currentUser.linkWithCredential(credential);
 
-      // Use UserProfileService for consistent updates
-      final userProfileService = UserProfileService();
+      print('🔗 Linking email credential...');
+      await currentUser.linkWithCredential(credential);
       
-      // Update profile using UserProfileService
-      await userProfileService.batchUpdateProfile({
-        'username': updatedProfile.username,
-        'email': updatedProfile.email,
-        'birthday': updatedProfile.birthday,
-        // Don't update nickname as it should be preserved
+      // Get the updated profile data
+      Map<String, dynamic> profileData = conversionData['guestProfile'];
+      UserProfile updatedProfile = UserProfile.fromMap(profileData);
+
+      print('💾 Updating Firestore documents...');
+      
+      // Update in a batch to ensure atomicity
+      WriteBatch batch = _firestore.batch();
+      
+      // Update main user document
+      DocumentReference userDoc = _firestore.collection('User').doc(currentUser.uid);
+      batch.set(userDoc, {
+        'email': conversionData['email'],
+        'role': 'user',
       });
 
-      // Update Firestore if online
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult != ConnectivityResult.none) {
-        WriteBatch batch = _firestore.batch();
-        
-        // Update main user document
-        batch.set(_firestore.collection('User').doc(currentUser.uid), {
-          'email': conversionData['email'],
-          'role': 'user'
-        });
+      // Update profile data
+      DocumentReference profileDoc = userDoc
+          .collection('ProfileData')
+          .doc(currentUser.uid);
+      batch.set(profileDoc, updatedProfile.toMap());
 
-        await _executeBatchWithRetry(batch);
-        print('✅ Firestore updated');
-      }
+      // Commit the batch
+      await batch.commit();
+
+      // Update local storage
+      await saveUserProfileLocally(updatedProfile);
+      _addToCache(currentUser.uid, updatedProfile);
+
+      // Clear pending conversion data
+      await prefs.remove('pending_conversion');
 
       print('✅ Guest conversion completed successfully\n');
       return currentUser;

@@ -127,69 +127,66 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         },
         child: GestureDetector(
           onTap: _closeDrawer,
-          child: Container(
-            color: Colors.black.withOpacity(0.5),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: headerHeight,
-                  right: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.75,
-                        color: const Color(0xFF241242),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildMenuItem('Play', onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PlayPage(
-                                      title: 'Play',
-                                      selectedLanguage: widget.selectedLanguage,
-                                    ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: headerHeight,
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onTap: () {},
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.75,
+                      color: const Color(0xFF241242),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildMenuItem('Play', onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlayPage(
+                                    title: 'Play',
+                                    selectedLanguage: widget.selectedLanguage,
                                   ),
-                                );
-                                _closeDrawer();
-                              }),
-                              _buildDivider(),
-                              _buildExpandableMenuItem('Learn', [
-                                'About Earthquakes',
-                                'Disastrous Earthquakes in the Philippines',
-                                'Preparing for Earthquakes',
-                              ], isEarthquakes: true),
-                              _buildDivider(),
-                              _buildExpandableMenuItem('Resources', [
-                                'Resource 1',
-                                'Resource 2',
-                                'Resource 3',
-                              ]),
-                              _buildDivider(),
-                              _buildMenuItem('Hotlines', onTap: () {}),
-                              _buildDivider(),
-                              _buildMenuItem('About', onTap: () {}),
-                              _buildDivider(),
-                              const SizedBox(height: 8),
-                              _buildMenuItem(
-                                _userRole == 'guest' ? 'Register' : 'Log out',
-                                onTap: _userRole == 'guest' ? _navigateToRegister : _logout,
-                              ),
-                              const SizedBox(height: 20),
-                            ],
-                          ),
+                                ),
+                              );
+                              _closeDrawer();
+                            }),
+                            _buildDivider(),
+                            _buildExpandableMenuItem('Learn', [
+                              'About Earthquakes',
+                              'Disastrous Earthquakes in the Philippines',
+                              'Preparing for Earthquakes',
+                            ], isEarthquakes: true),
+                            _buildDivider(),
+                            _buildExpandableMenuItem('Resources', [
+                              'Resource 1',
+                              'Resource 2',
+                              'Resource 3',
+                            ]),
+                            _buildDivider(),
+                            _buildMenuItem('Hotlines', onTap: () {}),
+                            _buildDivider(),
+                            _buildMenuItem('About', onTap: () {}),
+                            _buildDivider(),
+                            const SizedBox(height: 8),
+                            _buildMenuItem(
+                              _userRole == 'guest' ? 'Register' : 'Log out',
+                              onTap: _userRole == 'guest' ? _navigateToRegister : _logout,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

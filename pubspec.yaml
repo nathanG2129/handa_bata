@@ -116,7 +116,10 @@ flutter:
     - assets/characters/KloudArcade.svg
     - assets/characters/KladisLearn.svg
     - assets/characters/KloudLearn.svg
+    - assets/icons/check.svg
     - assets/icons/stageicon.svg
+    - assets/icons/menu.svg
+    - assets/icons/language_switcher.svg
     - assets/appicon/app_icon.png
     - assets/instructions/FillinTheBlanks01.jpg
     - assets/instructions/FillinTheBlanks02.jpg
@@ -161,25 +164,9 @@ flutter:
     - assets/badges/quake-quest/NormalStage05.png
     - assets/badges/quake-quest/NormalStage06.png
     - assets/badges/quake-quest/NormalStage07.png
-    - assets/badges/storm-quest/HardComplete.png
-    - assets/badges/storm-quest/HardFullClear.png
-    - assets/badges/storm-quest/HardStage01.png
-    - assets/badges/storm-quest/HardStage02.png
-    - assets/badges/storm-quest/HardStage03.png
-    - assets/badges/storm-quest/HardStage04.png
-    - assets/badges/storm-quest/HardStage05.png
-    - assets/badges/storm-quest/HardStage06.png
-    - assets/badges/storm-quest/HardStage07.png
-    - assets/badges/storm-quest/NormalComplete.png
-    - assets/badges/storm-quest/NormalFullClear.png
-    - assets/badges/storm-quest/NormalStage01.png
-    - assets/badges/storm-quest/NormalStage02.png
-    - assets/badges/storm-quest/NormalStage03.png
-    - assets/badges/storm-quest/NormalStage04.png
-    - assets/badges/storm-quest/NormalStage05.png
-    - assets/badges/storm-quest/NormalStage06.png
-    - assets/badges/storm-quest/NormalStage07.png
     - assets/gifs/Walking.gif
+    - assets/icons/language_switcher.svg
+    - assets/icons/check.svg
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

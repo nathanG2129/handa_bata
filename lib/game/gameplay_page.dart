@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
 import '../services/game_save_manager.dart';
 import '../models/game_state.dart';
+import 'package:handabatamae/widgets/character_animations.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -98,6 +99,10 @@ class GameplayPageState extends State<GameplayPage> {
   // Internal save state question index
   int saveStateQuestionIndex = 0;
 
+
+  Widget? _kladisAnimation;
+  Widget? _kloudAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -113,6 +118,8 @@ class GameplayPageState extends State<GameplayPage> {
     if (widget.gamemode == 'arcade') {
     _startStopwatch();
     }
+    _kladisAnimation = const KladisIdle();
+    _kloudAnimation = const KloudIdle();
   }
 
   @override
@@ -590,6 +597,8 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   setState(() {
     _isCorrect = isCorrect;
     
+    // Show animation
+        
     // Update arcade stats
     if (widget.gamemode == 'arcade') {
       _questionsAnswered++;
@@ -619,6 +628,14 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         _stopwatchSeconds += 10;
         _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
       }
+    }
+  });
+
+  // Hide animation after delay
+  Future.delayed(const Duration(seconds: 1), () {
+    if (mounted) {
+      setState(() {
+      });
     }
   });
 
@@ -669,33 +686,55 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
   }
 
   void _updateHealth(bool isCorrect, String questionType, {int blankPairs = 0, String difficulty = 'normal'}) {
-    if (widget.gamemode == 'arcade') return; // Skip health update for arcade mode
-  
     setState(() {
+      double oldHp = _hp;
+      
+      print('🎮 Updating animations - isCorrect: $isCorrect');
+      print('🎮 Before update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
+      
       if (isCorrect) {
         if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
           _hp += 5;
         } else {
           _hp += 20;
         }
+        // Show both characters' correct animations
+        _kladisAnimation = const KladisCorrect();
+        _kloudAnimation = const KloudCorrect();
       } else {
         if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
           _hp -= (difficulty == 'hard' ? 20 : 10) * blankPairs;
         } else {
           _hp -= (difficulty == 'hard' ? 50 : 25);
         }
+        // Show both characters' wrong animations
+        _kladisAnimation = const KladisWrong();
+        _kloudAnimation = const KloudWrong();
       }
-  
-      // Clamp the health value between 0 and 100
+
       _hp = _hp.clamp(0.0, 100.0);
-  
-      // Handle health reaching 0
-      if (_hp <= 0) {
+
+      if (_hp <= 0 && oldHp > 0) {
         _hp = 0;
-        // Handle game over logic here
         _isGameOver = true;
+        _kladisAnimation = const KladisDead();
+        _kloudAnimation = const KloudDead();
       }
+
+      print('🎮 After update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
     });
+
+    // Hide animation after delay (except for death animation)
+    if (!_isGameOver) {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            _kladisAnimation = const KladisIdle();
+            _kloudAnimation = const KloudIdle();
+          });
+        }
+      });
+    }
   }
 
   void _updateStopwatch(int seconds) {
@@ -886,150 +925,175 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     }
   
     return Scaffold(
-      body: ResponsiveBreakpoints(
-        breakpoints: const [
-          Breakpoint(start: 0, end: 450, name: MOBILE),
-          Breakpoint(start: 451, end: 800, name: TABLET),
-          Breakpoint(start: 801, end: 1920, name: DESKTOP),
-          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-        ],
-        child: MaxWidthBox(
-          maxWidth: 1200,
-          child: ResponsiveScaledBox(
-            width: ResponsiveValue<double>(context, conditionalValues: [
-              const Condition.equals(name: MOBILE, value: 450),
-              const Condition.between(start: 800, end: 1100, value: 800),
-              const Condition.between(start: 1000, end: 1200, value: 1000),
-            ]).value,
-            child: WillPopScope(
-              onWillPop: () async {
-                // Prevent back navigation
-                return false;
-              },
-              child: Scaffold(
-                backgroundColor: const Color(0xFF5E31AD),
-                body: SafeArea(
-                  child: Column(
-                    children: [
-                      ProgressBar(progress: _progress),
-                      const SizedBox(height: 48),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${currentQuestionIndex + 1} of $_totalQuestions',
-                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.settings, color: Colors.white),
-                              onPressed: () async {
-                                List<Map<String, String>> availableVoices = widget.language == 'fil'
-                                    ? [
-                                        {"name": _maleVoiceFil, "locale": "fil-PH"},
-                                        {"name": _femaleVoiceFil, "locale": "fil-PH"}
-                                      ]
-                                    : [
-                                        {"name": _maleVoiceEn, "locale": "en-US"},
-                                        {"name": _femaleVoiceEn, "locale": "en-US"}
-                                      ];
+      body: Stack(
+        children: [
+          ResponsiveBreakpoints(
+            breakpoints: const [
+              Breakpoint(start: 0, end: 450, name: MOBILE),
+              Breakpoint(start: 451, end: 800, name: TABLET),
+              Breakpoint(start: 801, end: 1920, name: DESKTOP),
+              Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+            ],
+            child: MaxWidthBox(
+              maxWidth: 1200,
+              child: ResponsiveScaledBox(
+                width: ResponsiveValue<double>(context, conditionalValues: [
+                  const Condition.equals(name: MOBILE, value: 450),
+                  const Condition.between(start: 800, end: 1100, value: 800),
+                  const Condition.between(start: 1000, end: 1200, value: 1000),
+                ]).value,
+                child: WillPopScope(
+                  onWillPop: () async {
+                    // Prevent back navigation
+                    return false;
+                  },
+                  child: Scaffold(
+                    backgroundColor: const Color(0xFF5E31AD),
+                    body: SafeArea(
+                      child: Column(
+                        children: [
+                          ProgressBar(progress: _progress),
+                          const SizedBox(height: 48),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${currentQuestionIndex + 1} of $_totalQuestions',
+                                  style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.settings, color: Colors.white),
+                                  onPressed: () async {
+                                    List<Map<String, String>> availableVoices = widget.language == 'fil'
+                                        ? [
+                                            {"name": _maleVoiceFil, "locale": "fil-PH"},
+                                            {"name": _femaleVoiceFil, "locale": "fil-PH"}
+                                          ]
+                                        : [
+                                            {"name": _maleVoiceEn, "locale": "en-US"},
+                                            {"name": _femaleVoiceEn, "locale": "en-US"}
+                                          ];
   
-                                // Ensure the selectedVoice is valid for the current language
-                                if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
-                                  setState(() {
-                                    _selectedVoice = availableVoices.first['name']!;
-                                  });
-                                }
-                                await showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return SettingsDialog(
-                                      flutterTts: flutterTts, // Pass the flutterTts instance
-                                      isTextToSpeechEnabled: _isTextToSpeechEnabled,
-                                      onTextToSpeechChanged: (bool value) {
-                                        setState(() {
-                                          _isTextToSpeechEnabled = value;
-                                        });
-                                        if (value) {
-                                          String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                          flutterTts.setLanguage(locale);
-                                          flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
-                                          flutterTts.setSpeechRate(_speechRate);
-                                          flutterTts.setVolume(_ttsVolume);
-                                        }
+                                    // Ensure the selectedVoice is valid for the current language
+                                    if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
+                                      setState(() {
+                                        _selectedVoice = availableVoices.first['name']!;
+                                      });
+                                    }
+                                    await showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return SettingsDialog(
+                                          flutterTts: flutterTts, // Pass the flutterTts instance
+                                          isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                                          onTextToSpeechChanged: (bool value) {
+                                            setState(() {
+                                              _isTextToSpeechEnabled = value;
+                                            });
+                                            if (value) {
+                                              String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                              flutterTts.setLanguage(locale);
+                                              flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
+                                              flutterTts.setSpeechRate(_speechRate);
+                                              flutterTts.setVolume(_ttsVolume);
+                                            }
+                                          },
+                                          selectedVoice: _selectedVoice,
+                                          onVoiceChanged: (String? newValue) {
+                                            setState(() {
+                                              _selectedVoice = newValue!;
+                                            });
+                                            String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                            flutterTts.setVoice({"name": newValue!, "locale": locale});
+                                          },
+                                          speed: _speechRate, // Use the state variable
+                                          onSpeedChanged: (double value) {
+                                            setState(() {
+                                              _speechRate = value;
+                                            });
+                                            flutterTts.setSpeechRate(value);
+                                          },
+                                          ttsVolume: _ttsVolume, // Use the state variable
+                                          onTtsVolumeChanged: (double value) {
+                                            setState(() {
+                                              _ttsVolume = value;
+                                            });
+                                            flutterTts.setVolume(value);
+                                          },
+                                          availableVoices: availableVoices,
+                                          musicVolume: _musicVolume, // Use the state variable
+                                          onMusicVolumeChanged: (double value) {
+                                            setState(() {
+                                              _musicVolume = value;
+                                            });
+                                            _audioPlayer.setVolume(value);
+                                          },
+                                          sfxVolume: _sfxVolume, // Use the state variable
+                                          onSfxVolumeChanged: (double value) {
+                                            setState(() {
+                                              _sfxVolume = value;
+                                            });
+                                          },
+                                          onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
+                                          isLastQuestion: _isLastAnsweredQuestion(),
+                                        );
                                       },
-                                      selectedVoice: _selectedVoice,
-                                      onVoiceChanged: (String? newValue) {
-                                        setState(() {
-                                          _selectedVoice = newValue!;
-                                        });
-                                        String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                        flutterTts.setVoice({"name": newValue!, "locale": locale});
-                                      },
-                                      speed: _speechRate, // Use the state variable
-                                      onSpeedChanged: (double value) {
-                                        setState(() {
-                                          _speechRate = value;
-                                        });
-                                        flutterTts.setSpeechRate(value);
-                                      },
-                                      ttsVolume: _ttsVolume, // Use the state variable
-                                      onTtsVolumeChanged: (double value) {
-                                        setState(() {
-                                          _ttsVolume = value;
-                                        });
-                                        flutterTts.setVolume(value);
-                                      },
-                                      availableVoices: availableVoices,
-                                      musicVolume: _musicVolume, // Use the state variable
-                                      onMusicVolumeChanged: (double value) {
-                                        setState(() {
-                                          _musicVolume = value;
-                                        });
-                                        _audioPlayer.setVolume(value);
-                                      },
-                                      sfxVolume: _sfxVolume, // Use the state variable
-                                      onSfxVolumeChanged: (double value) {
-                                        setState(() {
-                                          _sfxVolume = value;
-                                        });
-                                      },
-                                      onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
-                                      isLastQuestion: _isLastAnsweredQuestion(),
                                     );
                                   },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: Scrollbar(
-                          thumbVisibility: true, // Always show the scrollbar thumb
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                              child: questionWidget,
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: Scrollbar(
+                              thumbVisibility: true, // Always show the scrollbar thumb
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                                  child: questionWidget,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (widget.gamemode == 'arcade')
+                            Text(
+                              _stopwatchTime,
+                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+                            ),
+                          if (widget.gamemode != 'arcade') 
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 25.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: _isGameOver ? 128 : 64,
+                                    height: 64,
+                                    child: _kladisAnimation!,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  HPBar(hp: _hp),
+                                  const SizedBox(width: 5),
+                                  SizedBox(
+                                    width: _isGameOver ? 128 : 64,
+                                    height: 64,
+                                    child: _kloudAnimation!,
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
-                      if (widget.gamemode == 'arcade')
-                        Text(
-                          _stopwatchTime,
-                          style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
-                        ),
-                      if (widget.gamemode != 'arcade') HPBar(hp: _hp), // Add the HP bar at the bottom only if not in arcade mode
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1125,6 +1189,11 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       print('❌ Error auto-saving: $e');
     }
   }
+
+  void _showDeathAnimation() {
+    setState(() {
+    });
+  }
 }
 
 class ProgressBar extends StatelessWidget {
@@ -1152,7 +1221,7 @@ class HPBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fill = (hp * 3).toInt(); // Calculate the fill based on the HP value (0 to 300)
+    final fill = (hp * 3).toInt();
 
     final svgString = '''
     <svg
@@ -1178,7 +1247,8 @@ class HPBar extends StatelessWidget {
     ''';
 
     return SizedBox(
-      height: 120, // Adjust height as needed
+      height: 40, // Reduced from 60 to 40
+      width: 150, // Reduced from 200 to 150
       child: SvgPicture.string(svgString),
     );
   }

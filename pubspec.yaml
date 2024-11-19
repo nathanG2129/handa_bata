@@ -187,6 +187,8 @@ flutter:
     - assets/gifs/Walking.gif
     - assets/gifs/Victory.gif
     - assets/gifs/Defeat.gif
+    - assets/sprite-sheets/AdvSpriteSheet.png
+    - assets/sprite-sheets/Idle.png
 
     # Audios / SFX
     - assets/sound/bgm/AdvBGM.mp3

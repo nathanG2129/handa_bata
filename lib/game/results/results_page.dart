@@ -228,7 +228,7 @@ class ResultsPageState extends State<ResultsPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SizedBox(height: 175),
+                            const SizedBox(height: 125),
                             buildReactionWidget(stars),
                             const SizedBox(height: 20),
                             if (widget.gamemode == 'arcade')

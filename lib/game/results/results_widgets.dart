@@ -4,25 +4,29 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 
 Widget buildReactionWidget(int stars) {
-  String reaction;
-  
-  switch (stars) {
-    case 3:
-      reaction = 'Excellent!';
-      break;
-    case 2:
-      reaction = 'Great job!';
-      break;
-    case 1:
-      reaction = 'Good effort!';
-      break;
-    default:
-      reaction = 'Keep trying!';
-  }
-  
-  return TextWithShadow(
-    text: reaction,
-    fontSize: 48,
+  String message = stars == 0 ? 'Game Over!' : 
+                  stars == 1 ? 'Good Effort!' :
+                  stars == 2 ? 'Well Done!' : 'Perfect!';
+                  
+  return Column(
+    children: [
+      TextWithShadow(
+        text: message,
+          fontSize: 48,
+
+      ),
+      const SizedBox(height: 20),
+      // Add GIF with pixelated filter
+      Image.asset(
+        stars == 0 
+            ? 'assets/gifs/Defeat.gif'
+            : 'assets/gifs/Victory.gif',
+        height: 175,
+        width: 175,
+        filterQuality: FilterQuality.none, // Makes the image pixelated
+        fit: BoxFit.contain,
+      ),
+    ],
   );
 }
 

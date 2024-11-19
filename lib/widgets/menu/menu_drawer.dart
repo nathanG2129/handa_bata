@@ -6,6 +6,7 @@ import 'package:handabatamae/pages/register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:handabatamae/pages/play_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/pages/hotlines_page.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -169,7 +170,17 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                               'Resource 3',
                             ]),
                             _buildDivider(),
-                            _buildMenuItem('Hotlines', onTap: () {}),
+                            _buildMenuItem('Hotlines', onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => HotlinesPage(
+                                    selectedLanguage: widget.selectedLanguage,
+                                  ),
+                                ),
+                              );
+                              _closeDrawer();
+                            }),
                             _buildDivider(),
                             _buildMenuItem('About', onTap: () {}),
                             _buildDivider(),

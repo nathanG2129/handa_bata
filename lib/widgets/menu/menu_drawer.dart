@@ -9,6 +9,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/hotlines_page.dart';
 import 'package:handabatamae/pages/about_page.dart';
 import 'package:handabatamae/pages/learn_page.dart';
+import 'package:handabatamae/pages/resources_page.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -167,16 +168,15 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                             }),
                             _buildDivider(),
                             _buildExpandableMenuItem(
-                              'Learn', items:
-                              [], // Empty list since we're using isLearn
+                              'Learn',
+                              items: [],
                               isLearn: true,
                             ),
                             _buildDivider(),
-                            _buildExpandableMenuItem('Resources', items: [
-                              'Resource 1',
-                              'Resource 2',
-                              'Resource 3',
-                            ]),
+                            _buildExpandableMenuItem(
+                              'Resources',
+                              expandedNotifier: _resourcesExpanded,
+                            ),
                             _buildDivider(),
                             _buildMenuItem('Hotlines', onTap: () {
                               Navigator.push(
@@ -307,6 +307,38 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                 _buildSubmenuItem('Emergency Go Bag'),
               ],
             ),
+          ] else if (title == 'Resources') ...[
+            // Resources submenu items
+            _buildSubmenuItem(
+              'Infographics',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResourcesPage(
+                      selectedLanguage: widget.selectedLanguage,
+                      category: 'Infographics',
+                    ),
+                  ),
+                );
+                _closeDrawer();
+              },
+            ),
+            _buildSubmenuItem(
+              'Videos',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResourcesPage(
+                      selectedLanguage: widget.selectedLanguage,
+                      category: 'Videos',
+                    ),
+                  ),
+                );
+                _closeDrawer();
+              },
+            ),
           ] else if (items != null) ...[
             ...items.map((item) => _buildSubmenuItem(item)),
           ],
@@ -315,7 +347,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildSubmenuItem(String title) {
+  Widget _buildSubmenuItem(String title, {VoidCallback? onTap}) {
     String getCategory(String title) {
       // First, map the display title to the JSON key
       // ignore: unused_local_variable
@@ -348,7 +380,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     }
 
     return InkWell(
-      onTap: () {
+      onTap: onTap ?? () {
         final category = getCategory(title);
         print('🔍 Navigating to Learn page with category: $category, title: $title');
         

@@ -291,17 +291,43 @@ void readCurrentQuestion() {
     
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 100 : 300;
+    
+    // Get current question type
+    String questionType = _questions[currentQuestionIndex]['type'];
+    
+    // Set duration based on question type (in milliseconds)
+    int totalTime;
+    switch (questionType) {
+      case 'Multiple Choice':
+        totalTime = 30000; // 30 seconds
+        break;
+      case 'Identification':
+        totalTime = 60000; // 60 seconds
+        break;
+      case 'Fill in the Blanks':
+        totalTime = 90000; // 90 seconds
+        break;
+      default:
+        totalTime = 30000; // Default to 30 seconds
+    }
+
+    final startTime = DateTime.now();
+    
     readCurrentQuestion();
-    _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
+    
+    // Update every 16ms (roughly 60fps) for smooth animation
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (_isDisposing) {
         timer.cancel();
         return;
       }
+
+      final elapsedTime = DateTime.now().difference(startTime).inMilliseconds;
+      final newProgress = 1.0 - (elapsedTime / totalTime);
+      
       setState(() {
-        _progress -= 0.01;
+        _progress = newProgress.clamp(0.0, 1.0);
         if (_progress <= 0) {
-          _progress = 0;
           _timer?.cancel();
           _forceCheckAnswer();
         }
@@ -312,24 +338,38 @@ void readCurrentQuestion() {
   void _startMatchingTimer() {
     _timer?.cancel();
     _progress = 1.0;
-    int timerDuration = widget.mode == 'Hard' ? 100 : 300; // Adjust timer duration based on mode
-    readCurrentQuestion(); // Read the next question
-    _timer = Timer.periodic(Duration(milliseconds: timerDuration), (timer) {
+    
+    final totalTime = 90000; // 90 seconds
+    final startTime = DateTime.now();
+    
+    readCurrentQuestion();
+    
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      final elapsedTime = DateTime.now().difference(startTime).inMilliseconds;
+      final newProgress = 1.0 - (elapsedTime / totalTime);
+      
       setState(() {
-        _progress -= 0.01;
+        _progress = newProgress.clamp(0.0, 1.0);
         if (_progress <= 0) {
-          _progress = 0;
           _timer?.cancel();
-          _forceCheckAnswer(); // Force check the answer when the timer reaches zero
+          _forceCheckAnswer();
         }
       });
     });
   }
 
   void _startStopwatch() {
-    _stopwatchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    final startTime = DateTime.now().subtract(Duration(seconds: _stopwatchSeconds)); // Account for existing time
+    
+    _stopwatchTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (_isDisposing) {
+        timer.cancel();
+        return;
+      }
+
+      final elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
       setState(() {
-        _stopwatchSeconds++;
+        _stopwatchSeconds = elapsedSeconds;
         _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
       });
     });
@@ -340,7 +380,7 @@ void readCurrentQuestion() {
   }
 
   void _resumeStopwatch() {
-    _startStopwatch();
+    _startStopwatch(); // Will continue from last _stopwatchSeconds
   }
 
   String _formatStopwatchTime(int seconds) {

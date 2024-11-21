@@ -881,7 +881,9 @@ class AuthService {
 
       // Get current guest profile
       UserProfile? guestProfile = await getLocalUserProfile();
-      if (guestProfile == null) return null;
+      if (guestProfile == null) {
+        throw Exception('No guest profile found');
+      }
 
       print('👤 Current profile:');
       print('Username: ${guestProfile.username}');
@@ -970,6 +972,16 @@ class AuthService {
 
       // Commit the batch
       await batch.commit();
+
+      // Update profile using UserProfileService
+      final userProfileService = UserProfileService();
+      await userProfileService.batchUpdateProfile({
+        'username': conversionData['username'],
+        'email': conversionData['email'],
+        'birthday': conversionData['birthday'],
+        // Keep existing nickname from the guest profile
+        'nickname': conversionData['nickname'],
+      });
 
       // Update local storage
       await saveUserProfileLocally(updatedProfile);

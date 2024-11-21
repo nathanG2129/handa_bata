@@ -10,6 +10,7 @@ import '../pages/main/main_page.dart';
 import '../widgets/buttons/button_3d.dart';
 import '../widgets/loading_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../localization/email_verification/localization.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   final String email;
@@ -128,8 +129,19 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
               String? role = await _authService.getUserRole(currentUser.uid);
               
               if (role == 'guest') {
+                print('🔄 Starting guest conversion process...');
+                // First prepare the conversion
+                await _authService.convertGuestToUser(
+                  widget.email,
+                  widget.password!,
+                  widget.username!,
+                  '',  // Empty nickname since we'll keep the existing one
+                  widget.birthday!,
+                );
+                print('✅ Guest conversion prepared');
+
+                // Now complete the conversion
                 print('🔄 Completing guest conversion...');
-                // Complete the conversion process
                 await _authService.completeGuestConversion();
                 print('✅ Guest conversion completed');
               } else {
@@ -157,9 +169,11 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
             );
           } catch (e) {
             print('❌ Error during account creation/conversion: $e');
-            // Handle specific errors
             if (e.toString().contains('Username is already taken')) {
               throw Exception('This username is no longer available. Please go back and choose another.');
+            }
+            if (e.toString().contains('No pending conversion')) {
+              throw Exception('Conversion process failed. Please try again.');
             }
             rethrow;
           }
@@ -262,12 +276,14 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     TextWithShadow(
-                                      text: widget.isEmailChange ? 'Verify New Email' : 'Verify Email',
+                                      text: widget.isEmailChange 
+                                        ? EmailVerificationLocalization.translate('title_change_email', widget.selectedLanguage)
+                                        : EmailVerificationLocalization.translate('title', widget.selectedLanguage),
                                       fontSize: 48,
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Enter the code we sent to your email.',
+                                      EmailVerificationLocalization.translate('enter_code', widget.selectedLanguage),
                                       style: GoogleFonts.rubik(
                                         fontSize: 18,
                                         color: Colors.black87,
@@ -310,7 +326,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'Code expires in ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
+                                      '${EmailVerificationLocalization.translate('code_expires', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
                                       style: GoogleFonts.rubik(
                                         fontSize: 16,
                                         color: Colors.black,
@@ -321,7 +337,9 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                       onPressed: _verifyOTP,
                                       height: 45,
                                       child: Text(
-                                        widget.isEmailChange ? 'Verify' : 'Sign Up',
+                                        widget.isEmailChange 
+                                          ? EmailVerificationLocalization.translate('verify_button', widget.selectedLanguage)
+                                          : EmailVerificationLocalization.translate('signup_button', widget.selectedLanguage),
                                         style: GoogleFonts.vt323(
                                           fontSize: 20,
                                           color: Colors.white,
@@ -331,7 +349,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                     TextButton(
                                       onPressed: _canResend ? _sendOTP : null,
                                       child: Text(
-                                        "Didn't receive the code? Request a new one",
+                                        EmailVerificationLocalization.translate('resend_code', widget.selectedLanguage),
                                         style: GoogleFonts.rubik(
                                           fontSize: 16,
                                           color: _canResend ? const Color(0xFF3A1A5F) : Colors.grey,

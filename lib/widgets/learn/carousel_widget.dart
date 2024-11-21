@@ -102,7 +102,7 @@ class CarouselWidgetState extends State<CarouselWidget> {
                       itemCount: widget.contents.length,
                       itemBuilder: (context, index) {
                         return Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(0),
                           child: Center(
                             child: widget.contents[index],
                           ),

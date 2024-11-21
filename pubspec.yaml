@@ -183,6 +183,14 @@ flutter:
     - assets/hotlines/PRC.png
     - assets/characters/CuriousKloud.png
     - assets/characters/CuriousKladis.png
+    - assets/images/landing/PlayAdventure01.jpg
+    - assets/images/landing/PlayAdventure02.jpg
+    - assets/images/landing/PlayAdventure03.jpg
+    - assets/images/landing/PlayAdventure04.jpg
+    - assets/images/landing/PlayArcade01.jpg
+    - assets/images/landing/PlayArcade02.jpg
+    - assets/images/landing/PlayArcade03.jpg
+    - assets/images/landing/PlayArcade04.jpg
     - assets/images/learn/TropicalCyclone.jpg
     - assets/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png
     - assets/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg

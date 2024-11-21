@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/widgets/learn/carousel_widget.dart';
 
 class TutorialPage extends StatefulWidget {
   final String title;
@@ -33,6 +33,34 @@ class TutorialPage extends StatefulWidget {
 class _TutorialPageState extends State<TutorialPage> {
   int _current = 0;
 
+  List<Widget> _buildCarouselContents() {
+    return widget.imagePaths.map((imagePath) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageZoomPage(
+                imagePaths: widget.imagePaths,
+                initialIndex: _current,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.fill,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -60,60 +88,10 @@ class _TutorialPageState extends State<TutorialPage> {
               ),
               const SizedBox(height: 20),
               if (widget.imagePaths.isNotEmpty) ...[
-                CarouselSlider(
-                  options: CarouselOptions(
-                    height: 200.0,
-                    enableInfiniteScroll: false,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _current = index;
-                      });
-                    },
-                  ),
-                  items: widget.imagePaths.map((imagePath) {
-                    return Builder(
-                      builder: (BuildContext context) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ImageZoomPage(
-                                  imagePaths: widget.imagePaths,
-                                  initialIndex: _current,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage(imagePath),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: widget.imagePaths.map((url) {
-                    int index = widget.imagePaths.indexOf(url);
-                    return Container(
-                      width: 8.0,
-                      height: 8.0,
-                      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _current == index ? Colors.black : Colors.grey,
-                      ),
-                    );
-                  }).toList(),
+                CarouselWidget(
+                  height: 200,
+                  automatic: false,
+                  contents: _buildCarouselContents(),
                 ),
                 const SizedBox(height: 20),
               ],

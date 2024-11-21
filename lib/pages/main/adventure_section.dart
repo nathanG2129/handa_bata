@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import the new button widget
+import 'package:handabatamae/widgets/learn/carousel_widget.dart'; // Add this import
 
 class AdventureSection extends StatelessWidget {
   final String selectedLanguage;
@@ -13,6 +13,27 @@ class AdventureSection extends StatelessWidget {
     super.key,
     required this.selectedLanguage,
   });
+
+  List<Widget> _buildCarouselContents() {
+    return [
+      'PlayAdventure01',
+      'PlayAdventure02',
+      'PlayAdventure03',
+      'PlayAdventure04',
+    ].map((imageName) {
+      return ClipRRect(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          child: Image.asset(
+            'assets/images/landing/$imageName.jpg',
+            fit: BoxFit.fill,
+            alignment: Alignment.center,
+          ),
+        ),
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,31 +72,9 @@ class AdventureSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          CarouselSlider(
-            options: CarouselOptions(
-              height: 200.0,
-              enlargeCenterPage: true,
-              autoPlay: true,
-              aspectRatio: 16 / 9,
-              autoPlayCurve: Curves.fastOutSlowIn,
-              enableInfiniteScroll: true,
-              autoPlayAnimationDuration: const Duration(milliseconds: 800),
-              viewportFraction: 0.8,
-            ),
-            items: [1, 2, 3, 4, 5].map((i) {
-              return Builder(
-                builder: (BuildContext context) {
-                  return Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                    decoration: const BoxDecoration(
-                      color: Colors.amber,
-                    ),
-                    child: Text('Adventure image $i', style: const TextStyle(fontSize: 16.0)),
-                  );
-                },
-              );
-            }).toList(),
+          CarouselWidget(
+            height: 200,
+            contents: _buildCarouselContents(),
           ),
           const SizedBox(height: 50),
           Button3D(

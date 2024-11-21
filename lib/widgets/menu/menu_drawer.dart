@@ -162,17 +162,37 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildMenuItem('Play', onTap: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PlayPage(
-                                    title: 'Play',
-                                    selectedLanguage: widget.selectedLanguage,
-                                  ),
-                                ),
+                            _buildMenuItem('Play', onTap: () async {
+                              // Show loading overlay
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return WillPopScope(
+                                    onWillPop: () async => false,
+                                    child: const LoadingWidget(),
+                                  );
+                                },
                               );
-                              _closeDrawer();
+
+                              // Close drawer first
+                              await _closeDrawer();
+                              
+                              if (mounted) {
+                                // Remove loading overlay
+                                Navigator.of(context).pop();
+                                
+                                // Use pushReplacement to navigate to PlayPage
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PlayPage(
+                                      title: 'Play',
+                                      selectedLanguage: widget.selectedLanguage,
+                                    ),
+                                  ),
+                                );
+                              }
                             }),
                             _buildDivider(),
                             _buildExpandableMenuItem(
@@ -365,32 +385,72 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
             // Resources submenu items
             _buildSubmenuItem(
               'Infographics',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ResourcesPage(
-                      selectedLanguage: widget.selectedLanguage,
-                      category: 'Infographics',
-                    ),
-                  ),
+              onTap: () async {
+                // Show loading overlay
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return WillPopScope(
+                      onWillPop: () async => false,
+                      child: const LoadingWidget(),
+                    );
+                  },
                 );
-                _closeDrawer();
+
+                // Close drawer first
+                await _closeDrawer();
+                
+                if (mounted) {
+                  // Remove loading overlay
+                  Navigator.of(context).pop();
+                  
+                  // Use pushReplacement instead of push to prevent going back
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResourcesPage(
+                        selectedLanguage: widget.selectedLanguage,
+                        category: 'Infographics',
+                      ),
+                    ),
+                  );
+                }
               },
             ),
             _buildSubmenuItem(
               'Videos',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ResourcesPage(
-                      selectedLanguage: widget.selectedLanguage,
-                      category: 'Videos',
-                    ),
-                  ),
+              onTap: () async {
+                // Show loading overlay
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return WillPopScope(
+                      onWillPop: () async => false,
+                      child: const LoadingWidget(),
+                    );
+                  },
                 );
-                _closeDrawer();
+
+                // Close drawer first
+                await _closeDrawer();
+                
+                if (mounted) {
+                  // Remove loading overlay
+                  Navigator.of(context).pop();
+                  
+                  // Use pushReplacement instead of push to prevent going back
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResourcesPage(
+                        selectedLanguage: widget.selectedLanguage,
+                        category: 'Videos',
+                      ),
+                    ),
+                  );
+                }
               },
             ),
           ] else if (items != null) ...[

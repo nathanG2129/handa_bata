@@ -22,7 +22,14 @@ class ResourcesPage extends StatefulWidget {
 
 class _ResourcesPageState extends State<ResourcesPage> {
   @override
+  void initState() {
+    super.initState();
+    print('ResourcesPage initialized with category: ${widget.category}'); // Debug print
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('Building ResourcesPage with category: ${widget.category}'); // Debug print
     return Scaffold(
       body: ResponsiveBreakpoints(
         breakpoints: const [

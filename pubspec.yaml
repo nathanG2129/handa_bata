@@ -181,6 +181,44 @@ flutter:
     - assets/hotlines/DSWD.png
     - assets/hotlines/NDRRMC.png
     - assets/hotlines/PRC.png
+    - assets/images/infographics/CommunityAndFamilyEarthquakeSafetyGuide.png
+    - assets/images/infographics/EarthquakeAreYouPrepared.jpg
+    - assets/images/infographics/EmergencyGoBag.jfif
+    - assets/images/infographics/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg
+    - assets/images/infographics/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg
+    - assets/images/infographics/LindolHandaKaNaBa.jpg
+    - assets/images/infographics/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png
+    - assets/images/infographics/MgaUriNgBagyoPhilippineInformationAgency.jpg
+    - assets/images/infographics/PHIVOLCSEarthquakeIntensityScale.jpg
+    - assets/images/infographics/RainfallWarningSystemPayongPAGASA.jpeg
+    - assets/images/infographics/TropicalCycloneWarningSystemPayongPAGASA.jpeg
+    - assets/images/infographics/TropicalCycloneWindSignalPhilippineInformationAgency.jpg
+    - assets/images/infographics/VolcanicEruption.jpg
+    - assets/images/infographics/Drought_Preparedness.jpeg
+    - assets/images/infographics/EarthquakePreparedness.jpg
+    - assets/images/infographics/FirstAid.jpg
+    - assets/images/infographics/Flood_Preparedness.jpeg
+    - assets/images/infographics/TyphoonPreparedness.jpeg
+    - assets/images/infographics/WhatToDoVolcanicEruption.jpg
+    - assets/images/infographics/previews/CommunityAndFamilyEarthquakeSafetyGuide.png
+    - assets/images/infographics/previews/EarthquakeAreYouPrepared.jpg
+    - assets/images/infographics/previews/EmergencyGoBag.jfif
+    - assets/images/infographics/previews/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg
+    - assets/images/infographics/previews/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg
+    - assets/images/infographics/previews/LindolHandaKaNaBa.jpg
+    - assets/images/infographics/previews/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png
+    - assets/images/infographics/previews/MgaUriNgBagyoPhilippineInformationAgency.jpg
+    - assets/images/infographics/previews/PHIVOLCSEarthquakeIntensityScale.jpg
+    - assets/images/infographics/previews/RainfallWarningSystemPayongPAGASA.jpeg
+    - assets/images/infographics/previews/TropicalCycloneWarningSystemPayongPAGASA.jpeg
+    - assets/images/infographics/previews/TropicalCycloneWindSignalPhilippineInformationAgency.jpg
+    - assets/images/infographics/previews/VolcanicEruption.jpg
+    - assets/images/infographics/previews/Drought_Preparedness.jpeg
+    - assets/images/infographics/previews/EarthquakePreparedness.jpg
+    - assets/images/infographics/previews/FirstAid.jpg
+    - assets/images/infographics/previews/Flood_Preparedness.jpeg
+    - assets/images/infographics/previews/TyphoonPreparedness.jpeg
+    - assets/images/infographics/previews/WhatToDoVolcanicEruption.jpg
     - assets/characters/CuriousKloud.png
     - assets/characters/CuriousKladis.png
     - assets/images/landing/PlayAdventure01.jpg
@@ -250,3 +288,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  

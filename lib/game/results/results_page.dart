@@ -16,6 +16,7 @@ import 'results_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
+import 'package:handabatamae/localization/results/localization.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -243,15 +244,15 @@ class ResultsPageState extends State<ResultsPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(height: 125),
-                            buildReactionWidget(stars),
+                            buildReactionWidget(stars, widget.language),
                             const SizedBox(height: 20),
                             if (widget.gamemode == 'arcade')
-                              buildStatisticItem('Record', widget.record), // Display the record widget if gamemode is arcade
+                              buildStatisticItem(ResultsLocalization.translate('record', widget.language), widget.record), // Display the record widget if gamemode is arcade
                             if (widget.gamemode != 'arcade')
                               buildStarsWidget(stars), // Display the stars widget if gamemode is not arcade
                             const SizedBox(height: 20),
                             Text(
-                              'My Performance',
+                              ResultsLocalization.translate('myPerformance', widget.language),
                               style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
                             ),
                             const SizedBox(height: 20),
@@ -259,6 +260,7 @@ class ResultsPageState extends State<ResultsPage> {
                               widget.score,
                               widget.accuracy,
                               widget.streak,
+                              widget.language,
                             ),
                             const SizedBox(height: 50),
                             Row(
@@ -309,7 +311,7 @@ class ResultsPageState extends State<ResultsPage> {
                                   width: 120,
                                   height: 50,
                                   child: Text(
-                                    'Back',
+                                    ResultsLocalization.translate('back', widget.language),
                                     style: GoogleFonts.vt323(
                                       color: Colors.white,
                                       fontSize: 20,
@@ -358,7 +360,7 @@ class ResultsPageState extends State<ResultsPage> {
                                   width: 120,
                                   height: 50,
                                   child: Text(
-                                    'Play Again',
+                                    ResultsLocalization.translate('playAgain', widget.language),
                                     style: GoogleFonts.vt323(
                                       color: Colors.black,
                                       fontSize: 20,
@@ -369,7 +371,7 @@ class ResultsPageState extends State<ResultsPage> {
                             ),
                             const SizedBox(height: 50),
                             Text(
-                              'Stage Questions',
+                              ResultsLocalization.translate('stageQuestions', widget.language),
                               style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
                             ),
                             const SizedBox(height: 10),
@@ -396,11 +398,11 @@ class ResultsPageState extends State<ResultsPage> {
           if (question['type'] == 'Multiple Choice') {
             return buildMultipleChoiceQuestionWidget(context, index, question);
           } else if (question['type'] == 'Identification') {
-            return buildIdentificationQuestionWidget(context, index, question);
+            return buildIdentificationQuestionWidget(context, index, question, widget.language);
           } else if (question['type'] == 'Fill in the Blanks') {
             return buildFillInTheBlanksQuestionWidget(context, index, question);
           } else {
-            return buildMatchingTypeQuestionWidget(context, index, question);
+            return buildMatchingTypeQuestionWidget(context, index, question, widget.language);
           }
         }).toList(),
       ),

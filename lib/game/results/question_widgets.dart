@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/localization/results/localization.dart';
 
 Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
     return Padding(
@@ -78,7 +79,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
     );
   }
 
-    Widget buildIdentificationQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
+    Widget buildIdentificationQuestionWidget(BuildContext context, int index, Map<String, dynamic> question, String language) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Stack(
@@ -104,8 +105,8 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Correct Answer:',
-                            style: GoogleFonts.rubik(fontSize: 16, color: Colors.black,  fontWeight: FontWeight.bold),
+                            ResultsLocalization.translate('correctAnswer', language),
+                            style: GoogleFonts.rubik(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -237,7 +238,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
       );
     }
 
-  Widget buildMatchingTypeQuestionWidget(BuildContext context, int index, Map<String, dynamic> question) {
+  Widget buildMatchingTypeQuestionWidget(BuildContext context, int index, Map<String, dynamic> question, String language) {
     List<Map<String, dynamic>> correctPairs = List<Map<String, dynamic>>.from(question['correctPairs'] ?? []);
   
     return Padding(
@@ -265,7 +266,7 @@ Widget buildMultipleChoiceQuestionWidget(BuildContext context, int index, Map<St
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Correct Pairs:',
+                          ResultsLocalization.translate('correctPairs', language),
                           style: GoogleFonts.rubik(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),

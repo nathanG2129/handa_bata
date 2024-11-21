@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:handabatamae/localization/results/localization.dart';
 
-Widget buildReactionWidget(int stars) {
-  String message = stars == 0 ? 'Nice Try!' : 
-                  stars == 1 ? 'Good Job!' :
-                  stars == 2 ? 'Impressive!' : 'Outstanding!';
+Widget buildReactionWidget(int stars, String language) {
+  String message = stars == 0 ? ResultsLocalization.translate('niceTry', language) : 
+                  stars == 1 ? ResultsLocalization.translate('goodJob', language) :
+                  stars == 2 ? ResultsLocalization.translate('impressive', language) : 
+                  ResultsLocalization.translate('outstanding', language);
                   
   return Column(
     children: [
       TextWithShadow(
         text: message,
-          fontSize: 48,
-
+        fontSize: 48,
       ),
       const SizedBox(height: 20),
       // Add GIF with pixelated filter
@@ -65,13 +66,13 @@ Widget buildRecordWidget(String record) {
   return buildStatisticItem('Record', record);
 }
 
-Widget buildStatisticsWidget(int score, double accuracy, int streak, {String? record}) {
+Widget buildStatisticsWidget(int score, double accuracy, int streak, String language, {String? record}) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
-      buildStatisticItem('Score', score.toString()),
-      buildStatisticItem('Accuracy', '${(accuracy * 100).toStringAsFixed(1)}%'),
-      buildStatisticItem('Streak', streak.toString()),
+      buildStatisticItem(ResultsLocalization.translate('score', language), score.toString()),
+      buildStatisticItem(ResultsLocalization.translate('accuracy', language), '${(accuracy * 100).toStringAsFixed(1)}%'),
+      buildStatisticItem(ResultsLocalization.translate('streak', language), streak.toString()),
       if (record != null) buildRecordWidget(record), // Add the record widget if record is provided
     ],
   );

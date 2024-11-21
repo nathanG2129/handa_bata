@@ -64,7 +64,7 @@ class LearnMoreSection extends StatelessWidget {
           Button3D(
             onPressed: () {
               print('📚 Learn More button pressed');
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) => LearnPage(

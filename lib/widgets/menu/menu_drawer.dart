@@ -268,14 +268,13 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         // Close drawer first
         await _closeDrawer();
         
-        // Then navigate, removing the loading overlay
         if (mounted) {
           Navigator.of(context).pop(); // Remove loading overlay
           
           // Handle navigation based on title
           switch (title) {
             case 'Hotlines':
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) => HotlinesPage(
@@ -285,7 +284,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               );
               break;
             case 'About':
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) => AboutPage(
@@ -524,7 +523,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         // Then navigate, removing the loading overlay
         if (mounted) {
           Navigator.of(context).pop(); // Remove loading overlay
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => LearnPage(

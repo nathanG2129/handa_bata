@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/pages/splash_page.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'header_section.dart';
@@ -36,7 +37,13 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        return true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SplashPage(selectedLanguage: _selectedLanguage),
+          ),
+        );
+        return false;
       },
       child: Scaffold(
         body: ResponsiveBreakpoints(

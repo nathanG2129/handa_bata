@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/widgets/header_footer/header_widget.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
@@ -16,104 +17,122 @@ class HotlinesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ResponsiveBreakpoints(
-        breakpoints: const [
-          Breakpoint(start: 0, end: 450, name: MOBILE),
-          Breakpoint(start: 451, end: 800, name: TABLET),
-          Breakpoint(start: 801, end: 1920, name: DESKTOP),
-          Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-        ],
-        child: MaxWidthBox(
-          maxWidth: 1200,
-          child: ResponsiveScaledBox(
-            width: ResponsiveValue<double>(context, conditionalValues: [
-              const Condition.equals(name: MOBILE, value: 450),
-              const Condition.between(start: 800, end: 1100, value: 800),
-              const Condition.between(start: 1000, end: 1200, value: 1000),
-            ]).value,
-            child: Stack(
-              children: [
-                SvgPicture.asset(
-                  'assets/backgrounds/background.svg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-                Column(
-                  children: [
-                    HeaderWidget(
-                      selectedLanguage: selectedLanguage,
-                      onBack: () => Navigator.pop(context),
-                      onChangeLanguage: (String newLanguage) {
-                        // Handle language change
-                      },
-                    ),
-                    Expanded(
-                      child: CustomScrollView(
-                        slivers: [
-                          SliverList(
-                            delegate: SliverChildListDelegate(
-                              [
-                                const SizedBox(height: 40),
-                                Transform.translate(
-                                  offset: const Offset(0, -20),
-                                  child: Column(
-                                    children: [
-                                      const TextWithShadow(
-                                        text: 'EMERGENCY',
-                                        fontSize: 70,
-                                      ),
-                                      Transform.translate(
-                                        offset: const Offset(0, -30),
-                                        child: const TextWithShadow(
-                                          text: 'HOTLINES',
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainPage(selectedLanguage: selectedLanguage),
+          ),
+        );
+        return false;
+      },
+      child: Scaffold(
+        body: ResponsiveBreakpoints(
+          breakpoints: const [
+            Breakpoint(start: 0, end: 450, name: MOBILE),
+            Breakpoint(start: 451, end: 800, name: TABLET),
+            Breakpoint(start: 801, end: 1920, name: DESKTOP),
+            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+          ],
+          child: MaxWidthBox(
+            maxWidth: 1200,
+            child: ResponsiveScaledBox(
+              width: ResponsiveValue<double>(context, conditionalValues: [
+                const Condition.equals(name: MOBILE, value: 450),
+                const Condition.between(start: 800, end: 1100, value: 800),
+                const Condition.between(start: 1000, end: 1200, value: 1000),
+              ]).value,
+              child: Stack(
+                children: [
+                  SvgPicture.asset(
+                    'assets/backgrounds/background.svg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  Column(
+                    children: [
+                      HeaderWidget(
+                        selectedLanguage: selectedLanguage,
+                        onBack: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MainPage(selectedLanguage: selectedLanguage),
+                            ),
+                          );
+                        },
+                        onChangeLanguage: (String newLanguage) {
+                          // Handle language change
+                        },
+                      ),
+                      Expanded(
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverList(
+                              delegate: SliverChildListDelegate(
+                                [
+                                  const SizedBox(height: 40),
+                                  Transform.translate(
+                                    offset: const Offset(0, -20),
+                                    child: Column(
+                                      children: [
+                                        const TextWithShadow(
+                                          text: 'EMERGENCY',
                                           fontSize: 70,
                                         ),
-                                      ),
-                                      Transform.translate(
-                                        offset: const Offset(0, -40),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 20,
-                                          ),
-                                          child: Text(
-                                            'Earthquakes, typhoons and volcanic eruptions of the most common and destructive natural disasters in the Philippines. Here are some important emergency numbers you should keep in mind in case of an earthquake or typhoon.',
-                                            style: GoogleFonts.rubik(
-                                              fontSize: 24,
-                                              color: Colors.white,
-                                            ),
-                                            textAlign: TextAlign.center,
+                                        Transform.translate(
+                                          offset: const Offset(0, -30),
+                                          child: const TextWithShadow(
+                                            text: 'HOTLINES',
+                                            fontSize: 70,
                                           ),
                                         ),
-                                      ),
-                                      Transform.translate(
-                                        offset: const Offset(0, -30),
-                                        child: const HotlinesList(),
-                                      ),
-                                    ],
+                                        Transform.translate(
+                                          offset: const Offset(0, -40),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 20,
+                                            ),
+                                            child: Text(
+                                              'Earthquakes, typhoons and volcanic eruptions of the most common and destructive natural disasters in the Philippines. Here are some important emergency numbers you should keep in mind in case of an earthquake or typhoon.',
+                                              style: GoogleFonts.rubik(
+                                                fontSize: 24,
+                                                color: Colors.white,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                        Transform.translate(
+                                          offset: const Offset(0, -30),
+                                          child: const HotlinesList(),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 20),
-                              ],
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Column(
-                              children: [
-                                Spacer(),
-                                FooterWidget(),
-                              ],
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Column(
+                                children: [
+                                  Spacer(),
+                                  FooterWidget(),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

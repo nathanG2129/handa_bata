@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
-import '../../localization/play/localization.dart';
+import '../../localization/account_deletion/localization.dart';
 
 class AccountDeletionDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -105,7 +105,7 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                         children: [
                           Center(
                             child: Text(
-                              'Delete account',
+                              AccountDeletionLocalization.translate('title', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 fontSize: 28,
                                 color: Colors.white,
@@ -125,9 +125,9 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    widget.userRole == 'guest' 
-                                      ? PlayLocalization.translate('deleteGuestAccountConfirmation', widget.selectedLanguage)
-                                      : 'Are you sure you want to leave Kladis and Kloud? Deleting your account cannot be undone, so please be sure you want to do this before proceeding.',
+                                    widget.userRole == 'guest'
+                                      ? AccountDeletionLocalization.translate('guest_warning', widget.selectedLanguage)
+                                      : AccountDeletionLocalization.translate('user_warning', widget.selectedLanguage),
                                     style: GoogleFonts.vt323(
                                       color: Colors.black,
                                       fontSize: 16,
@@ -138,13 +138,6 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            PlayLocalization.translate('deleteAccountWarning', widget.selectedLanguage),
-                            style: GoogleFonts.vt323(
-                              color: Colors.red,
-                              fontSize: 16,
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -157,7 +150,7 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                           TextButton(
                             onPressed: _handleClose,
                             child: Text(
-                              PlayLocalization.translate('cancel', widget.selectedLanguage),
+                              AccountDeletionLocalization.translate('cancel_button', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -172,7 +165,7 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                             width: 120,
                             height: 40,
                             child: Text(
-                              PlayLocalization.translate('delete', widget.selectedLanguage),
+                              AccountDeletionLocalization.translate('delete_button', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 color: Colors.white,
                                 fontSize: 18,

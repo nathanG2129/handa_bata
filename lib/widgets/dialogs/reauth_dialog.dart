@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../localization/play/localization.dart';
+import '../../localization/reauth/localization.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 
 class ReauthenticationDialog extends StatefulWidget {
@@ -67,7 +67,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
     try {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null || user.email == null) {
-        throw Exception('No user found');
+        throw Exception(ReauthLocalization.translate('no_user', widget.selectedLanguage));
       }
 
       AuthCredential credential = EmailAuthProvider.credential(
@@ -85,7 +85,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
     } catch (e) {
       print('❌ Reauthentication error: $e');
       setState(() {
-        _errorMessage = PlayLocalization.translate('invalidPassword', widget.selectedLanguage);
+        _errorMessage = ReauthLocalization.translate('invalid_password', widget.selectedLanguage);
       });
     } finally {
       if (mounted) {
@@ -130,7 +130,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                       children: [
                         Center(
                           child: Text(
-                            'Delete account',
+                            ReauthLocalization.translate('title', widget.selectedLanguage),
                             style: GoogleFonts.vt323(
                               fontSize: 28,
                               color: Colors.white,
@@ -150,7 +150,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Are you sure you want to leave Kladis and Kloud? Deleting your account cannot be undone, so please be sure you want to do this before proceeding.',
+                                  ReauthLocalization.translate('warning', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     color: Colors.black,
                                     fontSize: 16,
@@ -162,7 +162,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Password',
+                          ReauthLocalization.translate('password_label', widget.selectedLanguage),
                           style: GoogleFonts.vt323(
                             color: Colors.white,
                             fontSize: 16,
@@ -208,7 +208,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                         TextButton(
                           onPressed: _isLoading ? null : _handleClose,
                           child: Text(
-                            'Cancel',
+                            ReauthLocalization.translate('cancel_button', widget.selectedLanguage),
                             style: GoogleFonts.vt323(
                               color: Colors.white,
                               fontSize: 18,
@@ -222,7 +222,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                             : () => _reauthenticate(),
                           backgroundColor: const Color(0xFFF1B33A),
                           borderColor: const Color(0xFF916D23),
-                          width: 120,
+                          width: 150,
                           height: 40,
                           child: _isLoading
                               ? const SizedBox(
@@ -234,7 +234,7 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                                   ),
                                 )
                               : Text(
-                                  'Delete account',
+                                  ReauthLocalization.translate('delete_button', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     color: Colors.white,
                                     fontSize: 18,

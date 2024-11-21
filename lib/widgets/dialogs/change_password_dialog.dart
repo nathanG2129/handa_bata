@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
-import '../../localization/play/localization.dart';
+import '../../localization/password_change/localization.dart';
 
 class ChangePasswordDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -68,7 +68,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            PlayLocalization.translate('passwordsDoNotMatch', widget.selectedLanguage),
+            PasswordChangeLocalization.translate('passwords_not_match', widget.selectedLanguage),
           ),
           backgroundColor: Colors.red,
         ),
@@ -114,7 +114,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                     children: [
                       Center(
                         child: Text(
-                          PlayLocalization.translate('changePassword', widget.selectedLanguage),
+                          PasswordChangeLocalization.translate('title', widget.selectedLanguage),
                           style: GoogleFonts.vt323(
                             fontSize: 28,
                             color: Colors.white,
@@ -124,21 +124,21 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                       const SizedBox(height: 20),
                       _buildPasswordField(
                         _currentPasswordController,
-                        'currentPassword',
+                        'current_password',
                         _obscureCurrentPassword,
                         () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
                       ),
                       const SizedBox(height: 16),
                       _buildPasswordField(
                         _newPasswordController,
-                        'newPassword',
+                        'new_password',
                         _obscureNewPassword,
                         () => setState(() => _obscureNewPassword = !_obscureNewPassword),
                       ),
                       const SizedBox(height: 16),
                       _buildPasswordField(
                         _confirmPasswordController,
-                        'confirmNewPassword',
+                        'confirm_password',
                         _obscureConfirmPassword,
                         () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                       ),
@@ -154,7 +154,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                       TextButton(
                         onPressed: _handleClose,
                         child: Text(
-                          PlayLocalization.translate('cancel', widget.selectedLanguage),
+                          PasswordChangeLocalization.translate('cancel_button', widget.selectedLanguage),
                           style: GoogleFonts.vt323(
                             color: Colors.white,
                             fontSize: 18,
@@ -169,7 +169,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                         width: 120,
                         height: 40,
                         child: Text(
-                          PlayLocalization.translate('save', widget.selectedLanguage),
+                          PasswordChangeLocalization.translate('save_button', widget.selectedLanguage),
                           style: GoogleFonts.vt323(
                             color: Colors.white,
                             fontSize: 18,
@@ -198,7 +198,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
       obscureText: obscureText,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: PlayLocalization.translate(labelKey, widget.selectedLanguage),
+        labelText: PasswordChangeLocalization.translate(labelKey, widget.selectedLanguage),
         labelStyle: const TextStyle(color: Colors.white70),
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.zero,

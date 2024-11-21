@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../widgets/buttons/button_3d.dart';
-import '../../localization/login/localization.dart';
+import '../../localization/password_reset_flow/localization.dart';
 import '../../services/auth_service.dart';
 
 class PasswordResetFlowDialog extends StatefulWidget {
@@ -96,7 +96,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
 
   Future<void> _verifyOTP() async {
     if (_otpController.text.isEmpty) {
-      _showError(LoginLocalization.translate('pleaseEnterOTP', widget.selectedLanguage));
+      _showError(PasswordResetFlowLocalization.translate('pleaseEnterOTP', widget.selectedLanguage));
       return;
     }
 
@@ -116,12 +116,12 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
 
   Future<void> _resetPassword() async {
     if (_newPasswordController.text.isEmpty) {
-      _showError(LoginLocalization.translate('pleaseEnterNewPassword', widget.selectedLanguage));
+      _showError(PasswordResetFlowLocalization.translate('pleaseEnterNewPassword', widget.selectedLanguage));
       return;
     }
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      _showError(LoginLocalization.translate('passwordsDoNotMatch', widget.selectedLanguage));
+      _showError(PasswordResetFlowLocalization.translate('passwordsDoNotMatch', widget.selectedLanguage));
       return;
     }
 
@@ -153,12 +153,12 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
     return Column(
       children: [
         TextWithShadow(
-          text: LoginLocalization.translate('forgotPassword', widget.selectedLanguage),
+          text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
           fontSize: 48,
         ),
         const SizedBox(height: 12),
         Text(
-          LoginLocalization.translate('enterOTPSentToEmail', widget.selectedLanguage),
+          PasswordResetFlowLocalization.translate('enter_otp', widget.selectedLanguage),
           style: GoogleFonts.rubik(
             fontSize: 18,
             color: Colors.black87,
@@ -210,7 +210,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
         ),
         const SizedBox(height: 16),
         Text(
-          '${LoginLocalization.translate('codeExpiresIn', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
+          '${PasswordResetFlowLocalization.translate('code_expires', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
           style: GoogleFonts.rubik(
             fontSize: 16,
             color: Colors.black,
@@ -223,7 +223,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           borderColor: const Color(0xFF916D23),
           height: 45,
           child: Text(
-            LoginLocalization.translate('verify', widget.selectedLanguage),
+            PasswordResetFlowLocalization.translate('verify_button', widget.selectedLanguage),
             style: GoogleFonts.vt323(
               fontSize: 20,
               color: Colors.white,
@@ -238,7 +238,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
     return Column(
       children: [
         TextWithShadow(
-          text: LoginLocalization.translate('resetPassword', widget.selectedLanguage),
+          text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
           fontSize: 48,
         ),
         const SizedBox(height: 24),
@@ -250,7 +250,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
             color: Colors.black,
           ),
           decoration: InputDecoration(
-            labelText: LoginLocalization.translate('newPassword', widget.selectedLanguage),
+            labelText: PasswordResetFlowLocalization.translate('new_password', widget.selectedLanguage),
             labelStyle: const TextStyle(color: Colors.black87),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.zero,
@@ -282,7 +282,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
             color: Colors.black,
           ),
           decoration: InputDecoration(
-            labelText: LoginLocalization.translate('confirmNewPassword', widget.selectedLanguage),
+            labelText: PasswordResetFlowLocalization.translate('confirm_password', widget.selectedLanguage),
             labelStyle: const TextStyle(color: Colors.black87),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.zero,
@@ -312,7 +312,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           borderColor: const Color(0xFF916D23),
           height: 45,
           child: Text(
-            LoginLocalization.translate('resetPassword', widget.selectedLanguage),
+            PasswordResetFlowLocalization.translate('reset_button', widget.selectedLanguage),
             style: GoogleFonts.vt323(
               fontSize: 20,
               color: Colors.white,
@@ -327,7 +327,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
     return Column(
       children: [
         Text(
-          LoginLocalization.translate('canNowLogin', widget.selectedLanguage),
+          PasswordResetFlowLocalization.translate('success_message', widget.selectedLanguage),
           style: GoogleFonts.vt323(
             fontSize: 18,
             color: Colors.black,
@@ -342,7 +342,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           width: 120,
           height: 40,
           child: Text(
-            LoginLocalization.translate('logIn', widget.selectedLanguage),
+            PasswordResetFlowLocalization.translate('login_button', widget.selectedLanguage),
             style: GoogleFonts.vt323(
               fontSize: 18,
               color: Colors.white,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
-import '../../localization/play/localization.dart';
+import '../../localization/email_change/localization.dart';
 
 class ChangeEmailDialog extends StatefulWidget {
   final String currentEmail;
@@ -68,7 +68,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(
-          PlayLocalization.translate('pleaseCompleteFields', widget.selectedLanguage)
+          EmailChangeLocalization.translate('pleaseCompleteFields', widget.selectedLanguage)
         )),
       );
       return;
@@ -125,7 +125,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                             children: [
                               Center(
                                 child: Text(
-                                  PlayLocalization.translate('changeEmail', widget.selectedLanguage),
+                                  EmailChangeLocalization.translate('title', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     fontSize: 28,
                                     color: Colors.white,
@@ -137,7 +137,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                                 controller: _emailController,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  labelText: PlayLocalization.translate('newEmail', widget.selectedLanguage),
+                                  labelText: EmailChangeLocalization.translate('new_email', widget.selectedLanguage),
                                   labelStyle: const TextStyle(color: Colors.white70),
                                   border: const OutlineInputBorder(
                                     borderRadius: BorderRadius.zero,
@@ -159,7 +159,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                                 obscureText: true,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  labelText: PlayLocalization.translate('currentPassword', widget.selectedLanguage),
+                                  labelText: EmailChangeLocalization.translate('current_password', widget.selectedLanguage),
                                   labelStyle: const TextStyle(color: Colors.white70),
                                   border: const OutlineInputBorder(
                                     borderRadius: BorderRadius.zero,
@@ -187,7 +187,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                               TextButton(
                                 onPressed: _isLoading ? null : _handleClose,
                                 child: Text(
-                                  PlayLocalization.translate('cancel', widget.selectedLanguage),
+                                  EmailChangeLocalization.translate('cancel_button', widget.selectedLanguage),
                                   style: GoogleFonts.vt323(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -200,9 +200,9 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                                 child: Button3D(
                                   backgroundColor: const Color(0xFFF1B33A),
                                   borderColor: const Color(0xFF8B5A00),
-                                  onPressed: _isLoading ? handleContinue : handleContinue,
+                                  onPressed: _isLoading ? () {} : handleContinue,
                                   child: Text(
-                                    PlayLocalization.translate('continue', widget.selectedLanguage),
+                                    EmailChangeLocalization.translate('change_button', widget.selectedLanguage),
                                     style: GoogleFonts.vt323(
                                       color: Colors.black,
                                       fontSize: 18,

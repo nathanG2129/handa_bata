@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/buttons/button_3d.dart';
-import '../../localization/login/localization.dart';
+import '../../localization/forgot_password/localization.dart';
 
 class ForgotPasswordDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -62,7 +62,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            LoginLocalization.translate('pleaseEnterEmail', widget.selectedLanguage),
+            ForgotPasswordLocalization.translate('pleaseEnterEmail', widget.selectedLanguage),
           ),
           backgroundColor: Colors.red,
         ),
@@ -75,7 +75,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            LoginLocalization.translate('invalidEmail', widget.selectedLanguage),
+            ForgotPasswordLocalization.translate('invalidEmail', widget.selectedLanguage),
           ),
           backgroundColor: Colors.red,
         ),
@@ -122,7 +122,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
                         children: [
                           Center(
                             child: Text(
-                              LoginLocalization.translate('forgotPassword', widget.selectedLanguage),
+                              ForgotPasswordLocalization.translate('title', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 fontSize: 28,
                                 color: Colors.white,
@@ -135,8 +135,8 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
                             style: const TextStyle(color: Colors.white),
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: LoginLocalization.translate('Email', widget.selectedLanguage),
-                              hintText: LoginLocalization.translate('enterEmail', widget.selectedLanguage),
+                              labelText: ForgotPasswordLocalization.translate('email_label', widget.selectedLanguage),
+                              hintText: ForgotPasswordLocalization.translate('email_hint', widget.selectedLanguage),
                               labelStyle: const TextStyle(color: Colors.white70),
                               border: const OutlineInputBorder(
                                 borderRadius: BorderRadius.zero,
@@ -164,7 +164,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
                           TextButton(
                             onPressed: _handleClose,
                             child: Text(
-                              LoginLocalization.translate('back', widget.selectedLanguage),
+                              ForgotPasswordLocalization.translate('back_button', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -179,7 +179,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
                             width: 120,
                             height: 40,
                             child: Text(
-                              LoginLocalization.translate('continue', widget.selectedLanguage),
+                              ForgotPasswordLocalization.translate('continue_button', widget.selectedLanguage),
                               style: GoogleFonts.vt323(
                                 color: Colors.white,
                                 fontSize: 18,

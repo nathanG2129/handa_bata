@@ -4,13 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_options.dart';
 import 'web_mobile_bridge.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'localization/learn/localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize localizations
-  await LearnLocalization.initialize();
   
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

@@ -45,7 +45,7 @@
           },
           {
             "heading": "Ano ang mga epekto ng lindol?",
-            "description": "<p>Ang mga lindol ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy'/><figcaption>Ang epekto ng Luzon Earthquake sa Hyatt Terraces Hotel sa Baguio City, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga lindol:</p>",
+            "description": "<p>Ang mga lindol ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='assets/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy'/><figcaption>Ang epekto ng Luzon Earthquake sa Hyatt Terraces Hotel sa Baguio City, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga lindol:</p>",
             "list": [
               "<b>Pagbitak ng lupa</b> – Ito ay ang karaniwang mahabang bitak sa lupa dulot ng paggalaw ng active fault. Maaari itong magdulot ng pagkasira ng istrukturang direktang nasa ibabaw ng active fault.",
               "<b>Pagyanig ng lupa</b> – Ito ay ang taas-baba at pahalang na paggalaw ng lupa kapag may lindol. Maaari itong magdulot ng pagbagsak ng mga gamit sa bahay, pagkasira at pagbagsak ng iba’t ibang istruktura, pagguho ng istruktura dahil sa matinding pagyanig, at iba pang panganib tulad ng <i>liquefaction</i> at <i>pagguho ng lupa (landslide)</i>.",
@@ -231,7 +231,7 @@
         "content": [
           {
             "heading": "Ano ang bagyo?",
-            "description": "<p>Ang <b>tropical cyclone</b>,  karaniwang kilala bilang \"typhoon\" o \"bagyo\" sa Pilipinas, ay sistema ng mga <i>thunderstorm</i> na gumagalaw sa pabilog na direksyon</p><figure class='flex flex-col items-center'><img src='/images/learn/TropicalCyclone.jpg' alt='' loading='lazy'/><figcaption>Isang tropical cyclone na nakikita mula sa itaas.</figcaption></figure><p>Sa iba't ibang bahagi ng mundo, ang mga tropical cyclone ay kilala sa iba't ibang pangalan. Sa Kanlurang Hilagang Karagatang Pasipiko, sila ay tinatawag na mga \"typhoon.\" Sa Hilagang Atlantiko, Silangang Hilagang Pasipiko, at Timog Pasipiko, sila ay tinatawag na mga \"hurricane.\" Sa Bay of Bengal, Dagat ng Arabia, at Kanlurang Timog Karagatang India, sila ay tinatawag na mga \"cyclone.\" At sa Silangang Timog Karagatang India, tinatawag silang mga \"willy-willy.\"</p><p>Ang mga tropical cyclone ay maaaring tumagal ng ilang araw o hanggang dalawang linggo, at ang karamihan ay tumatagal ng anim na araw bago mag-<i>landfall</i>. Kung ang isang bagyo ay nag-landfall, nangangahulugan ito na ang sentro o mata ng bagyo ay tumama sa anumang kalupaan ng bansa.</p>"
+            "description": "<p>Ang <b>tropical cyclone</b>,  karaniwang kilala bilang \"typhoon\" o \"bagyo\" sa Pilipinas, ay sistema ng mga <i>thunderstorm</i> na gumagalaw sa pabilog na direksyon</p><figure class='flex flex-col items-center'><img src='assets/images/learn/TropicalCyclone.jpg' alt='' loading='lazy'/><figcaption>Isang tropical cyclone na nakikita mula sa itaas.</figcaption></figure><p>Sa iba't ibang bahagi ng mundo, ang mga tropical cyclone ay kilala sa iba't ibang pangalan. Sa Kanlurang Hilagang Karagatang Pasipiko, sila ay tinatawag na mga \"typhoon.\" Sa Hilagang Atlantiko, Silangang Hilagang Pasipiko, at Timog Pasipiko, sila ay tinatawag na mga \"hurricane.\" Sa Bay of Bengal, Dagat ng Arabia, at Kanlurang Timog Karagatang India, sila ay tinatawag na mga \"cyclone.\" At sa Silangang Timog Karagatang India, tinatawag silang mga \"willy-willy.\"</p><p>Ang mga tropical cyclone ay maaaring tumagal ng ilang araw o hanggang dalawang linggo, at ang karamihan ay tumatagal ng anim na araw bago mag-<i>landfall</i>. Kung ang isang bagyo ay nag-landfall, nangangahulugan ito na ang sentro o mata ng bagyo ay tumama sa anumang kalupaan ng bansa.</p>"
           },
           {
             "heading": "Alam mo ba?",
@@ -254,7 +254,7 @@
           },
           {
             "heading": "Ano ang mga epekto ng bagyo?",
-            "description": "<p>Ang mga bagyo ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy'/><figcaption>Ang mga epekto ng Super Typhoon Odette sa Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga bagyo:</p>",
+            "description": "<p>Ang mga bagyo ay isa sa mga pinaka-nakakapinsala na likas na kalamidad sa Pilipinas at dahil sa heograpikal na lokasyon ng ating bansa, hindi maiiwasan ang mga ito.</p><figure class='flex flex-col items-center'><img src='assets/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy'/><figcaption>Ang mga epekto ng Super Typhoon Odette sa Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Naririto ang ilan sa maraming panganib na dala ng mga bagyo:</p>",
             "list": [
               "<b>Malakas na hangin</b> na posibleng umabot sa 250 kilometro kada oras. Kaya nitong makasira ng kabahayan at makabuwal ng mga puno, poste, at iba pang istruktura.",
               "<b>Pagbaha</b> dahil sa malakas at tuloy-tuloy na pag-ulan. Ang matinding pagbaha ay maaaring makapinsala ng mga pananim at istruktura. Maaari ring makontamina nito ang mga inuming tubig at magdala ng mga sakit tulad ng Leptospirosis.",
@@ -406,14 +406,20 @@
             "heading": "Habang Bumabagyo",
             "list": [
               {
+                "subheading": "Kung ikaw ay nasa loob ng bahay",
                 "list": [
-                  "Manatiling kalmado at manatili sa loob ng bahay.",
-                  "Patuloy na makinig sa ulat ng panahon. Ihanda ang iyong emergency go bag para sa posibleng paglikas kung lumala ang sitwasyon.",
+                  "Manatiling kalmado.",
+                  "Manatiling nakatutok sa mga balita at update ng panahon. Ihanda ang iyong emergency go bag para sa posibleng paglikas kung lumala ang sitwasyon.",
                   "Huwag hawakan ang mga kagamitang de kuryente kung ikaw ay basa o nakatayo sa tubig baha.",
                   "Huwag lumangoy o mamangka sa umaapaw na ilog.",
                   "Huwag tumawid ng sapa o ilog kung lagpas tuhod na ang tubig.",
                   "Huwag maglakad o magmaneho sa lugar na baha.",
-                  "Kung ikaw ay nakulong dahil sa pagbaha, pumunta sa pinakamataas na bahagi ng iyong bahay o ng gusali. Huwag umakyat sa isang saradong espasyo. Maaari kang ma-trap ng tumataas na tubig baha.",
+                  "Kung ikaw ay nakulong dahil sa pagbaha, pumunta sa pinakamataas na bahagi ng iyong bahay o ng gusali. Huwag umakyat sa isang saradong espasyo. Maaari kang ma-trap ng tumataas na tubig baha."
+                ]
+              },
+              {
+                "subheading": "",
+                "list": [
                   {
                     "title": "Kung kailangan lumikas, gawin ang mga sumusunod:",
                     "sublist": [
@@ -576,7 +582,7 @@
             "description": "<p>Ang Tropical Cyclone Warning System (TCWS) ay may limang (5) mga <i>wind signal level</i>, kung saan ang Wind Signal No. 1 ang pinakamahina at Wind Signal No. 5 ang pinakamalakas.</p>",
             "list": [
               {
-                "img": "/images/learn/WindSignal1.png",
+                "img": "assets/images/learn/WindSignal1.png",
                 "details": [
                   {
                     "title": "Wind Signal No. 1",
@@ -593,7 +599,7 @@
                 ]
               },
               {
-                "img": "/images/learn/WindSignal2.png",
+                "img": "assets/images/learn/WindSignal2.png",
                 "details": [
                   {
                     "title": "Wind Signal No. 2",
@@ -610,7 +616,7 @@
                 ]
               },
               {
-                "img": "/images/learn/WindSignal3.png",
+                "img": "assets/images/learn/WindSignal3.png",
                 "details": [
                   {
                     "title": "Wind Signal No. 3",
@@ -627,7 +633,7 @@
                 ]
               },
               {
-                "img": "/images/learn/WindSignal4.png",
+                "img": "assets/images/learn/WindSignal4.png",
                 "details": [
                   {
                     "title": "Wind Signal No. 4",
@@ -644,7 +650,7 @@
                 ]
               },
               {
-                "img": "/images/learn/WindSignal5.png",
+                "img": "assets/images/learn/WindSignal5.png",
                 "details": [
                   {
                     "title": "Wind Signal No. 5",
@@ -681,7 +687,7 @@
             "description": "<p>Ang <b>Thunderstorm Warning System (TSTM-WS)</b> ay isang babala na itinataas ng PAGASA kapag may <i>short duration rainfall</i>. Sa TSTM-WS, may tatlong uri ng mga thunderstorm warning: ang Thunderstorm Advisory, ang Thunderstorm Watch, at ang Thunderstorm Information.</p>",
             "list": [
               {
-                "img": "/images/learn/ThunderstormAdvisory.png",
+                "img": "assets/images/learn/ThunderstormAdvisory.png",
                 "details": [
                   {
                     "title": "Thunderstorm Advisory"
@@ -693,7 +699,7 @@
                 ]
               },
               {
-                "img": "/images/learn/ThunderstormWatch.png",
+                "img": "assets/images/learn/ThunderstormWatch.png",
                 "details": [
                   {
                     "title": "Thunderstorm Watch"
@@ -705,7 +711,7 @@
                 ]
               },
               {
-                "img": "/images/learn/ThunderstormInformation.png",
+                "img": "assets/images/learn/ThunderstormInformation.png",
                 "details": [
                   {
                     "title": "Thunderstorm Information"
@@ -723,7 +729,7 @@
             "description": "<p>Ang <b>Heavy Rainfall Warning System (HR-WS)</b> ay isang babala na itinataas ng PAGASA kapag may <i>long duration rainfall</i>. Sa TSTM-WS, may tatlong uri ng mga <i>color-coded</i> heavy rainfall warning: ang Yellow Rainfall Warning, ang Orange Rainfall Warning, at ang Red Rainfall Warning. </p>",
             "list": [
               {
-                "img": "/images/learn/YellowRainfallWarning.png",
+                "img": "assets/images/learn/YellowRainfallWarning.png",
                 "color": "bg-yellow-100",
                 "details": [
                   {
@@ -736,7 +742,7 @@
                 ]
               },
               {
-                "img": "/images/learn/OrangeRainfallWarning.png",
+                "img": "assets/images/learn/OrangeRainfallWarning.png",
                 "color": "bg-orange-100",
                 "details": [
                   {
@@ -749,7 +755,7 @@
                 ]
               },
               {
-                "img": "/images/learn/RedRainfallWarning.png",
+                "img": "assets/images/learn/RedRainfallWarning.png",
                 "color": "bg-pink-100",
                 "details": [
                   {

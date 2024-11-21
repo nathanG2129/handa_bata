@@ -10,6 +10,7 @@ import 'package:handabatamae/pages/hotlines_page.dart';
 import 'package:handabatamae/pages/about_page.dart';
 import 'package:handabatamae/pages/learn_page.dart';
 import 'package:handabatamae/pages/resources_page.dart';
+import 'package:handabatamae/widgets/loading_widget.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -81,16 +82,20 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
   }
 
   Future<void> _closeDrawer() async {
+    print('🚪 Closing drawer');
     await _animationController.reverse();
-    widget.onClose();
+    if (mounted) {
+      widget.onClose();
+    }
   }
 
   Future<void> _logout() async {
     try {
+      await _closeDrawer();
+      if (!mounted) return;
+
       AuthService authService = AuthService();
       await authService.signOut();
-      
-      if (!mounted) return;
       
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage)),
@@ -104,13 +109,16 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     }
   }
 
-  void _navigateToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RegistrationPage(selectedLanguage: widget.selectedLanguage),
-      ),
-    );
+  void _navigateToRegister() async {
+    await _closeDrawer();
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RegistrationPage(selectedLanguage: widget.selectedLanguage),
+        ),
+      );
+    }
   }
 
   Widget _buildDivider() {
@@ -224,7 +232,53 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
 
   Widget _buildMenuItem(String title, {required VoidCallback onTap}) {
     return InkWell(
-      onTap: onTap,
+      onTap: () async {
+        // Show loading overlay
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return WillPopScope(
+              onWillPop: () async => false,
+              child: const LoadingWidget(),
+            );
+          },
+        );
+
+        // Close drawer first
+        await _closeDrawer();
+        
+        // Then navigate, removing the loading overlay
+        if (mounted) {
+          Navigator.of(context).pop(); // Remove loading overlay
+          
+          // Handle navigation based on title
+          switch (title) {
+            case 'Hotlines':
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HotlinesPage(
+                    selectedLanguage: widget.selectedLanguage,
+                  ),
+                ),
+              );
+              break;
+            case 'About':
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AboutPage(
+                    selectedLanguage: widget.selectedLanguage,
+                  ),
+                ),
+              );
+              break;
+            default:
+              onTap();
+          }
+        }
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -380,21 +434,54 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     }
 
     return InkWell(
-      onTap: onTap ?? () {
+      onTap: onTap ?? () async {
         final category = getCategory(title);
-        print('🔍 Navigating to Learn page with category: $category, title: $title');
+        print('🔍 Selected learn item: $title in category: $category');
         
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LearnPage(
-              selectedLanguage: widget.selectedLanguage,
-              category: category,
-              title: title,
-            ),
-          ),
+        // Store navigation data
+        final navigationData = {
+          'category': category,
+          'title': title,
+        };
+
+        // Show loading overlay
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return WillPopScope(
+              onWillPop: () async => false,
+              child: const LoadingWidget(),
+            );
+          },
         );
-        _closeDrawer();
+
+        // Close drawer first
+        if (mounted) {
+          await _closeDrawer();
+        }
+
+        // Then navigate, removing the loading overlay
+        if (mounted) {
+          Navigator.of(context).pop(); // Remove loading overlay
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LearnPage(
+                selectedLanguage: widget.selectedLanguage,
+                category: navigationData['category']!,
+                title: navigationData['title']!,
+                onBack: () {
+                  print('↩️ Navigating back from Learn');
+                  Navigator.pop(context);
+                },
+                onLanguageChange: (String newLanguage) {
+                  print('🌐 Language changed to: $newLanguage');
+                },
+              ),
+            ),
+          );
+        }
       },
       child: Container(
         width: double.infinity,

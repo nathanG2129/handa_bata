@@ -63,6 +63,7 @@ class LearnMoreSection extends StatelessWidget {
           const SizedBox(height: 50),
           Button3D(
             onPressed: () {
+              print('📚 Learn More button pressed');
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -70,6 +71,13 @@ class LearnMoreSection extends StatelessWidget {
                     selectedLanguage: selectedLanguage,
                     category: 'Earthquakes',
                     title: 'About Earthquakes',
+                    onBack: () {
+                      print('↩️ Navigating back from Learn More');
+                      Navigator.pop(context);
+                    },
+                    onLanguageChange: (String newLanguage) {
+                      print('🌐 Language changed to: $newLanguage');
+                    },
                   ),
                 ),
               );

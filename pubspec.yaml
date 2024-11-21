@@ -57,6 +57,8 @@ dependencies:
   package_info_plus: ^8.1.1
   cached_network_image: ^3.3.0
   youtube_player_flutter: ^8.1.2
+  flutter_html: ^3.0.0-beta.2
+  flutter_html_table: ^3.0.0-beta.2
 
 dev_dependencies:
   flutter_test:
@@ -168,24 +170,6 @@ flutter:
     - assets/badges/quake-quest/NormalStage05.png
     - assets/badges/quake-quest/NormalStage06.png
     - assets/badges/quake-quest/NormalStage07.png
-    - assets/badges/storm-quest/HardComplete.png
-    - assets/badges/storm-quest/HardFullClear.png
-    - assets/badges/storm-quest/HardStage01.png
-    - assets/badges/storm-quest/HardStage02.png
-    - assets/badges/storm-quest/HardStage03.png
-    - assets/badges/storm-quest/HardStage04.png
-    - assets/badges/storm-quest/HardStage05.png
-    - assets/badges/storm-quest/HardStage06.png
-    - assets/badges/storm-quest/HardStage07.png
-    - assets/badges/storm-quest/NormalComplete.png
-    - assets/badges/storm-quest/NormalFullClear.png
-    - assets/badges/storm-quest/NormalStage01.png
-    - assets/badges/storm-quest/NormalStage02.png
-    - assets/badges/storm-quest/NormalStage03.png
-    - assets/badges/storm-quest/NormalStage04.png
-    - assets/badges/storm-quest/NormalStage05.png
-    - assets/badges/storm-quest/NormalStage06.png
-    - assets/badges/storm-quest/NormalStage07.png
     - assets/gifs/Walking.gif
     - assets/gifs/Victory.gif
     - assets/gifs/Defeat.gif
@@ -197,6 +181,22 @@ flutter:
     - assets/hotlines/DSWD.png
     - assets/hotlines/NDRRMC.png
     - assets/hotlines/PRC.png
+    - assets/characters/CuriousKloud.png
+    - assets/characters/CuriousKladis.png
+    - assets/images/learn/TropicalCyclone.jpg
+    - assets/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png
+    - assets/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg
+    - assets/images/learn/WindSignal1.png
+    - assets/images/learn/WindSignal2.png
+    - assets/images/learn/WindSignal3.png
+    - assets/images/learn/WindSignal4.png
+    - assets/images/learn/WindSignal5.png
+    - assets/images/learn/ThunderstormAdvisory.png
+    - assets/images/learn/ThunderstormWatch.png
+    - assets/images/learn/ThunderstormInformation.png
+    - assets/images/learn/YellowRainfallWarning.png
+    - assets/images/learn/OrangeRainfallWarning.png
+    - assets/images/learn/RedRainfallWarning.png
     - assets/localization/learn/en.json
     - assets/localization/learn/fil.json
     - assets/members/Andrea.png

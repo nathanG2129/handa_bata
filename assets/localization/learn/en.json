@@ -45,7 +45,7 @@
         },
         {
           "heading": "What are the effects of an earthquake?",
-          "description": "<p>Earthquakes are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img width='100%' height='100%' src='/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy' /><figcaption><p>The effect of Luzon Earthquake on the Hyatt Terraces Hotel in Baguio City, Philippines.</p><p class='text-xs'>Photo from the Philippine Institute of Volcanology and Seismology</p></figcaption></figure><p>Here are some of the many dangers that earthquakes bring:</p>",
+          "description": "<p>Earthquakes are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img width='100%' height='100%' src='assets/images/learn/EffectOfLuzonEarthquakeOnHyattTerracesHotel.png' alt='' loading='lazy' /><figcaption><p>The effect of Luzon Earthquake on the Hyatt Terraces Hotel in Baguio City, Philippines.</p><p class='text-xs'>Photo from the Philippine Institute of Volcanology and Seismology</p></figcaption></figure><p>Here are some of the many dangers that earthquakes bring:</p>",
           "list": [
             "<b>Ground rupture</b> – This is the deformation on the ground that marks the intersection of the fault with the earth’s surface. It can cause fissuring and displacement of the ground due to movement of the fault.",
             "<b>Ground Shaking</b> – This is the disruptive up, down, and sideways vibration of the ground during an earthquake. It can cause the following falling down of household items, damage and collapse of various structures, structural collapse due to severe shaking, and other hazards such as liquefaction and landslides.",
@@ -228,7 +228,7 @@
       "content": [
         {
           "heading": "What are typhoons?",
-          "description": "<p>A <b>tropical cyclone</b>, commonly known as “typhoon” or “bagyo” in the Philippines, is a system of thunderstorms moving in a circular direction.</p><figure><img src='/images/learn/TropicalCyclone.jpg' alt='' loading='lazy' /><figcaption>A tropical cyclone as seen from above.</figcaption></figure><p>In different parts of the world, tropical cyclones are known by various names. In the Western North Pacific Ocean, they are called \"typhoons.\" In the North Atlantic, Eastern North Pacific, and South Pacific Ocean, they are called \"hurricanes.\" In the Bay of Bengal, Arabian Sea, and Western South Indian Ocean, they are called \"cyclones.\" And in the Eastern South Indian Ocean, they are called \"willy-willies.\"</p><p>Tropical cyclones can last for a few days or up to two weeks, with most lasting about six days before making landfall. If a typhoon makes landfall, it means that the center or eye of the typhoon has hit any landmass in the country.</p>"
+          "description": "<p>A <b>tropical cyclone</b>, commonly known as “typhoon” or “bagyo” in the Philippines, is a system of thunderstorms moving in a circular direction.</p><figure><img src='assets/images/learn/TropicalCyclone.jpg' alt='' loading='lazy' /><figcaption>A tropical cyclone as seen from above.</figcaption></figure><p>In different parts of the world, tropical cyclones are known by various names. In the Western North Pacific Ocean, they are called \"typhoons.\" In the North Atlantic, Eastern North Pacific, and South Pacific Ocean, they are called \"hurricanes.\" In the Bay of Bengal, Arabian Sea, and Western South Indian Ocean, they are called \"cyclones.\" And in the Eastern South Indian Ocean, they are called \"willy-willies.\"</p><p>Tropical cyclones can last for a few days or up to two weeks, with most lasting about six days before making landfall. If a typhoon makes landfall, it means that the center or eye of the typhoon has hit any landmass in the country.</p>"
         },
         {
           "heading": "Did you know?",
@@ -251,7 +251,7 @@
         },
         {
           "heading": "What are the dangers of typhoons?",
-          "description": "<p>Typhoons are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img src='/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy' /><figcaption>The effects of Super Typhoon Odette in Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Here are some of the many dangers that typhoons bring:</p>",
+          "description": "<p>Typhoons are one of the most devastating natural disasters in the Philippines and because of our country's geographic location, they are unavoidable.</p><figure><img src='assets/images/learn/EffectsOfSuperTyphoonOdetteInLapuLapuCity.jpg' alt='' loading='lazy' /><figcaption>The effects of Super Typhoon Odette in Lapu-Lapu City, Cebu, Philippines.</figcaption></figure><p>Here are some of the many dangers that typhoons bring:</p>",
           "list": [
             "<b>Strong winds</b> that may reach 250 kilometers per hour. It can destroy homes and knock down trees, poles, and other structures.",
             "<b>Flooding</b> due to heavy and persistent rains. Severe flooding can damage crops and structures. It can also contaminate drinking water and carry diseases such as Leptospirosis.",
@@ -402,14 +402,20 @@
           "heading": "During a Typhoon",
           "list": [
             {
+              "subheading": "If you are indoors",
               "list": [
-                "Stay calm and stay indoors.",
+                "Stay calm.",
                 "Stay tuned for the latest news and weather updates. Prepare your emergency go bag for a possible evacuation if the situation worsens.",
                 "Do not touch electrical equipment if you are wet or standing in floodwater.",
                 "Do not go swimming or boating in swollen rivers",
                 "Do not cross streams when water level is already above the knee.",
                 "Do not walk or drive through flooded areas.",
-                "If you are trapped because of flooding, go to the highest level of your house or building. Do not climb into a closed space. You may become trapped by rising flood water.",
+                "If you are trapped because of flooding, go to the highest level of your house or building. Do not climb into a closed space. You may become trapped by rising flood water."
+              ]
+            },
+            {
+              "subheading": "", 
+              "list": [
                 {
                   "title": "If evacuation is necessary, do the following:",
                   "sublist": [
@@ -572,7 +578,7 @@
           "description": "<p>The Tropical Cyclone Warning System (TCWS) has five (5) wind signal levels, with Wind Signal No. 1 being the lowest and Wind Signal No. 5 being the highest.",
           "list": [
             {
-              "img": "/images/learn/WindSignal1.png",
+              "img": "assets/images/learn/WindSignal1.png",
               "details": [
                 {
                   "title": "Wind Signal No. 1",
@@ -589,7 +595,7 @@
               ]
             },
             {
-              "img": "/images/learn/WindSignal2.png",
+              "img": "assets/images/learn/WindSignal2.png",
               "details": [
                 {
                   "title": "Wind Signal No. 2",
@@ -606,7 +612,7 @@
               ]
             },
             {
-              "img": "/images/learn/WindSignal3.png",
+              "img": "assets/images/learn/WindSignal3.png",
               "details": [
                 {
                   "title": "Wind Signal No. 3",
@@ -623,7 +629,7 @@
               ]
             },
             {
-              "img": "/images/learn/WindSignal4.png",
+              "img": "assets/images/learn/WindSignal4.png",
               "details": [
                 {
                   "title": "Wind Signal No. 4",
@@ -640,7 +646,7 @@
               ]
             },
             {
-              "img": "/images/learn/WindSignal5.png",
+              "img": "assets/images/learn/WindSignal5.png",
               "details": [
                 {
                   "title": "Wind Signal No. 5",
@@ -677,7 +683,7 @@
           "description": "<p>The <b>Thunderstorm Warning System (TSTM-WS)</b> is a warning issued by PAGASA when there is short duration rainfall. In TSTM-WS, there are three types of thunderstorm warnings: the Thunderstorm Advisory, the Thunderstorm Watch, and the Thunderstorm Information.</p>",
           "list": [
             {
-              "img": "/images/learn/ThunderstormAdvisory.png",
+              "img": "assets/images/learn/ThunderstormAdvisory.png",
               "details": [
                 {
                   "title": "Thunderstorm Advisory"
@@ -689,7 +695,7 @@
               ]
             },
             {
-              "img": "/images/learn/ThunderstormWatch.png",
+              "img": "assets/images/learn/ThunderstormWatch.png",
               "details": [
                 {
                   "title": "Thunderstorm Watch"
@@ -701,7 +707,7 @@
               ]
             },
             {
-              "img": "/images/learn/ThunderstormInformation.png",
+              "img": "assets/images/learn/ThunderstormInformation.png",
               "details": [
                 {
                   "title": "Thunderstorm Information"
@@ -719,7 +725,7 @@
           "description": "<p>The <b>Heavy Rainfall Warning System (HR-WS)</b> is a warning issued by PAGASA when there is long duration rainfall. In HR-WS, there are three types of color-coded heavy rainfall warnings: the Yellow Rainfall Warning, the Orange Rainfall Warning, and the Red Rainfall Warning.</p>",
           "list": [
             {
-              "img": "/images/learn/YellowRainfallWarning.png",
+              "img": "assets/images/learn/YellowRainfallWarning.png",
               "details": [
                 {
                   "title": "Yellow Rainfall Warning"
@@ -731,7 +737,7 @@
               ]
             },
             {
-              "img": "/images/learn/OrangeRainfallWarning.png",
+              "img": "assets/images/learn/OrangeRainfallWarning.png",
               "details": [
                 {
                   "title": "Orange Rainfall Warning"
@@ -743,7 +749,7 @@
               ]
             },
             {
-              "img": "/images/learn/RedRainfallWarning.png",
+              "img": "assets/images/learn/RedRainfallWarning.png",
               "details": [
                 {
                   "title": "Red Rainfall Warning"

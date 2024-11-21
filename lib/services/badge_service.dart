@@ -736,7 +736,7 @@ class BadgeService {
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Server revision: $serverRevision, Local revision: $localRevision');
+      print('📊 Badge server revision: $serverRevision, Badge local revision: $localRevision');
 
       if (localRevision == null || serverRevision > localRevision) {
         print('🔄 Server has newer data, updating local cache');

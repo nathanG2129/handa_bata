@@ -59,6 +59,7 @@ dependencies:
   youtube_player_flutter: ^8.1.2
   flutter_html: ^3.0.0-beta.2
   flutter_html_table: ^3.0.0-beta.2
+  html: ^0.15.4
 
 dev_dependencies:
   flutter_test:
@@ -148,10 +149,12 @@ flutter:
     - assets/badges/drought-quest/PlaceholderBadge.png
     - assets/badges/tsunami-quest/PlaceholderBadge.png
     - assets/badges/flood-quest/PlaceholderBadge.png
+
     - assets/badges/arcade/Accuracy.png
     - assets/badges/arcade/Speed.png
     - assets/badges/arcade/Streak.png
     - assets/badges/arcade/Record.png
+    
     - assets/badges/quake-quest/HardComplete.png
     - assets/badges/quake-quest/HardFullClear.png
     - assets/badges/quake-quest/HardStage01.png
@@ -170,6 +173,64 @@ flutter:
     - assets/badges/quake-quest/NormalStage05.png
     - assets/badges/quake-quest/NormalStage06.png
     - assets/badges/quake-quest/NormalStage07.png
+
+    - assets/badges/storm-quest/HardComplete.png
+    - assets/badges/storm-quest/HardFullClear.png
+    - assets/badges/storm-quest/HardStage01.png
+    - assets/badges/storm-quest/HardStage02.png
+    - assets/badges/storm-quest/HardStage03.png
+    - assets/badges/storm-quest/HardStage04.png
+    - assets/badges/storm-quest/HardStage05.png
+    - assets/badges/storm-quest/HardStage06.png
+    - assets/badges/storm-quest/HardStage07.png
+    - assets/badges/storm-quest/NormalComplete.png
+    - assets/badges/storm-quest/NormalFullClear.png
+    - assets/badges/storm-quest/NormalStage01.png
+    - assets/badges/storm-quest/NormalStage02.png
+    - assets/badges/storm-quest/NormalStage03.png
+    - assets/badges/storm-quest/NormalStage04.png
+    - assets/badges/storm-quest/NormalStage05.png
+    - assets/badges/storm-quest/NormalStage06.png
+    - assets/badges/storm-quest/NormalStage07.png
+
+    # - assets/badges/volcano-quest/HardComplete.png
+    # - assets/badges/volcano-quest/HardFullClear.png
+    - assets/badges/volcano-quest/HardStage01.png
+    - assets/badges/volcano-quest/HardStage02.png
+    - assets/badges/volcano-quest/HardStage03.png
+    - assets/badges/volcano-quest/HardStage04.png
+    - assets/badges/volcano-quest/HardStage05.png
+    - assets/badges/volcano-quest/HardStage06.png
+    - assets/badges/volcano-quest/HardStage07.png
+    # - assets/badges/volcano-quest/NormalComplete.png
+    # - assets/badges/volcano-quest/NormalFullClear.png
+    - assets/badges/volcano-quest/NormalStage01.png
+    - assets/badges/volcano-quest/NormalStage02.png
+    - assets/badges/volcano-quest/NormalStage03.png
+    - assets/badges/volcano-quest/NormalStage04.png
+    - assets/badges/volcano-quest/NormalStage05.png
+    - assets/badges/volcano-quest/NormalStage06.png
+    - assets/badges/volcano-quest/NormalStage07.png
+
+    # - assets/badges/drought-quest/HardComplete.png
+    # - assets/badges/drought-quest/HardFullClear.png
+    - assets/badges/drought-quest/HardStage01.png
+    - assets/badges/drought-quest/HardStage02.png
+    - assets/badges/drought-quest/HardStage03.png
+    - assets/badges/drought-quest/HardStage04.png
+    - assets/badges/drought-quest/HardStage05.png
+    - assets/badges/drought-quest/HardStage06.png
+    - assets/badges/drought-quest/HardStage07.png
+    # - assets/badges/drought-quest/NormalComplete.png
+    # - assets/badges/drought-quest/NormalFullClear.png
+    - assets/badges/drought-quest/NormalStage01.png
+    - assets/badges/drought-quest/NormalStage02.png
+    - assets/badges/drought-quest/NormalStage03.png
+    - assets/badges/drought-quest/NormalStage04.png
+    - assets/badges/drought-quest/NormalStage05.png
+    - assets/badges/drought-quest/NormalStage06.png
+    - assets/badges/drought-quest/NormalStage07.png
+
     - assets/gifs/Walking.gif
     - assets/gifs/Victory.gif
     - assets/gifs/Defeat.gif

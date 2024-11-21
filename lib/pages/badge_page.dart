@@ -489,9 +489,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    // Define opacity values
-    const double lockedOpacity = 0.5;  // Dimmed for locked badges
-    const double unlockedOpacity = 1.0; // Full opacity for unlocked badges
+    const double lockedOpacity = 0.5;
+    const double unlockedOpacity = 1.0;
 
     return Card(
       color: Colors.transparent,
@@ -505,21 +504,26 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
           color: Colors.transparent,
         ),
         child: GestureDetector(
-          onTap: isUnlocked ? onTap : null,  // Only allow tap if unlocked
+          onTap: isUnlocked ? onTap : null,
           behavior: HitTestBehavior.opaque,
           child: Center(
             child: Opacity(
               opacity: isUnlocked ? unlockedOpacity : lockedOpacity,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,  // Added to match banner page
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    'assets/badges/${badge['img']}',
-                    width: 50,
+                  SizedBox(
+                    width: 47,
                     height: 50,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.none,
+                    child: Image.asset(
+                      'assets/badges/${badge['img']}',
+                      width: 47,
+                      height: 50,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.none,
+                      isAntiAlias: false,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(

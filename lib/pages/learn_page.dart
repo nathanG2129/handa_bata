@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
@@ -303,34 +301,95 @@ class LearnPageState extends State<LearnPage> {
   }
 
   Widget _buildDescription(String text) {
-    print('🖼️ Building description with HTML: ${text.substring(0, min(100, text.length))}...');
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: Html(
-        data: text,
-        style: {
-          "body": Style(
-            color: Colors.black,
-            fontSize: FontSize(16),
-            fontFamily: 'Rubik',
+    // Fixed RegExp patterns with proper escaping
+    final RegExp figureRegex = RegExp(r'<figure.*?>(.*?)</figure>', dotAll: true);
+    final RegExp imgRegex = RegExp(r'''src=["']([^"']*)["']'''); // Using triple quotes for cleaner escaping
+    final RegExp figcaptionRegex = RegExp(r'<figcaption>(.*?)</figcaption>', dotAll: true);
+    
+    print('📝 Original text: $text');
+    
+    // Split text by figures
+    final parts = text.split(figureRegex);
+    final figures = figureRegex.allMatches(text);
+    
+    List<Widget> widgets = [];
+    
+    // Handle each part
+    for (int i = 0; i < parts.length; i++) {
+      // Add HTML content before/after figures
+      if (parts[i].trim().isNotEmpty) {
+        widgets.add(
+          Html(
+            data: parts[i],
+            style: {
+              "body": Style(
+                color: Colors.black,
+                fontSize: FontSize(16),
+                fontFamily: 'Rubik',
+              ),
+              "p": Style(margin: Margins.zero),
+            },
           ),
-          "p": Style(margin: Margins.zero),
-          "figure": Style(
-            margin: Margins.zero,
-            padding: HtmlPaddings.zero,
-          ),
-          "figcaption": Style(
-            color: Colors.black54,
-            fontSize: FontSize(14),
-            fontStyle: FontStyle.italic,
-            textAlign: TextAlign.center,
-          ),
-          "img": Style(
-            width: Width(double.infinity),
-            backgroundColor: Colors.transparent,
-          ),
-        },
-      ),
+        );
+      }
+      
+      // Add figure if there is one
+      if (i < figures.length) {
+        final figureContent = figures.elementAt(i).group(1) ?? '';
+        print('🔍 Figure content: $figureContent'); // Debug the figure content
+        
+        // Extract image source
+        final imgMatch = imgRegex.firstMatch(figureContent);
+        final imgSrc = imgMatch?.group(1) ?? '';
+        print('🖼️ Found image source: $imgSrc'); // Debug the image source
+        
+        // Extract caption
+        final captionMatch = figcaptionRegex.firstMatch(figureContent);
+        final caption = captionMatch?.group(1) ?? '';
+        print('📝 Found caption: $caption'); // Debug the caption
+        
+        if (imgSrc.isNotEmpty) {
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Column(
+                children: [
+                  Image.asset(
+                    imgSrc,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('❌ Error loading image $imgSrc: $error');
+                      print('Stack trace: $stackTrace');
+                      return const SizedBox();
+                    },
+                  ),
+                  if (caption.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Html(
+                        data: caption,
+                        style: {
+                          "body": Style(
+                            color: Colors.black54,
+                            fontSize: FontSize(14),
+                            fontStyle: FontStyle.italic,
+                            textAlign: TextAlign.center,
+                          ),
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
     );
   }
 
@@ -644,13 +703,20 @@ class LearnPageState extends State<LearnPage> {
     return (_content!['references'] as List).map((reference) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
-        child: Text(
-          reference,
-          style: GoogleFonts.rubik(
-            fontSize: 14,
-            color: Colors.black,
-            fontStyle: FontStyle.italic,
-          ),
+        child: Html(
+          data: reference,
+          style: {
+            "body": Style(
+              color: Colors.black,
+              fontSize: FontSize(14),
+              fontFamily: 'Rubik',
+              margin: Margins.zero,
+            ),
+            // Style specifically for italic tags
+            "i": Style(
+              fontStyle: FontStyle.italic,
+            ),
+          },
         ),
       );
     }).toList();

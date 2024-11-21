@@ -122,7 +122,23 @@ class LoginPageState extends State<LoginPage> {
               email: email,
               selectedLanguage: _selectedLanguage,
               onClose: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the reset flow dialog
+                
+                // Ensure we're on LoginPage
+                if (mounted) {
+                  // If we're not already on LoginPage, navigate to it
+                  if (ModalRoute.of(context)?.settings.name != '/login') {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoginPage(selectedLanguage: _selectedLanguage),
+                        settings: const RouteSettings(name: '/login'),
+                      ),
+                    );
+                  }
+                }
+                
+                // Clear the form fields
                 _usernameController.clear();
                 _passwordController.clear();
               },

@@ -67,17 +67,22 @@ class BadgeDetailsDialogState extends State<BadgeDetailsDialog> with SingleTicke
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/badges/${widget.badge['img']}',
-                      width: 50,
+                    SizedBox(
+                      width: 47,
                       height: 50,
-                      fit: BoxFit.cover,
-                      filterQuality: FilterQuality.none, // Make the image pixelated
+                      child: Image.asset(
+                        'assets/badges/${widget.badge['img']}',
+                        width: 47,
+                        height: 50,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                        isAntiAlias: false,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       widget.badge['title'] ?? 'Badge',
-                      textAlign: TextAlign.center, // Center the title text
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.vt323(
                         color: Colors.black,
                         fontSize: 32,
@@ -86,7 +91,7 @@ class BadgeDetailsDialogState extends State<BadgeDetailsDialog> with SingleTicke
                     const SizedBox(height: 10),
                     Text(
                       widget.badge['description'] ?? 'No description available.',
-                      textAlign: TextAlign.center, // Center the description text
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.vt323(
                         color: Colors.black,
                         fontSize: 20,

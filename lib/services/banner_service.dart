@@ -442,7 +442,7 @@ class BannerService {
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Server revision: $serverRevision, Local revision: $localRevision');
+      print('📊 Banner server revision: $serverRevision, Banner local revision: $localRevision');
 
       if (localRevision == null || serverRevision > localRevision) {
         print('🔄 Server has newer data, updating local cache');
@@ -517,58 +517,33 @@ class BannerService {
     BannerPriority priority = BannerPriority.HIGH
   }) async {
     try {
-      final cacheKey = 'all_banners';
-      
-      // Check batch cache first
-      if (_batchCache.containsKey(cacheKey) && _batchCache[cacheKey]!.isValid) {
-        return List<Map<String, dynamic>>.from(_batchCache[cacheKey]!.data['banners']);
-      }
-
-      // Try local storage first
-      List<Map<String, dynamic>> localBanners = await _getBannersFromLocal();
-      
-      if (localBanners.isEmpty) {
         final quality = await _connectionManager.checkConnectionQuality();
         
-        switch (quality) {
-          case ConnectionQuality.OFFLINE:
-            return [];
-            
-          case ConnectionQuality.POOR:
-            // Queue background update if priority is high enough
-            if (priority == BannerPriority.CRITICAL || priority == BannerPriority.HIGH) {
-              _debouncedSync();
-            }
-            return [];
-            
-          default:
-            // Fetch from server with timeout based on priority
-            final timeout = _getTimeoutForPriority(priority);
-            DocumentSnapshot snapshot = await _bannerDoc.get().timeout(timeout);
+      if (quality != ConnectionQuality.OFFLINE) {
+        try {
+          // Try server first when online
+          DocumentSnapshot snapshot = await _bannerDoc.get()
+              .timeout(const Duration(seconds: 5));
             
             if (snapshot.exists) {
               Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-              localBanners = data['banners'] != null ? 
-                  List<Map<String, dynamic>>.from(data['banners']) : [];
-              
-              // Update caches and local storage
-              _addToBatchCache(cacheKey, localBanners);
-              for (var banner in localBanners) {
-                _addToCache(banner['id'], banner);
-              }
-              await _storeBannersLocally(localBanners);
-            }
+            List<Map<String, dynamic>> serverBanners = 
+                data['banners'] != null ? List<Map<String, dynamic>>.from(data['banners']) : [];
+            
+            // Update local storage with server data
+            await _storeBannersLocally(serverBanners);
+            return serverBanners;
+          }
+        } catch (e) {
+          print('⚠️ Error fetching from server, falling back to local: $e');
         }
       }
       
-      // Queue banners based on priority
-      for (var banner in localBanners) {
-        queueBannerLoad(banner['id'], priority);
-      }
+      // Fallback to local storage
+      return await _getBannersFromLocal();
       
-      return localBanners;
     } catch (e) {
-      print('Error in fetchBanners: $e');
+      print('❌ Error in fetchBanners: $e');
       await _logBannerOperation('fetch_error', -1, e.toString());
       return [];
     }
@@ -594,20 +569,28 @@ class BannerService {
   Future<void> _storeBannersLocally(List<Map<String, dynamic>> banners) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      // Store backup before updating
+      
+      // Create backup first
       String? existingData = prefs.getString(BANNERS_CACHE_KEY);
       if (existingData != null) {
         await prefs.setString('${BANNERS_CACHE_KEY}_backup', existingData);
       }
       
+      // Store new data
       String bannersJson = jsonEncode(banners);
-      await prefs.setString(BANNERS_CACHE_KEY, bannersJson);
+      final success = await prefs.setString(BANNERS_CACHE_KEY, bannersJson);
       
+      if (success) {
       // Clear backup after successful update
       await prefs.remove('${BANNERS_CACHE_KEY}_backup');
+        print('💾 Banners stored locally');
+      } else {
+        throw Exception('Failed to store banners locally');
+      }
     } catch (e) {
+      print('❌ Error storing banners locally: $e');
       await _restoreFromBackup();
-      print('Error storing banners locally: $e');
+      throw e;
     }
   }
 
@@ -627,14 +610,32 @@ class BannerService {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? bannersJson = prefs.getString(BANNERS_CACHE_KEY);
+      
       if (bannersJson != null) {
+        try {
         List<dynamic> bannersList = jsonDecode(bannersJson);
-        return bannersList.map((banner) => banner as Map<String, dynamic>).toList();
-      }
+          return bannersList.map((banner) => 
+            Map<String, dynamic>.from(banner)
+          ).toList();
     } catch (e) {
-      print('Error getting banners from local: $e');
+          print('⚠️ Error parsing local banners: $e');
+          await _restoreFromBackup();
+          
+          // Try backup
+          String? backup = prefs.getString('${BANNERS_CACHE_KEY}_backup');
+          if (backup != null) {
+            List<dynamic> backupList = jsonDecode(backup);
+            return backupList.map((banner) => 
+              Map<String, dynamic>.from(banner)
+            ).toList();
+          }
+        }
     }
     return [];
+    } catch (e) {
+      print('❌ Error getting banners from local: $e');
+      return [];
+    }
   }
 
   Future<void> cleanupOldVersions() async {
@@ -934,6 +935,8 @@ class BannerService {
 
   Future<void> updateBanner(int id, Map<String, dynamic> updatedBanner) async {
     try {
+      print('🔄 Updating banner $id');
+      
       // Fetch current banners
       List<Map<String, dynamic>> banners = await fetchBanners();
       int index = banners.indexWhere((b) => b['id'] == id);
@@ -946,17 +949,22 @@ class BannerService {
         updatedBanner['lastModified'] = DateTime.now().millisecondsSinceEpoch;
         banners[index] = updatedBanner;
         
-        // Update both local storage and server
-        await _storeBannersLocally(banners);
-        await _updateServerBanners(banners);
+        // Update both storages in parallel
+        await Future.wait([
+          _storeBannersLocally(banners),
+          _updateServerBanners(banners)
+        ]);
         
-        // Clear cache for this banner
+        // Clear cache and memory
         clearBannerCache(id);
+        _bannerCache.remove(id);
         
         // Notify listeners of the update
         _bannerUpdateController.add(banners);
 
-        // Log admin update with changes
+        print('✅ Banner updated successfully');
+        
+        // Log admin update
         await _logBannerOperation(
           'admin_update',
           id,
@@ -969,7 +977,7 @@ class BannerService {
         );
       }
     } catch (e) {
-      print('Error updating banner: $e');
+      print('❌ Error updating banner: $e');
       await _logBannerOperation('update_error', id, e.toString());
       rethrow;
     }
@@ -1791,5 +1799,24 @@ class BannerService {
       print('❌ Error in syncBanners: $e');
       await _logBannerOperation('sync_error', -1, e.toString());
     }
+  }
+
+  // Add validation method
+  Map<String, String> validateBanner(Map<String, dynamic> banner) {
+    final errors = <String, String>{};
+    
+    if (banner['title']?.toString().isEmpty ?? true) {
+      errors['title'] = 'Title is required';
+    }
+    
+    if (banner['img']?.toString().isEmpty ?? true) {
+      errors['img'] = 'Image URL is required';
+    }
+    
+    if (banner['description']?.toString().isEmpty ?? true) {
+      errors['description'] = 'Description is required';
+    }
+    
+    return errors;
   }
 }

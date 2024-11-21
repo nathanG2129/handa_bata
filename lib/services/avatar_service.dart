@@ -817,7 +817,7 @@ class AvatarService {
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Server revision: $serverRevision, Local revision: $localRevision');
+      print('📊 Avatar server revision: $serverRevision, Avatar local revision: $localRevision');
 
       // Only sync if server has newer data
       if (localRevision == null || serverRevision > localRevision) {

@@ -16,37 +16,103 @@ class AdminBannerPage extends StatefulWidget {
   _AdminBannerPageState createState() => _AdminBannerPageState();
 }
 
+class AdminBannerState {
+  final bool isLoading;
+  final String? error;
+  final List<Map<String, dynamic>> banners;
+  final Set<int> processingIds; // Track banners being edited/deleted
+
+  const AdminBannerState({
+    this.isLoading = false,
+    this.error,
+    this.banners = const [],
+    this.processingIds = const {},
+  });
+
+  AdminBannerState copyWith({
+    bool? isLoading,
+    String? error,
+    List<Map<String, dynamic>>? banners,
+    Set<int>? processingIds,
+  }) {
+    return AdminBannerState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error,  // Note: Passing null clears error
+      banners: banners ?? this.banners,
+      processingIds: processingIds ?? this.processingIds,
+    );
+  }
+}
+
 class _AdminBannerPageState extends State<AdminBannerPage> {
   final BannerService _bannerService = BannerService();
-  List<Map<String, dynamic>> _banners = [];
+  late AdminBannerState _state;
   StreamSubscription? _bannerSubscription;
+  StreamSubscription? _syncSubscription;
 
   @override
   void initState() {
     super.initState();
-    _setupBannerListener();
+    _state = const AdminBannerState();
+    _setupSubscriptions();
     _fetchBanners();
   }
 
-  void _setupBannerListener() {
-    _bannerSubscription = _bannerService.bannerUpdates.listen((banners) {
-      if (mounted) {
-        setState(() => _banners = banners);
-      }
-    });
+  void _setupSubscriptions() {
+    // Listen for banner updates
+    _bannerSubscription = _bannerService.bannerUpdates.listen(
+      (banners) {
+        if (mounted) {
+          setState(() => _state = _state.copyWith(
+            banners: banners,
+            isLoading: false,
+            error: null,
+          ));
+        }
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() => _state = _state.copyWith(
+            error: error.toString(),
+            isLoading: false,
+          ));
+        }
+      },
+    );
+
+    // Listen for sync status
+    _syncSubscription = _bannerService.syncStatus.listen(
+      (isSyncing) {
+        if (mounted) {
+          setState(() => _state = _state.copyWith(
+            isLoading: isSyncing,
+          ));
+        }
+      },
+    );
   }
 
   Future<void> _fetchBanners() async {
     try {
-      List<Map<String, dynamic>> banners = await _bannerService.fetchBanners();
+      setState(() => _state = _state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      final banners = await _bannerService.fetchBanners();
+      
       if (mounted) {
-        setState(() => _banners = banners);
+        setState(() => _state = _state.copyWith(
+          banners: banners,
+          isLoading: false,
+        ));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching banners: $e')),
-        );
+        setState(() => _state = _state.copyWith(
+          error: e.toString(),
+          isLoading: false,
+        ));
       }
     }
   }
@@ -75,35 +141,73 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
     }
   }
 
-  void _deleteBanner(int id) async {
-    bool confirm = await BannerDeletionDialog(bannerId: id, context: context).show();
-    if (confirm) {
+  Future<void> _deleteBanner(int id) async {
+    try {
+      bool confirm = await BannerDeletionDialog(
+        bannerId: id, 
+        context: context
+      ).show();
+
+      if (!confirm) return;
+
+      // Add to processing set
+      setState(() => _state = _state.copyWith(
+        processingIds: {..._state.processingIds, id},
+      ));
+
+      // Optimistic update
+      final updatedBanners = _state.banners
+          .where((b) => b['id'] != id)
+          .toList();
+      
+      setState(() => _state = _state.copyWith(
+        banners: updatedBanners,
+      ));
+
+      // Perform delete
       await _bannerService.deleteBanner(id);
+
+      // Remove from processing
+      setState(() => _state = _state.copyWith(
+        processingIds: _state.processingIds.difference({id}),
+      ));
+
+    } catch (e) {
+      // Revert on error
       _fetchBanners();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting banner: $e')),
+        );
+      }
     }
   }
 
-  @override
-  void dispose() {
-    _bannerSubscription?.cancel();
-    super.dispose();
-  }
-
-  @override
+  @override 
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        textTheme: GoogleFonts.vt323TextTheme().apply(bodyColor: Colors.white, displayColor: Colors.white),
+        textTheme: GoogleFonts.vt323TextTheme()
+            .apply(bodyColor: Colors.white, displayColor: Colors.white),
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Manage Banners', style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
+          title: Text('Manage Banners', 
+              style: GoogleFonts.vt323(color: Colors.white, fontSize: 30)),
           backgroundColor: const Color(0xFF381c64),
           iconTheme: const IconThemeData(color: Colors.white),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
+          actions: [
+            // Keep the refresh button
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _state.isLoading ? null : _fetchBanners,
+            ),
+          ],
         ),
         backgroundColor: const Color(0xFF381c64),
         body: SizedBox(
@@ -111,54 +215,90 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
           width: double.infinity,
           child: Stack(
             children: [
+              // Background
               Positioned.fill(
                 child: SvgPicture.asset(
                   'assets/backgrounds/background.svg',
                   fit: BoxFit.cover,
                 ),
               ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _showAddBannerDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF381c64),
-                        shadowColor: Colors.transparent,
+              
+              // Content
+              if (_state.error != null)
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Error: ${_state.error}',
+                          style: GoogleFonts.vt323(color: Colors.red)),
+                      ElevatedButton(
+                        onPressed: _fetchBanners,
+                        child: const Text('Retry'),
                       ),
-                      child: Text('Add Banner', style: GoogleFonts.vt323(color: Colors.white, fontSize: 20)),
-                    ),
-                    const SizedBox(height: 20),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: BannerDataTable(
-                        banners: _banners,
-                        onEditBanner: _navigateToEditBanner,
-                        onDeleteBanner: _deleteBanner,
+                    ],
+                  ),
+                )
+              else
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _state.isLoading ? null : _showAddBannerDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF381c64),
+                          shadowColor: Colors.transparent,
+                        ),
+                        child: Text('Add Banner',
+                            style: GoogleFonts.vt323(
+                                color: Colors.white, fontSize: 20)),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: BannerDataTable(
+                          banners: _state.banners,
+                          processingIds: _state.processingIds,
+                          onEditBanner: _navigateToEditBanner,
+                          onDeleteBanner: _deleteBanner,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+              // Loading Indicator
+              if (_state.isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
             ],
           ),
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _bannerSubscription?.cancel();
+    _syncSubscription?.cancel();
+    super.dispose();
+  }
 }
 
 class BannerDataTable extends StatelessWidget {
   final List<Map<String, dynamic>> banners;
+  final Set<int> processingIds;
   final ValueChanged<Map<String, dynamic>> onEditBanner;
   final ValueChanged<int> onDeleteBanner;
 
   const BannerDataTable({
     super.key,
     required this.banners,
+    required this.processingIds,
     required this.onEditBanner,
     required this.onDeleteBanner,
   });

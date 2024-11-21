@@ -138,6 +138,7 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
   void _handleOptionSelection(int index, String option) {
     _playSound(_soundId3); // Play select answer sound
     setState(() {
+      // First check if index is valid for optionSelected array
       if (index < 0 || index >= optionSelected.length) {
         return;
       }
@@ -145,26 +146,26 @@ class FillInTheBlanksQuestionState extends State<FillInTheBlanksQuestion> {
       if (optionSelected[index]) {
         // Deselect the option
         int selectedIndex = selectedOptions.indexOf(option);
-        if (selectedIndex != -1) {
+        // Add bounds check for selectedOptions array
+        if (selectedIndex != -1 && selectedIndex < selectedOptions.length) {
           selectedOptions[selectedIndex] = null;
-          optionPositions[index] = null; // Clear the position
+          optionSelected[index] = false;
         }
-        optionSelected[index] = false;
       } else {
         // Select the option
         int emptyIndex = selectedOptions.indexOf(null);
-        if (emptyIndex != -1) {
+        // Add bounds check for selectedOptions array
+        if (emptyIndex != -1 && emptyIndex < selectedOptions.length) {
           selectedOptions[emptyIndex] = option;
           optionSelected[index] = true;
-          optionPositions[index] = emptyIndex + 1; // Store 1-based position
         }
       }
-
-      // Check if all input boxes are filled
-      if (!selectedOptions.contains(null)) {
-        _checkAnswer();
-      }
     });
+
+    // Check if all slots are filled before checking the answer
+    if (!selectedOptions.contains(null)) {
+      _checkAnswer();
+    }
   }
 
 void _checkAnswer() {

@@ -550,14 +550,7 @@ void readCurrentQuestion() {
       _selectedOptionIndex = index;
       _isCorrect = isCorrect;
       
-      if (widget.gamemode == 'arcade') {
-        _updateAnimationsForArcade(isCorrect);
-        _questionsAnswered++;
-        _totalTimeInSeconds = _stopwatchSeconds;
-        _averageTimePerQuestion = _totalTimeInSeconds / _questionsAnswered;
-      }
-
-      // Update arcade stats
+      // Remove immediate animation update
       if (widget.gamemode == 'arcade') {
         _questionsAnswered++;
         _totalTimeInSeconds = _stopwatchSeconds;
@@ -575,20 +568,9 @@ void readCurrentQuestion() {
         if (_currentStreak > _highestStreak) {
           _highestStreak = _currentStreak;
         }
-        // Handle arcade time
-        if (widget.gamemode == 'arcade') {
-          _stopwatchSeconds -= 10;
-          if (_stopwatchSeconds < 0) _stopwatchSeconds = 0;
-          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
-        }
       } else {
         _wrongAnswersCount++;
         _currentStreak = 0;
-        // Handle arcade time
-        if (widget.gamemode == 'arcade') {
-          _stopwatchSeconds += 10;
-          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
-        }
       }
     });
 
@@ -598,12 +580,27 @@ void readCurrentQuestion() {
     // Save with incremented index
     autoSaveGame();
 
-    // Update health after delay
+    // Update health, stopwatch, and animations after delay
     Future.delayed(const Duration(seconds: 1), () {
       _updateHealth(isCorrect, 'Multiple Choice');
+      
+      if (widget.gamemode == 'arcade') {
+        setState(() {
+          // Update animations
+          _updateAnimationsForArcade(isCorrect);
+          
+          // Update stopwatch
+          if (_isCorrect == true) {
+            _stopwatchSeconds -= 10;
+            if (_stopwatchSeconds < 0) _stopwatchSeconds = 0;
+          } else {
+            _stopwatchSeconds += 10;
+          }
+          _stopwatchTime = _formatStopwatchTime(_stopwatchSeconds);
+        });
+      }
     });
 
-    // Move to next question after delay
     Future.delayed(const Duration(seconds: 6), () {
       _nextQuestion();
     });
@@ -912,6 +909,24 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     Map<String, dynamic> currentQuestion = _questions[currentQuestionIndex];
     String? questionType = currentQuestion['type'];
   
+    int totalTime;
+    switch (questionType) {
+      case 'Multiple Choice':
+        totalTime = 30000; // 30 seconds
+        break;
+      case 'Identification':
+        totalTime = 60000; // 60 seconds
+        break;
+      case 'Fill in the Blanks':
+        totalTime = 90000; // 90 seconds
+        break;
+      case 'Matching Type':
+        totalTime = 90000; // 90 seconds
+        break;
+      default:
+        totalTime = 30000; // Default to 30 seconds
+    }
+  
     Widget questionWidget;
     switch (questionType) {
       case 'Multiple Choice':
@@ -1004,7 +1019,10 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                     body: SafeArea(
                       child: Column(
                         children: [
-                          ProgressBar(progress: _progress),
+                          ProgressBar(
+                            progress: _progress,
+                            totalTime: totalTime,
+                          ),
                           const SizedBox(height: 48),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 50.0),
@@ -1303,18 +1321,37 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
 class ProgressBar extends StatelessWidget {
   final double progress;
-
-  const ProgressBar({super.key, required this.progress});
+  final int totalTime;
+  
+  const ProgressBar({
+    super.key, 
+    required this.progress,
+    required this.totalTime,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 30, // Make the progress bar thicker
-      child: LinearProgressIndicator(
-        value: progress,
-        backgroundColor: Colors.grey,
-        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-      ),
+    final remainingSeconds = ((totalTime / 1000) * progress).round();
+    
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          height: 30,
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+          ),
+        ),
+        Text(
+          '$remainingSeconds',
+          style: GoogleFonts.vt323(
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }

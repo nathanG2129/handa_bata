@@ -94,12 +94,12 @@ class MainPageState extends State<MainPage> {
                                 ],
                               ),
                             ),
-                            const SliverFillRemaining(
+                            SliverFillRemaining(
                               hasScrollBody: false,
                               child: Column(
                                 children: [
-                                  Spacer(),
-                                  FooterWidget(),
+                                  const Spacer(),
+                                  FooterWidget(selectedLanguage: _selectedLanguage),
                                 ],
                               ),
                             ),

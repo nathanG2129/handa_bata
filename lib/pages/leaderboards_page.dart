@@ -261,12 +261,12 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                                     }).toList(),
                                   ),
                                 ),
-                              const SliverFillRemaining(
+                              SliverFillRemaining(
                                 hasScrollBody: false,
                                 child: Column(
                                   children: [
-                                    Spacer(),
-                                    FooterWidget(), // Add the footer here
+                                    const Spacer(),
+                                    FooterWidget(selectedLanguage: _selectedLanguage), // Add the footer here
                                   ],
                                 ),
                               ),

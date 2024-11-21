@@ -106,12 +106,12 @@ class _ResourcesPageState extends State<ResourcesPage> {
                               ]),
                             ),
                             // Footer
-                            const SliverFillRemaining(
+                            SliverFillRemaining(
                               hasScrollBody: false,
                               child: Column(
                                 children: [
-                                  Spacer(),
-                                  FooterWidget(),
+                                  const Spacer(),
+                                  FooterWidget(selectedLanguage: widget.selectedLanguage),
                                 ],
                               ),
                             ),

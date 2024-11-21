@@ -117,12 +117,12 @@ class HotlinesPage extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const SliverFillRemaining(
+                            SliverFillRemaining(
                               hasScrollBody: false,
                               child: Column(
                                 children: [
-                                  Spacer(),
-                                  FooterWidget(),
+                                  const Spacer(),
+                                  FooterWidget(selectedLanguage: selectedLanguage),
                                 ],
                               ),
                             ),

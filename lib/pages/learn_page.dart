@@ -146,12 +146,12 @@ class LearnPageState extends State<LearnPage> {
             ],
           ),
         ),
-        const SliverFillRemaining(
+        SliverFillRemaining(
           hasScrollBody: false,
           child: Column(
             children: [
-              Spacer(),
-              FooterWidget(),
+              const Spacer(),
+              FooterWidget(selectedLanguage: widget.selectedLanguage),
             ],
           ),
         ),

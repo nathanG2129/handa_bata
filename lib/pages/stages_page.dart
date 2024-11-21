@@ -520,12 +520,12 @@ class StagesPageState extends State<StagesPage> {
                               height: 20, // Adjust the height as needed
                               ),
                             ),
-                            const SliverFillRemaining(
+                            SliverFillRemaining(
                               hasScrollBody: false,
                               child: Column(
                                 children: [
-                                  Spacer(), // Push the footer to the bottom
-                                  FooterWidget(), // Add the footer here
+                                  const Spacer(), // Push the footer to the bottom
+                                  FooterWidget(selectedLanguage: widget.selectedLanguage), // Add the footer here
                                 ],
                               ),
                             ),

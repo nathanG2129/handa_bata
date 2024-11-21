@@ -127,7 +127,7 @@ class PlayPageState extends State<PlayPage> {
                           ),
                         ),
                       ),
-                      const FooterWidget(),
+                      FooterWidget(selectedLanguage: _selectedLanguage),
                     ],
                   ),
                   if (_isUserProfileVisible)

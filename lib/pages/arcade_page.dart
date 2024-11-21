@@ -414,7 +414,7 @@ class ArcadePageState extends State<ArcadePage> {
                                         ),
                                       ),
                                       const Spacer(), // Push the footer to the bottom
-                                      const FooterWidget(), // Add the footer here
+                                      FooterWidget(selectedLanguage: _selectedLanguage), // Add the footer here
                                     ],
                                   ),
                                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -22,42 +22,44 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(30),
-      onTap: onTap,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          child: Container(
-            alignment: Alignment.center,
-            width: ResponsiveValue<double>(
-              context,
-              defaultValue: width ?? double.infinity,
-              conditionalValues: [
-                Condition.smallerThan(name: MOBILE, value: (width ?? double.infinity) * 1.1), // Increased width for smaller screens
-                Condition.largerThan(name: MOBILE, value: (width ?? double.infinity) * 1.2),
-              ],
-            ).value,
-            height: ResponsiveValue<double>(
-              context,
-              defaultValue: height ?? 50,
-              conditionalValues: [
-                Condition.smallerThan(name: MOBILE, value: (height ?? 50) * 0.8),
-                Condition.largerThan(name: MOBILE, value: (height ?? 50) * 1.2),
-              ],
-            ).value,
-            child: Text(
-              text,
-              style: GoogleFonts.rubik(color: textColor, fontWeight: FontWeight.bold),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final isDesktop = sizingInformation.deviceScreenType == DeviceScreenType.desktop;
+        final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+        
+        // Adjusted text sizes
+        final dynamicTextSize = isDesktop ? 18.0 :
+                              isTablet ? 15.0 : // Reduced from 16.0
+                              13.0;  // Reduced from 14.0
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: onTap,
+          child: Material(
+            color: Colors.transparent,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Container(
+                alignment: Alignment.center,
+                width: width ?? double.infinity,
+                height: height ?? 50,
+                child: Text(
+                  text,
+                  style: GoogleFonts.rubik(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: dynamicTextSize,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

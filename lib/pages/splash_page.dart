@@ -6,7 +6,6 @@ import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import '../widgets/buttons/custom_button.dart';
@@ -18,6 +17,7 @@ import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class SplashPage extends StatefulWidget {
   final String selectedLanguage;
@@ -428,247 +428,299 @@ class SplashPageState extends State<SplashPage> {
     return Scaffold(
       body: Stack(
         children: [
-          ResponsiveBreakpoints(
-            breakpoints: const [
-              Breakpoint(start: 0, end: 450, name: MOBILE),
-              Breakpoint(start: 451, end: 800, name: TABLET),
-              Breakpoint(start: 801, end: 1920, name: DESKTOP),
-              Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-            ],
-            child: MaxWidthBox(
-              maxWidth: 1200,
-              child: ResponsiveScaledBox(
-                width: ResponsiveValue<double>(
-                  context,
-                  defaultValue: 450.0,
-                  conditionalValues: [
-                    const Condition.equals(name: MOBILE, value: 450.0),
-                    const Condition.between(start: 800, end: 1100, value: 800.0),
-                    const Condition.between(start: 1000, end: 1200, value: 1000.0),
-                  ],
-                ).value,
-                child: Stack(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/backgrounds/background.svg',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                    Positioned(
-                      top: 60,
-                      right: 35,
-                      child: DropdownButton<String>(
-                        icon: const Icon(Icons.language, color: Colors.white, size: 40), // Larger icon
-                        underline: Container(), // Remove underline
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'en',
-                            child: Text('English'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'fil',
-                            child: Text('Filipino'),
-                          ),
-                        ],
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            _changeLanguage(newValue);
-                          }
-                        },
-                      ),
-                    ),
-                    Center(
-                      child: Column(
-                        children: <Widget>[
-                          Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: (ResponsiveValue<double>(
-                                  context,
-                                  defaultValue: topPadding,
-                                  conditionalValues: [
-                                    const Condition.smallerThan(name: MOBILE, value: topPadding * 0.8),
-                                    const Condition.largerThan(name: MOBILE, value: topPadding * 1.2),
-                                  ],
-                                ).value), // Provide a default value
-                              ),
+          ResponsiveBuilder(
+            builder: (context, sizingInformation) {
+              final isDesktop = sizingInformation.deviceScreenType == DeviceScreenType.desktop;
+              final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+              final isMobile = sizingInformation.deviceScreenType == DeviceScreenType.mobile;
+              
+              final screenWidth = sizingInformation.screenSize.width;
+              
+              // Adjust title sizes with more consistent ratio for mobile
+              final dynamicTitleSize = (isDesktop ? 90.0 : 
+                                      isTablet ? 80.0 : 
+                                      screenWidth * 0.15);
+              
+              // Make subtitle closer to title size on mobile
+              final dynamicSubtitleSize = (isDesktop ? 85.0 : 
+                                         isTablet ? 75.0 : 
+                                         screenWidth * 0.14); // Increased from 0.12 to be closer to title size
+              
+              // Adjust button dimensions for better proportions
+              final dynamicButtonWidth = isDesktop ? 600.0 :
+                                       isTablet ? screenWidth * 0.5 : // Reduced from 0.6
+                                       screenWidth * 0.7; // Reduced from 0.8
+              
+              final dynamicButtonHeight = isDesktop ? 65.0 :
+                                        isTablet ? 55.0 : // Reduced from 60.0
+                                        45.0; // Reduced from 55.0
+              
+              final dynamicSpacing = isDesktop ? 25.0 :
+                                    isTablet ? 20.0 : // Reduced from 20.0
+                                    15.0; // Reduced from 15.0
+
+              return Stack(
+                children: [
+                  // Background
+                  SvgPicture.asset(
+                    'assets/backgrounds/background.svg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  
+                  // Language Dropdown
+                  Positioned(
+                    top: 60,
+                    right: 35,
+                    child: _buildLanguageDropdown(),
+                  ),
+                  
+                  // Main Content
+                  SafeArea(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktop ? 1200 : 800,
+                        ),
+                        child: Column(
+                          children: [
+                            // Adjusted spacing for title section
+                            Spacer(flex: isDesktop ? 2 : 3),
+                            
+                            // Title Section with adjusted spacing
+                            Transform.translate(
+                              offset: Offset(0, isMobile ? 20 : 0),
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: TextWithShadow(
                                       text: SplashLocalization.translate('title', _selectedLanguage),
-                                      fontSize: (ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: titleFontSize,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: titleFontSize * 0.8),
-                                          const Condition.largerThan(name: MOBILE, value: titleFontSize * 1.2),
-                                        ],
-                                      ).value), // Provide a default value
+                                      fontSize: dynamicTitleSize,
                                     ),
                                   ),
                                   Transform.translate(
-                                    offset: Offset(0, (ResponsiveValue<double>(
-                                      context,
-                                      defaultValue: verticalOffset,
-                                      conditionalValues: [
-                                        const Condition.smallerThan(name: MOBILE, value: verticalOffset * 0.8),
-                                        const Condition.largerThan(name: MOBILE, value: verticalOffset * 1.2),
-                                      ],
-                                    ).value)), // Provide a default value
+                                    offset: Offset(0, isDesktop ? -20.0 :
+                                                    isTablet ? -10.0 : -8.0), // Adjusted mobile offset
                                     child: FittedBox(
                                       fit: BoxFit.scaleDown,
                                       child: TextWithShadow(
                                         text: SplashLocalization.translate('subtitle', _selectedLanguage),
-                                        fontSize: (ResponsiveValue<double>(
-                                          context,
-                                          defaultValue: subtitleFontSize,
-                                          conditionalValues: [
-                                            const Condition.smallerThan(name: MOBILE, value: subtitleFontSize * 0.8),
-                                            const Condition.largerThan(name: MOBILE, value: subtitleFontSize * 1.2),
-                                          ],
-                                        ).value), // Provide a default value
+                                        fontSize: dynamicSubtitleSize,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 0),
-                          SizedBox(
-                            width: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: MediaQuery.of(context).size.width * buttonWidthFactor,
-                              conditionalValues: [
-                                Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
-                              ],
-                            ).value), // Provide a default value
-                            height: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: buttonHeight,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
-                                const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
-                              ],
-                            ).value), // Provide a default value
-                            child: CustomButton(
-                              text: SplashLocalization.translate('login', _selectedLanguage),
-                              color: const Color(0xFF351B61),
-                              textColor: Colors.white,
-                              width: (ResponsiveValue<double>(
-                                context,
-                                defaultValue: MediaQuery.of(context).size.width * buttonWidthFactor,
-                                conditionalValues: [
-                                  Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                  Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
+                            
+                            // Adjusted spacing between title and buttons
+                            Spacer(flex: isDesktop ? 3 : 2),
+                            
+                            // Buttons Section
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * (isDesktop ? 0.1 : 0.08),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildLoginButton(dynamicButtonWidth, dynamicButtonHeight),
+                                  SizedBox(height: dynamicSpacing),
+                                  _buildPlayNowButton(dynamicButtonWidth, dynamicButtonHeight),
                                 ],
-                              ).value), // Provide a default value
-                              height: (ResponsiveValue<double>(
-                                context,
-                                defaultValue: buttonHeight,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
-                                  const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
-                                ],
-                              ).value), // Provide a default value
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
-                                );
-                              },
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            height: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: buttonSpacing,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: buttonSpacing * 0.8),
-                                const Condition.largerThan(name: MOBILE, value: buttonSpacing * 1.2),
-                              ],
-                            ).value), // Provide a default value
-                          ),
-                          SizedBox(
-                            width: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: MediaQuery.of(context).size.width * buttonWidthFactor,
-                              conditionalValues: [
-                                Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
-                              ],
-                            ).value), // Provide a default value
-                            height: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: buttonHeight,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
-                                const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
-                              ],
-                            ).value), // Provide a default value
-                            child: CustomButton(
-                              text: SplashLocalization.translate('play_now', _selectedLanguage),
-                              color: const Color(0xFFF1B33A),
-                              textColor: Colors.black,
-                              width: (ResponsiveValue<double>(
-                                context,
-                                defaultValue: MediaQuery.of(context).size.width * buttonWidthFactor,
-                                conditionalValues: [
-                                  Condition.smallerThan(name: MOBILE, value: MediaQuery.of(context).size.width * 0.9),
-                                  Condition.largerThan(name: MOBILE, value: MediaQuery.of(context).size.width * buttonWidthFactor),
-                                ],
-                              ).value), // Provide a default value
-                              height: (ResponsiveValue<double>(
-                                context,
-                                defaultValue: buttonHeight,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: buttonHeight * 0.8),
-                                  const Condition.largerThan(name: MOBILE, value: buttonHeight * 1.2),
-                                ],
-                              ).value), // Provide a default value
-                              onTap: () {
-                                _checkSignInStatus(context);
-                              },
+                            
+                            // Adjusted bottom spacing
+                            Spacer(flex: isDesktop ? 2 : 1),
+                            
+                            // Copyright with adjusted padding
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: isDesktop ? 10.0 : 
+                                         isTablet ? 15.0 : 20.0,
+                              ),
+                              child: _buildCopyright(),
                             ),
-                          ),
-                          SizedBox(
-                            height: (ResponsiveValue<double>(
-                              context,
-                              defaultValue: bottomPadding,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: bottomPadding * 0.8),
-                                const Condition.largerThan(name: MOBILE, value: bottomPadding * 1.2),
-                              ],
-                            ).value), // Provide a default value
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Text(
-                              SplashLocalization.translate('copyright', _selectedLanguage),
-                              style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+                ],
+              );
+            },
           ),
           if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: LoadingWidget(),
+            _buildLoadingOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleSection({
+    required double titleSize,
+    required double subtitleSize,
+    required double spacing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: TextWithShadow(
+              text: SplashLocalization.translate('title', _selectedLanguage),
+              fontSize: titleSize,
+            ),
+          ),
+          SizedBox(height: spacing),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: TextWithShadow(
+              text: SplashLocalization.translate('subtitle', _selectedLanguage),
+              fontSize: subtitleSize,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoginButton(double width, double height) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomButton(
+        text: SplashLocalization.translate('login', _selectedLanguage),
+        color: const Color(0xFF351B61),
+        textColor: Colors.white,
+        width: width,
+        height: height,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPlayNowButton(double width, double height) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: CustomButton(
+        text: SplashLocalization.translate('play_now', _selectedLanguage),
+        color: const Color(0xFFF1B33A),
+        textColor: Colors.black,
+        width: width,
+        height: height,
+        onTap: () => _checkSignInStatus(context),
+      ),
+    );
+  }
+
+  Widget _buildCopyright() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Text(
+        SplashLocalization.translate('copyright', _selectedLanguage),
+        style: GoogleFonts.vt323(fontSize: 16, color: Colors.grey),
+      ),
+    );
+  }
+
+  Widget _buildLanguageDropdown() {
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final isDesktop = sizingInformation.deviceScreenType == DeviceScreenType.desktop;
+        final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+        
+        // Calculate icon size based on device type
+        final iconSize = isDesktop ? 40.0 :
+                        isTablet ? 36.0 : 32.0;
+        
+        // Calculate menu text size
+        final menuTextSize = isDesktop ? 18.0 :
+                           isTablet ? 16.0 : 14.0;
+
+        return PopupMenuButton<String>(
+          icon: SvgPicture.asset(
+            'assets/icons/language_switcher.svg',
+            width: iconSize,
+            height: iconSize,
+            color: Colors.white,
+          ),
+          padding: EdgeInsets.zero,
+          offset: const Offset(0, 30),
+          color: const Color(0xFF241242),
+          onSelected: (String newValue) {
+            _changeLanguage(newValue);
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'en',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _selectedLanguage == 'en' ? 'English' : 'Ingles',
+                    style: GoogleFonts.vt323(
+                      color: Colors.white,
+                      fontSize: menuTextSize,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (_selectedLanguage == 'en') 
+                    SvgPicture.asset(
+                      'assets/icons/check.svg',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
+                ],
               ),
             ),
-        ],
+            PopupMenuItem<String>(
+              value: 'fil',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Filipino',
+                    style: GoogleFonts.vt323(
+                      color: Colors.white,
+                      fontSize: menuTextSize,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (_selectedLanguage == 'fil') 
+                    SvgPicture.asset(
+                      'assets/icons/check.svg',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: const Center(
+        child: LoadingWidget(),
       ),
     );
   }

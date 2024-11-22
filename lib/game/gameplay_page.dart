@@ -44,7 +44,7 @@ class GameplayPage extends StatefulWidget {
 class GameplayPageState extends State<GameplayPage> {
   FlutterTts flutterTts = FlutterTts();
   double _speechRate = 0.5;
-  double _ttsVolume = 0.5;
+  double _ttsVolume = 1.0;
   double _musicVolume = 0.5; // Default music volume
   double _sfxVolume = 0.5; // Default SFX volume
   List<Map<String, dynamic>> _questions = [];
@@ -311,7 +311,7 @@ void readCurrentQuestion() {
         totalTime = 30000; // Default to 30 seconds
     }
 
-    final startTime = DateTime.now();
+    final startTime = DateTime.now().add(const Duration(seconds: 2)); // Changed to 2 seconds
     
     readCurrentQuestion();
     
@@ -322,7 +322,16 @@ void readCurrentQuestion() {
         return;
       }
 
-      final elapsedTime = DateTime.now().difference(startTime).inMilliseconds;
+      final now = DateTime.now();
+      if (now.isBefore(startTime)) {
+        // During the delay, keep progress at 1.0
+        setState(() {
+          _progress = 1.0;
+        });
+        return;
+      }
+
+      final elapsedTime = now.difference(startTime).inMilliseconds;
       final newProgress = 1.0 - (elapsedTime / totalTime);
       
       setState(() {
@@ -340,12 +349,21 @@ void readCurrentQuestion() {
     _progress = 1.0;
     
     final totalTime = 90000; // 90 seconds
-    final startTime = DateTime.now();
+    final startTime = DateTime.now().add(const Duration(seconds: 2)); // Changed to 2 seconds
     
     readCurrentQuestion();
     
     _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      final elapsedTime = DateTime.now().difference(startTime).inMilliseconds;
+      final now = DateTime.now();
+      if (now.isBefore(startTime)) {
+        // During the delay, keep progress at 1.0
+        setState(() {
+          _progress = 1.0;
+        });
+        return;
+      }
+
+      final elapsedTime = now.difference(startTime).inMilliseconds;
       final newProgress = 1.0 - (elapsedTime / totalTime);
       
       setState(() {

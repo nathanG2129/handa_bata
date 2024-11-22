@@ -311,6 +311,10 @@ flutter:
     - assets/members/Charles.png
     - assets/members/John.png
     - assets/members/Margaret.png
+    - assets/members/Leonard.png
+    - assets/members/Camry.png
+    - assets/members/Nathan.png
+    - assets/members/See.png
     - assets/sprite-sheets/AdvSpriteSheet.png
     - assets/sprite-sheets/Idle.png
 

@@ -265,19 +265,19 @@ class TeamSection extends StatelessWidget {
                   children: const [
                     TeamMemberCard(
                       name: 'Ariel Camry Serrano',
-                      imagePath: '', // Placeholder for now
+                      imagePath: 'assets/members/Camry.png',
                     ),
                     TeamMemberCard(
                       name: 'Leonard Balang',
-                      imagePath: '', // Placeholder for now
+                      imagePath: 'assets/members/Leonard.png',
                     ),
                     TeamMemberCard(
                       name: 'Nathan Paul Gaya',
-                      imagePath: '', // Placeholder for now
+                      imagePath: 'assets/members/Nathan.png',
                     ),
                     TeamMemberCard(
                       name: 'John Christopher See',
-                      imagePath: '', // Placeholder for now
+                      imagePath: 'assets/members/See.png',
                     ),
                   ],
                 ),

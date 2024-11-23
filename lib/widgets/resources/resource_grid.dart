@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/resources/resource_preview.dart';
 
 class ResourceGrid extends StatelessWidget {
@@ -248,22 +249,48 @@ class ResourceGrid extends StatelessWidget {
     final resources = getResources();
     final screenWidth = MediaQuery.of(context).size.width;
     
+    // Adjust grid spacing and aspect ratio based on screen size
+    final gridSpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16.0,
+      tablet: 20.0,
+      desktop: 24.0,
+    );
+
+    // Adjust aspect ratio to give more height for content
+    final childAspectRatio = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 0.8,
+      tablet: 0.7,  // Made taller for tablet to accommodate text
+      desktop: 0.8,
+    );
+
+    // Adjust number of columns based on screen width
+    final crossAxisCount = screenWidth > 1200 
+        ? 4 
+        : screenWidth > 800 
+            ? 2  // Changed from 3 to 2 for tablet to give more width
+            : screenWidth > 450 
+                ? 2 
+                : 1;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 50),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 50,
+          tablet: 30,  // Reduced padding for tablet to use more space
+          desktop: 50,
+        ),
+      ),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: screenWidth > 1200 
-              ? 4 
-              : screenWidth > 800 
-                  ? 3 
-                  : screenWidth > 450 
-                      ? 2 
-                      : 1,
-          childAspectRatio: 0.8,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: gridSpacing,
+          mainAxisSpacing: gridSpacing,
         ),
         itemCount: resources.length,
         itemBuilder: (context, index) {

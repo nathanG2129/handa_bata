@@ -5,7 +5,8 @@ import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/resources/resource_grid.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class ResourcesPage extends StatefulWidget {
   final String selectedLanguage;
@@ -23,14 +24,7 @@ class ResourcesPage extends StatefulWidget {
 
 class _ResourcesPageState extends State<ResourcesPage> {
   @override
-  void initState() {
-    super.initState();
-    print('ResourcesPage initialized with category: ${widget.category}');
-  }
-
-  @override
   Widget build(BuildContext context) {
-    print('Building ResourcesPage with category: ${widget.category}');
     return WillPopScope(
       onWillPop: () async {
         Navigator.pushReplacement(
@@ -42,88 +36,97 @@ class _ResourcesPageState extends State<ResourcesPage> {
         return false;
       },
       child: Scaffold(
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  // Background
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  // Content
-                  Column(
-                    children: [
-                      // Header
-                      HeaderWidget(
-                        selectedLanguage: widget.selectedLanguage,
-                        onBack: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
-                            ),
-                          );
-                        },
-                        onChangeLanguage: (String newLanguage) {
-                          // Handle language change
-                        },
-                      ),
-                      // Main Content
-                      Expanded(
-                        child: CustomScrollView(
-                          slivers: [
-                            SliverList(
-                              delegate: SliverChildListDelegate([
-                                const SizedBox(height: 20),
-                                Center(
-                                  child: TextWithShadow(
-                                    text: widget.category,
-                                    fontSize: 70,
+        backgroundColor: const Color(0xFF2C1B47),
+        body: Stack(
+          children: [
+            // Background
+            SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            // Content
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                final maxWidth = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: double.infinity,
+                  tablet: MediaQuery.of(context).size.width * 0.9,
+                  desktop: 1200,
+                );
+
+                final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: 16.0,
+                  tablet: 24.0,
+                  desktop: 48.0,
+                );
+
+                final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: 48.0,
+                  tablet: 60.0,
+                  desktop: 70.0,
+                );
+
+                return Column(
+                  children: [
+                    // Header
+                    HeaderWidget(
+                      selectedLanguage: widget.selectedLanguage,
+                      onBack: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
+                          ),
+                        );
+                      },
+                      onChangeLanguage: (String newLanguage) {
+                        // Handle language change
+                      },
+                    ),
+                    // Main content with constrained width
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Constrained content
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: maxWidth),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: 20),
+                                      TextWithShadow(
+                                        text: widget.category,
+                                        fontSize: titleFontSize,
+                                      ),
+                                      const SizedBox(height: 20),
+                                      ResourceGrid(
+                                        category: widget.category,
+                                        selectedLanguage: widget.selectedLanguage,
+                                      ),
+                                      const SizedBox(height: 40),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 20),
-                                ResourceGrid(
-                                  category: widget.category,
-                                  selectedLanguage: widget.selectedLanguage,
-                                ),
-                                const SizedBox(height: 40),
-                              ]),
-                            ),
-                            // Footer
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Column(
-                                children: [
-                                  const Spacer(),
-                                  FooterWidget(selectedLanguage: widget.selectedLanguage),
-                                ],
                               ),
                             ),
+                            // Footer outside of constraints
+                            FooterWidget(selectedLanguage: widget.selectedLanguage),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
+          ],
         ),
       ),
     );

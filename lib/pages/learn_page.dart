@@ -8,7 +8,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class LearnPage extends StatefulWidget {
   final String selectedLanguage;
@@ -80,7 +81,7 @@ class LearnPageState extends State<LearnPage> {
     }
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, SizingInformation sizingInformation) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -94,73 +95,91 @@ class LearnPageState extends State<LearnPage> {
       );
     }
 
-    return CustomScrollView(
-      slivers: [
-        SliverList(
-          delegate: SliverChildListDelegate(
-            [
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextWithShadow(
-                          text: _content!['title'],
-                          fontSize: 48,
-                        ),
-                        const SizedBox(height: 20),
-                        ..._buildContentSections(),
-                        if (_content!.containsKey('references')) ...[
-                          const SizedBox(height: 40),
-                          Text(
-                            widget.selectedLanguage == 'en' ? 'References' : 'Mga Sanggunian',
-                            style: GoogleFonts.rubik(
-                              fontSize: 32,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ..._buildReferences(),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
+    final contentPadding = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16.0,
+      tablet: 24.0,
+      desktop: 32.0,
+    );
+
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 32.0,
+      tablet: 40.0,
+      desktop: 48.0,
+    );
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: Colors.black,
+                width: 1,
               ),
-              const SizedBox(height: 40),
-            ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(contentPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextWithShadow(
+                    text: _content!['title'],
+                    fontSize: titleFontSize,
+                  ),
+                  const SizedBox(height: 20),
+                  ..._buildContentSections(sizingInformation),
+                  if (_content!.containsKey('references')) ...[
+                    const SizedBox(height: 40),
+                    Text(
+                      widget.selectedLanguage == 'en' ? 'References' : 'Mga Sanggunian',
+                      style: GoogleFonts.rubik(
+                        fontSize: ResponsiveUtils.valueByDevice<double>(
+                          context: context,
+                          mobile: 24.0,
+                          tablet: 28.0,
+                          desktop: 32.0,
+                        ),
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ..._buildReferences(sizingInformation),
+                  ],
+                ],
+              ),
+            ),
           ),
-        ),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
-            children: [
-              const Spacer(),
-              FooterWidget(selectedLanguage: widget.selectedLanguage),
-            ],
-          ),
-        ),
-      ],
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 
-  List<Widget> _buildContentSections() {
+  List<Widget> _buildContentSections(SizingInformation sizingInformation) {
     List<Widget> widgets = [];
     
     for (var section in _content!['content']) {
+      // Update font sizes and spacing based on screen size
+      final headingFontSize = ResponsiveUtils.valueByDevice<double>(
+        context: context,
+        mobile: 20.0,
+        tablet: 24.0,
+        desktop: 28.0,
+      );
+
+      ResponsiveUtils.valueByDevice<double>(
+        context: context,
+        mobile: 14.0,
+        tablet: 16.0,
+        desktop: 18.0,
+      );
+
       // Special handling for "Did you know?" sections
       if (section.containsKey('heading') && 
           (section['heading'] == 'Did you know?' || 
@@ -197,7 +216,7 @@ class LearnPageState extends State<LearnPage> {
                       Text(
                         section['heading'],
                         style: GoogleFonts.rubik(
-                          fontSize: 24,
+                          fontSize: headingFontSize,
                           color: const Color(0xFF351B61),
                           fontWeight: FontWeight.bold,
                         ),
@@ -238,7 +257,7 @@ class LearnPageState extends State<LearnPage> {
                     child: Text(
                       listItem['subheading'],
                       style: GoogleFonts.rubik(
-                        fontSize: 20,
+                        fontSize: headingFontSize,
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                       ),
@@ -699,7 +718,14 @@ class LearnPageState extends State<LearnPage> {
     );
   }
 
-  List<Widget> _buildReferences() {
+  List<Widget> _buildReferences(SizingInformation sizingInformation) {
+    final fontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 12.0,
+      tablet: 14.0,
+      desktop: 16.0,
+    );
+
     return (_content!['references'] as List).map((reference) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
@@ -708,11 +734,10 @@ class LearnPageState extends State<LearnPage> {
           style: {
             "body": Style(
               color: Colors.black,
-              fontSize: FontSize(14),
+              fontSize: FontSize(fontSize),
               fontFamily: 'Rubik',
               margin: Margins.zero,
             ),
-            // Style specifically for italic tags
             "i": Style(
               fontStyle: FontStyle.italic,
             ),
@@ -736,52 +761,73 @@ class LearnPageState extends State<LearnPage> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF2C1B47),
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  Column(
-                    children: [
-                      HeaderWidget(
-                        selectedLanguage: _currentLanguage,
-                        onBack: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MainPage(selectedLanguage: _currentLanguage),
-                            ),
-                          );
-                        },
-                        onChangeLanguage: _handleLanguageChange,
-                      ),
-                      Expanded(
-                        child: _buildContent(context),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+        body: Stack(
+          children: [
+            // Background
+            SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
+            // Content
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                final maxWidth = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: double.infinity,
+                  tablet: MediaQuery.of(context).size.width * 0.9,
+                  desktop: 1200,
+                );
+
+                final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: 16.0,
+                  tablet: 24.0,
+                  desktop: 48.0,
+                );
+
+                return Column(
+                  children: [
+                    // Header
+                    HeaderWidget(
+                      selectedLanguage: _currentLanguage,
+                      onBack: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MainPage(selectedLanguage: _currentLanguage),
+                          ),
+                        );
+                      },
+                      onChangeLanguage: _handleLanguageChange,
+                    ),
+                    // Main content with constrained width
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Constrained content
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: maxWidth),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                                  child: _buildContent(context, sizingInformation),
+                                ),
+                              ),
+                            ),
+                            // Footer outside of constraints
+                            FooterWidget(selectedLanguage: widget.selectedLanguage),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

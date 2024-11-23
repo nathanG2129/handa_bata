@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import '../services/auth_service.dart';
 import '../pages/main/main_page.dart';
 import '../widgets/buttons/button_3d.dart';
 import '../widgets/loading_widget.dart';
+import '../utils/responsive_utils.dart';
+import '../constants/breakpoints.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../localization/email_verification/localization.dart';
+import '../services/user_profile_service.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   final String email;
@@ -111,7 +114,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
         if (!mounted) return;
         Navigator.of(context).pop();
       } else {
-        // Handle registration verification
+        // Verify OTP first
         final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
         final result = await functions
             .httpsCallable('verifyOTP')
@@ -122,10 +125,11 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
 
         if (result.data['success']) {
           try {
-            // Check if this is a guest conversion
+            // Check if this is a guest conversion or new account
             User? currentUser = FirebaseAuth.instance.currentUser;
             
             if (currentUser != null) {
+              // Guest conversion flow
               String? role = await _authService.getUserRole(currentUser.uid);
               
               if (role == 'guest') {
@@ -144,20 +148,31 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                 print('🔄 Completing guest conversion...');
                 await _authService.completeGuestConversion();
                 print('✅ Guest conversion completed');
-              } else {
-                // Create new user account
-                final user = await _authService.registerWithEmailAndPassword(
-                  widget.email,
-                  widget.password!,
-                  widget.username!,
-                  '',  // Empty nickname, will be generated
-                  widget.birthday!,
-                );
-                
-                if (user == null) {
-                  throw Exception('Failed to create account');
-                }
               }
+            } else {
+              // Create new user account
+              print('👤 Creating new user account...');
+              final user = await _authService.registerWithEmailAndPassword(
+                widget.email,
+                widget.password!,
+                widget.username!,
+                '',  // Empty nickname, will be generated
+                widget.birthday!,
+              );
+              
+              if (user == null) {
+                throw Exception('Failed to create account');
+              }
+
+              // Initialize profile using UserProfileService
+              final userProfileService = UserProfileService();
+              await userProfileService.batchUpdateProfile({
+                'username': widget.username,
+                'email': widget.email,
+                'birthday': widget.birthday,
+              });
+
+              print('✅ New user account created successfully');
             }
 
             if (!mounted) return;
@@ -224,141 +239,112 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (!_isLoading) {
-          await _closeDialog();
-        }
-        return false;
-      },
-      child: GestureDetector(
-        onTap: _isLoading ? null : _closeDialog,
-        child: Stack(
-          children: [
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () {}, // Prevent dialog from closing when clicking inside
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: AbsorbPointer(
-                        absorbing: _isLoading,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: Container(
-                            width: ResponsiveValue<double>(
-                              context,
-                              defaultValue: 400,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 300),
-                                const Condition.largerThan(name: TABLET, value: 400),
-                              ],
-                            ).value,
-                            margin: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: SingleChildScrollView(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    TextWithShadow(
-                                      text: widget.isEmailChange 
-                                        ? EmailVerificationLocalization.translate('title_change_email', widget.selectedLanguage)
-                                        : EmailVerificationLocalization.translate('title', widget.selectedLanguage),
-                                      fontSize: 48,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      EmailVerificationLocalization.translate('enter_code', widget.selectedLanguage),
-                                      style: GoogleFonts.rubik(
-                                        fontSize: 18,
-                                        color: Colors.black87,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    SizedBox(
-                                      width: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 200,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 150),
-                                          const Condition.largerThan(name: TABLET, value: 250),
-                                        ],
-                                      ).value,
-                                      child: TextField(
-                                        controller: _otpController,
-                                        textAlign: TextAlign.center,
-                                        keyboardType: TextInputType.number,
-                                        style: GoogleFonts.vt323(
-                                          fontSize: 32,
-                                          color: Colors.black,
-                                        ),
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.zero,
-                                            borderSide: BorderSide(color: Colors.grey),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.zero,
-                                            borderSide: BorderSide(color: Color(0xFF3A1A5F), width: 1),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.zero,
-                                            borderSide: BorderSide(color: Colors.grey),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      '${EmailVerificationLocalization.translate('code_expires', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
-                                      style: GoogleFonts.rubik(
-                                        fontSize: 16,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Button3D(
-                                      onPressed: _verifyOTP,
-                                      height: 45,
-                                      child: Text(
-                                        widget.isEmailChange 
-                                          ? EmailVerificationLocalization.translate('verify_button', widget.selectedLanguage)
-                                          : EmailVerificationLocalization.translate('signup_button', widget.selectedLanguage),
-                                        style: GoogleFonts.vt323(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: _canResend ? _sendOTP : null,
-                                      child: Text(
-                                        EmailVerificationLocalization.translate('resend_code', widget.selectedLanguage),
-                                        style: GoogleFonts.rubik(
-                                          fontSize: 16,
-                                          color: _canResend ? const Color(0xFF3A1A5F) : Colors.grey,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
+    return ResponsiveBuilder(
+      breakpoints: AppBreakpoints.screenBreakpoints,
+      builder: (context, sizingInformation) {
+        final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.9,
+          tablet: 450,
+          desktop: 500,
+        );
+
+        final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 36,
+          tablet: 48,
+          desktop: 56,
+        );
+
+        final textFontSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 18,
+          desktop: 20,
+        );
+
+        final otpFieldWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 150,
+          tablet: 200,
+          desktop: 250,
+        );
+
+        final dialogPadding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 20,
+          tablet: 24,
+          desktop: 28,
+        );
+
+        return WillPopScope(
+          onWillPop: () async {
+            if (!_isLoading) {
+              await _closeDialog();
+            }
+            return false;
+          },
+          child: GestureDetector(
+            onTap: _isLoading ? null : _closeDialog,
+            child: Stack(
+              children: [
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {}, // Prevent dialog from closing when clicking inside
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: AbsorbPointer(
+                            absorbing: _isLoading,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                width: dialogWidth,
+                                margin: EdgeInsets.all(dialogPadding),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
                                     ),
                                   ],
+                                ),
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(dialogPadding),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextWithShadow(
+                                          text: widget.isEmailChange 
+                                            ? EmailVerificationLocalization.translate('title_change_email', widget.selectedLanguage)
+                                            : EmailVerificationLocalization.translate('title', widget.selectedLanguage),
+                                          fontSize: titleFontSize,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          EmailVerificationLocalization.translate('enter_code', widget.selectedLanguage),
+                                          style: GoogleFonts.rubik(
+                                            fontSize: textFontSize,
+                                            color: Colors.black87,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        _buildOTPField(otpFieldWidth, textFontSize),
+                                        const SizedBox(height: 16),
+                                        _buildTimerText(textFontSize),
+                                        const SizedBox(height: 24),
+                                        _buildButtons(textFontSize),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -368,16 +354,96 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                     ),
                   ),
                 ),
-              ),
+                if (_isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.7),
+                    child: const LoadingWidget(),
+                  ),
+              ],
             ),
-            if (_isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.7),
-                child: const LoadingWidget(),
-              ),
-          ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOTPField(double width, double fontSize) {
+    return SizedBox(
+      width: width,
+      child: TextField(
+        controller: _otpController,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        style: GoogleFonts.vt323(
+          fontSize: fontSize * 2,
+          color: Colors.black,
+        ),
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: Color(0xFF3A1A5F), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: Colors.grey),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimerText(double fontSize) {
+    return Text(
+      '${EmailVerificationLocalization.translate('code_expires', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
+      style: GoogleFonts.rubik(
+        fontSize: fontSize,
+        color: Colors.black,
+      ),
+    );
+  }
+
+  Widget _buildButtons(double fontSize) {
+    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 45,
+      tablet: 50,
+      desktop: 55,
+    );
+
+    return Column(
+      children: [
+        Button3D(
+          onPressed: _verifyOTP,
+          backgroundColor: const Color(0xFFF1B33A),
+          borderColor: const Color(0xFF916D23),
+          height: buttonHeight,
+          child: Text(
+            widget.isEmailChange 
+              ? EmailVerificationLocalization.translate('verify_button', widget.selectedLanguage)
+              : EmailVerificationLocalization.translate('signup_button', widget.selectedLanguage),
+            style: GoogleFonts.vt323(
+              fontSize: fontSize * 1.2,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: _canResend ? _sendOTP : null,
+          child: Text(
+            EmailVerificationLocalization.translate('resend_code', widget.selectedLanguage),
+            style: GoogleFonts.rubik(
+              fontSize: fontSize,
+              color: _canResend ? const Color(0xFF3A1A5F) : Colors.grey,
+              decoration: TextDecoration.underline,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
   }
 } 

@@ -67,24 +67,25 @@ class PlayPageState extends State<PlayPage> {
             final screenWidth = MediaQuery.of(context).size.width;
             
             // Calculate content width based on device type
-            final contentWidth = sizingInformation.deviceScreenType == DeviceScreenType.mobile
-                ? screenWidth  // Full width for mobile
-                : sizingInformation.deviceScreenType == DeviceScreenType.tablet
-                    ? screenWidth  // Full width for tablet
-                    : 1200.0;     // Max width for desktop
+            final contentWidth = screenWidth;  // Always use full width for the container
 
-            // Calculate button spacing
-            final buttonSpacing = ResponsiveUtils.valueByDevice(
+            // Calculate button container width for tablet - reduced from 0.9 to 0.7
+            final buttonContainerWidth = sizingInformation.deviceScreenType == DeviceScreenType.tablet
+                ? screenWidth * 0.7  // 70% width for buttons container only (reduced from 90%)
+                : contentWidth;
+
+            // Calculate spacing - reduced for tablet
+            final spacing = ResponsiveUtils.valueByDevice(
               context: context,
               mobile: 20.0,
-              tablet: 30.0,
-              desktop: 40.0,
+              tablet: 20.0,  // Reduced from 40.0 to bring buttons closer
+              desktop: 60.0,
             );
 
-            // Calculate top padding
-            final topPadding = ResponsiveUtils.valueByDevice(
+            // Calculate vertical padding for buttons container
+            final verticalPadding = ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 40.0,
+              mobile: 0.0,
               tablet: 60.0,
               desktop: 80.0,
             );
@@ -107,7 +108,7 @@ class PlayPageState extends State<PlayPage> {
                     ),
                     child: Column(
                       children: [
-                        // Header
+                        // Header (full width)
                         HeaderWidget(
                           selectedLanguage: _selectedLanguage,
                           onBack: () {
@@ -121,44 +122,81 @@ class PlayPageState extends State<PlayPage> {
                           onChangeLanguage: _changeLanguage,
                         ),
                         
-                        // Scrollable Content
+                        // Center content vertically in the remaining space
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: Center(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: buttonContainerWidth,
+                              ),
                               child: Padding(
-                                padding: EdgeInsets.only(top: topPadding),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    AdventureButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage),
+                                padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                                child: sizingInformation.deviceScreenType == DeviceScreenType.mobile
+                                    // Mobile layout (vertical)
+                                    ? Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          AdventureButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
-                                    ),
-                                    SizedBox(height: buttonSpacing),
-                                    ArcadeButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage),
+                                          SizedBox(height: spacing),
+                                          ArcadeButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                        ],
+                                      )
+                                    // Tablet/Desktop layout (horizontal)
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: AdventureButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => AdventurePage(selectedLanguage: _selectedLanguage),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          SizedBox(width: spacing),
+                                          Expanded(
+                                            child: ArcadeButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
                           ),
                         ),
                         
-                        // Footer
+                        // Footer (full width)
                         FooterWidget(selectedLanguage: _selectedLanguage),
                       ],
                     ),

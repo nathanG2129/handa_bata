@@ -13,6 +13,8 @@ import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/widgets/menu/menu_drawer.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String selectedLanguage;
@@ -342,166 +344,190 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        left: 20,
-        right: 20,
-        bottom: 16,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF351B61),
-        border: Border(
-          bottom: BorderSide(color: Colors.white, width: 2.0),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Back button
-          Transform.translate(
-            offset: const Offset(0, 2),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, size: 32, color: Colors.white),
-              onPressed: widget.onBack,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        return Container(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + ResponsiveUtils.valueByDevice(
+              context: context,
+              mobile: 8,
+              tablet: 12,
+              desktop: 16,
+            ),
+            left: ResponsiveUtils.valueByDevice(
+              context: context,
+              mobile: 16,
+              tablet: 20,
+              desktop: 24,
+            ),
+            right: ResponsiveUtils.valueByDevice(
+              context: context,
+              mobile: 16,
+              tablet: 20,
+              desktop: 24,
+            ),
+            bottom: ResponsiveUtils.valueByDevice(
+              context: context,
+              mobile: 12,
+              tablet: 14,
+              desktop: 16,
             ),
           ),
-          // Spacer to push everything else to the right
-          const Spacer(),
-          // Right side items grouped together
-          Row(
+          decoration: const BoxDecoration(
+            color: Color(0xFF351B61),
+            border: Border(
+              bottom: BorderSide(color: Colors.white, width: 2.0),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Transform.translate(
-                offset: const Offset(0, 2),
-                child: _buildAvatarButton(),
-              ),
-              const SizedBox(width: 18),
-              Transform.translate(
-                offset: const Offset(0, 2),
-                child: PopupMenuButton<String>(
-                  icon: SvgPicture.asset(
-                    'assets/icons/language_switcher.svg',
-                    width: 32,
-                    height: 32,
-                    color: Colors.white,
-                  ),
-                  padding: EdgeInsets.zero,
-                  offset: const Offset(0, 65),
-                  color: const Color(0xFF241242),
-                  onSelected: (String newValue) {
-                    widget.onChangeLanguage(newValue);
-                  },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    PopupMenuItem<String>(
-                      value: 'en',
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            widget.selectedLanguage == 'en' ? 'English' : 'Ingles',
-                            style: GoogleFonts.vt323(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (widget.selectedLanguage == 'en') 
-                            SvgPicture.asset(
-                              'assets/icons/check.svg',
-                              width: 24,
-                              height: 24,
-                              color: Colors.white,
-                            ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'fil',
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Filipino',
-                            style: GoogleFonts.vt323(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (widget.selectedLanguage == 'fil') 
-                            SvgPicture.asset(
-                              'assets/icons/check.svg',
-                              width: 24,
-                              height: 24,
-                              color: Colors.white,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
+              // Back button
               Transform.translate(
                 offset: const Offset(0, 2),
                 child: IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 32, color: Colors.white),
+                  onPressed: widget.onBack,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: SvgPicture.string(
-                    _isMenuOpen ? _getCloseMenuSvg() : '''
-                      <svg
-                        width="32"
-                        height="32"
-                        fill="white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm16 5H4v2h16v-2z"
-                          fill="white"
-                        />
-                      </svg>
-                    ''',
-                    width: 40,
-                    height: 40,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isMenuOpen = true;
-                    });
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      barrierColor: Colors.transparent,
-                      builder: (BuildContext context) {
-                        return MenuDrawer(
-                          onClose: () {
-                            setState(() {
-                              _isMenuOpen = false;
-                            });
-                            Navigator.of(context).pop();
-                          },
-                          selectedLanguage: widget.selectedLanguage,
-                        );
-                      },
-                    ).then((_) {
-                      // This ensures the icon changes back when dialog is dismissed by tapping outside
-                      setState(() {
-                        _isMenuOpen = false;
-                      });
-                    });
-                  },
                 ),
+              ),
+              // Spacer to push everything else to the right
+              const Spacer(),
+              // Right side items grouped together
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, 2),
+                    child: _buildAvatarButton(),
+                  ),
+                  const SizedBox(width: 18),
+                  Transform.translate(
+                    offset: const Offset(0, 2),
+                    child: PopupMenuButton<String>(
+                      icon: SvgPicture.asset(
+                        'assets/icons/language_switcher.svg',
+                        width: 32,
+                        height: 32,
+                        color: Colors.white,
+                      ),
+                      padding: EdgeInsets.zero,
+                      offset: const Offset(0, 65),
+                      color: const Color(0xFF241242),
+                      onSelected: (String newValue) {
+                        widget.onChangeLanguage(newValue);
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'en',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.selectedLanguage == 'en' ? 'English' : 'Ingles',
+                                style: GoogleFonts.vt323(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (widget.selectedLanguage == 'en') 
+                                SvgPicture.asset(
+                                  'assets/icons/check.svg',
+                                  width: 24,
+                                  height: 24,
+                                  color: Colors.white,
+                                ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'fil',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Filipino',
+                                style: GoogleFonts.vt323(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (widget.selectedLanguage == 'fil') 
+                                SvgPicture.asset(
+                                  'assets/icons/check.svg',
+                                  width: 24,
+                                  height: 24,
+                                  color: Colors.white,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Transform.translate(
+                    offset: const Offset(0, 2),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: SvgPicture.string(
+                        _isMenuOpen ? _getCloseMenuSvg() : '''
+                          <svg
+                            width="32"
+                            height="32"
+                            fill="white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm16 5H4v2h16v-2z"
+                              fill="white"
+                            />
+                          </svg>
+                        ''',
+                        width: 40,
+                        height: 40,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isMenuOpen = true;
+                        });
+                        showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierColor: Colors.transparent,
+                          builder: (BuildContext context) {
+                            return MenuDrawer(
+                              onClose: () {
+                                setState(() {
+                                  _isMenuOpen = false;
+                                });
+                                Navigator.of(context).pop();
+                              },
+                              selectedLanguage: widget.selectedLanguage,
+                            );
+                          },
+                        ).then((_) {
+                          // This ensures the icon changes back when dialog is dismissed by tapping outside
+                          setState(() {
+                            _isMenuOpen = false;
+                          });
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
 }

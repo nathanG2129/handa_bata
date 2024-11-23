@@ -11,6 +11,8 @@ import 'package:handabatamae/pages/about_page.dart';
 import 'package:handabatamae/pages/learn_page.dart';
 import 'package:handabatamae/pages/resources_page.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class MenuDrawer extends StatefulWidget {
   final VoidCallback onClose;
@@ -133,190 +135,216 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-    final headerHeight = statusBarHeight + 60;
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final drawerWidth = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.75,  // 75% width for mobile
+          tablet: MediaQuery.of(context).size.width * 0.5,   // 50% width for tablet
+          desktop: MediaQuery.of(context).size.width * 0.4,  // 40% width for desktop
+        );
 
-    return Material(
-      type: MaterialType.transparency,
-      child: WillPopScope(
-        onWillPop: () async {
-          await _closeDrawer();
-          return false;
-        },
-        child: GestureDetector(
-          onTap: _closeDrawer,
-          child: Stack(
-            children: [
-              Positioned(
-                top: headerHeight,
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: () {},
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.75,
-                      color: const Color(0xFF241242),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildMenuItem('Play', onTap: () async {
-                              // Show loading overlay
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return WillPopScope(
-                                    onWillPop: () async => false,
-                                    child: const LoadingWidget(),
-                                  );
-                                },
-                              );
+        final menuFontSize = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 20.0,
+          tablet: 22.0,
+          desktop: 24.0,
+        );
 
-                              // Close drawer first
-                              await _closeDrawer();
-                              
-                              if (mounted) {
-                                // Remove loading overlay
-                                Navigator.of(context).pop();
-                                
-                                // Use pushReplacement to navigate to PlayPage
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PlayPage(
-                                      title: 'Play',
-                                      selectedLanguage: widget.selectedLanguage,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }),
-                            _buildDivider(),
-                            _buildExpandableMenuItem(
-                              'Learn',
-                              items: [],
-                              isLearn: true,
-                            ),
-                            _buildDivider(),
-                            _buildExpandableMenuItem(
-                              'Resources',
-                              expandedNotifier: _resourcesExpanded,
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem('Hotlines', onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => HotlinesPage(
-                                    selectedLanguage: widget.selectedLanguage,
-                                  ),
+        final submenuFontSize = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 18.0,
+          tablet: 20.0,
+          desktop: 22.0,
+        );
+
+        final menuPadding = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 20.0,
+          tablet: 24.0,
+          desktop: 28.0,
+        );
+
+        final submenuPadding = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 36.0,
+          tablet: 40.0,
+          desktop: 44.0,
+        );
+
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        final headerHeight = statusBarHeight + 60;
+
+        return Material(
+          type: MaterialType.transparency,
+          child: WillPopScope(
+            onWillPop: () async {
+              await _closeDrawer();
+              return false;
+            },
+            child: GestureDetector(
+              onTap: _closeDrawer,
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: headerHeight,
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Container(
+                          width: drawerWidth,
+                          color: const Color(0xFF241242),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildMenuItem(
+                                  'Play',
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  onTap: () async {
+                                    // Show loading overlay
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return WillPopScope(
+                                          onWillPop: () async => false,
+                                          child: const LoadingWidget(),
+                                        );
+                                      },
+                                    );
+
+                                    // Close drawer first
+                                    await _closeDrawer();
+                                    
+                                    if (mounted) {
+                                      // Remove loading overlay
+                                      Navigator.of(context).pop();
+                                      
+                                      // Use pushReplacement to navigate to PlayPage
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PlayPage(
+                                            title: 'Play',
+                                            selectedLanguage: widget.selectedLanguage,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 ),
-                              );
-                              _closeDrawer();
-                            }),
-                            _buildDivider(),
-                            _buildMenuItem('About', onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AboutPage(
-                                    selectedLanguage: widget.selectedLanguage,
-                                  ),
+                                _buildDivider(),
+                                _buildExpandableMenuItem(
+                                  'Learn',
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  submenuPadding: submenuPadding,
+                                  submenuFontSize: submenuFontSize,
+                                  items: [],
+                                  isLearn: true,
                                 ),
-                              );
-                              _closeDrawer();
-                            }),
-                            _buildDivider(),
-                            const SizedBox(height: 8),
-                            _buildMenuItem(
-                              _userRole == 'guest' ? 'Register' : 'Log out',
-                              onTap: _userRole == 'guest' ? _navigateToRegister : _logout,
+                                _buildDivider(),
+                                _buildExpandableMenuItem(
+                                  'Resources',
+                                  expandedNotifier: _resourcesExpanded,
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  submenuPadding: submenuPadding,
+                                  submenuFontSize: submenuFontSize,
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem('Hotlines', 
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HotlinesPage(
+                                          selectedLanguage: widget.selectedLanguage,
+                                        ),
+                                      ),
+                                    );
+                                    _closeDrawer();
+                                  }
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem('About', 
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AboutPage(
+                                          selectedLanguage: widget.selectedLanguage,
+                                        ),
+                                      ),
+                                    );
+                                    _closeDrawer();
+                                  }
+                                ),
+                                _buildDivider(),
+                                const SizedBox(height: 8),
+                                _buildMenuItem(
+                                  _userRole == 'guest' ? 'Register' : 'Log out',
+                                  fontSize: menuFontSize,
+                                  padding: menuPadding,
+                                  onTap: _userRole == 'guest' ? _navigateToRegister : _logout,
+                                ),
+                                const SizedBox(height: 20),
+                              ],
                             ),
-                            const SizedBox(height: 20),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildMenuItem(String title, {required VoidCallback onTap}) {
+  Widget _buildMenuItem(String title, {
+    required VoidCallback onTap,
+    required double fontSize,
+    required double padding,
+  }) {
     return InkWell(
-      onTap: () async {
-        // Show loading overlay
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return WillPopScope(
-              onWillPop: () async => false,
-              child: const LoadingWidget(),
-            );
-          },
-        );
-
-        // Close drawer first
-        await _closeDrawer();
-        
-        if (mounted) {
-          Navigator.of(context).pop(); // Remove loading overlay
-          
-          // Handle navigation based on title
-          switch (title) {
-            case 'Hotlines':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HotlinesPage(
-                    selectedLanguage: widget.selectedLanguage,
-                  ),
-                ),
-              );
-              break;
-            case 'About':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AboutPage(
-                    selectedLanguage: widget.selectedLanguage,
-                  ),
-                ),
-              );
-              break;
-            default:
-              onTap();
-          }
-        }
-      },
+      onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.75),
         child: Text(
           title,
           style: GoogleFonts.vt323(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: fontSize,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildExpandableMenuItem(String title, {
+  Widget _buildExpandableMenuItem(
+    String title, {
     bool isLearn = false,
     List<String>? items,
     ValueNotifier<bool>? expandedNotifier,
     List<Widget>? children,
+    required double fontSize,
+    required double padding,
+    required double submenuPadding,
+    required double submenuFontSize,
   }) {
     final notifier = expandedNotifier ?? (title == 'Learn' ? _learnExpanded : _resourcesExpanded);
     
@@ -329,7 +357,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
           title,
           style: GoogleFonts.vt323(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: fontSize,
           ),
         ),
         trailing: ValueListenableBuilder<bool>(
@@ -348,42 +376,96 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         },
         children: children ?? [
           if (isLearn) ...[
-            // Earthquakes section
             _buildExpandableMenuItem(
               'Earthquakes',
               expandedNotifier: _earthquakesExpanded,
+              fontSize: fontSize,
+              padding: padding,
+              submenuPadding: submenuPadding,
+              submenuFontSize: submenuFontSize,
               children: [
-                _buildSubmenuItem('About Earthquakes'),
-                _buildSubmenuItem('Disastrous Earthquakes in the Philippines'),
-                _buildSubmenuItem('Preparing for Earthquakes'),
-                _buildSubmenuItem('Earthquake Intensity Scale'),
+                _buildSubmenuItem(
+                  'About Earthquakes',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Disastrous Earthquakes in the Philippines',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Preparing for Earthquakes',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Earthquake Intensity Scale',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
               ],
             ),
-            // Typhoons section
             _buildExpandableMenuItem(
               'Typhoons',
               expandedNotifier: _typhoonsExpanded,
+              fontSize: fontSize,
+              padding: padding,
+              submenuPadding: submenuPadding,
+              submenuFontSize: submenuFontSize,
               children: [
-                _buildSubmenuItem('About Typhoons'),
-                _buildSubmenuItem('Disastrous Typhoons in the Philippines'),
-                _buildSubmenuItem('Preparing for Typhoons'),
-                _buildSubmenuItem('Tropical Cyclone Warning Systems'),
-                _buildSubmenuItem('Rainfall Warning System'),
+                _buildSubmenuItem(
+                  'About Typhoons',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Disastrous Typhoons in the Philippines',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Preparing for Typhoons',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Tropical Cyclone Warning Systems',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Rainfall Warning System',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
               ],
             ),
-            // Other Information section
             _buildExpandableMenuItem(
               'Other Information',
               expandedNotifier: _otherInfoExpanded,
+              fontSize: fontSize,
+              padding: padding,
+              submenuPadding: submenuPadding,
+              submenuFontSize: submenuFontSize,
               children: [
-                _buildSubmenuItem('Guidelines on the Cancellation or Suspension of Classes'),
-                _buildSubmenuItem('Emergency Go Bag'),
+                _buildSubmenuItem(
+                  'Guidelines on the Cancellation or Suspension of Classes',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
+                _buildSubmenuItem(
+                  'Emergency Go Bag',
+                  fontSize: submenuFontSize,
+                  padding: submenuPadding,
+                ),
               ],
             ),
           ] else if (title == 'Resources') ...[
-            // Resources submenu items
             _buildSubmenuItem(
               'Infographics',
+              fontSize: submenuFontSize,
+              padding: submenuPadding,
               onTap: () async {
                 // Show loading overlay
                 showDialog(
@@ -419,6 +501,8 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
             ),
             _buildSubmenuItem(
               'Videos',
+              fontSize: submenuFontSize,
+              padding: submenuPadding,
               onTap: () async {
                 // Show loading overlay
                 showDialog(
@@ -453,14 +537,19 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               },
             ),
           ] else if (items != null) ...[
-            ...items.map((item) => _buildSubmenuItem(item)),
+            ...items.map((item) => _buildSubmenuItem(item, fontSize: submenuFontSize, padding: submenuPadding)),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSubmenuItem(String title, {VoidCallback? onTap}) {
+  Widget _buildSubmenuItem(
+    String title, {
+    VoidCallback? onTap,
+    required double fontSize,
+    required double padding,
+  }) {
     String getCategory(String title) {
       // First, map the display title to the JSON key
       // ignore: unused_local_variable
@@ -544,12 +633,17 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.only(left: 36, right: 20, top: 12, bottom: 12),
+        padding: EdgeInsets.only(
+          left: padding,
+          right: padding * 0.6,
+          top: padding * 0.6,
+          bottom: padding * 0.6,
+        ),
         child: Text(
           title,
           style: GoogleFonts.vt323(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: fontSize,
           ),
         ),
       ),

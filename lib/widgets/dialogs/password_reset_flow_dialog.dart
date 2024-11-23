@@ -3,10 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import '../../widgets/buttons/button_3d.dart';
 import '../../localization/password_reset_flow/localization.dart';
 import '../../services/auth_service.dart';
+import '../../utils/responsive_utils.dart';
+import '../../constants/breakpoints.dart';
+import '../../widgets/loading_widget.dart';
 
 class PasswordResetFlowDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -104,12 +107,16 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
 
     try {
       await _authService.verifyPasswordResetOTP(widget.email, _otpController.text);
-      setState(() => _otpVerified = true);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _otpVerified = true;
+        });
+      }
     } catch (e) {
-      _showError(e.toString());
-    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+        _showError(e.toString());
       }
     }
   }
@@ -129,12 +136,16 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
 
     try {
       await _authService.resetPassword(widget.email, _newPasswordController.text);
-      setState(() => _resetComplete = true);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _resetComplete = true;
+        });
+      }
     } catch (e) {
-      _showError(e.toString());
-    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+        _showError(e.toString());
       }
     }
   }
@@ -150,17 +161,38 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
   }
 
   Widget _buildOTPVerification() {
+    final otpFieldWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 150,
+      tablet: 200,
+      desktop: 250,
+    );
+
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 36,
+      tablet: 48,
+      desktop: 56,
+    );
+
+    final textFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16,
+      tablet: 18,
+      desktop: 20,
+    );
+
     return Column(
       children: [
         TextWithShadow(
           text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
-          fontSize: 48,
+          fontSize: titleFontSize,
         ),
         const SizedBox(height: 12),
         Text(
           PasswordResetFlowLocalization.translate('enter_otp', widget.selectedLanguage),
           style: GoogleFonts.rubik(
-            fontSize: 18,
+            fontSize: textFontSize,
             color: Colors.black87,
           ),
           textAlign: TextAlign.center,
@@ -169,27 +201,20 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
         Text(
           widget.email,
           style: GoogleFonts.rubik(
-            fontSize: 16,
+            fontSize: textFontSize - 2,
             color: Colors.black87,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
         SizedBox(
-          width: ResponsiveValue<double>(
-            context,
-            defaultValue: 200,
-            conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 150),
-              const Condition.largerThan(name: TABLET, value: 250),
-            ],
-          ).value,
+          width: otpFieldWidth,
           child: TextField(
             controller: _otpController,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             style: GoogleFonts.vt323(
-              fontSize: 32,
+              fontSize: textFontSize * 2,
               color: Colors.black,
             ),
             decoration: const InputDecoration(
@@ -212,142 +237,160 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
         Text(
           '${PasswordResetFlowLocalization.translate('code_expires', widget.selectedLanguage)} ${_timeLeft ~/ 60}:${(_timeLeft % 60).toString().padLeft(2, '0')}',
           style: GoogleFonts.rubik(
-            fontSize: 16,
+            fontSize: textFontSize,
             color: Colors.black,
           ),
         ),
         const SizedBox(height: 24),
-        Button3D(
+        _buildActionButton(
           onPressed: _verifyOTP,
-          backgroundColor: const Color(0xFFF1B33A),
-          borderColor: const Color(0xFF916D23),
-          height: 45,
-          child: Text(
-            PasswordResetFlowLocalization.translate('verify_button', widget.selectedLanguage),
-            style: GoogleFonts.vt323(
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
+          text: PasswordResetFlowLocalization.translate('verify_button', widget.selectedLanguage),
         ),
       ],
     );
   }
 
   Widget _buildNewPassword() {
+    final textFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16,
+      tablet: 18,
+      desktop: 20,
+    );
+
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 36,
+      tablet: 48,
+      desktop: 56,
+    );
+
     return Column(
       children: [
         TextWithShadow(
           text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
-          fontSize: 48,
+          fontSize: titleFontSize,
         ),
         const SizedBox(height: 24),
-        TextField(
+        _buildPasswordField(
           controller: _newPasswordController,
-          obscureText: _obscureNewPassword,
-          style: GoogleFonts.rubik(
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          decoration: InputDecoration(
-            labelText: PasswordResetFlowLocalization.translate('new_password', widget.selectedLanguage),
-            labelStyle: const TextStyle(color: Colors.black87),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Color(0xFF3A1A5F), width: 1),
-            ),
-            enabledBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Colors.grey),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureNewPassword ? Icons.visibility : Icons.visibility_off,
-                color: Colors.black54,
-              ),
-              onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
-            ),
-          ),
+          obscure: _obscureNewPassword,
+          onToggleVisibility: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+          label: 'new_password',
+          fontSize: textFontSize,
         ),
         const SizedBox(height: 16),
-        TextField(
+        _buildPasswordField(
           controller: _confirmPasswordController,
-          obscureText: _obscureConfirmPassword,
-          style: GoogleFonts.rubik(
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          decoration: InputDecoration(
-            labelText: PasswordResetFlowLocalization.translate('confirm_password', widget.selectedLanguage),
-            labelStyle: const TextStyle(color: Colors.black87),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Color(0xFF3A1A5F), width: 1),
-            ),
-            enabledBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: Colors.grey),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                color: Colors.black54,
-              ),
-              onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-            ),
-          ),
+          obscure: _obscureConfirmPassword,
+          onToggleVisibility: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+          label: 'confirm_password',
+          fontSize: textFontSize,
         ),
         const SizedBox(height: 24),
-        Button3D(
+        _buildActionButton(
           onPressed: _resetPassword,
-          backgroundColor: const Color(0xFFF1B33A),
-          borderColor: const Color(0xFF916D23),
-          height: 45,
-          child: Text(
-            PasswordResetFlowLocalization.translate('reset_button', widget.selectedLanguage),
-            style: GoogleFonts.vt323(
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
+          text: PasswordResetFlowLocalization.translate('reset_button', widget.selectedLanguage),
         ),
       ],
     );
   }
 
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required bool obscure,
+    required VoidCallback onToggleVisibility,
+    required String label,
+    required double fontSize,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: GoogleFonts.rubik(
+        fontSize: fontSize,
+        color: Colors.black,
+      ),
+      decoration: InputDecoration(
+        labelText: PasswordResetFlowLocalization.translate(label, widget.selectedLanguage),
+        labelStyle: const TextStyle(color: Colors.black87),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: Color(0xFF3A1A5F), width: 1),
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility : Icons.visibility_off,
+            color: Colors.black54,
+          ),
+          onPressed: onToggleVisibility,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 45,
+      tablet: 50,
+      desktop: 55,
+    );
+
+    final buttonFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 18,
+      tablet: 20,
+      desktop: 22,
+    );
+
+    return Button3D(
+      onPressed: onPressed,
+      backgroundColor: const Color(0xFFF1B33A),
+      borderColor: const Color(0xFF916D23),
+      height: buttonHeight,
+      child: Text(
+        text,
+        style: GoogleFonts.vt323(
+          fontSize: buttonFontSize,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   Widget _buildSuccess() {
+    final textFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16,
+      tablet: 18,
+      desktop: 20,
+    );
+
     return Column(
       children: [
         Text(
           PasswordResetFlowLocalization.translate('success_message', widget.selectedLanguage),
           style: GoogleFonts.vt323(
-            fontSize: 18,
+            fontSize: textFontSize,
             color: Colors.black,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        Button3D(
+        _buildActionButton(
           onPressed: widget.onClose,
-          backgroundColor: const Color(0xFFF1B33A),
-          borderColor: const Color(0xFF916D23),
-          width: 120,
-          height: 40,
-          child: Text(
-            PasswordResetFlowLocalization.translate('login_button', widget.selectedLanguage),
-            style: GoogleFonts.vt323(
-              fontSize: 18,
-              color: Colors.white,
-            ),
-          ),
+          text: PasswordResetFlowLocalization.translate('login_button', widget.selectedLanguage),
         ),
       ],
     );
@@ -355,63 +398,83 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        widget.onClose();
-        return true;
-      },
-      child: GestureDetector(
-        onTap: widget.onClose,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-          child: Container(
-            color: Colors.black.withOpacity(0.5),
-            child: GestureDetector(
-              onTap: () {},
-              child: Center(
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: AbsorbPointer(
-                    absorbing: _isLoading,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        width: ResponsiveValue<double>(
-                          context,
-                          defaultValue: 400,
-                          conditionalValues: [
-                            const Condition.smallerThan(name: MOBILE, value: 300),
-                            const Condition.largerThan(name: TABLET, value: 400),
-                          ],
-                        ).value,
-                        margin: const EdgeInsets.all(20),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.zero,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 10,
-                              offset: Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (!_otpVerified && !_resetComplete)
-                                  _buildOTPVerification()
-                                else if (_otpVerified && !_resetComplete)
-                                  _buildNewPassword()
-                                else
-                                  _buildSuccess(),
-                              ],
+    return ResponsiveBuilder(
+      breakpoints: AppBreakpoints.screenBreakpoints,
+      builder: (context, sizingInformation) {
+        final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.9,
+          tablet: 450,
+          desktop: 500,
+        );
+
+        final dialogPadding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 20,
+          tablet: 24,
+          desktop: 28,
+        );
+
+        return WillPopScope(
+          onWillPop: () async {
+            widget.onClose();
+            return true;
+          },
+          child: GestureDetector(
+            onTap: widget.onClose,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: GestureDetector(
+                  onTap: () {},
+                  child: Center(
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Stack(
+                        children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: Container(
+                              width: dialogWidth,
+                              margin: EdgeInsets.all(dialogPadding),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.zero,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: EdgeInsets.all(dialogPadding),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!_otpVerified && !_resetComplete)
+                                        _buildOTPVerification()
+                                      else if (_otpVerified && !_resetComplete)
+                                        _buildNewPassword()
+                                      else
+                                        _buildSuccess(),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          if (_isLoading)
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.black54,
+                                child: const LoadingWidget(),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -419,8 +482,8 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 } 

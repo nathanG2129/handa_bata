@@ -6,6 +6,7 @@ import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import '../widgets/buttons/custom_button.dart';
@@ -430,35 +431,6 @@ class SplashPageState extends State<SplashPage> {
         children: [
           ResponsiveBuilder(
             builder: (context, sizingInformation) {
-              final isDesktop = sizingInformation.deviceScreenType == DeviceScreenType.desktop;
-              final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
-              final isMobile = sizingInformation.deviceScreenType == DeviceScreenType.mobile;
-              
-              final screenWidth = sizingInformation.screenSize.width;
-              
-              // Adjust title sizes with more consistent ratio for mobile
-              final dynamicTitleSize = (isDesktop ? 90.0 : 
-                                      isTablet ? 80.0 : 
-                                      screenWidth * 0.15);
-              
-              // Make subtitle closer to title size on mobile
-              final dynamicSubtitleSize = (isDesktop ? 85.0 : 
-                                         isTablet ? 75.0 : 
-                                         screenWidth * 0.14); // Increased from 0.12 to be closer to title size
-              
-              // Adjust button dimensions for better proportions
-              final dynamicButtonWidth = isDesktop ? 600.0 :
-                                       isTablet ? screenWidth * 0.5 : // Reduced from 0.6
-                                       screenWidth * 0.7; // Reduced from 0.8
-              
-              final dynamicButtonHeight = isDesktop ? 65.0 :
-                                        isTablet ? 55.0 : // Reduced from 60.0
-                                        45.0; // Reduced from 55.0
-              
-              final dynamicSpacing = isDesktop ? 25.0 :
-                                    isTablet ? 20.0 : // Reduced from 20.0
-                                    15.0; // Reduced from 15.0
-
               return Stack(
                 children: [
                   // Background
@@ -471,8 +443,18 @@ class SplashPageState extends State<SplashPage> {
                   
                   // Language Dropdown
                   Positioned(
-                    top: 60,
-                    right: 35,
+                    top: ResponsiveUtils.valueByDevice(
+                      context: context,
+                      mobile: 40.0,
+                      tablet: 50.0,
+                      desktop: 60.0,
+                    ),
+                    right: ResponsiveUtils.valueByDevice(
+                      context: context,
+                      mobile: 25.0,
+                      tablet: 30.0,
+                      desktop: 35.0,
+                    ),
                     child: _buildLanguageDropdown(),
                   ),
                   
@@ -481,72 +463,14 @@ class SplashPageState extends State<SplashPage> {
                     child: Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: isDesktop ? 1200 : 800,
+                          maxWidth: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 600.0,
+                            tablet: 800.0,
+                            desktop: 1200.0,
+                          ),
                         ),
-                        child: Column(
-                          children: [
-                            // Adjusted spacing for title section
-                            Spacer(flex: isDesktop ? 2 : 3),
-                            
-                            // Title Section with adjusted spacing
-                            Transform.translate(
-                              offset: Offset(0, isMobile ? 20 : 0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: TextWithShadow(
-                                      text: SplashLocalization.translate('title', _selectedLanguage),
-                                      fontSize: dynamicTitleSize,
-                                    ),
-                                  ),
-                                  Transform.translate(
-                                    offset: Offset(0, isDesktop ? -20.0 :
-                                                    isTablet ? -10.0 : -8.0), // Adjusted mobile offset
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: TextWithShadow(
-                                        text: SplashLocalization.translate('subtitle', _selectedLanguage),
-                                        fontSize: dynamicSubtitleSize,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            
-                            // Adjusted spacing between title and buttons
-                            Spacer(flex: isDesktop ? 3 : 2),
-                            
-                            // Buttons Section
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * (isDesktop ? 0.1 : 0.08),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildLoginButton(dynamicButtonWidth, dynamicButtonHeight),
-                                  SizedBox(height: dynamicSpacing),
-                                  _buildPlayNowButton(dynamicButtonWidth, dynamicButtonHeight),
-                                ],
-                              ),
-                            ),
-                            
-                            // Adjusted bottom spacing
-                            Spacer(flex: isDesktop ? 2 : 1),
-                            
-                            // Copyright with adjusted padding
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: isDesktop ? 10.0 : 
-                                         isTablet ? 15.0 : 20.0,
-                              ),
-                              child: _buildCopyright(),
-                            ),
-                          ],
-                        ),
+                        child: _buildMainContent(context),
                       ),
                     ),
                   ),
@@ -554,20 +478,82 @@ class SplashPageState extends State<SplashPage> {
               );
             },
           ),
-          if (_isLoading)
-            _buildLoadingOverlay(),
+          if (_isLoading) _buildLoadingOverlay(),
         ],
       ),
     );
   }
 
-  Widget _buildTitleSection({
-    required double titleSize,
-    required double subtitleSize,
-    required double spacing,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+  Widget _buildMainContent(BuildContext context) {
+    return Column(
+      children: [
+        // Top spacing - increased for tablet
+        Spacer(
+          flex: ResponsiveUtils.valueByDevice(
+            context: context,
+            mobile: 3,
+            tablet: 5,  // Increased from 2 to push content down more on tablet
+            desktop: 2,
+          ),
+        ),
+        
+        // Title Section
+        _buildTitleSection(context),
+        
+        // Middle spacing
+        Spacer(
+          flex: ResponsiveUtils.valueByDevice(
+            context: context,
+            mobile: 2,
+            tablet: 4,  // Increased from 3 to add more space between title and buttons
+            desktop: 3,
+          ),
+        ),
+        
+        // Buttons Section
+        _buildButtonsSection(context),
+        
+        // Bottom spacing
+        Spacer(
+          flex: ResponsiveUtils.valueByDevice(
+            context: context,
+            mobile: 1,  // Increased to push copyright down on mobile
+            tablet: 3,  // Increased to push copyright down on tablet
+            desktop: 2,
+          ),
+        ),
+        
+        // Copyright
+        _buildCopyright(),
+      ],
+    );
+  }
+
+  Widget _buildTitleSection(BuildContext context) {
+    final titleSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 60.0,
+      tablet: 80.0,
+      desktop: 90.0,
+    );
+
+    final subtitleSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 55.0,
+      tablet: 70.0,
+      desktop: 85.0,
+    );
+
+    return Transform.translate(
+      offset: Offset(
+        0,
+        ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 20.0,
+          tablet: 20.0,
+          desktop: 0.0,
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -578,14 +564,66 @@ class SplashPageState extends State<SplashPage> {
               fontSize: titleSize,
             ),
           ),
-          SizedBox(height: spacing),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: TextWithShadow(
-              text: SplashLocalization.translate('subtitle', _selectedLanguage),
-              fontSize: subtitleSize,
+          Transform.translate(
+            offset: Offset(
+              0,
+              ResponsiveUtils.valueByDevice(
+                context: context,
+                mobile: -8.0,
+                tablet: -15.0,
+                desktop: -20.0,
+              ),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: TextWithShadow(
+                text: SplashLocalization.translate('subtitle', _selectedLanguage),
+                fontSize: subtitleSize,
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButtonsSection(BuildContext context) {
+    final buttonWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: MediaQuery.of(context).size.width * 0.8,  // Increased from 0.7
+      tablet: MediaQuery.of(context).size.width * 0.5,
+      desktop: 600.0,
+    );
+
+    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 50.0,  // Increased from 45.0
+      tablet: 55.0,
+      desktop: 65.0,
+    );
+
+    final buttonSpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 20.0,  // Increased from 15.0
+      tablet: 30.0,
+      desktop: 45.0,
+    );
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 16.0,  // Reduced from 20.0
+          tablet: 40.0,
+          desktop: 60.0,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLoginButton(buttonWidth, buttonHeight),
+          SizedBox(height: buttonSpacing),
+          _buildPlayNowButton(buttonWidth, buttonHeight),
         ],
       ),
     );

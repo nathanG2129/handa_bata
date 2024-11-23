@@ -261,32 +261,72 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 _buildMenuItem('Hotlines', 
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => HotlinesPage(
-                                          selectedLanguage: widget.selectedLanguage,
-                                        ),
-                                      ),
+                                  onTap: () async {
+                                    // Show loading overlay
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return WillPopScope(
+                                          onWillPop: () async => false,
+                                          child: const LoadingWidget(),
+                                        );
+                                      },
                                     );
-                                    _closeDrawer();
+
+                                    // Close drawer first
+                                    await _closeDrawer();
+                                    
+                                    if (mounted) {
+                                      // Remove loading overlay
+                                      Navigator.of(context).pop();
+                                      
+                                      // Navigate to Hotlines page
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => HotlinesPage(
+                                            selectedLanguage: widget.selectedLanguage,
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   }
                                 ),
                                 _buildDivider(),
                                 _buildMenuItem('About', 
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AboutPage(
-                                          selectedLanguage: widget.selectedLanguage,
-                                        ),
-                                      ),
+                                  onTap: () async {
+                                    // Show loading overlay
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return WillPopScope(
+                                          onWillPop: () async => false,
+                                          child: const LoadingWidget(),
+                                        );
+                                      },
                                     );
-                                    _closeDrawer();
+
+                                    // Close drawer first
+                                    await _closeDrawer();
+                                    
+                                    if (mounted) {
+                                      // Remove loading overlay
+                                      Navigator.of(context).pop();
+                                      
+                                      // Navigate to About page
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AboutPage(
+                                            selectedLanguage: widget.selectedLanguage,
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   }
                                 ),
                                 _buildDivider(),

@@ -398,7 +398,7 @@ class TeamSection extends StatelessWidget {
       context: context,
       mobile: 2,
       tablet: 2,
-      desktop: 2,
+      desktop: 4,
     );
 
     final gridSpacing = ResponsiveUtils.valueByDevice<double>(

@@ -9,7 +9,8 @@ import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'play_page.dart';
 import 'package:handabatamae/widgets/buttons/adventure_button.dart'; // Import AdventureButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
-import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'user_profile.dart'; // Import UserProfilePage
@@ -215,97 +216,11 @@ class AdventurePageState extends State<AdventurePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isUserProfileVisible) {
-          setState(() {
-            _isUserProfileVisible = false;
-          });
-          return false;
-        } else {
-          _navigateBack(context);
-          return false;
-        }
-      },
-      child: Scaffold(
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg', // Use the common background image
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  Column(
-                    children: [
-                      HeaderWidget(
-                        selectedLanguage: _selectedLanguage,
-                        onBack: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => PlayPage(title: '', selectedLanguage: _selectedLanguage)),
-                          );
-                        },
-                        onChangeLanguage: _changeLanguage, 
-                      ),
-                      Expanded(
-                        child: CustomScrollView(
-                          slivers: [
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Column(
-                                children: [
-                                  _buildContent(),
-                                  const SizedBox(height: 20),
-                                  const Spacer(), // Push the footer to the bottom
-                                  FooterWidget(selectedLanguage: _selectedLanguage), // Add the footer here
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_isUserProfileVisible)
-                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
-                  if (_isSyncing)
-                    const Positioned(
-                      top: 16,
-                      right: 16,
-                      child: CircularProgressIndicator(),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context, SizingInformation sizingInformation) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (_errorMessage != null) {
       return Center(
         child: Column(
@@ -326,6 +241,49 @@ class AdventurePageState extends State<AdventurePage> {
       );
     }
 
+    // Get responsive values for buttons
+    final adventureButtonSpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 30.0,
+      tablet: 40.0,
+      desktop: 50.0,
+    );
+
+    final categoryButtonWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 300.0,
+      tablet: 350.0,
+      desktop: 500.0,
+    );
+
+    final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 160.0,
+      tablet: 150.0,  // Increased height for tablet to accommodate content
+      desktop: 160.0,
+    );
+
+    final categorySpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 20.0,
+      tablet: 30.0,  // Reduced spacing for tablet grid
+      desktop: 40.0,
+    );
+
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 24.0,
+      tablet: 24.0,  // Slightly smaller for tablet to prevent overflow
+      desktop: 32.0,
+    );
+
+    final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 18.0,
+      tablet: 18.0,  // Smaller font size for tablet descriptions
+      desktop: 25.0,
+    );
+
     return Column(
       children: [
         Padding(
@@ -336,47 +294,200 @@ class AdventurePageState extends State<AdventurePage> {
             },
           ),
         ),
-        const SizedBox(height: 30),
-        ..._categories.map((category) {
-          final buttonColor = _getButtonColor(category['name']);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 40),
-            child: Align(
-              alignment: Alignment.center,
-              child: Button3D(
-                width: 350,
-                height: 215,
-                onPressed: () => _onCategoryPressed(category),
-                backgroundColor: buttonColor,
-                borderColor: _darkenColor(buttonColor),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category['name'],
-                        style: GoogleFonts.vt323(
-                          fontSize: 32,
-                          color: Colors.white,
+        SizedBox(height: adventureButtonSpacing),
+        // Wrap categories in a grid for tablet
+        if (sizingInformation.deviceScreenType == DeviceScreenType.tablet)
+          Wrap(
+            spacing: categorySpacing,
+            runSpacing: categorySpacing,
+            alignment: WrapAlignment.center,
+            children: _categories.map((category) {
+              final buttonColor = _getButtonColor(category['name']);
+              return SizedBox(
+                width: categoryButtonWidth,
+                child: Button3D(
+                  width: categoryButtonWidth,
+                  height: categoryButtonHeight,
+                  onPressed: () => _onCategoryPressed(category),
+                  backgroundColor: buttonColor,
+                  borderColor: _darkenColor(buttonColor),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),  // Reduced padding
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          category['name'],
+                          style: GoogleFonts.vt323(
+                            fontSize: titleFontSize,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,  // Limit to 2 lines
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        category['description'],
-                        style: GoogleFonts.vt323(
-                          fontSize: 25,
-                          color: Colors.white,
+                        const SizedBox(height: 4),  // Reduced spacing
+                        Text(
+                          category['description'],
+                          style: GoogleFonts.vt323(
+                            fontSize: descriptionFontSize,
+                            color: Colors.white,
+                          ),
+                          maxLines: 3,  // Limit to 3 lines
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          )
+        // Single column layout for mobile and desktop
+        else
+          ...(_categories.map((category) {
+            final buttonColor = _getButtonColor(category['name']);
+            return Padding(
+              padding: EdgeInsets.only(bottom: categorySpacing),
+              child: Align(
+                alignment: Alignment.center,
+                child: Button3D(
+                  width: categoryButtonWidth,
+                  height: categoryButtonHeight,
+                  onPressed: () => _onCategoryPressed(category),
+                  backgroundColor: buttonColor,
+                  borderColor: _darkenColor(buttonColor),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          category['name'],
+                          style: GoogleFonts.vt323(
+                            fontSize: titleFontSize,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          category['description'],
+                          style: GoogleFonts.vt323(
+                            fontSize: descriptionFontSize,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }).toList()),
+        const SizedBox(height: 20),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        if (_isUserProfileVisible) {
+          setState(() {
+            _isUserProfileVisible = false;
+          });
+          return false;
+        } else {
+          _navigateBack(context);
+          return false;
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF2C1B47),
+        body: Stack(
+          children: [
+            // Background
+            SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            // Content
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                final maxWidth = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: double.infinity,
+                  tablet: MediaQuery.of(context).size.width * 0.9,
+                  desktop: 1200,
+                );
+
+                final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: 16.0,
+                  tablet: 24.0,
+                  desktop: 48.0,
+                );
+
+                return Column(
+                  children: [
+                    // Header
+                    HeaderWidget(
+                      selectedLanguage: _selectedLanguage,
+                      onBack: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PlayPage(
+                              title: '',
+                              selectedLanguage: _selectedLanguage,
+                            ),
+                          ),
+                        );
+                      },
+                      onChangeLanguage: _changeLanguage,
+                    ),
+                    // Main content with constrained width
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Constrained content
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: maxWidth),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                                  child: _buildContent(context, sizingInformation),
+                                ),
+                              ),
+                            ),
+                            // Footer outside of constraints
+                            FooterWidget(selectedLanguage: _selectedLanguage),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            // Overlays
+            if (_isUserProfileVisible)
+              UserProfilePage(
+                onClose: _toggleUserProfile,
+                selectedLanguage: _selectedLanguage,
+              ),
+            if (_isSyncing)
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: CircularProgressIndicator(),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

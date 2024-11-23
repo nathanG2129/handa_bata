@@ -10,13 +10,14 @@ import 'leaderboards_page.dart'; // Import LeaderboardsPage
 import 'package:handabatamae/widgets/buttons/arcade_button.dart'; // Import ArcadeButton
 import 'package:handabatamae/services/stage_service.dart'; // Import StageService
 import 'package:handabatamae/models/stage_models.dart';  // Add this import
-import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:handabatamae/widgets/buttons/button_3d.dart'; // Import Button3D
 import 'package:handabatamae/models/game_save_data.dart'; // Import GameSaveData
 import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
 import 'package:handabatamae/utils/category_text_utils.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -248,198 +249,302 @@ class ArcadePageState extends State<ArcadePage> {
         }
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFF2C1B47),
         body: Stack(
           children: [
-            ResponsiveBreakpoints(
-              breakpoints: const [
-                Breakpoint(start: 0, end: 450, name: MOBILE),
-                Breakpoint(start: 451, end: 800, name: TABLET),
-                Breakpoint(start: 801, end: 1920, name: DESKTOP),
-                Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-              ],
-              child: MaxWidthBox(
-                maxWidth: 1200,
-                child: ResponsiveScaledBox(
-                  width: ResponsiveValue<double>(context, conditionalValues: [
-                    const Condition.equals(name: MOBILE, value: 450),
-                    const Condition.between(start: 800, end: 1100, value: 800),
-                    const Condition.between(start: 1000, end: 1200, value: 1000),
-                  ]).value,
-                  child: Stack(
-                    children: [
-                      SvgPicture.asset(
-                        'assets/backgrounds/background.svg',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                      Column(
-                        children: [
-                          HeaderWidget(
-                            selectedLanguage: _selectedLanguage,
-                            onBack: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PlayPage(selectedLanguage: widget.selectedLanguage, title: ''),
-                                ),
-                              );
-                            },
-                            onChangeLanguage: _changeLanguage,
-                          ),
-                          Expanded(
-                            child: CustomScrollView(
-                              slivers: [
-                                SliverFillRemaining(
-                                  hasScrollBody: false,
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 20),
-                                        child: ArcadeButton(
-                                          onPressed: () {
-                                            // Define the action for the Arcade button if needed
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(height: 30),
-                                      _isLoading
-                                          ? const CircularProgressIndicator()
-                                          : _errorMessage != null
-                                              ? _buildErrorState()
-                                              : Column(
-                                                  children: _categories.map((category) {
-                                                    final buttonColor = _getButtonColor(category['name']);
-                                                    final categoryText = getCategoryText(category['name'], _selectedLanguage);
-                                                    final isUnlocked = _isCategoryUnlocked(category['id']);
-                                                    
-                                                    return Padding(
-                                                      padding: const EdgeInsets.only(bottom: 30),
-                                                      child: Align(
-                                                        alignment: Alignment.center,
-                                                        child: Button3D(
-                                                          width: 350,
-                                                          height: 175,
-                                                          onPressed: () {
-                                                            if (isUnlocked) {
-                                                              _onCategoryPressed(category);
-                                                            }
-                                                          },
-                                                          backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
-                                                          borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
-                                                          child: Stack(
-                                                            children: [
-                                                              Padding(
-                                                                padding: const EdgeInsets.all(8.0),
-                                                                child: Column(
-                                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                                  children: [
-                                                                    Text(
-                                                                      categoryText['name']!,
-                                                                      style: GoogleFonts.vt323(
-                                                                        fontSize: 30,
-                                                                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
-                                                                      ),
-                                                                    ),
-                                                                    const SizedBox(height: 10),
-                                                                    Text(
-                                                                      isUnlocked 
-                                                                        ? categoryText['description']!
-                                                                        : _selectedLanguage == 'fil'
-                                                                          ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
-                                                                          : 'Complete ${category["name"]} at Adventure to unlock this game mode.',
-                                                                      style: GoogleFonts.vt323(
-                                                                        fontSize: 22,
-                                                                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              if (!isUnlocked)
-                                                                Positioned(
-                                                                  right: 5,
-                                                                  top: 10,
-                                                                  child: SvgPicture.string(
-                                                                    _getLockSvg(),
-                                                                    width: 40,
-                                                                    height: 40,
-                                                                  ),
-                                                                ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 0, bottom: 40),
-                                        child: Button3D(
-                                          width: 350,
-                                          height: 150,
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => const LeaderboardsPage(),
-                                              ),
-                                            );
-                                          },
-                                          backgroundColor: const Color.fromARGB(255, 37, 196, 100),
-                                          borderColor: _darkenColor(const Color(0xFF28e172)),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Leaderboards',
-                                                  style: GoogleFonts.vt323(
-                                                    fontSize: 30, // Larger font size
-                                                    color: Colors.white, // Text color
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Text(
-                                                  'Show the world what you\'re made of and climb the leaderboards!',
-                                                  style: GoogleFonts.vt323(
-                                                    fontSize: 22,
-                                                    color: Colors.white, // Text color
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const Spacer(), // Push the footer to the bottom
-                                      FooterWidget(selectedLanguage: _selectedLanguage), // Add the footer here
-                                    ],
-                                  ),
-                                ),
-                              ],
+            // Background
+            SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            // Content
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                final maxWidth = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: double.infinity,
+                  tablet: MediaQuery.of(context).size.width * 0.9,
+                  desktop: 1200,
+                );
+
+                final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+                  context: context,
+                  mobile: 16.0,
+                  tablet: 24.0,
+                  desktop: 48.0,
+                );
+
+                return Column(
+                  children: [
+                    // Header
+                    HeaderWidget(
+                      selectedLanguage: _selectedLanguage,
+                      onBack: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PlayPage(
+                              title: '',
+                              selectedLanguage: _selectedLanguage,
                             ),
                           ),
-                        ],
-                      ),
-                      if (_isUserProfileVisible)
-                        UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
-                      if (_isSyncing)
-                        const Positioned(
-                          top: 16,
-                          right: 16,
-                          child: CircularProgressIndicator(),
+                        );
+                      },
+                      onChangeLanguage: _changeLanguage,
+                    ),
+                    // Main content with constrained width
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Constrained content
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: maxWidth),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                                  child: _buildContent(context, sizingInformation),
+                                ),
+                              ),
+                            ),
+                            // Footer outside of constraints
+                            FooterWidget(selectedLanguage: _selectedLanguage),
+                          ],
                         ),
-                    ],
-                  ),
-                ),
-              ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
+            // Overlays
+            if (_isUserProfileVisible)
+              UserProfilePage(
+                onClose: _toggleUserProfile,
+                selectedLanguage: _selectedLanguage,
+              ),
+            if (_isSyncing)
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: CircularProgressIndicator(),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildContent(BuildContext context, SizingInformation sizingInformation) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _buildErrorState();
+    }
+
+    // Get responsive values for buttons - same as adventure_page.dart
+    final arcadeButtonSpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 30.0,
+      tablet: 40.0,
+      desktop: 50.0,
+    );
+
+    final categoryButtonWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 300.0,
+      tablet: 350.0,
+      desktop: 500.0,
+    );
+
+    final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 160.0,
+      tablet: 150.0,
+      desktop: 160.0,
+    );
+
+    final categorySpacing = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 20.0,
+      tablet: 30.0,
+      desktop: 40.0,
+    );
+
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 24.0,
+      tablet: 24.0,
+      desktop: 32.0,
+    );
+
+    final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 18.0,
+      tablet: 18.0,
+      desktop: 25.0,
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: ArcadeButton(
+            onPressed: () {
+              // Define the action for the Arcade button if needed
+            },
+          ),
+        ),
+        SizedBox(height: arcadeButtonSpacing),
+        // Wrap categories in a grid for tablet
+        if (sizingInformation.deviceScreenType == DeviceScreenType.tablet)
+          Wrap(
+            spacing: categorySpacing,
+            runSpacing: categorySpacing,
+            alignment: WrapAlignment.center,
+            children: _buildCategoryButtons(
+              categoryButtonWidth,
+              categoryButtonHeight,
+              titleFontSize,
+              descriptionFontSize,
+            ),
+          )
+        // Single column layout for mobile and desktop
+        else
+          ..._buildCategoryButtons(
+            categoryButtonWidth,
+            categoryButtonHeight,
+            titleFontSize,
+            descriptionFontSize,
+          ),
+        // Leaderboards button
+        Padding(
+          padding: EdgeInsets.only(
+            top: categorySpacing,
+            bottom: categorySpacing,
+          ),
+          child: Button3D(
+            width: categoryButtonWidth,
+            height: categoryButtonHeight,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LeaderboardsPage(),
+                ),
+              );
+            },
+            backgroundColor: const Color.fromARGB(255, 37, 196, 100),
+            borderColor: _darkenColor(const Color(0xFF28e172)),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Leaderboards',
+                    style: GoogleFonts.vt323(
+                      fontSize: titleFontSize,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Show the world what you\'re made of and climb the leaderboards!',
+                    style: GoogleFonts.vt323(
+                      fontSize: descriptionFontSize,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  List<Widget> _buildCategoryButtons(
+    double width,
+    double height,
+    double titleFontSize,
+    double descriptionFontSize,
+  ) {
+    return _categories.map((category) {
+      final buttonColor = _getButtonColor(category['name']);
+      final categoryText = getCategoryText(category['name'], _selectedLanguage);
+      final isUnlocked = _isCategoryUnlocked(category['id']);
+
+      // Get responsive lock icon size
+      final lockIconSize = ResponsiveUtils.valueByDevice<double>(
+        context: context,
+        mobile: 32.0,
+        tablet: 36.0,
+        desktop: 40.0,
+      );
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 30),
+        child: Button3D(
+          width: width,
+          height: height,
+          onPressed: () {
+            if (isUnlocked) {
+              _onCategoryPressed(category);
+            }
+          },
+          backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
+          borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      categoryText['name']!,
+                      style: GoogleFonts.vt323(
+                        fontSize: titleFontSize,
+                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      isUnlocked 
+                        ? categoryText['description']!
+                        : _selectedLanguage == 'fil'
+                          ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
+                          : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                      style: GoogleFonts.vt323(
+                        fontSize: descriptionFontSize,
+                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isUnlocked)
+                Positioned(
+                  right: 5,  // Adjusted positioning
+                  top: 0,
+                  child: SvgPicture.string(
+                    _getLockSvg(),
+                    width: lockIconSize,
+                    height: lockIconSize,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
   }
 
   Widget _buildErrorState() {
@@ -459,86 +564,6 @@ class ArcadePageState extends State<ArcadePage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildContent() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: ArcadeButton(
-            onPressed: () {
-              // Define the action for the Arcade button if needed
-            },
-          ),
-        ),
-        const SizedBox(height: 30),
-        ..._categories.map((category) {
-          final buttonColor = _getButtonColor(category['name']);
-          final categoryText = getCategoryText(category['name'], _selectedLanguage);
-          final isUnlocked = _isCategoryUnlocked(category['id']);
-          
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 30),
-            child: Align(
-              alignment: Alignment.center,
-              child: Button3D(
-                width: 350,
-                height: 150,
-                onPressed: () {
-                  if (isUnlocked) {
-                    _onCategoryPressed(category);
-                  }
-                },
-                backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
-                borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.7),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            categoryText['name']!,
-                            style: GoogleFonts.vt323(
-                              fontSize: 30,
-                              color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            isUnlocked 
-                              ? categoryText['description']!
-                              : _selectedLanguage == 'fil'
-                                ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ito.'
-                                : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
-                            style: GoogleFonts.vt323(
-                              fontSize: 22,
-                              color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isUnlocked)
-                      Positioned(
-                        right: 20,
-                        top: 20,
-                        child: SvgPicture.string(
-                          _getLockSvg(),
-                          width: 40,
-                          height: 40,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ],
     );
   }
 }

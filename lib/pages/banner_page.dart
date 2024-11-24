@@ -6,6 +6,7 @@ import 'package:handabatamae/pages/banner_details_dialog.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 enum BannerFilter { all, myCollection }
 
@@ -176,87 +177,112 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
               : (currentFilter == BannerFilter.all || isUnlocked);
         }).toList();
 
-        return NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification notification) {
-            if (notification is ScrollEndNotification) {
-              final metrics = notification.metrics;
-              final startIndex = (metrics.pixels ~/ 210); // 210 is item height
-              final endIndex = ((metrics.pixels + metrics.viewportDimension) ~/ 210);
-              
-              _bannerService.handleViewportChange(
-                startIndex: startIndex,
-                endIndex: endIndex,
-                cacheKey: 'banner_grid',
-                userLevel: userLevel,
-              );
-            }
-            return true;
-          },
-          child: GridView.builder(
-            padding: const EdgeInsets.all(4.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
-              crossAxisSpacing: 0.0,
-              mainAxisSpacing: 2.0,
-              mainAxisExtent: 210,
-            ),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: visibleBanners.length,
-            itemBuilder: (context, index) {
-              final banner = visibleBanners[index];
-              final originalIndex = banners.indexOf(banner);
-              final isUnlocked = (originalIndex + 1) <= userLevel;
+        return ResponsiveBuilder(
+          builder: (context, sizingInformation) {
+            // Check for specific mobile breakpoints
+            final screenWidth = MediaQuery.of(context).size.width;
+            final bool isMobileSmall = screenWidth <= 375;
+            final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+            final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+            final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
 
-              return ValueListenableBuilder<int?>(
-                valueListenable: _selectedBannerNotifier,
-                builder: (context, selectedBannerId, _) {
-                  return Opacity(
-                    opacity: isUnlocked ? 1.0 : 0.5,
-                    child: GestureDetector(
-                      onTap: isUnlocked ? () => _handleBannerTap(banner) : null,
-                      child: Card(
-                        color: Colors.transparent,
-                        elevation: 0,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: selectedBannerId == banner['id']
-                                ? Border.all(color: const Color(0xFF9474CC), width: 2)
-                                : null,
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/banners/${banner['img']}',
-                                  width: 150,
-                                  height: 150,
-                                  fit: BoxFit.contain,
+            // Calculate sizes based on device type
+            final double bannerWidth = isTablet ? 150 : 200;
+            final double bannerHeight = isTablet ? 150 : 200;
+            final double titleFontSize = isMobileSmall ? 16 : 
+                                       isMobileLarge ? 18 :
+                                       isMobileExtraLarge ? 20 : 22;
+            final double gridPadding = isMobileSmall ? 8 : 
+                                     isMobileLarge ? 10 :
+                                     isMobileExtraLarge ? 12 :
+                                     isTablet ? 14 : 16;
+
+            return NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification notification) {
+                if (notification is ScrollEndNotification) {
+                  final metrics = notification.metrics;
+                  final startIndex = (metrics.pixels ~/ (bannerHeight + gridPadding * 2));
+                  final endIndex = ((metrics.pixels + metrics.viewportDimension) ~/ (bannerHeight + gridPadding * 2));
+                  
+                  _bannerService.handleViewportChange(
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    cacheKey: 'banner_grid',
+                    userLevel: userLevel,
+                  );
+                }
+                return true;
+              },
+              child: GridView.builder(
+                padding: EdgeInsets.all(gridPadding),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isTablet ? 2 : 1,
+                  crossAxisSpacing: gridPadding,
+                  mainAxisSpacing: gridPadding,
+                  childAspectRatio: isTablet ? 1.5 : 1.2,
+                ),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visibleBanners.length,
+                itemBuilder: (context, index) {
+                  final banner = visibleBanners[index];
+                  final originalIndex = banners.indexOf(banner);
+                  final isUnlocked = (originalIndex + 1) <= userLevel;
+
+                  return ValueListenableBuilder<int?>(
+                    valueListenable: _selectedBannerNotifier,
+                    builder: (context, selectedBannerId, _) {
+                      return Opacity(
+                        opacity: isUnlocked ? 1.0 : 0.5,
+                        child: GestureDetector(
+                          onTap: isUnlocked ? () => _handleBannerTap(banner) : null,
+                          child: Card(
+                            color: Colors.transparent,
+                            elevation: 0,
+                            margin: EdgeInsets.symmetric(
+                              vertical: gridPadding,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: selectedBannerId == banner['id']
+                                    ? Border.all(color: const Color(0xFF9474CC), width: 2)
+                                    : null,
+                              ),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/banners/${banner['img']}',
+                                      width: bannerWidth,
+                                      height: bannerHeight,
+                                      fit: BoxFit.contain,
+                                    ),
+                                    SizedBox(height: gridPadding / 2),
+                                    Text(
+                                      isUnlocked 
+                                          ? banner['title'] ?? 'Banner'
+                                          : 'Unlocks at Level ${index + 1}',
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.white,
+                                        fontSize: titleFontSize,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  isUnlocked 
-                                      ? banner['title'] ?? 'Banner'
-                                      : 'Unlocks at Level ${index + 1}',
-                                  style: GoogleFonts.vt323(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
+              ),
+            );
+          },
         );
       },
     );

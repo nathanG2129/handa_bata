@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import '../../localization/play/localization.dart';
 import '../../services/badge_service.dart';
 import '../../services/user_profile_service.dart';
@@ -103,146 +104,144 @@ class FavoriteBadgesState extends State<FavoriteBadges> {
 
   @override
   Widget build(BuildContext context) {
-    const double scaleFactor = 0.9;
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final bool isMobileLargeOrSmaller = 
+            sizingInformation.deviceScreenType == DeviceScreenType.mobile &&
+            MediaQuery.of(context).size.width <= 414;
 
-    return Column(
-      children: [
-        // Title section
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Transform.translate(
-            offset: const Offset(3, 0),
-            child: Text(
-              PlayLocalization.translate('favoriteBadges', widget.selectedLanguage),
-              style: GoogleFonts.rubik(
-                fontSize: ResponsiveValue<double>(
-                  context,
-                  defaultValue: 18 * scaleFactor,
-                  conditionalValues: [
-                    const Condition.smallerThan(name: MOBILE, value: 16 * scaleFactor),
-                    const Condition.largerThan(name: MOBILE, value: 20 * scaleFactor),
-                  ],
-                ).value,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+        ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: isMobileLargeOrSmaller ? 8 : 12,
+          tablet: 16,
+          desktop: 20,
+        );
+
+        return Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Transform.translate(
+                offset: const Offset(3, 0),
+                child: Text(
+                  PlayLocalization.translate('favoriteBadges', widget.selectedLanguage),
+                  style: GoogleFonts.rubik(
+                    fontSize: ResponsiveUtils.valueByDevice(
+                      context: context,
+                      mobile: isMobileLargeOrSmaller ? 14 : 16,
+                      tablet: 18,
+                      desktop: 20,
+                    ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        SizedBox(
-          height: ResponsiveValue<double>(
-            context,
-            defaultValue: 10 * scaleFactor,
-            conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 8 * scaleFactor),
-              const Condition.largerThan(name: MOBILE, value: 12 * scaleFactor),
-            ],
-          ).value,
-        ),
-        // Content section
-        if (_isLoading) 
-          const Center(child: CircularProgressIndicator())
-        else if (_errorMessage != null) 
-          Center(
-            child: Text(
-              _errorMessage!,
-              style: GoogleFonts.rubik(color: Colors.red),
+            SizedBox(
+              height: ResponsiveUtils.valueByDevice(
+                context: context,
+                mobile: isMobileLargeOrSmaller ? 8 : 12,
+                tablet: 16,
+                desktop: 20,
+              ),
             ),
-          )
-        else ...[  // Use spread operator for multiple widgets
-          // Badge display section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _badgeShowcase.map((badgeId) {
-              final badge = badgeId != -1 ? _badgeCache[badgeId] : null;
-              return Expanded(
-                child: Card(
-                  color: const Color(0xFF4d278f),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Center(
-                      child: badge != null && badge['img'].isNotEmpty 
-                        ? Image.asset(
-                            'assets/badges/${badge['img']}',
-                            width: ResponsiveValue<double>(
-                              context,
-                              defaultValue: 64 * scaleFactor,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                              ],
-                            ).value,
-                            height: ResponsiveValue<double>(
-                              context,
-                              defaultValue: 64 * scaleFactor,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 48 * scaleFactor),
-                                const Condition.largerThan(name: MOBILE, value: 80 * scaleFactor),
-                              ],
-                            ).value,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.none,
-                          )
-                        : const SizedBox.shrink(),
-                    ),
-                  ),
+            // Content section
+            if (_isLoading) 
+              const Center(child: CircularProgressIndicator())
+            else if (_errorMessage != null) 
+              Center(
+                child: Text(
+                  _errorMessage!,
+                  style: GoogleFonts.rubik(color: Colors.red),
                 ),
-              );
-            }).toList(),
-          ),
-          // Badge titles section
-          SizedBox(height: ResponsiveValue<double>(
-            context,
-            defaultValue: 3 * scaleFactor,
-            conditionalValues: [
-              const Condition.smallerThan(name: MOBILE, value: 1 * scaleFactor),
-              const Condition.largerThan(name: MOBILE, value: 5 * scaleFactor),
-            ],
-          ).value),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _badgeShowcase.map((badgeId) {
-              final badge = badgeId != -1 ? _badgeCache[badgeId] : null;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveValue<double>(
-                      context,
-                      defaultValue: 12 * scaleFactor,
-                      conditionalValues: [
-                        const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
-                        const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
-                      ],
-                    ).value,
-                  ),
-                  // Only show title if badge['title'] is not empty
-                  child: badge != null && badge['title'].isNotEmpty 
-                    ? Text(
-                        badge['title'],
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.rubik(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 12 * scaleFactor,
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 10 * scaleFactor),
-                              const Condition.largerThan(name: MOBILE, value: 14 * scaleFactor),
-                            ],
-                          ).value,
+              )
+            else ...[  // Use spread operator for multiple widgets
+              // Badge display section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _badgeShowcase.map((badgeId) {
+                  final badge = badgeId != -1 ? _badgeCache[badgeId] : null;
+                  return Expanded(
+                    child: Card(
+                      color: const Color(0xFF4d278f),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Center(
+                          child: badge != null && badge['img'].isNotEmpty 
+                            ? Image.asset(
+                                'assets/badges/${badge['img']}',
+                                width: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: isMobileLargeOrSmaller ? 48 : 64,
+                                  tablet: 80,
+                                  desktop: 96,
+                                ),
+                                height: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: isMobileLargeOrSmaller ? 48 : 64,
+                                  tablet: 80,
+                                  desktop: 96,
+                                ),
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.none,
+                              )
+                            : const SizedBox.shrink(),
                         ),
-                      )
-                    : const SizedBox.shrink(), // Empty box when no title
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              // Badge titles section
+              SizedBox(height: ResponsiveUtils.valueByDevice(
+                context: context,
+                mobile: isMobileLargeOrSmaller ? 1 : 5,
+                tablet: 5,
+                desktop: 5,
+              )),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _badgeShowcase.map((badgeId) {
+                  final badge = badgeId != -1 ? _badgeCache[badgeId] : null;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.valueByDevice(
+                          context: context,
+                          mobile: isMobileLargeOrSmaller ? 10 : 14,
+                          tablet: 14,
+                          desktop: 18,
+                        ),
+                      ),
+                      // Only show title if badge['title'] is not empty
+                      child: badge != null && badge['title'].isNotEmpty 
+                        ? Text(
+                            badge['title'],
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.rubik(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: ResponsiveUtils.valueByDevice(
+                                context: context,
+                                mobile: isMobileLargeOrSmaller ? 10 : 14,
+                                tablet: 14,
+                                desktop: 18,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(), // Empty box when no title
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

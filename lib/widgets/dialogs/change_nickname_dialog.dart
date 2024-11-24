@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import '../../localization/play/localization.dart';
+import '../../utils/responsive_utils.dart';
 
 class ChangeNicknameDialog extends StatefulWidget {
   final String currentNickname;
@@ -69,104 +71,162 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        await _handleClose();
-        return false;
-      },
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Dialog(
-            shape: const RoundedRectangleBorder(
-              side: BorderSide(color: Colors.black, width: 1),
-              borderRadius: BorderRadius.zero,
-            ),
-            backgroundColor: const Color(0xFF351b61),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        // Get responsive dimensions
+        final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.9,
+          tablet: 450,
+          desktop: 500,
+        );
+
+        final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 24,
+          tablet: 28,
+          desktop: 32,
+        );
+
+        final buttonTextSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 18,
+          desktop: 20,
+        );
+
+        final contentPadding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 20,
+          desktop: 24,
+        );
+
+        // Check for specific mobile breakpoints
+        final screenWidth = MediaQuery.of(context).size.width;
+        final bool isMobileSmall = screenWidth <= 375;
+        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+
+        return WillPopScope(
+          onWillPop: () async {
+            await _handleClose();
+            return false;
+          },
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Dialog(
+                shape: const RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.zero,
+                ),
+                backgroundColor: const Color(0xFF351b61),
+                child: Container(
+                  width: dialogWidth,
+                  constraints: const BoxConstraints(maxWidth: 500),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                          // Start of Selection
-                          Center(
-                            child: Text(
-                              PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                              style: GoogleFonts.vt323(
-                                fontSize: 28,
-                                color: Colors.white,
+                      Padding(
+                        padding: EdgeInsets.all(contentPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text(
+                                PlayLocalization.translate('changeNickname', widget.selectedLanguage),
+                                style: GoogleFonts.vt323(
+                                  fontSize: isMobileSmall ? 20 :
+                                           isMobileLarge ? 22 :
+                                           isMobileExtraLarge ? 24 : titleFontSize,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                          ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _controller,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: PlayLocalization.translate('', widget.selectedLanguage),
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.zero,
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderRadius: BorderRadius.zero,
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius: BorderRadius.zero,
-                            borderSide: BorderSide(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  color: const Color(0xFF241242),
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: _handleClose,
-                        child: Text(
-                          PlayLocalization.translate('cancel', widget.selectedLanguage),
-                          style: GoogleFonts.vt323(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 75,
-                        child: Button3D(
-                          backgroundColor: const Color(0xFFF1B33A),
-                          borderColor: const Color(0xFF8B5A00),
-                          onPressed: _handleSave,
-                          child: Text(
-                            PlayLocalization.translate('save', widget.selectedLanguage),
-                            style: GoogleFonts.vt323(
-                              color: Colors.black,
-                              fontSize: 18,
+                            SizedBox(height: contentPadding),
+                            TextField(
+                              controller: _controller,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isMobileSmall ? 14 :
+                                         isMobileLarge ? 15 :
+                                         isMobileExtraLarge ? 16 : 18,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: PlayLocalization.translate('', widget.selectedLanguage),
+                                labelStyle: const TextStyle(color: Colors.white70),
+                                border: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.zero,
+                                  borderSide: BorderSide(color: Colors.white),
+                                ),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.zero,
+                                  borderSide: BorderSide(color: Colors.white),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.zero,
+                                  borderSide: BorderSide(color: Colors.white, width: 2),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        color: const Color(0xFF241242),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: contentPadding,
+                          vertical: contentPadding * 0.75,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _handleClose,
+                              child: Text(
+                                PlayLocalization.translate('cancel', widget.selectedLanguage),
+                                style: GoogleFonts.vt323(
+                                  color: Colors.white,
+                                  fontSize: buttonTextSize,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: contentPadding * 0.75),
+                            SizedBox(
+                              width: ResponsiveUtils.valueByDevice(
+                                context: context,
+                                mobile: isMobileSmall ? 65 : 75,
+                                tablet: 85,
+                                desktop: 95,
+                              ),
+                              child: Button3D(
+                                backgroundColor: const Color(0xFFF1B33A),
+                                borderColor: const Color(0xFF8B5A00),
+                                onPressed: _handleSave,
+                                child: Text(
+                                  PlayLocalization.translate('save', widget.selectedLanguage),
+                                  style: GoogleFonts.vt323(
+                                    color: Colors.black,
+                                    fontSize: buttonTextSize,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 } 

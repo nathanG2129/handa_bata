@@ -236,6 +236,13 @@ class HeaderWidgetState extends State<HeaderWidget> {
   }
 
   Widget _buildAvatarButton() {
+    final double avatarRadius = ResponsiveUtils.valueByDevice(
+      context: context,
+      mobile: 20,  // Smaller for mobile
+      tablet: 24,
+      desktop: 24,
+    );
+
     return PopupMenuButton<String>(
       color: const Color(0xFF241242),
       offset: const Offset(0, 64),
@@ -322,12 +329,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
         ),
       ],
       child: CircleAvatar(
-        radius: 24,
+        radius: avatarRadius,
         backgroundColor: Colors.white,
         child: _cachedAvatarPath != null 
           ? Container(
-              width: 32,
-              height: 32,
+              width: avatarRadius * 1.5,  // Adjusted proportionally
+              height: avatarRadius * 1.5,
               decoration: BoxDecoration(
                 shape: BoxShape.rectangle,
                 image: DecorationImage(
@@ -346,29 +353,32 @@ class HeaderWidgetState extends State<HeaderWidget> {
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
       builder: (context, sizingInformation) {
+        final bool isMobileLargeOrSmaller = sizingInformation.deviceScreenType == DeviceScreenType.mobile &&
+            MediaQuery.of(context).size.width <= 414;  // mobileLarge breakpoint
+
         return Container(
           padding: EdgeInsets.only(
             top: MediaQuery.of(context).padding.top + ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 8,
+              mobile: 4,  // Reduced padding for mobile
               tablet: 12,
               desktop: 16,
             ),
             left: ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 16,
+              mobile: 12,  // Reduced padding for mobile
               tablet: 20,
               desktop: 24,
             ),
             right: ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 16,
+              mobile: 12,  // Reduced padding for mobile
               tablet: 20,
               desktop: 24,
             ),
             bottom: ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 12,
+              mobile: 8,  // Reduced padding for mobile
               tablet: 14,
               desktop: 16,
             ),
@@ -383,19 +393,20 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Back button
               Transform.translate(
                 offset: const Offset(0, 2),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 32, color: Colors.white),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    size: isMobileLargeOrSmaller ? 24 : 32,  // Smaller icon for mobile
+                    color: Colors.white
+                  ),
                   onPressed: widget.onBack,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
               ),
-              // Spacer to push everything else to the right
               const Spacer(),
-              // Right side items grouped together
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -403,14 +414,14 @@ class HeaderWidgetState extends State<HeaderWidget> {
                     offset: const Offset(0, 2),
                     child: _buildAvatarButton(),
                   ),
-                  const SizedBox(width: 18),
+                  SizedBox(width: isMobileLargeOrSmaller ? 12 : 18),  // Reduced spacing
                   Transform.translate(
                     offset: const Offset(0, 2),
                     child: PopupMenuButton<String>(
                       icon: SvgPicture.asset(
                         'assets/icons/language_switcher.svg',
-                        width: 32,
-                        height: 32,
+                        width: isMobileLargeOrSmaller ? 24 : 32,  // Smaller for mobile
+                        height: isMobileLargeOrSmaller ? 24 : 32,
                         color: Colors.white,
                       ),
                       padding: EdgeInsets.zero,

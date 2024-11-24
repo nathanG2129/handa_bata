@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/pages/badge_details_dialog.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 enum BadgeFilter {
   myCollection,
@@ -178,88 +179,148 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                     return _buildErrorState();
                   }
 
-                  return Stack(
-                    fit: StackFit.passthrough,
-                    children: [
-                      SlideTransition(
-                        position: _slideAnimation,
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: MediaQuery.of(context).size.height * 0.7,
-                              maxHeight: MediaQuery.of(context).size.height * 0.7,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  color: const Color(0xFF3A1A5F),
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                  child: Center(
-                                    child: Text(
-                                      'Badges',
-                                      style: GoogleFonts.vt323(
-                                        color: Colors.white,
-                                        fontSize: 42,
-                                      ),
-                                    ),
-                                  ),
+                  return ResponsiveBuilder(
+                    builder: (context, sizingInformation) {
+                      // Check for specific mobile breakpoints
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final bool isMobileSmall = screenWidth <= 375;
+                      final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+                      final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+                      final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+
+                      // Calculate sizes based on device type
+                      final double headerFontSize = isMobileSmall ? 28 : 
+                                                  isMobileLarge ? 32 :
+                                                  isMobileExtraLarge ? 36 :
+                                                  isTablet ? 38 : 42;
+
+                      final double gridPadding = isMobileSmall ? 8 : 
+                                               isMobileLarge ? 10 :
+                                               isMobileExtraLarge ? 12 :
+                                               isTablet ? 14 : 16;
+
+                      final double badgeSize = isMobileSmall ? 48 : 
+                                             isMobileLarge ? 52 :
+                                             isMobileExtraLarge ? 55 :
+                                             isTablet ? 60 : 65;
+
+                      final double titleFontSize = isMobileSmall ? 12 : 
+                                                 isMobileLarge ? 14 :
+                                                 isMobileExtraLarge ? 15 :
+                                                 isTablet ? 16 : 18;
+
+                      return Stack(
+                        children: [
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxWidth: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: MediaQuery.of(context).size.width * 0.9,
+                                  tablet: MediaQuery.of(context).size.width * 0.6,
+                                  desktop: 800,
                                 ),
-                                Expanded(
-                                  child: Container(
-                                    color: const Color(0xFF241242),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            child: Column(
-                                              children: [
-                                                if (!widget.selectionMode)
-                                                  Padding(
-                                                    padding: const EdgeInsets.all(16.0),
-                                                    child: _buildFilterDropdown(),
-                                                  ),
-                                                _buildBadgeGrid(_badges),
-                                              ],
-                                            ),
+                                maxHeight: MediaQuery.of(context).size.height * 0.8,
+                              ),
+                              margin: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: isMobileSmall ? 60 : 80,
+                                  tablet: 90,
+                                  desktop: 110,
+                                ),
+                              ),
+                              child: Card(
+                                margin: EdgeInsets.zero,
+                                shape: const RoundedRectangleBorder(
+                                  side: BorderSide(color: Colors.black, width: 1),
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      color: const Color(0xFF3A1A5F),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: isMobileSmall ? 6 : 
+                                                isTablet ? 10 : 8,
+                                        horizontal: isMobileSmall ? 12 : 
+                                                  isTablet ? 18 : 16,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Badges',
+                                          style: GoogleFonts.vt323(
+                                            color: Colors.white,
+                                            fontSize: headerFontSize,
                                           ),
                                         ),
-                                        if (widget.selectionMode)
-                                          Container(
-                                            width: double.infinity,
-                                            color: const Color(0xFF3A1A5F),
-                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                            child: _buildSaveButton(),
-                                          ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                    Expanded(
+                                      child: Container(
+                                        color: const Color(0xFF241242),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  children: [
+                                                    if (!widget.selectionMode)
+                                                      Padding(
+                                                        padding: EdgeInsets.all(gridPadding),
+                                                        child: _buildFilterDropdown(titleFontSize),
+                                                      ),
+                                                    _buildBadgeGrid(
+                                                      _badges,
+                                                      badgeSize,
+                                                      titleFontSize,
+                                                      isTablet,
+                                                      gridPadding,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            if (widget.selectionMode)
+                                              Container(
+                                                width: double.infinity,
+                                                color: const Color(0xFF3A1A5F),
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: isMobileSmall ? 6 : 8,
+                                                  horizontal: isMobileSmall ? 12 : 16,
+                                                ),
+                                                child: _buildSaveButton(titleFontSize),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      if (isSyncing)
-                        const Positioned(
-                          top: 120,
-                          right: 30,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          if (isSyncing)
+                            Positioned(
+                              top: isMobileSmall ? 70 : 
+                                   isTablet ? 100 : 90,
+                              right: 30,
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                    ],
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -270,7 +331,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildFilterDropdown() {
+  Widget _buildFilterDropdown(double fontSize) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -290,7 +351,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               style: GoogleFonts.vt323(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: fontSize,
               ),
               onChanged: _handleFilterChange,
               items: BadgeFilter.values.map((filter) => DropdownMenuItem(
@@ -402,24 +463,25 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     }
   }
 
-  Widget _buildBadgeGrid(List<Map<String, dynamic>> badges) {
+  Widget _buildBadgeGrid(
+    List<Map<String, dynamic>> badges,
+    double badgeSize,
+    double titleFontSize,
+    bool isTablet,
+    double gridPadding,
+  ) {
     return ValueListenableBuilder<BadgeFilter>(
       valueListenable: _filterNotifier,
       builder: (context, currentFilter, _) {
         var filteredBadges = _filterBadges(badges, currentFilter);
         
         return GridView.builder(
-          padding: const EdgeInsets.all(2.0),
+          padding: EdgeInsets.all(gridPadding),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: ResponsiveValue<int>(
-              context,
-              defaultValue: 2,
-              conditionalValues: [
-                const Condition.largerThan(name: TABLET, value: 4),
-              ],
-            ).value,
-            crossAxisSpacing: 0.0,
-            mainAxisSpacing: 20.0,
+            crossAxisCount: isTablet ? 4 : 2,
+            crossAxisSpacing: gridPadding,
+            mainAxisSpacing: gridPadding * 2,
+            childAspectRatio: isTablet ? 1.0 : 0.85,
           ),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -437,6 +499,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                   badge: badge,
                   isUnlocked: isUnlocked,
                   isSelected: isSelected,
+                  badgeSize: badgeSize,
+                  titleFontSize: titleFontSize,
                   onTap: () => widget.selectionMode 
                       ? _handleBadgeSelection(badge['id'])
                       : _showBadgeDetails(badge),
@@ -449,7 +513,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(double fontSize) {
     return ValueListenableBuilder<List<int>>(
       valueListenable: _selectedBadgesNotifier,
       builder: (context, selectedBadges, _) {
@@ -472,7 +536,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
               child: Text(
                 'Save Changes',
                 style: GoogleFonts.vt323(
-                  fontSize: 20,
+                  fontSize: fontSize,
                   color: Colors.black,  // Always black, no grey
                 ),
               ),
@@ -488,6 +552,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     required bool isUnlocked,
     required bool isSelected,
     required VoidCallback onTap,
+    required double badgeSize,
+    required double titleFontSize,
   }) {
     const double lockedOpacity = 0.5;
     const double unlockedOpacity = 1.0;
@@ -514,12 +580,12 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 47,
-                    height: 50,
+                    width: badgeSize,
+                    height: badgeSize,
                     child: Image.asset(
                       'assets/badges/${badge['img']}',
-                      width: 47,
-                      height: 50,
+                      width: badgeSize,
+                      height: badgeSize,
                       fit: BoxFit.contain,
                       filterQuality: FilterQuality.none,
                       isAntiAlias: false,
@@ -530,7 +596,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                     badge['title'] ?? 'Badge',
                     style: GoogleFonts.vt323(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: titleFontSize,
                     ),
                   ),
                 ],

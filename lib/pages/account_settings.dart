@@ -3,21 +3,21 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/models/user_model.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
+import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
 import 'package:handabatamae/widgets/dialogs/reauth_dialog.dart';
-import 'splash_page.dart'; // Import SplashPage
-import '../localization/play/localization.dart'; // Import the localization file
-import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
-import 'account_settings_content.dart'; // Import the new file
-// Import FavoriteBadges
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'splash_page.dart';
+import '../localization/play/localization.dart';
+import 'package:handabatamae/widgets/user_profile/user_profile_header.dart';
+import 'account_settings_content.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/widgets/dialogs/account_deletion_dialog.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
-  final String selectedLanguage; // Add this line
+  final String selectedLanguage;
 
   const AccountSettings({super.key, required this.onClose, required this.selectedLanguage});
 
@@ -301,70 +301,95 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
                 onTap: () {},
                 child: SlideTransition(
                   position: _slideAnimation,
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                    shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.black, width: 1),
-                      borderRadius: BorderRadius.zero,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          color: const Color(0xFF760a6b),
-                          child: _userProfile != null
-                              ? UserProfileHeader(
-                                  nickname: _userProfile!.nickname,
-                                  username: _userProfile!.username,
-                                  avatarId: _userProfile!.avatarId,
-                                  level: _userProfile!.level,
-                                  currentExp: _userProfile!.exp,
-                                  maxExp: _userProfile!.expCap,
-                                  textStyle: GoogleFonts.rubik(
-                                    color: Colors.white,
-                                    fontSize: ResponsiveValue<double>(
-                                      context,
-                                      defaultValue: 16,
-                                      conditionalValues: [
-                                        const Condition.smallerThan(name: MOBILE, value: 14),
-                                        const Condition.largerThan(name: MOBILE, value: 18),
-                                      ],
-                                    ).value,
-                                  ),
-                                  selectedLanguage: widget.selectedLanguage,
-                                  bannerId: _userProfile!.bannerId,
-                                  badgeShowcase: _userProfile!.badgeShowcase,
-                                )
-                              : const SizedBox.shrink(),
+                  child: ResponsiveBuilder(
+                    builder: (context, sizingInformation) {
+                      // Check for specific mobile breakpoints
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final bool isMobileSmall = screenWidth <= 375;
+                      final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+                      final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+
+                      // Calculate sizes based on device type
+                      double maxWidth = ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: MediaQuery.of(context).size.width * 0.9,
+                        tablet: MediaQuery.of(context).size.width * 0.4,
+                        desktop: 800,
+                      );
+
+                      double padding = ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: isMobileSmall ? 8 : 
+                               isMobileLarge ? 10 :
+                               isMobileExtraLarge ? 12 : 16,
+                        tablet: 24,
+                        desktop: 32,
+                      );
+
+                      return Container(
+                        constraints: BoxConstraints(
+                          maxWidth: maxWidth,
+                          maxHeight: MediaQuery.of(context).size.height * 0.8,
                         ),
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: EdgeInsets.all(
-                                ResponsiveValue<double>(
-                                  context,
-                                  defaultValue: 10.0,
-                                  conditionalValues: [
-                                    const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                    const Condition.largerThan(name: MOBILE, value: 24.0),
-                                  ],
-                                ).value,
+                        margin: EdgeInsets.all(padding),
+                        child: Card(
+                          margin: EdgeInsets.zero,
+                          shape: const RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.black, width: 1),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                color: const Color(0xFF760a6b),
+                                child: _userProfile != null
+                                  ? UserProfileHeader(
+                                      nickname: _userProfile!.nickname,
+                                      username: _userProfile!.username,
+                                      avatarId: _userProfile!.avatarId,
+                                      level: _userProfile!.level,
+                                      currentExp: _userProfile!.exp,
+                                      maxExp: _userProfile!.expCap,
+                                      textStyle: GoogleFonts.rubik(
+                                        color: Colors.white,
+                                        fontSize: ResponsiveUtils.valueByDevice(
+                                          context: context,
+                                          mobile: isMobileSmall ? 14 :
+                                                 isMobileLarge ? 16 :
+                                                 isMobileExtraLarge ? 18 : 20,
+                                          tablet: 22,
+                                          desktop: 24,
+                                        ),
+                                      ),
+                                      selectedLanguage: widget.selectedLanguage,
+                                      bannerId: _userProfile!.bannerId,
+                                      badgeShowcase: _userProfile!.badgeShowcase,
+                                    )
+                                  : const SizedBox.shrink(),
                               ),
-                              child: AccountSettingsContent(
-                                userProfile: _userProfile ?? UserProfile.guestProfile,
-                                onShowChangeNicknameDialog: _showChangeNicknameDialog,
-                                onLogout: _logout,
-                                onShowDeleteAccountDialog: _showDeleteAccountDialog,
-                                selectedLanguage: widget.selectedLanguage,
-                                darkenColor: _darkenColor,
-                                redactEmail: _redactEmail,
-                                userRole: _userRole,
+                              Flexible(
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(padding),
+                                    child: AccountSettingsContent(
+                                      userProfile: _userProfile ?? UserProfile.guestProfile,
+                                      onShowChangeNicknameDialog: _showChangeNicknameDialog,
+                                      onLogout: _logout,
+                                      onShowDeleteAccountDialog: _showDeleteAccountDialog,
+                                      selectedLanguage: widget.selectedLanguage,
+                                      darkenColor: _darkenColor,
+                                      redactEmail: _redactEmail,
+                                      userRole: _userRole,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),

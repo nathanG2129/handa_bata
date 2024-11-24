@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:handabatamae/services/avatar_service.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class CharacterPage extends StatefulWidget {
   final VoidCallback onClose;
@@ -188,52 +189,174 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
             color: Colors.black.withOpacity(0),
             child: Center(
               child: GestureDetector(
-                onTap: () {}, // Prevent tap from closing dialog
+                onTap: () {},
                 child: StreamBuilder<bool>(
                   stream: _avatarService.syncStatus,
                   builder: (context, syncSnapshot) {
                     final isSyncing = syncSnapshot.data ?? false;
                     
-                    return Stack(
-                      children: [
-                        SlideTransition(
-                          position: _slideAnimation,
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 110),
-                            shape: const RoundedRectangleBorder(
-                              side: BorderSide(color: Colors.black, width: 1),
-                              borderRadius: BorderRadius.zero,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildHeader(),
-                                if (_isLoading)
-                                  const Expanded(
-                                    child: Center(child: CircularProgressIndicator()),
-                                  )
-                                else
-                                  _buildAvatarGrid(),
-                                if (widget.selectionMode)
-                                  _buildSaveButton(),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (isSyncing)
-                          const Positioned(
-                            top: 120,
-                            right: 30,
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    return ResponsiveBuilder(
+                      builder: (context, sizingInformation) {
+                        // Check for specific mobile breakpoints
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final bool isMobileSmall = screenWidth <= 375;
+                        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+                        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+                        final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+
+                        // Calculate sizes based on device type
+                        final double headerFontSize = isMobileSmall ? 28 : 
+                                                    isMobileLarge ? 32 :
+                                                    isMobileExtraLarge ? 36 :
+                                                    isTablet ? 38 : 42;
+
+                        final double gridPadding = isMobileSmall ? 8 : 
+                                                 isMobileLarge ? 10 :
+                                                 isMobileExtraLarge ? 12 :
+                                                 isTablet ? 14 : 16;
+
+                        final double avatarSize = isMobileSmall ? 25 : 
+                                                isMobileLarge ? 28 :
+                                                isMobileExtraLarge ? 32 :
+                                                isTablet ? 38 : 45;
+
+                        final double titleFontSize = isMobileSmall ? 12 : 
+                                                   isMobileLarge ? 14 :
+                                                   isMobileExtraLarge ? 15 :
+                                                   isTablet ? 16 : 18;
+
+                        return Stack(
+                          children: [
+                            SlideTransition(
+                              position: _slideAnimation,
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: ResponsiveUtils.valueByDevice(
+                                    context: context,
+                                    mobile: MediaQuery.of(context).size.width * 0.9,
+                                    tablet: MediaQuery.of(context).size.width * 0.6,
+                                    desktop: 800,
+                                  ),
+                                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                ),
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: ResponsiveUtils.valueByDevice(
+                                    context: context,
+                                    mobile: isMobileSmall ? 60 : 80,
+                                    tablet: 90,
+                                    desktop: 110,
+                                  ),
+                                ),
+                                child: Card(
+                                  shape: const RoundedRectangleBorder(
+                                    side: BorderSide(color: Colors.black, width: 1),
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Header section
+                                      Container(
+                                        width: double.infinity,
+                                        color: const Color(0xFF3A1A5F),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: isMobileSmall ? 6 : 
+                                                  isTablet ? 10 : 8,
+                                          horizontal: isMobileSmall ? 12 : 
+                                                    isTablet ? 18 : 16,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'Characters',
+                                            style: GoogleFonts.vt323(
+                                              color: Colors.white,
+                                              fontSize: headerFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // Grid section
+                                      if (_isLoading)
+                                        const Expanded(
+                                          child: Center(child: CircularProgressIndicator()),
+                                        )
+                                      else
+                                        Flexible(
+                                          child: SingleChildScrollView(
+                                            child: Container(
+                                              color: const Color(0xFF241242),
+                                              padding: EdgeInsets.all(gridPadding),
+                                              child: GridView.builder(
+                                                padding: const EdgeInsets.all(2.0),
+                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: isTablet ? 4 : 3,
+                                                  crossAxisSpacing: gridPadding,
+                                                  mainAxisSpacing: gridPadding,
+                                                ),
+                                                shrinkWrap: true,
+                                                physics: const NeverScrollableScrollPhysics(),
+                                                itemCount: _avatars.length,
+                                                itemBuilder: (context, index) => _buildAvatarItem(
+                                                  _avatars[index],
+                                                  avatarSize,
+                                                  titleFontSize,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      // Save button section
+                                      if (widget.selectionMode)
+                                        Container(
+                                          width: double.infinity,
+                                          color: const Color(0xFF3A1A5F),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: isMobileSmall ? 6 : 8,
+                                            horizontal: isMobileSmall ? 12 : 16,
+                                          ),
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.white,
+                                              foregroundColor: Colors.black,
+                                              textStyle: GoogleFonts.vt323(
+                                                fontSize: titleFontSize,
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: isMobileSmall ? 6 : 8,
+                                              ),
+                                            ),
+                                            onPressed: _selectedAvatarId != null 
+                                              ? () => _handleAvatarUpdate(_selectedAvatarId!)
+                                              : null,
+                                            child: const Text(
+                                              'Save Changes',
+                                              style: TextStyle(fontSize: 18),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                            if (isSyncing)
+                              Positioned(
+                                top: isMobileSmall ? 70 : 
+                                     isTablet ? 100 : 90,
+                                right: 30,
+                                child: const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     );
                   },
                 ),
@@ -245,62 +368,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF3A1A5F),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      child: Center(
-        child: Text(
-          'Characters',
-          style: GoogleFonts.vt323(
-            color: Colors.white,
-            fontSize: 42,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarGrid() {
-    return Flexible(
-      child: SingleChildScrollView(
-        child: Container(
-          color: const Color(0xFF241242),
-          padding: EdgeInsets.all(
-            ResponsiveValue<double>(
-              context,
-              defaultValue: 20.0,
-              conditionalValues: [
-                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                const Condition.largerThan(name: MOBILE, value: 24.0),
-              ],
-            ).value,
-          ),
-          child: GridView.builder(
-            padding: const EdgeInsets.all(2.0),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: ResponsiveValue<int>(
-                context,
-                defaultValue: 3,
-                conditionalValues: [
-                  const Condition.largerThan(name: TABLET, value: 4),
-                ],
-              ).value,
-              crossAxisSpacing: 0.0,
-              mainAxisSpacing: 5.0,
-            ),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _avatars.length,
-            itemBuilder: (context, index) => _buildAvatarItem(_avatars[index]),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarItem(Map<String, dynamic> avatar) {
+  Widget _buildAvatarItem(Map<String, dynamic> avatar, double avatarSize, double titleFontSize) {
     final bool isSelected = widget.selectionMode 
         ? _selectedAvatarId == avatar['id']
         : widget.currentAvatarId == avatar['id'];
@@ -317,11 +385,11 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircleAvatar(
-                radius: 30,
+                radius: avatarSize,
                 backgroundColor: isSelected ? const Color(0xFF9474CC) : Colors.white,
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: avatarSize * 1.5,
+                  height: avatarSize * 1.5,
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     image: DecorationImage(
@@ -332,36 +400,20 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
                   ),
                 ),
               ),
-              const SizedBox(height: 0),
+              const SizedBox(height: 4),
               Text(
                 avatar['title'] ?? 'Avatar',
                 style: GoogleFonts.vt323(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: titleFontSize,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF3A1A5F),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          textStyle: GoogleFonts.vt323(fontSize: 20),
-        ),
-        onPressed: _selectedAvatarId != null 
-          ? () => _handleAvatarUpdate(_selectedAvatarId!)
-          : null,
-        child: const Text('Save Changes'),
       ),
     );
   }

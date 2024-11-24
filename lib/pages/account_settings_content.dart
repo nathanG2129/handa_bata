@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/email_verification_dialog.dart';
 import 'package:handabatamae/pages/register_page.dart';
@@ -171,99 +173,183 @@ class AccountSettingsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSection(
-            title: PlayLocalization.translate('nickname', selectedLanguage),
-            content: userProfile.nickname,
-            buttonLabel: PlayLocalization.translate('change', selectedLanguage),
-            buttonColor: const Color(0xFF4d278f),
-            onPressed: onShowChangeNicknameDialog,
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        // Check for specific mobile breakpoints
+        final screenWidth = MediaQuery.of(context).size.width;
+        final bool isMobileSmall = screenWidth <= 375;
+        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+        final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+
+        // Calculate sizes based on device type
+        final double titleFontSize = isMobileSmall ? 14 : 
+                                   isMobileLarge ? 15 :
+                                   isMobileExtraLarge ? 16 :
+                                   isTablet ? 18 : 20;
+
+        final double contentFontSize = isMobileSmall ? 15 : 
+                                     isMobileLarge ? 16 :
+                                     isMobileExtraLarge ? 18 :
+                                     isTablet ? 20 : 22;
+
+        final double buttonWidth = isMobileSmall ? 70 :
+                                 isMobileLarge ? 75 :
+                                 isMobileExtraLarge ? 80 :
+                                 isTablet ? 85 : 90;
+
+        final double buttonHeight = isMobileSmall ? 55 :
+                                  isMobileLarge ? 60 :
+                                  isMobileExtraLarge ? 65 :
+                                  isTablet ? 70 : 75;
+
+        final double sectionPadding = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: isMobileSmall ? 8 : 10,
+          tablet: 12,
+          desktop: 14,
+        );
+
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSection(
+                context: context,
+                title: PlayLocalization.translate('nickname', selectedLanguage),
+                content: userProfile.nickname,
+                buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                buttonColor: const Color(0xFF4d278f),
+                onPressed: onShowChangeNicknameDialog,
+                titleFontSize: titleFontSize,
+                contentFontSize: contentFontSize,
+                buttonWidth: buttonWidth,
+                buttonHeight: buttonHeight,
+                padding: sectionPadding,
+              ),
+              if (userRole != 'guest') ...[
+                _buildSection(
+                  context: context,
+                  title: PlayLocalization.translate('birthday', selectedLanguage),
+                  content: userProfile.birthday,
+                  titleFontSize: titleFontSize,
+                  contentFontSize: contentFontSize,
+                  padding: sectionPadding,
+                ),
+                _buildSection(
+                  context: context,
+                  title: PlayLocalization.translate('email', selectedLanguage),
+                  content: redactEmail(userProfile.email),
+                  buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                  buttonColor: const Color(0xFF4d278f),
+                  onPressed: () => _handleEmailChange(context),
+                  titleFontSize: titleFontSize,
+                  contentFontSize: contentFontSize,
+                  buttonWidth: buttonWidth,
+                  buttonHeight: buttonHeight,
+                  padding: sectionPadding,
+                ),
+                _buildSection(
+                  context: context,
+                  title: PlayLocalization.translate('password', selectedLanguage),
+                  content: '********',
+                  buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                  buttonColor: const Color(0xFF4d278f),
+                  onPressed: () => _handlePasswordChange(context),
+                  titleFontSize: titleFontSize,
+                  contentFontSize: contentFontSize,
+                  buttonWidth: buttonWidth,
+                  buttonHeight: buttonHeight,
+                  padding: sectionPadding,
+                ),
+              ],
+              _buildSection(
+                context: context,
+                title: userRole == 'guest' 
+                  ? PlayLocalization.translate('register', selectedLanguage)
+                  : PlayLocalization.translate('logout', selectedLanguage),
+                buttonLabel: userRole == 'guest'
+                  ? PlayLocalization.translate('registerButton', selectedLanguage)
+                  : PlayLocalization.translate('logoutButton', selectedLanguage),
+                buttonColor: userRole == 'guest' ? const Color(0xFF4d278f) : Colors.red,
+                onPressed: userRole == 'guest'
+                  ? () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegistrationPage(selectedLanguage: selectedLanguage),
+                      ),
+                    )
+                  : onLogout,
+                content: '',
+                titleFontSize: titleFontSize,
+                contentFontSize: contentFontSize,
+                buttonWidth: buttonWidth * 1.2, // Slightly wider for these buttons
+                buttonHeight: buttonHeight,
+                padding: sectionPadding,
+              ),
+              Divider(
+                color: Colors.black,
+                thickness: 1,
+                indent: sectionPadding,
+                endIndent: sectionPadding,
+              ),
+              _buildDangerZone(
+                context,
+                titleFontSize: titleFontSize,
+                contentFontSize: contentFontSize,
+                buttonWidth: buttonWidth * 1.5, // Wider for danger zone button
+                buttonHeight: buttonHeight,
+                padding: sectionPadding,
+              ),
+            ],
           ),
-          if (userRole != 'guest') ...[
-            _buildSection(
-              title: PlayLocalization.translate('birthday', selectedLanguage),
-              content: userProfile.birthday,
-            ),
-            _buildSection(
-              title: PlayLocalization.translate('email', selectedLanguage),
-              content: redactEmail(userProfile.email),
-              buttonLabel: PlayLocalization.translate('change', selectedLanguage),
-              buttonColor: const Color(0xFF4d278f),
-              onPressed: () => _handleEmailChange(context),
-            ),
-            _buildSection(
-              title: PlayLocalization.translate('password', selectedLanguage),
-              content: '********',
-              buttonLabel: PlayLocalization.translate('change', selectedLanguage),
-              buttonColor: const Color(0xFF4d278f),
-              onPressed: () => _handlePasswordChange(context),
-            ),
-          ],
-          _buildSection(
-            title: userRole == 'guest' 
-              ? PlayLocalization.translate('register', selectedLanguage)
-              : PlayLocalization.translate('logout', selectedLanguage),
-            buttonLabel: userRole == 'guest'
-              ? PlayLocalization.translate('registerButton', selectedLanguage)
-              : PlayLocalization.translate('logoutButton', selectedLanguage),
-            buttonColor: userRole == 'guest' ? const Color(0xFF4d278f) : Colors.red,
-            onPressed: userRole == 'guest'
-              ? () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RegistrationPage(selectedLanguage: selectedLanguage),
-                  ),
-                )
-              : onLogout,
-            content: '',
-          ),
-          const Divider(
-            color: Colors.black,
-            thickness: 1,
-            indent: 10,
-            endIndent: 10,
-          ),
-          _buildDangerZone(context),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildDangerZone(BuildContext context) {
+  Widget _buildDangerZone(
+    BuildContext context, {
+    required double titleFontSize,
+    required double contentFontSize,
+    required double buttonWidth,
+    required double buttonHeight,
+    required double padding,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: EdgeInsets.symmetric(horizontal: padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             PlayLocalization.translate('accountRemoval', selectedLanguage),
             style: GoogleFonts.rubik(
-              fontSize: 16,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: padding),
           Text(
             PlayLocalization.translate('accountRemovalDescription', selectedLanguage),
             style: GoogleFonts.rubik(
-              fontSize: 14,
+              fontSize: contentFontSize,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: padding),
           Align(
             alignment: Alignment.centerLeft,
             child: Button3D(
               onPressed: onShowDeleteAccountDialog,
               backgroundColor: const Color(0xFFc32929),
               borderColor: darkenColor(const Color(0xFFc32929)),
-              width: 150,
-              height: 40,
+              width: buttonWidth,
+              height: buttonHeight,
               child: Text(
                 PlayLocalization.translate('delete', selectedLanguage),
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 16),
+                style: GoogleFonts.vt323(
+                  color: Colors.white,
+                  fontSize: contentFontSize,
+                ),
               ),
             ),
           ),
@@ -273,15 +359,21 @@ class AccountSettingsContent extends StatelessWidget {
   }
 
   Widget _buildSection({
+    required BuildContext context,
     required String title,
     required String content,
     String? buttonLabel,
     Color? buttonColor,
     VoidCallback? onPressed,
     Color buttonTextColor = Colors.white,
+    required double titleFontSize,
+    required double contentFontSize,
+    required double padding,
+    double? buttonWidth,
+    double? buttonHeight,
   }) {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: EdgeInsets.all(padding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -292,30 +384,33 @@ class AccountSettingsContent extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.rubik(
-                    fontSize: 16,
+                    fontSize: titleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: padding / 2),
                 Text(
                   content,
                   style: GoogleFonts.rubik(
-                    fontSize: 14,
+                    fontSize: contentFontSize,
                   ),
                 ),
               ],
             ),
           ),
-          if (buttonLabel != null && buttonColor != null && onPressed != null)
+          if (buttonLabel != null && buttonColor != null && onPressed != null && buttonWidth != null && buttonHeight != null)
             Button3D(
               onPressed: onPressed,
               backgroundColor: buttonColor,
               borderColor: darkenColor(buttonColor),
-              width: 80 * 1.05,
-              height: 35 * 1.05,
+              width: buttonWidth,
+              height: buttonHeight,
               child: Text(
                 buttonLabel,
-                style: GoogleFonts.vt323(color: buttonTextColor, fontSize: 15),
+                style: GoogleFonts.vt323(
+                  color: buttonTextColor,
+                  fontSize: contentFontSize,
+                ),
               ),
             ),
         ],

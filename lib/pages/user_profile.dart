@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/models/user_model.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/user_profile/user_profile_header.dart'; // Import UserProfileHeader
 import 'package:handabatamae/widgets/user_profile/user_profile_stats.dart'; // Import UserProfileStats
 import 'package:handabatamae/widgets/user_profile/favorite_badges.dart'; // Import FavoriteBadges
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import 'package:responsive_builder/responsive_builder.dart';
 
 class UserProfilePage extends StatefulWidget {
   final VoidCallback onClose;
@@ -117,59 +118,87 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
                 onTap: () {},
                 child: SlideTransition(
                   position: _slideAnimation,
-                  child: Card(
-                    margin: const EdgeInsets.all(20),
-                    shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.black, width: 1), // Black border for the dialog
-                      borderRadius: BorderRadius.zero, // Purely rectangular
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          color: const Color(0xFF760a6b), // Background color for username, level, and profile picture
-                          child: _isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : _userProfile != null
-                                  ? UserProfileHeader(
-                                      nickname: _userProfile!.nickname, // Pass nickname
-                                      username: _userProfile!.username, // Pass username
-                                      avatarId: _userProfile!.avatarId,
-                                      level: _userProfile!.level,
-                                      currentExp: _userProfile!.exp, 
-                                      maxExp: _userProfile!.expCap,
-                                      textStyle: GoogleFonts.rubik(
-                                        color: Colors.white,
-                                        fontSize: ResponsiveValue<double>(
-                                          context,
-                                          defaultValue: 16,
-                                          conditionalValues: [
-                                            const Condition.smallerThan(name: MOBILE, value: 14),
-                                            const Condition.largerThan(name: MOBILE, value: 18),
-                                          ],
-                                        ).value,
-                                      ), selectedLanguage: _selectedLanguage,  // White font color for username and level
-                                      showMenuIcon: true, // Show menu icon
-                                      onUpdateProfile: _handleProfileUpdate, bannerId: _userProfile!.bannerId, // Changed from onProfileUpdate
-                                      badgeShowcase: _userProfile!.badgeShowcase,
-                                  )
-                                  : const SizedBox.shrink(),
+                  child: ResponsiveBuilder(
+                    builder: (context, sizingInformation) {
+                      // Calculate the maximum width based on device type
+                      double maxWidth = ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: MediaQuery.of(context).size.width * 0.9,
+                        tablet: MediaQuery.of(context).size.width * 0.4,
+                        desktop: 800,
+                      );
+
+                      // Calculate padding based on device type
+                      double padding = ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: 16,
+                        tablet: 24,
+                        desktop: 32,
+                      );
+
+                      return Container(
+                        constraints: BoxConstraints(
+                          maxWidth: maxWidth,
+                          maxHeight: MediaQuery.of(context).size.height * 0.8,
                         ),
-                        Padding(
-                          padding: EdgeInsets.all(
-                            ResponsiveValue<double>(
-                              context,
-                              defaultValue: 20.0,
-                              conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 16.0),
-                                const Condition.largerThan(name: MOBILE, value: 24.0),
-                              ],
-                            ).value,
+                        margin: EdgeInsets.all(padding),
+                        child: Card(
+                          shape: const RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.black, width: 1),
+                            borderRadius: BorderRadius.zero,
                           ),
-                          child: _buildUserProfile(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                color: const Color(0xFF760a6b),
+                                child: _isLoading
+                                    ? const Center(child: CircularProgressIndicator())
+                                    : _userProfile != null
+                                        ? UserProfileHeader(
+                                            nickname: _userProfile!.nickname,
+                                            username: _userProfile!.username,
+                                            avatarId: _userProfile!.avatarId,
+                                            level: _userProfile!.level,
+                                            currentExp: _userProfile!.exp,
+                                            maxExp: _userProfile!.expCap,
+                                            textStyle: GoogleFonts.rubik(
+                                              color: Colors.white,
+                                              fontSize: ResponsiveUtils.valueByDevice(
+                                                context: context,
+                                                mobile: 14,
+                                                tablet: 16,
+                                                desktop: 18,
+                                              ),
+                                            ),
+                                            selectedLanguage: _selectedLanguage,
+                                            showMenuIcon: true,
+                                            onUpdateProfile: _handleProfileUpdate,
+                                            bannerId: _userProfile!.bannerId,
+                                            badgeShowcase: _userProfile!.badgeShowcase,
+                                          )
+                                        : const SizedBox.shrink(),
+                              ),
+                              Flexible(
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(
+                                      ResponsiveUtils.valueByDevice(
+                                        context: context,
+                                        mobile: 16,
+                                        tablet: 20,
+                                        desktop: 24,
+                                      ),
+                                    ),
+                                    child: _buildUserProfile(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -197,10 +226,15 @@ class UserProfilePageState extends State<UserProfilePage> with SingleTickerProvi
           totalStagesCleared: _userProfile!.totalStageCleared,
           selectedLanguage: _selectedLanguage,
         ),
-        const Divider(
+        Divider(
           color: Colors.black,
           thickness: 1.5,
-          height: 32,
+          height: ResponsiveUtils.valueByDevice(
+            context: context,
+            mobile: 24,
+            tablet: 28,
+            desktop: 32,
+          ),
         ),
         FavoriteBadges(
           selectedLanguage: _selectedLanguage,

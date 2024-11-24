@@ -17,11 +17,14 @@ class FooterWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
       builder: (context, sizingInformation) {
+        final bool isMobileLargeOrSmaller = sizingInformation.deviceScreenType == DeviceScreenType.mobile &&
+            MediaQuery.of(context).size.width <= 414;  // mobileLarge breakpoint
+
         return Container(
           padding: EdgeInsets.all(
             ResponsiveUtils.valueByDevice(
               context: context,
-              mobile: 8,
+              mobile: 6,  // Reduced padding for mobile
               tablet: 10,
               desktop: 12,
             ),
@@ -37,7 +40,7 @@ class FooterWidget extends StatelessWidget {
               Text(
                 'Handa Bata © 2024',
                 style: GoogleFonts.vt323(
-                  fontSize: ResponsiveUtils.valueByDevice(
+                  fontSize: isMobileLargeOrSmaller ? 16 : ResponsiveUtils.valueByDevice(
                     context: context,
                     mobile: 20,
                     tablet: 22,
@@ -49,7 +52,7 @@ class FooterWidget extends StatelessWidget {
               SizedBox(
                 height: ResponsiveUtils.valueByDevice(
                   context: context,
-                  mobile: 4,
+                  mobile: 2,  // Reduced spacing for mobile
                   tablet: 5,
                   desktop: 6,
                 ),
@@ -70,11 +73,14 @@ class FooterWidget extends StatelessWidget {
                     },
                     child: Text(
                       selectedLanguage == 'fil' ? 'Patakaran sa Privacy' : 'Privacy Policy',
-                      style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
+                      style: GoogleFonts.vt323(
+                        fontSize: isMobileLargeOrSmaller ? 18 : 24,  // Smaller text for mobile
+                        color: Colors.white
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: isMobileLargeOrSmaller ? 6 : 10),  // Reduced spacing
                   Flexible(
                     child: TextButton(
                       onPressed: () {
@@ -89,7 +95,10 @@ class FooterWidget extends StatelessWidget {
                       },
                       child: Text(
                         selectedLanguage == 'fil' ? 'Mga Tuntunin ng Serbisyo' : 'Terms of Service',
-                        style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
+                        style: GoogleFonts.vt323(
+                          fontSize: isMobileLargeOrSmaller ? 18 : 24,  // Smaller text for mobile
+                          color: Colors.white
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),

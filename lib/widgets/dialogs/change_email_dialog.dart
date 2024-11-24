@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
 import '../../localization/email_change/localization.dart';
@@ -91,142 +93,206 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (!_isLoading) {
-          await _handleClose();
-        }
-        return false;
-      },
-      child: GestureDetector(
-        onTap: _isLoading ? null : _handleClose,
-        child: Stack(
-          children: [
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Dialog(
-                  shape: const RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.black, width: 1),
-                    borderRadius: BorderRadius.zero,
-                  ),
-                  backgroundColor: const Color(0xFF351b61),
-                  child: AbsorbPointer(
-                    absorbing: _isLoading,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        // Get responsive dimensions
+        final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.9,
+          tablet: 450,
+          desktop: 500,
+        );
+
+        final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 24,
+          tablet: 28,
+          desktop: 32,
+        );
+
+        final buttonTextSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 18,
+          desktop: 20,
+        );
+
+        final contentPadding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 20,
+          desktop: 24,
+        );
+
+        // Check for specific mobile breakpoints
+        final screenWidth = MediaQuery.of(context).size.width;
+        final bool isMobileSmall = screenWidth <= 375;
+        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+
+        return WillPopScope(
+          onWillPop: () async {
+            if (!_isLoading) {
+              await _handleClose();
+            }
+            return false;
+          },
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleClose,
+            child: Stack(
+              children: [
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Dialog(
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.black, width: 1),
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      backgroundColor: const Color(0xFF351b61),
+                      child: Container(
+                        width: dialogWidth,
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: AbsorbPointer(
+                          absorbing: _isLoading,
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Center(
-                                child: Text(
-                                  EmailChangeLocalization.translate('title', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    fontSize: 28,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              TextField(
-                                controller: _emailController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: EmailChangeLocalization.translate('new_email', widget.selectedLanguage),
-                                  labelStyle: const TextStyle(color: Colors.white70),
-                                  border: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  enabledBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  focusedBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white, width: 2),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: true,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: EmailChangeLocalization.translate('current_password', widget.selectedLanguage),
-                                  labelStyle: const TextStyle(color: Colors.white70),
-                                  border: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  enabledBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  focusedBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    borderSide: BorderSide(color: Colors.white, width: 2),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          color: const Color(0xFF241242),
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: _isLoading ? null : _handleClose,
-                                child: Text(
-                                  EmailChangeLocalization.translate('cancel_button', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 100,
-                                child: Button3D(
-                                  backgroundColor: const Color(0xFFF1B33A),
-                                  borderColor: const Color(0xFF8B5A00),
-                                  onPressed: _isLoading ? () {} : handleContinue,
-                                  child: Text(
-                                    EmailChangeLocalization.translate('change_button', widget.selectedLanguage),
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.black,
-                                      fontSize: 18,
+                              Padding(
+                                padding: EdgeInsets.all(contentPadding),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Center(
+                                      child: Text(
+                                        EmailChangeLocalization.translate('title', widget.selectedLanguage),
+                                        style: GoogleFonts.vt323(
+                                          fontSize: isMobileSmall ? 20 :
+                                                   isMobileLarge ? 22 :
+                                                   isMobileExtraLarge ? 24 : titleFontSize,
+                                          color: Colors.white,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                  ),
+                                    SizedBox(height: contentPadding),
+                                    TextField(
+                                      controller: _emailController,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: isMobileSmall ? 14 :
+                                                 isMobileLarge ? 15 :
+                                                 isMobileExtraLarge ? 16 : 18,
+                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: EmailChangeLocalization.translate('new_email', widget.selectedLanguage),
+                                        labelStyle: const TextStyle(color: Colors.white70),
+                                        border: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white),
+                                        ),
+                                        enabledBorder: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white),
+                                        ),
+                                        focusedBorder: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: contentPadding),
+                                    TextField(
+                                      controller: _passwordController,
+                                      obscureText: true,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: isMobileSmall ? 14 :
+                                                 isMobileLarge ? 15 :
+                                                 isMobileExtraLarge ? 16 : 18,
+                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: EmailChangeLocalization.translate('current_password', widget.selectedLanguage),
+                                        labelStyle: const TextStyle(color: Colors.white70),
+                                        border: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white),
+                                        ),
+                                        enabledBorder: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white),
+                                        ),
+                                        focusedBorder: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.zero,
+                                          borderSide: BorderSide(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                color: const Color(0xFF241242),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: contentPadding,
+                                  vertical: contentPadding * 0.75,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: _isLoading ? null : _handleClose,
+                                      child: Text(
+                                        EmailChangeLocalization.translate('cancel_button', widget.selectedLanguage),
+                                        style: GoogleFonts.vt323(
+                                          color: Colors.white,
+                                          fontSize: buttonTextSize,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: contentPadding * 0.75),
+                                    SizedBox(
+                                      width: ResponsiveUtils.valueByDevice(
+                                        context: context,
+                                        mobile: isMobileSmall ? 90 : 100,
+                                        tablet: 110,
+                                        desktop: 120,
+                                      ),
+                                      child: Button3D(
+                                        backgroundColor: const Color(0xFFF1B33A),
+                                        borderColor: const Color(0xFF8B5A00),
+                                        onPressed: _isLoading ? () {} : handleContinue,
+                                        child: Text(
+                                          EmailChangeLocalization.translate('change_button', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(
+                                            color: Colors.black,
+                                            fontSize: buttonTextSize,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (_isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.7),
+                    child: const LoadingWidget(),
+                  ),
+              ],
             ),
-            if (_isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.7),
-                child: const LoadingWidget(),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 } 

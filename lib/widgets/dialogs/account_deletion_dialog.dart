@@ -1,7 +1,8 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import '../../localization/account_deletion/localization.dart';
 
@@ -75,113 +76,172 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        await _handleClose();
-        return false;
-      },
-      child: GestureDetector(
-        onTap: () => _handleClose(),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        // Get responsive dimensions
+        final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: MediaQuery.of(context).size.width * 0.9,
+          tablet: 450,
+          desktop: 500,
+        );
+
+        final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 24,
+          tablet: 28,
+          desktop: 32,
+        );
+
+        final buttonTextSize = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 18,
+          desktop: 20,
+        );
+
+        final contentPadding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 16,
+          tablet: 20,
+          desktop: 24,
+        );
+
+        // Check for specific mobile breakpoints
+        final screenWidth = MediaQuery.of(context).size.width;
+        final bool isMobileSmall = screenWidth <= 375;
+        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+
+        return WillPopScope(
+          onWillPop: () async {
+            await _handleClose();
+            return false;
+          },
           child: GestureDetector(
-            onTap: () {},
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Dialog(
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1),
-                  borderRadius: BorderRadius.zero,
-                ),
-                backgroundColor: const Color(0xFF351b61),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
+            onTap: () => _handleClose(),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+              child: GestureDetector(
+                onTap: () {},
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Dialog(
+                    shape: const RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.black, width: 1),
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    backgroundColor: const Color(0xFF351b61),
+                    child: Container(
+                      width: dialogWidth,
+                      constraints: const BoxConstraints(maxWidth: 500),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Center(
-                            child: Text(
-                              AccountDeletionLocalization.translate('title', widget.selectedLanguage),
-                              style: GoogleFonts.vt323(
-                                fontSize: 28,
-                                color: Colors.white,
-                              ),
+                          Padding(
+                            padding: EdgeInsets.all(contentPadding),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Text(
+                                    AccountDeletionLocalization.translate('title', widget.selectedLanguage),
+                                    style: GoogleFonts.vt323(
+                                      fontSize: isMobileSmall ? 20 :
+                                               isMobileLarge ? 22 :
+                                               isMobileExtraLarge ? 24 : titleFontSize,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                SizedBox(height: contentPadding),
+                                Container(
+                                  padding: EdgeInsets.all(contentPadding * 0.75),
+                                  color: const Color(0xFFFFB74D),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.warning_rounded,
+                                        color: Colors.black,
+                                        size: isMobileSmall ? 20 :
+                                              isMobileLarge ? 22 :
+                                              isMobileExtraLarge ? 24 : 26,
+                                      ),
+                                      SizedBox(width: contentPadding * 0.5),
+                                      Expanded(
+                                        child: Text(
+                                          widget.userRole == 'guest'
+                                            ? AccountDeletionLocalization.translate('guest_warning', widget.selectedLanguage)
+                                            : AccountDeletionLocalization.translate('user_warning', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(
+                                            color: Colors.black,
+                                            fontSize: isMobileSmall ? 14 :
+                                                     isMobileLarge ? 15 :
+                                                     isMobileExtraLarge ? 16 : 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 20),
                           Container(
-                            padding: const EdgeInsets.all(12),
-                            color: const Color(0xFFFFB74D),
+                            color: const Color(0xFF241242),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: contentPadding,
+                              vertical: contentPadding * 0.75,
+                            ),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                const Icon(
-                                  Icons.warning_rounded,
-                                  color: Colors.black,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
+                                TextButton(
+                                  onPressed: _handleClose,
                                   child: Text(
-                                    widget.userRole == 'guest'
-                                      ? AccountDeletionLocalization.translate('guest_warning', widget.selectedLanguage)
-                                      : AccountDeletionLocalization.translate('user_warning', widget.selectedLanguage),
+                                    AccountDeletionLocalization.translate('cancel_button', widget.selectedLanguage),
                                     style: GoogleFonts.vt323(
-                                      color: Colors.black,
-                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontSize: buttonTextSize,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: contentPadding * 0.75),
+                                SizedBox(
+                                  width: ResponsiveUtils.valueByDevice(
+                                    context: context,
+                                    mobile: isMobileSmall ? 90 : 100,
+                                    tablet: 110,
+                                    desktop: 120,
+                                  ),
+                                  child: Button3D(
+                                    onPressed: _handleDelete,
+                                    backgroundColor: const Color(0xFFF1B33A),
+                                    borderColor: const Color(0xFF916D23),
+                                    child: Text(
+                                      AccountDeletionLocalization.translate('delete_button', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.white,
+                                        fontSize: buttonTextSize,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
-                    Container(
-                      color: const Color(0xFF241242),
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: _handleClose,
-                            child: Text(
-                              AccountDeletionLocalization.translate('cancel_button', widget.selectedLanguage),
-                              style: GoogleFonts.vt323(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Button3D(
-                            onPressed: _handleDelete,
-                            backgroundColor: const Color(0xFFF1B33A),
-                            borderColor: const Color(0xFF916D23),
-                            width: 120,
-                            height: 40,
-                            child: Text(
-                              AccountDeletionLocalization.translate('delete_button', widget.selectedLanguage),
-                              style: GoogleFonts.vt323(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 } 

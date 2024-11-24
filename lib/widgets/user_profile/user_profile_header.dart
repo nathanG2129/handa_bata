@@ -5,7 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/character_page.dart';
 import 'package:handabatamae/services/banner_service.dart';
 import 'package:handabatamae/widgets/dialogs/change_nickname_dialog.dart';
-import 'package:responsive_framework/responsive_framework.dart'; // Import Responsive Framework
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import '../../localization/play/localization.dart'; // Import the localization file
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:handabatamae/services/avatar_service.dart'; // Import Avatar Service
@@ -260,296 +261,251 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     return FutureBuilder<String?>(
       future: _getBannerImage(),
       builder: (context, bannerSnapshot) {
-        return Container(
-          width: double.infinity,
-          height: 120,
-          decoration: const BoxDecoration(
-            color: Color(0xFF381c64),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (bannerSnapshot.hasData)
-                SvgPicture.asset(
-                  'assets/banners/${bannerSnapshot.data}',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                width: double.infinity,
-                child: Stack(
-                  children: [
-                    Row(
+        return ResponsiveBuilder(
+          builder: (context, sizingInformation) {
+            // Check for specific mobile breakpoints
+            final screenWidth = MediaQuery.of(context).size.width;
+            final bool isMobileSmall = screenWidth <= 375; // mobileNormal and below
+            final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375; // mobileLarge
+            final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414; // mobileExtraLarge
+
+            return Container(
+              width: double.infinity,
+              height: ResponsiveUtils.valueByDevice(
+                context: context,
+                mobile: isMobileSmall ? 100 : 130, // Taller for larger phones
+                tablet: 140,
+                desktop: 150,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF381c64),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (bannerSnapshot.hasData)
+                    SvgPicture.asset(
+                      'assets/banners/${bannerSnapshot.data}',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  Container(
+                    padding: EdgeInsets.all(
+                      ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: isMobileSmall ? 12 : 16,
+                        tablet: 16,
+                        desktop: 20,
+                      ),
+                    ),
+                    width: double.infinity,
+                    child: Stack(
                       children: [
-                        FutureBuilder<String?>(
-                          future: _getAvatarImage(),
-                          builder: (context, snapshot) {
-                            return CircleAvatar(
-                              radius: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 40,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 40),
-                                  const Condition.largerThan(name: MOBILE, value: 64),
-                                ],
-                              ).value,
-                              backgroundColor: Colors.white,
-                              child: snapshot.hasData
-                                  ? Container(
-                                      width: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 55,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 50),
-                                          const Condition.largerThan(name: MOBILE, value: 80),
-                                        ],
-                                      ).value,
-                                      height: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 55,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 50),
-                                          const Condition.largerThan(name: MOBILE, value: 80),
-                                        ],
-                                      ).value,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.rectangle,
-                                        image: DecorationImage(
-                                          image: AssetImage('assets/avatars/${snapshot.data}'),
-                                          fit: BoxFit.cover,
-                                          filterQuality: FilterQuality.none,
+                        Row(
+                          children: [
+                            FutureBuilder<String?>(
+                              future: _getAvatarImage(),
+                              builder: (context, snapshot) {
+                                // Adjust avatar sizes based on mobile breakpoint
+                                final double avatarRadius = isMobileSmall ? 35 : 
+                                                         isMobileLarge ? 38 :
+                                                         isMobileExtraLarge ? 40 : 45;
+
+                                return CircleAvatar(
+                                  radius: avatarRadius,
+                                  backgroundColor: Colors.white,
+                                  child: snapshot.hasData
+                                    ? Container(
+                                        width: avatarRadius * 1.5,
+                                        height: avatarRadius * 1.5,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.rectangle,
+                                          image: DecorationImage(
+                                            image: AssetImage('assets/avatars/${snapshot.data}'),
+                                            fit: BoxFit.cover,
+                                            filterQuality: FilterQuality.none,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.person,
+                                        size: avatarRadius * 0.8,
+                                        color: const Color.fromARGB(255, 0, 0, 0),
+                                      ),
+                                );
+                              },
+                            ),
+                            SizedBox(
+                              width: isMobileSmall ? 12 : 16,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.nickname,
+                                  style: widget.textStyle.copyWith(
+                                    fontSize: isMobileSmall ? 14 : 
+                                             isMobileLarge ? 16 :
+                                             isMobileExtraLarge ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  '@${widget.username}',
+                                  style: widget.textStyle.copyWith(
+                                    fontSize: isMobileSmall ? 10 : 
+                                             isMobileLarge ? 12 :
+                                             isMobileExtraLarge ? 13 : 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: isMobileSmall ? 4 : 6,
+                                ),
+                                SizedBox(
+                                  width: isMobileSmall ? 150 : 
+                                        isMobileLarge ? 175 :
+                                        isMobileExtraLarge ? 200 : 250,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '${PlayLocalization.translate('level', widget.selectedLanguage)}: ${widget.level}',
+                                        style: widget.textStyle.copyWith(
+                                          fontSize: isMobileSmall ? 10 : 
+                                                   isMobileLarge ? 12 :
+                                                   isMobileExtraLarge ? 13 : 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                    )
-                                  : Icon(
-                                      Icons.person,
-                                      size: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 32,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 24),
-                                          const Condition.largerThan(name: MOBILE, value: 40),
-                                        ],
-                                      ).value,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
-                                    ),
-                            );
-                          },
-                        ),
-                        SizedBox(
-                          width: ResponsiveValue<double>(
-                            context,
-                            defaultValue: 16, // Scale down spacing
-                            conditionalValues: [
-                              const Condition.smallerThan(name: MOBILE, value: 12),
-                              const Condition.largerThan(name: MOBILE, value: 20),
-                            ],
-                          ).value,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.nickname,
-                              style: widget.textStyle.copyWith(
-                                fontSize: ResponsiveValue<double>(
-                                  context,
-                                  defaultValue: 18, // Scale down font size
-                                  conditionalValues: [
-                                    const Condition.smallerThan(name: MOBILE, value: 14),
-                                    const Condition.largerThan(name: MOBILE, value: 22),
-                                  ],
-                                ).value,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              '@${widget.username}',
-                              style: widget.textStyle.copyWith(
-                              fontSize: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 12.8, // Scale down font size
-                                conditionalValues: [
-                                const Condition.smallerThan(name: MOBILE, value: 9.6),
-                                const Condition.largerThan(name: MOBILE, value: 16),
-                                ],
-                              ).value,
-                              color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(
-                              height: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 6.4, // Scale down spacing
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 4.8),
-                                  const Condition.largerThan(name: MOBILE, value: 8),
-                                ],
-                              ).value,
-                            ),
-                            SizedBox(
-                              width: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 175,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 150),
-                                  const Condition.largerThan(name: MOBILE, value: 250),
-                                ],
-                              ).value,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '${PlayLocalization.translate('level', widget.selectedLanguage)}: ${widget.level}',
-                                    style: widget.textStyle.copyWith(
-                                      fontSize: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 12.8,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 9.6),
-                                          const Condition.largerThan(name: MOBILE, value: 16),
-                                        ],
-                                      ).value,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
+                                      Text(
+                                        '${widget.currentExp} / ${widget.maxExp}',
+                                        style: widget.textStyle.copyWith(
+                                          fontSize: isMobileSmall ? 9 : 
+                                                   isMobileLarge ? 11 :
+                                                   isMobileExtraLarge ? 12 : 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    '${widget.currentExp} / ${widget.maxExp}',
-                                    style: widget.textStyle.copyWith(
-                                      fontSize: ResponsiveValue<double>(
-                                        context,
-                                        defaultValue: 12.8,
-                                        conditionalValues: [
-                                          const Condition.smallerThan(name: MOBILE, value: 9),
-                                          const Condition.largerThan(name: MOBILE, value: 14),
-                                        ],
-                                      ).value,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              width: ResponsiveValue<double>(
-                                context,
-                                defaultValue: 175,
-                                conditionalValues: [
-                                  const Condition.smallerThan(name: MOBILE, value: 150),
-                                  const Condition.largerThan(name: MOBILE, value: 250),
-                                ],
-                              ).value,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(0),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(0),
-                                child: LinearProgressIndicator(
-                                  value: progressPercentage,
-                                  backgroundColor: Colors.black,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF28e172)),
                                 ),
-                              ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  width: isMobileSmall ? 150 : 
+                                        isMobileLarge ? 175 :
+                                        isMobileExtraLarge ? 200 : 250,
+                                  height: isMobileSmall ? 16 : 18,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(0),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(0),
+                                    child: LinearProgressIndicator(
+                                      value: progressPercentage,
+                                      backgroundColor: Colors.black,
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF28e172)),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
+                        if (widget.showMenuIcon)
+                          Positioned(
+                            top: -10,
+                            right: 0,
+                            child: PopupMenuButton<String>(
+                              offset: const Offset(-0, 40),
+                              icon: SvgPicture.string(
+                                '''
+                                <svg
+                                width="24"
+                                height="24"
+                                fill="white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                >
+                                <path
+                                d="M18 2h-2v2h2V2zM4 4h6v2H4v14h14v-6h2v8H2V4h2zm4 8H6v6h6v-2h2v-2h-2v2H8v-4zm4-2h-2v2H8v-2h2V8h2V6h2v2h-2v2zm2-6h2v2h-2V4zm4 0h2v2h2v2h-2v2h-2v2h-2v-2h2V8h2V6h-2V4zm-4 8h2v2h-2v-2z"
+                                fill="white"
+                                />
+                                </svg>
+                                ''',
+                                width: 28,
+                                height: 28,
+                              ),
+                              color: const Color(0xFF241242), // Set the popup menu background color
+                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                PopupMenuItem<String>(
+                                  value: 'Change Avatar',
+                                  child: Container(
+                                    width: double.infinity, // Span the entire width
+                                    height: 40, // Adjusted height
+                                    color: Colors.white,
+                                    alignment: Alignment.center, // Center the text
+                                    child: Text(
+                                      PlayLocalization.translate('changeAvatar', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'Change Nickname',
+                                  child: Container(
+                                    width: double.infinity, // Span the entire width
+                                    height: 40, // Adjusted height
+                                    color: Colors.white,
+                                    alignment: Alignment.center, // Center the text
+                                    child: Text(
+                                      PlayLocalization.translate('changeNickname', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'Change Banner',
+                                  child: Container(
+                                    width: double.infinity, // Span the entire width
+                                    height: 40, // Adjusted height
+                                    color: Colors.white,
+                                    alignment: Alignment.center, // Center the text
+                                    child: Text(
+                                      PlayLocalization.translate('changeBanner', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'Change Favorite Badges',
+                                  child: Container(
+                                    width: double.infinity, // Span the entire width
+                                    height: 44, // Adjusted height
+                                    color: Colors.white,
+                                    alignment: Alignment.center, // Center the text
+                                    child: Text(
+                                      PlayLocalization.translate('changeFavoriteBadges', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                      textAlign: TextAlign.center, // Add textAlign center
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onSelected: (String result) => _handleMenuSelection(result, context),
+                            ),
+                          ),
                       ],
                     ),
-                    if (widget.showMenuIcon)
-                      Positioned(
-                        top: -10,
-                        right: 0,
-                        child: PopupMenuButton<String>(
-                          offset: const Offset(-0, 40),
-                          icon: SvgPicture.string(
-                            '''
-                            <svg
-                            width="24"
-                            height="24"
-                            fill="white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            >
-                            <path
-                            d="M18 2h-2v2h2V2zM4 4h6v2H4v14h14v-6h2v8H2V4h2zm4 8H6v6h6v-2h2v-2h-2v2H8v-4zm4-2h-2v2H8v-2h2V8h2V6h2v2h-2v2zm2-6h2v2h-2V4zm4 0h2v2h2v2h-2v2h-2v2h-2v-2h2V8h2V6h-2V4zm-4 8h2v2h-2v-2z"
-                            fill="white"
-                            />
-                            </svg>
-                            ''',
-                            width: 28,
-                            height: 28,
-                          ),
-                          color: const Color(0xFF241242), // Set the popup menu background color
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                            PopupMenuItem<String>(
-                              value: 'Change Avatar',
-                              child: Container(
-                                width: double.infinity, // Span the entire width
-                                height: 40, // Adjusted height
-                                color: Colors.white,
-                                alignment: Alignment.center, // Center the text
-                                child: Text(
-                                  PlayLocalization.translate('changeAvatar', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
-                                ),
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'Change Nickname',
-                              child: Container(
-                                width: double.infinity, // Span the entire width
-                                height: 40, // Adjusted height
-                                color: Colors.white,
-                                alignment: Alignment.center, // Center the text
-                                child: Text(
-                                  PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
-                                ),
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'Change Banner',
-                              child: Container(
-                                width: double.infinity, // Span the entire width
-                                height: 40, // Adjusted height
-                                color: Colors.white,
-                                alignment: Alignment.center, // Center the text
-                                child: Text(
-                                  PlayLocalization.translate('changeBanner', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
-                                ),
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'Change Favorite Badges',
-                              child: Container(
-                                width: double.infinity, // Span the entire width
-                                height: 44, // Adjusted height
-                                color: Colors.white,
-                                alignment: Alignment.center, // Center the text
-                                child: Text(
-                                  PlayLocalization.translate('changeFavoriteBadges', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
-                                  textAlign: TextAlign.center, // Add textAlign center
-                                ),
-                              ),
-                            ),
-                          ],
-                          onSelected: (String result) => _handleMenuSelection(result, context),
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

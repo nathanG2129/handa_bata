@@ -50,8 +50,8 @@ class AdventureButtonState extends State<AdventureButton> {
 
         final textOffset = ResponsiveUtils.valueByDevice<double>(
           context: context,
-          mobile: 150,
-          tablet: 165,
+          mobile: 135,
+          tablet: 150,
           desktop: 180,
         );
 

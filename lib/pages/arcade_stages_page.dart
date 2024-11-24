@@ -7,7 +7,8 @@ import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/dialog_boxes/arcade_stage_dialog.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
-import 'package:responsive_framework/responsive_framework.dart'; // Import responsive_framework
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget
 import 'package:handabatamae/models/stage_models.dart';  // Add this import
@@ -209,174 +210,235 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         return false;
       },
       child: Scaffold(
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  Column(
-                    children: [
-                      HeaderWidget(
-                        selectedLanguage: widget.selectedLanguage,
-                        onBack: () {
-                          Navigator.pushReplacement(
+        body: ResponsiveBuilder(
+          builder: (context, sizingInformation) {
+            return Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Column(
+                  children: [
+                    HeaderWidget(
+                      selectedLanguage: widget.selectedLanguage,
+                      onBack: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ArcadePage(selectedLanguage: widget.selectedLanguage),
+                          ),
+                        );
+                      },
+                      onChangeLanguage: (String newValue) {
+                        setState(() {
+                          widget.selectedLanguage = newValue;
+                          _fetchStages();
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: _buildContent(context, sizingInformation),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, SizingInformation sizingInformation) {
+    final contentPadding = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16,
+      tablet: 32,
+      desktop: 48,
+    );
+
+    final maxWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: double.infinity,
+      tablet: MediaQuery.of(context).size.width * 0.7,
+      desktop: 1200,
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: contentPadding),
+                      child: Column(
+                        children: [
+                          // Title Section
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: ResponsiveUtils.valueByDevice<double>(
+                                context: context,
+                                mobile: 20,
+                                tablet: 25,
+                                desktop: 30,
+                              ),
+                              bottom: ResponsiveUtils.valueByDevice<double>(
+                                context: context,
+                                mobile: 30,
+                                tablet: 20,
+                                desktop: 50,
+                              ),
+                            ),
+                            child: _buildTitleSection(sizingInformation),
+                          ),
+                          // Arcade Stage - Single Stage Display
+                          _buildArcadeStage(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => ArcadePage(selectedLanguage: widget.selectedLanguage),
+                            ResponsiveUtils.valueByDevice<double>(
+                              context: context,
+                              mobile: 100,
+                              tablet: 140,
+                              desktop: 180,
                             ),
-                          );
-                        },
-                        onChangeLanguage: (String newValue) {
-                          setState(() {
-                            widget.selectedLanguage = newValue;
-                            _fetchStages(); // Fetch stages again with the new language
-                          });
-                        }, 
+                          ),
+                          SizedBox(
+                            height: ResponsiveUtils.valueByDevice<double>(
+                              context: context,
+                              mobile: 40,
+                              tablet: 45,
+                              desktop: 50,
+                            ),
+                          ),
+                        ],
                       ),
-                      Expanded(
-                        child: CustomScrollView(
-                          slivers: [
-                            SliverList(
-                              delegate: SliverChildListDelegate(
-                                [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 20), // Adjust the top padding as needed
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Column(
-                                          children: [
-                                            TextWithShadow(
-                                              text: widget.questName.split(' ')[0], // First word
-                                              fontSize: 85,
-                                            ),
-                                            Transform.translate(
-                                              offset: const Offset(0, -30), // Adjust the vertical offset as needed
-                                              child: TextWithShadow(
-                                                text: widget.questName.split(' ')[1], // Second word
-                                                fontSize: 85,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10), // Reduce the space between the stage name and stage buttons
-                                ],
-                              ),
-                            ),
-                            SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final stageIndex = index;
-                                  final stageNumber = stageIndex + 1;
-                                  final stageCategory = widget.category['name'];
-                                  final stageColor = _getStageColor(stageCategory);
-  
-                                  return FutureBuilder<Map<String, dynamic>>(
-                                    future: _fetchStageStats(stageIndex),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      }
-                                      if (!snapshot.hasData) {
-                                        return const Center(child: Text('Error loading stage stats'));
-                                      }
-                                      final stageStats = snapshot.data!;
-  
-                                      // Add unlock check
-                                      bool isUnlocked = false;
-                                      if (_gameSaveData != null) {
-                                        // Check if all normal stages have stars
-                                        isUnlocked = !_gameSaveData!.normalStageStars.contains(0);
-                                      }
-  
-                                      return GestureDetector(
-                                        onTap: isUnlocked ? () {
-                                          // Show dialog only if unlocked
-                                          showArcadeStageDialog(
-                                            context,
-                                            stageNumber,
-                                            {
-                                              'id': widget.category['id']!,
-                                              'name': widget.category['name']!,
-                                            },
-                                            _stages[stageIndex],
-                                            'normal',
-                                            stageStats['bestRecord'],
-                                            stageStats['crntRecord'],
-                                            0,
-                                            widget.selectedLanguage,
-                                            _stageService,
-                                          );
-                                        } : null,
-                                        child: Opacity(
-                                          opacity: isUnlocked ? 1.0 : 0.5,  // Dim if locked
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              SvgPicture.string(
-                                                _getModifiedSvg(stageColor),
-                                                width: 100,
-                                                height: 100,
-                                              ),
-                                              Text(
-                                                '$stageNumber',
-                                                style: GoogleFonts.rubik(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                childCount: _stages.length,
-                              ),
-                            ),
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Column(
-                                children: [
-                                  const Spacer(), // Push the footer to the bottom
-                                  FooterWidget(selectedLanguage: widget.selectedLanguage), // Add the footer here
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      ),
+        // Footer - Now outside of ScrollView and Expanded
+        Container(
+          width: MediaQuery.of(context).size.width,
+          decoration: const BoxDecoration(
+            color: Color(0xFF351B61),
+            border: Border(
+              top: BorderSide(color: Colors.white, width: 2.0),
+            ),
+          ),
+          child: FooterWidget(selectedLanguage: widget.selectedLanguage),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleSection(SizingInformation sizingInformation) {
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 65,
+      tablet: 75,
+      desktop: 80,
+    );
+
+    return Column(
+      children: [
+        TextWithShadow(
+          text: widget.questName.split(' ')[0],
+          fontSize: titleFontSize,
+        ),
+        Transform.translate(
+          offset: Offset(0, -titleFontSize * 0.35),
+          child: TextWithShadow(
+            text: widget.questName.split(' ')[1],
+            fontSize: titleFontSize,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArcadeStage(BuildContext context, double buttonSize) {
+    final stageCategory = widget.category['name'];
+    final stageColor = _getStageColor(stageCategory);
+
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _fetchStageStats(0),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: Text('Error loading stage stats'));
+        }
+
+        final stageStats = snapshot.data!;
+        final isUnlocked = stageStats['isUnlocked'];
+
+        return GestureDetector(
+          onTap: isUnlocked ? () {
+            showArcadeStageDialog(
+              context,
+              1,
+              {
+                'id': widget.category['id']!,
+                'name': widget.category['name']!,
+              },
+              _stages[0],
+              'normal',
+              stageStats['bestRecord'],
+              stageStats['crntRecord'],
+              0,
+              widget.selectedLanguage,
+              _stageService,
+            );
+          } : null,
+          child: Opacity(
+            opacity: isUnlocked ? 1.0 : 0.5,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SvgPicture.string(
+                  _getModifiedSvg(stageColor),
+                  width: ResponsiveUtils.valueByDevice<double>(
+                    context: context,
+                    mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100,
+                    tablet: 140,
+                    desktop: 180,
+                  ),
+                  height: ResponsiveUtils.valueByDevice<double>(
+                    context: context,
+                    mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100,
+                    tablet: 140,
+                    desktop: 180,
+                  ),
+                ),
+                Text(
+                  '1',
+                  style: GoogleFonts.rubik(
+                    fontSize: ResponsiveUtils.valueByDevice<double>(
+                      context: context,
+                      mobile: MediaQuery.of(context).size.width <= 414 ? 20 : 24,
+                      tablet: 35,
+                      desktop: 45,
+                    ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

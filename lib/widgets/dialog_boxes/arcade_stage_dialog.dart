@@ -8,6 +8,9 @@ import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
 import 'package:handabatamae/utils/category_text_utils.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:handabatamae/constants/breakpoints.dart';
 
 String formatTime(int seconds) {
   final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -60,118 +63,166 @@ void showArcadeStageDialog(
             print('❌ Error loading saved game state: ${snapshot.error}');
           }
 
-          return ScaleTransition(
-            scale: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(parent: anim1, curve: Curves.linear),
-            ),
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(0),
-                side: const BorderSide(color: Colors.black, width: 2),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Text(
-                        categoryText['name']!,
-                        style: GoogleFonts.vt323(
-                          fontSize: 48,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Column(
+          return ResponsiveBuilder(
+            breakpoints: AppBreakpoints.screenBreakpoints,
+            builder: (context, sizingInformation) {
+              final dialogWidth = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: MediaQuery.of(context).size.width * 0.9,
+                tablet: 450,
+                desktop: 500,
+              );
+
+              final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 36,
+                tablet: 42,
+                desktop: 48,
+              );
+
+              final recordsFontSize = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 20,
+                tablet: 22,
+                desktop: 24,
+              );
+
+              final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 55,
+                tablet: 60,
+                desktop: 50,
+              );
+
+              final buttonWidth = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 180,
+                tablet: 200,
+                desktop: 200,
+              );
+
+              final contentPadding = ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 16,
+                tablet: 20,
+                desktop: 20,
+              );
+
+              return ScaleTransition(
+                scale: Tween<double>(begin: 0.0, end: 1.0).animate(
+                  CurvedAnimation(parent: anim1, curve: Curves.linear),
+                ),
+                child: Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                    side: const BorderSide(color: Colors.black, width: 2),
+                  ),
+                  child: Container(
+                    width: dialogWidth,
+                    padding: EdgeInsets.all(contentPadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Best Record:',
-                          style: GoogleFonts.vt323(
-                            fontSize: 24,
+                        Center(
+                          child: Text(
+                            categoryText['name']!,
+                            style: GoogleFonts.vt323(
+                              fontSize: titleFontSize,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        Text(
-                          bestRecord == -1 ? 'None' : formatTime(bestRecord),
-                          style: GoogleFonts.vt323(
-                            fontSize: 24,
-                          ),
-                          textAlign: TextAlign.center,
+                        SizedBox(height: contentPadding * 0.5),
+                        Column(
+                          children: [
+                            Text(
+                              'Best Record:',
+                              style: GoogleFonts.vt323(
+                                fontSize: recordsFontSize,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              bestRecord == -1 ? 'None' : formatTime(bestRecord),
+                              style: GoogleFonts.vt323(
+                                fontSize: recordsFontSize,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: contentPadding * 0.5),
+                            Text(
+                              'Current Season Record:',
+                              style: GoogleFonts.vt323(
+                                fontSize: recordsFontSize,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              crntRecord == -1 ? 'None' : formatTime(crntRecord),
+                              style: GoogleFonts.vt323(
+                                fontSize: recordsFontSize,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Current Season Record:',
-                          style: GoogleFonts.vt323(
-                            fontSize: 24,
+                        SizedBox(height: contentPadding),
+                        Button3D(
+                          width: buttonWidth,
+                          height: buttonHeight,
+                          backgroundColor: const Color(0xFF351B61),
+                          borderColor: const Color(0xFF1A0D30),
+                          onPressed: () async {
+                            try {
+                              await _handleOfflineArcadeStart(
+                                category['id']!, 
+                                stageNumber,
+                                mode,
+                                stageService
+                              );
+                              
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => PrerequisitePage(
+                                      language: selectedLanguage,
+                                      category: category,
+                                      stageName: stageData['stageName'],
+                                      stageData: stageData,
+                                      mode: mode,
+                                      gamemode: 'arcade',
+                                      personalBest: bestRecord,
+                                      crntRecord: crntRecord,
+                                      stars: stars,
+                                      maxScore: 0,
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              print('❌ Error starting arcade game: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to start game: $e')),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(
+                            StageDialogLocalization.translate('play_now', selectedLanguage),
+                            style: GoogleFonts.vt323(
+                              fontSize: recordsFontSize,
+                              color: Colors.white,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          crntRecord == -1 ? 'None' : formatTime(crntRecord),
-                          style: GoogleFonts.vt323(
-                            fontSize: 24,
-                          ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Button3D(
-                      width: 200,
-                      height: 50,
-                      backgroundColor: const Color(0xFF351B61),
-                      borderColor: const Color(0xFF1A0D30),
-                      onPressed: () async {
-                        try {
-                          await _handleOfflineArcadeStart(
-                            category['id']!, 
-                            stageNumber,
-                            mode,
-                            stageService
-                          );
-                          
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => PrerequisitePage(
-                                  language: selectedLanguage,
-                                  category: category,
-                                  stageName: stageData['stageName'],
-                                  stageData: stageData,
-                                  mode: mode,
-                                  gamemode: 'arcade',
-                                  personalBest: bestRecord,
-                                  crntRecord: crntRecord,
-                                  stars: stars,
-                                  maxScore: 0,
-                                ),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          print('❌ Error starting arcade game: $e');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to start game: $e')),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(
-                        StageDialogLocalization.translate('play_now', selectedLanguage),
-                        style: GoogleFonts.vt323(
-                          fontSize: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       );

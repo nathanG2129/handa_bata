@@ -288,14 +288,29 @@ class StagesPageState extends State<StagesPage> {
                     children: [
                       SvgPicture.string(
                         _getModifiedSvg(isUnlocked ? stageColor : const Color(0xFFD9D9D9)),
-                        width: buttonSize * 0.8,
-                        height: buttonSize * 0.8,
+                        width: ResponsiveUtils.valueByDevice<double>(
+                          context: context,
+                          mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100, // Smaller for mobile devices
+                          tablet: 140,
+                          desktop: 160,
+                        ),
+                        height: ResponsiveUtils.valueByDevice<double>(
+                          context: context,
+                          mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100, // Smaller for mobile devices
+                          tablet: 140,
+                          desktop: 160,
+                        ),
                       ),
                       if (isUnlocked)
                         Text(
                           '$stageNumber',
                           style: GoogleFonts.vt323(
-                            fontSize: buttonSize * 0.25,
+                            fontSize: ResponsiveUtils.valueByDevice<double>(
+                              context: context,
+                              mobile: MediaQuery.of(context).size.width <= 414 ? 20 : 24, // Smaller font for mobile
+                              tablet: 35,
+                              desktop: 40,
+                            ),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -315,20 +330,31 @@ class StagesPageState extends State<StagesPage> {
                     children: List.generate(3, (starIndex) {
                       return Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: buttonSize * 0.01,
-                          vertical: 0,
+                          horizontal: ResponsiveUtils.valueByDevice<double>(
+                            context: context,
+                            mobile: MediaQuery.of(context).size.width <= 414 ? 2 : 4, // Tighter padding for mobile
+                            tablet: 6,
+                            desktop: 8,
+                          ),
                         ),
-                        child: Transform.translate(
-                          offset: Offset(0, starIndex == 1 ? buttonSize * 0.02 : 0),
-                          child: SvgPicture.string(
-                            '''
-                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 12 11">
-                              <path d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
-                                fill="${isUnlocked && stars > starIndex ? '#F1B33A' : '#453958'}"/>
-                            </svg>
-                            ''',
-                            width: buttonSize * 0.20,
-                            height: buttonSize * 0.20,
+                        child: SvgPicture.string(
+                          '''
+                          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 12 11">
+                            <path d="M5 0H7V1H8V3H11V4H12V6H11V7H10V10H9V11H7V10H5V11H3V10H2V7H1V6H0V4H1V3H4V1H5V0Z"
+                              fill="${isUnlocked && stars > starIndex ? '#F1B33A' : '#453958'}"/>
+                          </svg>
+                          ''',
+                          width: ResponsiveUtils.valueByDevice<double>(
+                            context: context,
+                            mobile: MediaQuery.of(context).size.width <= 414 ? 18 : 20, // Smaller stars for mobile
+                            tablet: 24,
+                            desktop: 28,
+                          ),
+                          height: ResponsiveUtils.valueByDevice<double>(
+                            context: context,
+                            mobile: MediaQuery.of(context).size.width <= 414 ? 18 : 20, // Smaller stars for mobile
+                            tablet: 24,
+                            desktop: 28,
                           ),
                         ),
                       );
@@ -430,16 +456,70 @@ class StagesPageState extends State<StagesPage> {
                             childAspectRatio: 1,
                           ),
                           itemCount: _stages.length,
-                          itemBuilder: (context, index) => _buildStageButton(
-                            context,
-                            index,
-                            ResponsiveUtils.valueByDevice<double>(
+                          itemBuilder: (context, index) {
+                            final columnsPerRow = ResponsiveUtils.valueByDevice<int>(
                               context: context,
-                              mobile: 120,
-                              tablet: 160,
-                              desktop: 180,
-                            ),
-                          ),
+                              mobile: 2,
+                              tablet: 3,
+                              desktop: 4,
+                            );
+                            
+                            final row = index ~/ columnsPerRow;
+                            final isEvenRow = row.isEven;
+                            
+                            // For the last incomplete row
+                            if (index >= _stages.length - (_stages.length % columnsPerRow) && 
+                                _stages.length % columnsPerRow != 0) {
+                              final itemsInLastRow = _stages.length % columnsPerRow;
+                              final positionInLastRow = index % columnsPerRow;
+                              
+                              if (positionInLastRow < itemsInLastRow) {
+                                // If the previous row was odd (snake pattern), align to the right
+                                if (!isEvenRow) {
+                                  final startOfLastRow = _stages.length - itemsInLastRow;
+                                  final reversedPosition = itemsInLastRow - 1 - positionInLastRow;
+                                  return _buildStageButton(
+                                    context,
+                                    startOfLastRow + reversedPosition,
+                                    ResponsiveUtils.valueByDevice<double>(
+                                      context: context,
+                                      mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100,
+                                      tablet: 140,
+                                      desktop: 160,
+                                    ),
+                                  );
+                                }
+                                // If previous row was even, keep normal left alignment
+                                return _buildStageButton(
+                                  context,
+                                  index,
+                                  ResponsiveUtils.valueByDevice<double>(
+                                    context: context,
+                                    mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100,
+                                    tablet: 140,
+                                    desktop: 160,
+                                  ),
+                                );
+                              }
+                              return const SizedBox();
+                            }
+
+                            // Normal snake pattern for complete rows
+                            final adjustedIndex = isEvenRow 
+                              ? index 
+                              : (row * columnsPerRow) + (columnsPerRow - 1) - (index % columnsPerRow);
+
+                            return _buildStageButton(
+                              context,
+                              adjustedIndex,
+                              ResponsiveUtils.valueByDevice<double>(
+                                context: context,
+                                mobile: MediaQuery.of(context).size.width <= 414 ? 90 : 100,
+                                tablet: 140,
+                                desktop: 160,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),

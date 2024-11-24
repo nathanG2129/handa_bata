@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:soundpool/soundpool.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class IdentificationQuestion extends StatefulWidget {
   final Map<String, dynamic> questionData;
@@ -239,7 +240,6 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       currentWordLength++;
     }
   
-    // Show the correct answer if the flag is set
     if (showCorrectAnswer) {
       answerText = '';
       selectedIndex = 0;
@@ -255,111 +255,138 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
       }
     }
   
-    return Column(
-      children: [
-        if (!showInput)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const TextWithShadow(
-                  text: 'Identification',
-                  fontSize: 40, // Adjusted font size to 40
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  questionText,
-                  style: GoogleFonts.rubik(fontSize: 25, color: Colors.white), // Updated font style
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        if (showInput)
-          Column(
-            children: [
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+        
+        return Column(
+          children: [
+            if (!showInput)
               Center(
-                child: Text(
-                  questionText,
-                  style: GoogleFonts.rubik(
-                    fontSize: 24,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextWithShadow(
+                      text: 'Identification',
+                      fontSize: isTablet ? 36 : 28,
+                    ),
+                    SizedBox(height: isTablet ? 24 : 16),
+                    Text(
+                      questionText,
+                      style: GoogleFonts.rubik(
+                        fontSize: isTablet ? 28 : 18,
+                        color: Colors.white
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(0),
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                  color: showCorrectAnswer
-                      ? Colors.green
-                      : (isCheckingAnswer
-                          ? (isCorrect == 0
-                              ? Colors.white
-                              : (isCorrect == 2
-                                  ? Colors.green
-                                  : Colors.red))
-                          : Colors.white),
-                  child: Text(
-                    answerText,
-                    style: GoogleFonts.rubik(
-                      fontSize: 24, 
-                      fontWeight: FontWeight.bold,
-                      color: showCorrectAnswer || isCorrect != 0 
-                          ? Colors.white 
-                          : Colors.black,
+            if (showInput)
+              Column(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 24.0 : 16.0
+                      ),
+                      child: Text(
+                        questionText,
+                        style: GoogleFonts.rubik(
+                          fontSize: isTablet ? 28 : 18,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (!showCorrectAnswer) // Hide options when showing the correct answer
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  children: uniqueOptions.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    String option = entry.value;
-                    String optionValue = option.split('_')[0];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-                      child: IgnorePointer(
-                        ignoring: isCheckingAnswer,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _handleOptionSelection(index, option);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                            backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
-                            padding: const EdgeInsets.all(16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0),
-                              side: const BorderSide(color: Colors.black, width: 2),
-                            ),
-                          ),
-                          child: Text(
-                            optionValue,
-                            style: GoogleFonts.rubik(fontSize: 24),
-                          ),
+                  SizedBox(height: isTablet ? 24 : 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      vertical: 4.0,
+                      horizontal: isTablet ? 250.0 : 25.0,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(0),
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                      padding: EdgeInsets.symmetric(
+                        vertical: isTablet ? 12.0 : 8.0,
+                        horizontal: isTablet ? 24.0 : 16.0
+                      ),
+                      color: showCorrectAnswer
+                          ? Colors.green
+                          : (isCheckingAnswer
+                              ? (isCorrect == 0
+                                  ? Colors.white
+                                  : (isCorrect == 2
+                                      ? Colors.green
+                                      : Colors.red))
+                              : Colors.white),
+                      child: Text(
+                        answerText,
+                        style: GoogleFonts.rubik(
+                          fontSize: isTablet ? 28 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: showCorrectAnswer || isCorrect != 0 
+                              ? Colors.white 
+                              : Colors.black,
                         ),
                       ),
-                    );
-                  }).toList(),
-                )
-            ],
-          ),
-      ],
+                    ),
+                  ),
+                  SizedBox(height: isTablet ? 24 : 16),
+                  if (!showCorrectAnswer)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 200.0 : 16.0
+                      ),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: isTablet ? 12.0 : 8.0,
+                        runSpacing: isTablet ? 16.0 : 12.0,
+                        children: uniqueOptions.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          String option = entry.value;
+                          String optionValue = option.split('_')[0];
+                          return IgnorePointer(
+                            ignoring: isCheckingAnswer,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                _handleOptionSelection(index, option);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                                backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
+                                padding: EdgeInsets.all(isTablet ? 20 : 16),
+                                minimumSize: Size(isTablet ? 80 : 60, isTablet ? 80 : 60),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0),
+                                  side: const BorderSide(color: Colors.black, width: 2),
+                                ),
+                              ),
+                              child: Text(
+                                optionValue,
+                                style: GoogleFonts.rubik(
+                                  fontSize: isTablet ? 28 : 18
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    )
+                ],
+              ),
+          ],
+        );
+      }
     );
   }
 }

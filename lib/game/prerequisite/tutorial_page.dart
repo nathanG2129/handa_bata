@@ -128,7 +128,8 @@ class _TutorialPageState extends State<TutorialPage> {
                   Button3D(
                     onPressed: widget.onNext,
                     backgroundColor: const Color(0xFF351B61),
-                    width: 120,
+                    width: 150,
+                    height: 80,
                     child: Text(
                       widget.isLastPage ? 'Start Game' : 'Next',
                       style: GoogleFonts.vt323(

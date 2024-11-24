@@ -9,7 +9,7 @@ import 'package:handabatamae/pages/arcade_stages_page.dart'; // Import ArcadeSta
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import 'package:soundpool/soundpool.dart'; // Import soundpool package
 import 'question_widgets.dart';
 import 'results_widgets.dart';
@@ -17,6 +17,7 @@ import '../../services/auth_service.dart';
 import '../../services/badge_unlock_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
 import 'package:handabatamae/localization/results/localization.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -215,197 +216,265 @@ class ResultsPageState extends State<ResultsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: !_isInitialized
-          ?         Container(
-          color: const Color(0xFF5E31AD), // Add purple background color
-          child: const Center(
-            child: LoadingWidget(),
-          ),
-        )
-          : ResponsiveBreakpoints(
-              breakpoints: const [
-                Breakpoint(start: 0, end: 450, name: MOBILE),
-                Breakpoint(start: 451, end: 800, name: TABLET),
-                Breakpoint(start: 801, end: 1920, name: DESKTOP),
-                Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-              ],
-              child: MaxWidthBox(
-                maxWidth: 1200,
-                child: ResponsiveScaledBox(
-                  width: ResponsiveValue<double>(context, conditionalValues: [
-                    const Condition.equals(name: MOBILE, value: 450),
-                    const Condition.between(start: 800, end: 1100, value: 800),
-                    const Condition.between(start: 1000, end: 1200, value: 1000),
-                  ]).value,
-                  child: Container(
-                    color: const Color(0xFF5E31AD), // Same background color as GameplayPage
-                    child: SafeArea(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 125),
-                            buildReactionWidget(stars, widget.language),
-                            const SizedBox(height: 20),
-                            if (widget.gamemode == 'arcade')
-                              buildStatisticItem(ResultsLocalization.translate('record', widget.language), widget.record), // Display the record widget if gamemode is arcade
-                            if (widget.gamemode != 'arcade')
-                              buildStarsWidget(stars), // Display the stars widget if gamemode is not arcade
-                            const SizedBox(height: 20),
-                            Text(
-                              ResultsLocalization.translate('myPerformance', widget.language),
-                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
+          ? Container(
+              color: const Color(0xFF5E31AD),
+              child: const Center(
+                child: LoadingWidget(),
+              ),
+            )
+          : ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+                
+                return Container(
+                  color: const Color(0xFF5E31AD),
+                  child: SafeArea(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 80.0,
+                            tablet: 125.0,
+                          )),
+                          buildReactionWidget(stars, widget.language),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 16.0,
+                            tablet: 20.0,
+                          )),
+                          if (widget.gamemode == 'arcade')
+                            buildStatisticItem(
+                              ResultsLocalization.translate('record', widget.language), 
+                              widget.record
                             ),
-                            const SizedBox(height: 20),
-                            buildStatisticsWidget(
-                              widget.score,
-                              widget.accuracy,
-                              widget.streak,
-                              widget.language,
+                          if (widget.gamemode != 'arcade')
+                            buildStarsWidget(stars),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 16.0,
+                            tablet: 20.0,
+                          )),
+                          Text(
+                            ResultsLocalization.translate('myPerformance', widget.language),
+                            style: GoogleFonts.vt323(
+                              fontSize: isTablet ? 36 : 32,
+                              color: Colors.white
                             ),
-                            const SizedBox(height: 50),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Button3D(
-                                  onPressed: () async {
-                                    // Cleanup sounds before navigation
-                                    if (_isSoundLoaded) {
-                                      _soundpool.dispose();
-                                      _isSoundLoaded = false;
-                                    }
+                          ),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 16.0,
+                            tablet: 20.0,
+                          )),
+                          buildStatisticsWidget(
+                            widget.score,
+                            widget.accuracy,
+                            widget.streak,
+                            widget.language,
+                          ),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 40.0,
+                            tablet: 50.0,
+                          )),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Button3D(
+                                onPressed: () async {
+                                  // Cleanup sounds before navigation
+                                  if (_isSoundLoaded) {
+                                    _soundpool.dispose();
+                                    _isSoundLoaded = false;
+                                  }
 
-                                    if (!mounted) return;
+                                  if (!mounted) return;
 
-                                    if (widget.gamemode == 'arcade') {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ArcadeStagesPage(
-                                            category: {
-                                              'id': widget.category['id'],
-                                              'name': widget.category['name'],
-                                            },
-                                            selectedLanguage: widget.language,
-                                            questName: widget.category['name'],
-                                          ),
-                                        ),
-                                      );
-                                    } else {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => StagesPage(
-                                            questName: widget.category['name'],
-                                            category: {
-                                              'id': widget.category['id'],
-                                              'name': widget.category['name'],
-                                            },
-                                            selectedLanguage: widget.language,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  backgroundColor: const Color(0xFF351b61),
-                                  borderColor: const Color(0xFF1A0D30),
-                                  width: 120,
-                                  height: 50,
-                                  child: Text(
-                                    ResultsLocalization.translate('back', widget.language),
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 25),
-                                Button3D(
-                                  onPressed: () async {
-                                    // Cleanup sounds before navigation
-                                    if (_isSoundLoaded) {
-                                      _soundpool.dispose();
-                                      _isSoundLoaded = false;
-                                    }
-
-                                    if (!mounted) return;
-
-                                    // Delete any existing saved game first
-                                    await _gameSaveManager.deleteSavedGame(
-                                      categoryId: widget.category['id'],
-                                      stageName: widget.stageName,
-                                      mode: widget.mode,
-                                    );
-
+                                  if (widget.gamemode == 'arcade') {
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => PrerequisitePage(
-                                          language: widget.language,
-                                          category: widget.category as Map<String, String>,
-                                          stageName: widget.stageName,
-                                          stageData: widget.stageData,
-                                          mode: widget.mode,
-                                          gamemode: widget.gamemode,
-                                          personalBest: widget.score,
-                                          maxScore: widget.stageData['maxScore'],
-                                          stars: stars,
-                                          crntRecord: widget.gamemode == 'arcade' ? 
-                                            _convertRecordToSeconds(widget.record) : -1,
+                                        builder: (context) => ArcadeStagesPage(
+                                          category: {
+                                            'id': widget.category['id'],
+                                            'name': widget.category['name'],
+                                          },
+                                          selectedLanguage: widget.language,
+                                          questName: widget.category['name'],
                                         ),
                                       ),
                                     );
-                                  },
-                                  backgroundColor: const Color(0xFFF1B33A),
-                                  borderColor: const Color(0xFF8B5A00),
-                                  width: 120,
-                                  height: 50,
-                                  child: Text(
-                                    ResultsLocalization.translate('playAgain', widget.language),
-                                    style: GoogleFonts.vt323(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
+                                  } else {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => StagesPage(
+                                          questName: widget.category['name'],
+                                          category: {
+                                            'id': widget.category['id'],
+                                            'name': widget.category['name'],
+                                          },
+                                          selectedLanguage: widget.language,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                backgroundColor: const Color(0xFF351b61),
+                                borderColor: const Color(0xFF1A0D30),
+                                width: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: 120.0,
+                                  tablet: 150.0,
+                                ),
+                                height: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: 50.0,
+                                  tablet: 60.0,
+                                ),
+                                child: Text(
+                                  ResultsLocalization.translate('back', widget.language),
+                                  style: GoogleFonts.vt323(
+                                    color: Colors.white,
+                                    fontSize: isTablet ? 24 : 20,
                                   ),
                                 ),
-                              ],
+                              ),
+                              SizedBox(width: ResponsiveUtils.valueByDevice(
+                                context: context,
+                                mobile: 20.0,
+                                tablet: 25.0,
+                              )),
+                              Button3D(
+                                onPressed: () async {
+                                  // Cleanup sounds before navigation
+                                  if (_isSoundLoaded) {
+                                    _soundpool.dispose();
+                                    _isSoundLoaded = false;
+                                  }
+
+                                  if (!mounted) return;
+
+                                  // Delete any existing saved game first
+                                  await _gameSaveManager.deleteSavedGame(
+                                    categoryId: widget.category['id'],
+                                    stageName: widget.stageName,
+                                    mode: widget.mode,
+                                  );
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PrerequisitePage(
+                                        language: widget.language,
+                                        category: widget.category as Map<String, String>,
+                                        stageName: widget.stageName,
+                                        stageData: widget.stageData,
+                                        mode: widget.mode,
+                                        gamemode: widget.gamemode,
+                                        personalBest: widget.score,
+                                        maxScore: widget.stageData['maxScore'],
+                                        stars: stars,
+                                        crntRecord: widget.gamemode == 'arcade' ? 
+                                          _convertRecordToSeconds(widget.record) : -1,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                backgroundColor: const Color(0xFFF1B33A),
+                                borderColor: const Color(0xFF8B5A00),
+                                width: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: 120.0,
+                                  tablet: 150.0,
+                                ),
+                                height: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: 50.0,
+                                  tablet: 60.0,
+                                ),
+                                child: Text(
+                                  ResultsLocalization.translate('playAgain', widget.language),
+                                  style: GoogleFonts.vt323(
+                                    color: Colors.black,
+                                    fontSize: isTablet ? 24 : 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 40.0,
+                            tablet: 50.0,
+                          )),
+                          Text(
+                            ResultsLocalization.translate('stageQuestions', widget.language),
+                            style: GoogleFonts.vt323(
+                              fontSize: isTablet ? 36 : 32,
+                              color: Colors.white
                             ),
-                            const SizedBox(height: 50),
-                            Text(
-                              ResultsLocalization.translate('stageQuestions', widget.language),
-                              style: GoogleFonts.vt323(fontSize: 32, color: Colors.white),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildAnsweredQuestionsWidget(context),
-                            const SizedBox(height: 50),
-                          ],
-                        ),
+                          ),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 8.0,
+                            tablet: 10.0,
+                          )),
+                          _buildAnsweredQuestionsWidget(context),
+                          SizedBox(height: ResponsiveUtils.valueByDevice(
+                            context: context,
+                            mobile: 40.0,
+                            tablet: 50.0,
+                          )),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              )
-          ),
+                );
+              },
+            ),
     );
   }
 
   Widget _buildAnsweredQuestionsWidget(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.85,
-      child: Column(
-        children: widget.answeredQuestions.asMap().entries.map((entry) {
-          int index = entry.key;
-          Map<String, dynamic> question = entry.value;
-          if (question['type'] == 'Multiple Choice') {
-            return buildMultipleChoiceQuestionWidget(context, index, question);
-          } else if (question['type'] == 'Identification') {
-            return buildIdentificationQuestionWidget(context, index, question, widget.language);
-          } else if (question['type'] == 'Fill in the Blanks') {
-            return buildFillInTheBlanksQuestionWidget(context, index, question);
-          } else {
-            return buildMatchingTypeQuestionWidget(context, index, question, widget.language);
-          }
-        }).toList(),
-      ),
+    return ResponsiveBuilder(
+      builder: (context, sizingInformation) {
+        final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+        final refinedSize = sizingInformation.refinedSize;
+        
+        // Adjust width based on refined size
+        double containerWidth;
+        if (refinedSize == RefinedSize.small) {
+          containerWidth = 0.95; // Smaller phones
+        } else if (refinedSize == RefinedSize.normal) {
+          containerWidth = 0.90; // Normal phones
+        } else if (isTablet) {
+          containerWidth = 0.85; // Tablets
+        } else {
+          containerWidth = 0.88; // Default/larger phones
+        }
+        
+        return SizedBox(
+          width: MediaQuery.of(context).size.width * containerWidth,
+          child: Column(
+            children: widget.answeredQuestions.asMap().entries.map((entry) {
+              int index = entry.key;
+              Map<String, dynamic> question = entry.value;
+              if (question['type'] == 'Multiple Choice') {
+                return buildMultipleChoiceQuestionWidget(context, index, question);
+              } else if (question['type'] == 'Identification') {
+                return buildIdentificationQuestionWidget(context, index, question, widget.language);
+              } else if (question['type'] == 'Fill in the Blanks') {
+                return buildFillInTheBlanksQuestionWidget(context, index, question);
+              } else {
+                return buildMatchingTypeQuestionWidget(context, index, question, widget.language);
+              }
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 

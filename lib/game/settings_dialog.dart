@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_tts/flutter_tts.dart'; // Import Flutter TTS package
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
@@ -117,6 +116,11 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isTablet = screenSize.shortestSide >= 600;
+    final double dialogWidth = isTablet ? 450 : 300;
+    final double maxDialogHeight = screenSize.height * 0.8; // 80% of screen height
+
     return WillPopScope(
       onWillPop: () async {
         await _closeDialog();
@@ -133,324 +137,337 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                 onTap: () {}, // Prevents tap from propagating
                 child: SlideTransition(
                   position: _slideAnimation,
-                  child: AlertDialog(
-                    backgroundColor: const Color(0xFF351B61),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
-                      side: const BorderSide(color: Colors.black),
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                    actionsPadding: EdgeInsets.zero,
-                    buttonPadding: EdgeInsets.zero,
-                    insetPadding: EdgeInsets.zero,
-                    title: Center(
-                      child: Text(
-                        'Settings', 
-                        style: GoogleFonts.vt323(
-                          color: Colors.white,
-                          fontSize: 24,
-                        )
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Container(
+                      width: dialogWidth,
+                      constraints: BoxConstraints(
+                        maxHeight: maxDialogHeight,
                       ),
-                    ),
-                    content: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                        child: SizedBox(
-                          width: ResponsiveValue<double>(
-                            context,
-                            conditionalValues: [
-                              const Condition.equals(name: MOBILE, value: 300),
-                              const Condition.between(start: 451, end: 800, value: 400),
-                              const Condition.between(start: 801, end: 1920, value: 450),
-                              const Condition.largerThan(name: '4K', value: 500),
-                            ],
-                            defaultValue: 300,
-                          ).value,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Music Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                                  Text(
-                                    '${_visualMusicVolume.round()}', 
-                                    style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 8.0, // Make the slider bar thicker
-                                ),
-                                child: Slider(
-                                  value: _visualMusicVolume,
-                                  onChanged: (double value) {
-                                    setState(() {
-                                      _visualMusicVolume = value;
-                                    });
-                                    widget.onMusicVolumeChanged(value / 100); // Convert visual volume to actual volume
-                                    _saveSettings(); // Save settings
-                                  },
-                                  min: 0,
-                                  max: 100,
-                                  divisions: 100,
-                                  activeColor: const Color(0xFFF1B33A),
-                                  inactiveColor: const Color(0xFF241242),
+                      margin: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 40.0 : 20.0,
+                        vertical: 24.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF351B61),
+                        borderRadius: BorderRadius.circular(0),
+                        border: Border.all(color: Colors.black),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Title
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(
+                              child: Text(
+                                'Settings',
+                                style: GoogleFonts.vt323(
+                                  color: Colors.white,
+                                  fontSize: isTablet ? 28 : 24,
                                 ),
                               ),
-                              const SizedBox(height: 16), // Add larger top margin
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('SFX Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                                  Text(
-                                    '${_visualSfxVolume.round()}', 
-                                    style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 8.0, // Make the slider bar thicker
+                            ),
+                          ),
+                          // Content - Now in Expanded with SingleChildScrollView
+                          Flexible(
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isTablet ? 24.0 : 20.0,
+                                  vertical: isTablet ? 12.0 : 10.0,
                                 ),
-                                child: Slider(
-                                  value: _visualSfxVolume,
-                                  onChanged: (double value) {
-                                    setState(() {
-                                      _visualSfxVolume = value;
-                                    });
-                                    widget.onSfxVolumeChanged(value / 100); // Convert visual volume to actual volume
-                                    _saveSettings(); // Save settings
-                                  },
-                                  min: 0,
-                                  max: 100,
-                                  divisions: 100,
-                                  activeColor: const Color(0xFFF1B33A),
-                                  inactiveColor: const Color(0xFF241242),
-                                ),
-                              ),
-                              const SizedBox(height: 16), // Add larger top margin
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Text-to-Speech', 
-                                    style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
-                                  ),
-                                  Switch(
-                                    value: _isTextToSpeechEnabled,
-                                    onChanged: (bool value) {
-                                      setState(() {
-                                        _isTextToSpeechEnabled = value;
-                                      });
-                                      widget.onTextToSpeechChanged(value);
-                                      if (!value) {
-                                        widget.flutterTts.stop(); // Stop TTS immediately when toggled off
-                                      }
-                                      _saveSettings(); // Save settings
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16), // Add spacing before Voice section
-                              const SizedBox(height: 8),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: Text('Language', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                              ),
-                              const SizedBox(height: 8),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF241242),
-                                    border: Border.all(color: Colors.white24),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: ButtonTheme(
-                                      alignedDropdown: true, // This helps align the dropdown items
-                                      child: DropdownButton<String>(
-                                        value: _selectedVoice,
-                                        isExpanded: true, // Make dropdown take full width
-                                        icon: const Icon(
-                                          Icons.arrow_drop_down,
-                                          color: Colors.white,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Music Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                        Text(
+                                          '${_visualMusicVolume.round()}', 
+                                          style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
                                         ),
-                                        dropdownColor: const Color(0xFF241242),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        onChanged: _isTextToSpeechEnabled 
-                                          ? (String? newValue) {
-                                              setState(() {
-                                                _selectedVoice = newValue!;
-                                              });
-                                              widget.onVoiceChanged(newValue);
-                                              _saveSettings();
+                                      ],
+                                    ),
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: 8.0, // Make the slider bar thicker
+                                      ),
+                                      child: Slider(
+                                        value: _visualMusicVolume,
+                                        onChanged: (double value) {
+                                          setState(() {
+                                            _visualMusicVolume = value;
+                                          });
+                                          widget.onMusicVolumeChanged(value / 100); // Convert visual volume to actual volume
+                                          _saveSettings(); // Save settings
+                                        },
+                                        min: 0,
+                                        max: 100,
+                                        divisions: 100,
+                                        activeColor: const Color(0xFFF1B33A),
+                                        inactiveColor: const Color(0xFF241242),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16), // Add larger top margin
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('SFX Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                        Text(
+                                          '${_visualSfxVolume.round()}', 
+                                          style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: 8.0, // Make the slider bar thicker
+                                      ),
+                                      child: Slider(
+                                        value: _visualSfxVolume,
+                                        onChanged: (double value) {
+                                          setState(() {
+                                            _visualSfxVolume = value;
+                                          });
+                                          widget.onSfxVolumeChanged(value / 100); // Convert visual volume to actual volume
+                                          _saveSettings(); // Save settings
+                                        },
+                                        min: 0,
+                                        max: 100,
+                                        divisions: 100,
+                                        activeColor: const Color(0xFFF1B33A),
+                                        inactiveColor: const Color(0xFF241242),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16), // Add larger top margin
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Text-to-Speech', 
+                                          style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                        ),
+                                        Switch(
+                                          value: _isTextToSpeechEnabled,
+                                          onChanged: (bool value) {
+                                            setState(() {
+                                              _isTextToSpeechEnabled = value;
+                                            });
+                                            widget.onTextToSpeechChanged(value);
+                                            if (!value) {
+                                              widget.flutterTts.stop(); // Stop TTS immediately when toggled off
                                             }
-                                          : null,
-                                        items: widget.availableVoices
-                                            .map<DropdownMenuItem<String>>((dynamic voice) {
-                                          String displayName;
-                                          if (voice['name'] == 'en-us-x-tpd-local') {
-                                            displayName = 'John';
-                                          } else if (voice['name'] == 'en-us-x-log-local') {
-                                            displayName = 'Jane';
-                                          } else if (voice['name'] == 'fil-ph-x-fie-local') {
-                                            displayName = 'Juan';
-                                          } else if (voice['name'] == 'fil-PH-language') {
-                                            displayName = 'Maria';
-                                          } else {
-                                            displayName = voice['name'];
-                                          }
-                                          return DropdownMenuItem<String>(
-                                            value: voice['name'],
-                                            child: Text(
-                                              displayName,
-                                              style: GoogleFonts.vt323(
+                                            _saveSettings(); // Save settings
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16), // Add spacing before Voice section
+                                    const SizedBox(height: 8),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: Text('Language', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF241242),
+                                          border: Border.all(color: Colors.white24),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: ButtonTheme(
+                                            alignedDropdown: true, // This helps align the dropdown items
+                                            child: DropdownButton<String>(
+                                              value: _selectedVoice,
+                                              isExpanded: true, // Make dropdown take full width
+                                              icon: const Icon(
+                                                Icons.arrow_drop_down,
                                                 color: Colors.white,
-                                                fontSize: 20,
                                               ),
+                                              dropdownColor: const Color(0xFF241242),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              onChanged: _isTextToSpeechEnabled 
+                                                ? (String? newValue) {
+                                                    setState(() {
+                                                      _selectedVoice = newValue!;
+                                                    });
+                                                    widget.onVoiceChanged(newValue);
+                                                    _saveSettings();
+                                                  }
+                                                : null,
+                                              items: widget.availableVoices
+                                                  .map<DropdownMenuItem<String>>((dynamic voice) {
+                                                String displayName;
+                                                if (voice['name'] == 'en-us-x-tpd-local') {
+                                                  displayName = 'John';
+                                                } else if (voice['name'] == 'en-us-x-log-local') {
+                                                  displayName = 'Jane';
+                                                } else if (voice['name'] == 'fil-ph-x-fie-local') {
+                                                  displayName = 'Juan';
+                                                } else if (voice['name'] == 'fil-PH-language') {
+                                                  displayName = 'Maria';
+                                                } else {
+                                                  displayName = voice['name'];
+                                                }
+                                                return DropdownMenuItem<String>(
+                                                  value: voice['name'],
+                                                  child: Text(
+                                                    displayName,
+                                                    style: GoogleFonts.vt323(
+                                                      color: Colors.white,
+                                                      fontSize: 20,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
                                             ),
-                                          );
-                                        }).toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Speed', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                          Text(
+                                            _visualSpeed.toStringAsFixed(2), 
+                                            style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: 8.0,
+                                        ),
+                                        child: Slider(
+                                          value: _visualSpeed,
+                                          onChanged: _isTextToSpeechEnabled 
+                                            ? (double value) {
+                                                setState(() {
+                                                  _visualSpeed = value;
+                                                });
+                                                widget.onSpeedChanged(value / 2);
+                                                _saveSettings();
+                                              }
+                                            : null, // Disable slider when TTS is off
+                                          min: 0.0,
+                                          max: 2.0,
+                                          divisions: 8,
+                                          activeColor: const Color(0xFFF1B33A),
+                                          inactiveColor: const Color(0xFF241242),
+                                        ),
+                                      ),
+                                    ),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('TTS Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                          Text(
+                                            '${_visualVolume.round()}', 
+                                            style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Opacity(
+                                      opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
+                                      child: SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: 8.0,
+                                        ),
+                                        child: Slider(
+                                          value: _visualVolume,
+                                          onChanged: _isTextToSpeechEnabled 
+                                            ? (double value) {
+                                                setState(() {
+                                                  _visualVolume = value;
+                                                });
+                                                widget.onTtsVolumeChanged(value / 100);
+                                                _saveSettings();
+                                              }
+                                            : null, // Disable slider when TTS is off
+                                          min: 0,
+                                          max: 100,
+                                          divisions: 100,
+                                          activeColor: const Color(0xFFF1B33A),
+                                          inactiveColor: const Color(0xFF241242),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16), // Add larger top margin
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Actions - Always at bottom
+                          Container(
+                            width: double.infinity,
+                            color: const Color(0xFF241242),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                              vertical: 20.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: _closeDialog,
+                                  child: Text(
+                                    'Back',
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Opacity(
+                                  opacity: widget.isLastQuestion ? 0.5 : 1.0,
+                                  child: Button3D(
+                                    backgroundColor: const Color(0xFFF1B33A),
+                                    borderColor: const Color(0xFF8B5A00),
+                                    width: 120,
+                                    height: 60,
+                                    onPressed: () {
+                                      if (widget.isLastQuestion) return;
+                                      
+                                      print('🎮 Quit Game button pressed');
+                                      Navigator.of(context).pop();
+                                      print('🎮 Dialog closed, calling onQuitGame');
+                                      widget.onQuitGame().then((_) {
+                                        print('🎮 onQuitGame completed successfully');
+                                      }).catchError((e) {
+                                        print('❌ Error in onQuitGame: $e');
+                                      });
+                                    },
+                                    child: Text(
+                                      'Quit Game',
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.black,
+                                        fontSize: 18,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Speed', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                                    Text(
-                                      _visualSpeed.toStringAsFixed(2), 
-                                      style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    trackHeight: 8.0,
-                                  ),
-                                  child: Slider(
-                                    value: _visualSpeed,
-                                    onChanged: _isTextToSpeechEnabled 
-                                      ? (double value) {
-                                          setState(() {
-                                            _visualSpeed = value;
-                                          });
-                                          widget.onSpeedChanged(value / 2);
-                                          _saveSettings();
-                                        }
-                                      : null, // Disable slider when TTS is off
-                                    min: 0.0,
-                                    max: 2.0,
-                                    divisions: 8,
-                                    activeColor: const Color(0xFFF1B33A),
-                                    inactiveColor: const Color(0xFF241242),
-                                  ),
-                                ),
-                              ),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('TTS Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
-                                    Text(
-                                      '${_visualVolume.round()}', 
-                                      style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Opacity(
-                                opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    trackHeight: 8.0,
-                                  ),
-                                  child: Slider(
-                                    value: _visualVolume,
-                                    onChanged: _isTextToSpeechEnabled 
-                                      ? (double value) {
-                                          setState(() {
-                                            _visualVolume = value;
-                                          });
-                                          widget.onTtsVolumeChanged(value / 100);
-                                          _saveSettings();
-                                        }
-                                      : null, // Disable slider when TTS is off
-                                    min: 0,
-                                    max: 100,
-                                    divisions: 100,
-                                    activeColor: const Color(0xFFF1B33A),
-                                    inactiveColor: const Color(0xFF241242),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16), // Add larger top margin
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                    actionsAlignment: MainAxisAlignment.end,
-                    actions: [
-                      Container(
-                        width: double.infinity,
-                        color: const Color(0xFF241242),
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: _closeDialog,
-                              child: Text(
-                                'Back',
-                                style: GoogleFonts.vt323(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Opacity(
-                              opacity: widget.isLastQuestion ? 0.5 : 1.0,
-                              child: Button3D(
-                                backgroundColor: const Color(0xFFF1B33A),
-                                borderColor: const Color(0xFF8B5A00),
-                                width: 120,
-                                onPressed: () {
-                                  if (widget.isLastQuestion) return;
-                                  
-                                  print('🎮 Quit Game button pressed');
-                                  Navigator.of(context).pop();
-                                  print('🎮 Dialog closed, calling onQuitGame');
-                                  widget.onQuitGame().then((_) {
-                                    print('🎮 onQuitGame completed successfully');
-                                  }).catchError((e) {
-                                    print('❌ Error in onQuitGame: $e');
-                                  });
-                                },
-                                child: Text(
-                                  'Quit Game',
-                                  style: GoogleFonts.vt323(
-                                    color: Colors.black,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),

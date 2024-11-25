@@ -349,16 +349,20 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       desktop: 80,
     );
 
+    // Split the quest name and remove "Quest" if present
+    final questWords = widget.questName.split(' ');
+    final firstWord = questWords[0]; // This will be "Quake", "Storm", etc.
+
     return Column(
       children: [
         TextWithShadow(
-          text: widget.questName.split(' ')[0],
+          text: firstWord, // Just use the first word
           fontSize: titleFontSize,
         ),
         Transform.translate(
           offset: Offset(0, -titleFontSize * 0.35),
           child: TextWithShadow(
-            text: widget.questName.split(' ')[1],
+            text: 'Arcade', // Replace "Quest" with "Arcade"
             fontSize: titleFontSize,
           ),
         ),

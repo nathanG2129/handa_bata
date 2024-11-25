@@ -257,8 +257,14 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                                       width: ResponsiveUtils.valueByDevice(
                                         context: context,
                                         mobile: isMobileSmall ? 90 : 100,
-                                        tablet: 110,
+                                        tablet: 150,
                                         desktop: 120,
+                                      ),
+                                      height: ResponsiveUtils.valueByDevice(
+                                        context: context,
+                                        mobile: isMobileSmall ? 45 : 50,
+                                        tablet: 60,
+                                        desktop: 50,
                                       ),
                                       child: Button3D(
                                         backgroundColor: const Color(0xFFF1B33A),

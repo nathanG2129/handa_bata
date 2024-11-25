@@ -82,9 +82,9 @@ void showArcadeStageDialog(
 
               final recordsFontSize = ResponsiveUtils.valueByDevice<double>(
                 context: context,
-                mobile: 20,
-                tablet: 22,
-                desktop: 24,
+                mobile: 24,
+                tablet: 28,
+                desktop: 28,
               );
 
               final buttonHeight = ResponsiveUtils.valueByDevice<double>(

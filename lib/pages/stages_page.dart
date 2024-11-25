@@ -307,7 +307,7 @@ class StagesPageState extends State<StagesPage> {
                           style: GoogleFonts.vt323(
                             fontSize: ResponsiveUtils.valueByDevice<double>(
                               context: context,
-                              mobile: MediaQuery.of(context).size.width <= 414 ? 20 : 24, // Smaller font for mobile
+                              mobile: MediaQuery.of(context).size.width <= 414 ? 28 : 32, // Smaller font for mobile
                               tablet: 35,
                               desktop: 40,
                             ),

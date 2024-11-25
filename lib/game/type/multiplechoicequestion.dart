@@ -337,7 +337,7 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                                     child: Text(
                                       String.fromCharCode(65 + index),
                                       style: GoogleFonts.rubik(
-                                        fontSize: isTablet ? 28 : 24,
+                                        fontSize: isTablet ? 28 : 20,
                                         color: Colors.white
                                       ),
                                     ),

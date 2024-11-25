@@ -224,8 +224,8 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
   Widget _buildActionButtons(double fontSize) {
     final buttonHeight = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 40,
-      tablet: 45,
+      mobile: 55,
+      tablet: 60,
       desktop: 50,
     );
 

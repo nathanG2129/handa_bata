@@ -74,15 +74,15 @@ void showStageDialog(
 
               final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
                 context: context,
-                mobile: 24,
-                tablet: 30,
+                mobile: 28,
+                tablet: 32,
                 desktop: 36,
               );
 
               final statsFontSize = ResponsiveUtils.valueByDevice<double>(
                 context: context,
-                mobile: 18,
-                tablet: 20,
+                mobile: 20,
+                tablet: 24,
                 desktop: 24,
               );
 

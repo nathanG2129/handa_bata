@@ -274,7 +274,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                     Text(
                       questionText,
                       style: GoogleFonts.rubik(
-                        fontSize: isTablet ? 28 : 18,
+                        fontSize: isTablet ? 28 : 20,
                         color: Colors.white
                       ),
                       textAlign: TextAlign.center,
@@ -293,7 +293,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                       child: Text(
                         questionText,
                         style: GoogleFonts.rubik(
-                          fontSize: isTablet ? 28 : 18,
+                          fontSize: isTablet ? 28 : 20,
                           color: Colors.white,
                         ),
                         textAlign: TextAlign.center,
@@ -332,7 +332,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                       child: Text(
                         answerText,
                         style: GoogleFonts.rubik(
-                          fontSize: isTablet ? 28 : 24,
+                          fontSize: isTablet ? 28 : 20,
                           fontWeight: FontWeight.bold,
                           color: showCorrectAnswer || isCorrect != 0 
                               ? Colors.white 
@@ -349,8 +349,8 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                       ),
                       child: Wrap(
                         alignment: WrapAlignment.center,
-                        spacing: isTablet ? 12.0 : 8.0,
-                        runSpacing: isTablet ? 16.0 : 12.0,
+                        spacing: isTablet ? 12.0 : 4.0,
+                        runSpacing: isTablet ? 16.0 : 4.0,
                         children: uniqueOptions.asMap().entries.map((entry) {
                           int index = entry.key;
                           String option = entry.value;
@@ -374,7 +374,7 @@ class IdentificationQuestionState extends State<IdentificationQuestion> {
                               child: Text(
                                 optionValue,
                                 style: GoogleFonts.rubik(
-                                  fontSize: isTablet ? 28 : 18
+                                  fontSize: isTablet ? 28 : 20
                                 ),
                               ),
                             ),

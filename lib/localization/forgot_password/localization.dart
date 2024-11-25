@@ -15,7 +15,7 @@ class ForgotPasswordLocalization {
     },
     'fil': {
       'title': 'Forgot Password',
-      'email_label': 'IlEmail',
+      'email_label': 'Email',
       'email_hint': 'Ilagay ang iyong email address',
       'continue_button': 'Magpatuloy',
       'back_button': 'Bumalik',

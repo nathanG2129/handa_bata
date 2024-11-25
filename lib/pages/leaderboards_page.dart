@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/header_footer/header_widget.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:handabatamae/pages/user_profile.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class LeaderboardsPage extends StatefulWidget {
   const LeaderboardsPage({super.key});
@@ -107,80 +108,100 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
         }
       },
       child: Scaffold(
-        body: ResponsiveBreakpoints(
-          breakpoints: const [
-            Breakpoint(start: 0, end: 450, name: MOBILE),
-            Breakpoint(start: 451, end: 800, name: TABLET),
-            Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-          child: MaxWidthBox(
-            maxWidth: 1200,
-            child: ResponsiveScaledBox(
-              width: ResponsiveValue<double>(context, conditionalValues: [
-                const Condition.equals(name: MOBILE, value: 450),
-                const Condition.between(start: 800, end: 1100, value: 800),
-                const Condition.between(start: 1000, end: 1200, value: 1000),
-              ]).value,
-              child: Stack(
-                children: [
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  Column(
-                    children: [
-                      HeaderWidget(
-                        selectedLanguage: _selectedLanguage,
-                        onBack: () {
-                          Navigator.pop(context);
-                        },
-                        onChangeLanguage: _changeLanguage, 
-                      ),
-                      if (_isLoading)
-                        const Expanded(child: Center(child: CircularProgressIndicator()))
-                      else
-                        Expanded(
-                          child: CustomScrollView(
-                            slivers: [
-                              SliverList(
-                                delegate: SliverChildListDelegate(
-                                  [
-                                    const SizedBox(height: 20),
-                                    const Center(
-                                      child: TextWithShadow(
-                                        text: 'Leaderboards',
-                                        fontSize: 65,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    TabBar(
-                                      controller: _tabController,
-                                      isScrollable: true,
-                                      indicatorColor: Colors.white,
-                                      labelColor: Colors.white,
-                                      unselectedLabelColor: Colors.white,
-                                      indicator: const UnderlineTabIndicator(
-                                        borderSide: BorderSide(color: Colors.white, width: 2.0),
-                                      ),
-                                      tabs: _categories.map((category) {
-                                          return Tab(
-                                          child: Text(
-                                            category['name'],
-                                            style: GoogleFonts.rubik(fontSize: 18),
-                                          ),
-                                          );
-                                      }).toList(),
-                                    ),
-                                    const SizedBox(height: 20),
-                                  ],
+        body: ResponsiveBuilder(
+          builder: (context, sizingInformation) {
+            // Get responsive values based on device type
+            final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 16,
+              tablet: 200,
+              desktop: 48,
+            );
+
+            final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 45,
+              tablet: 55,
+              desktop: 65,
+            );
+
+            final tabFontSize = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 16,
+              tablet: 18,
+              desktop: 20,
+            );
+
+            final rankWidth = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 40,
+              tablet: 50,
+              desktop: 60,
+            );
+
+            final listItemPadding = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 4,
+              tablet: 5,
+              desktop: 8,
+            );
+
+            return Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Column(
+                  children: [
+                    HeaderWidget(
+                      selectedLanguage: _selectedLanguage,
+                      onBack: () {
+                        Navigator.pop(context);
+                      },
+                      onChangeLanguage: _changeLanguage,
+                    ),
+                    if (_isLoading)
+                      const Expanded(child: Center(child: CircularProgressIndicator()))
+                    else
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 20),
+                              Center(
+                                child: TextWithShadow(
+                                  text: 'Leaderboards',
+                                  fontSize: titleFontSize,
                                 ),
                               ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: TabBar(
+                                  controller: _tabController,
+                                  isScrollable: true,
+                                  indicatorColor: Colors.white,
+                                  labelColor: Colors.white,
+                                  unselectedLabelColor: Colors.white,
+                                  indicator: const UnderlineTabIndicator(
+                                    borderSide: BorderSide(color: Colors.white, width: 2.0),
+                                  ),
+                                  tabs: _categories.map((category) {
+                                    return Tab(
+                                      child: Text(
+                                        category['name'],
+                                        style: GoogleFonts.rubik(fontSize: tabFontSize),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
                               if (_tabController != null)
-                                SliverFillRemaining(
-                                  hasScrollBody: true,
+                                SizedBox(
+                                  height: MediaQuery.of(context).size.height * 0.6,
                                   child: TabBarView(
                                     controller: _tabController,
                                     children: _categories.map((category) {
@@ -220,7 +241,10 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
 
                                                 return Container(
                                                   color: containerColor,
-                                                  margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 20.0),
+                                                  margin: EdgeInsets.symmetric(
+                                                    vertical: listItemPadding,
+                                                    horizontal: horizontalPadding,
+                                                  ),
                                                   child: Stack(
                                                     children: [
                                                       Positioned(
@@ -228,7 +252,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                                                         top: 0,
                                                         bottom: 0,
                                                         child: Container(
-                                                          width: 40,
+                                                          width: rankWidth,
                                                           color: const Color(0xFF4d278f), // Rank container color
                                                           alignment: Alignment.center,
                                                           child: Text(
@@ -261,26 +285,25 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                                     }).toList(),
                                   ),
                                 ),
-                              SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: Column(
-                                  children: [
-                                    const Spacer(),
-                                    FooterWidget(selectedLanguage: _selectedLanguage), // Add the footer here
-                                  ],
-                                ),
-                              ),
+                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
-                    ],
+                      ),
+                    Container(
+                      width: double.infinity,
+                      child: FooterWidget(selectedLanguage: _selectedLanguage),
+                    ),
+                  ],
+                ),
+                if (_isUserProfileVisible)
+                  UserProfilePage(
+                    onClose: _toggleUserProfile,
+                    selectedLanguage: _selectedLanguage,
                   ),
-                  if (_isUserProfileVisible)
-                    UserProfilePage(onClose: _toggleUserProfile, selectedLanguage: _selectedLanguage),
-                ],
-              ),
-            ),
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

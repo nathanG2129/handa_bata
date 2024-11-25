@@ -225,19 +225,20 @@ void _showAnswerVisually() async {
     await Future.delayed(const Duration(seconds: 1, milliseconds: 750));
 
     setState(() {
-      if (selectedOptions[i] == correctOptions[i]) {
-        _playSound(_soundId2);
-        correctness[i] = true;
-        widget.updateHealth(true, 'Fill in the Blanks');
-        if (widget.gamemode == 'arcade') {
-          widget.updateStopwatch(-5);
-        }
-      } else {
+      // Check if the box is empty (null) or has incorrect answer
+      if (selectedOptions[i] == null || selectedOptions[i] != correctOptions[i]) {
         _playSound(_soundId1);
         correctness[i] = false;
         widget.updateHealth(false, 'Fill in the Blanks', blankPairs: 1);
         if (widget.gamemode == 'arcade') {
           widget.updateStopwatch(5);
+        }
+      } else {
+        _playSound(_soundId2);
+        correctness[i] = true;
+        widget.updateHealth(true, 'Fill in the Blanks');
+        if (widget.gamemode == 'arcade') {
+          widget.updateStopwatch(-5);
         }
       }
       completedUpdates++;
@@ -409,7 +410,7 @@ void _showAnswerVisually() async {
                           color: Colors.white
                         )
                       : GoogleFonts.rubik(
-                          fontSize: isTablet ? 20 : 16,
+                          fontSize: isTablet ? 20 : 18,
                           fontWeight: FontWeight.bold,
                           color: correctness[inputIndex] != null ? Colors.white : Colors.black,
                         ),

@@ -5,14 +5,14 @@ class SplashLocalization {
       'subtitle': 'Mobile',
       'login': 'Login',
       'play_now': 'Play Now',
-      'copyright': '© 2023 Handa Bata. All rights reserved.',
+      'copyright': '© 2024 Handa Bata. All rights reserved.',
     },
     'fil': {
       'title': 'Handa Bata',
       'subtitle': 'Mobile',
       'login': 'Mag-login',
       'play_now': 'Maglaro Na',
-      'copyright': '© 2023 Handa Bata. All rights reserved.',
+      'copyright': '© 2024 Handa Bata. All rights reserved.',
     },
   };
 

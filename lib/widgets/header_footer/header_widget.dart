@@ -245,7 +245,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
     return PopupMenuButton<String>(
       color: const Color(0xFF241242),
-      offset: const Offset(0, 64),
+      offset: Offset(0, ResponsiveUtils.valueByDevice(
+        context: context,
+        mobile: 52,  // Smaller offset for mobile
+        tablet: 62,  // Medium offset for tablet 
+        desktop: 64, // Original offset for desktop
+      )),
       onSelected: (String result) {
         switch (result) {
           case 'My Profile':
@@ -425,7 +430,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
                         color: Colors.white,
                       ),
                       padding: EdgeInsets.zero,
-                      offset: const Offset(0, 65),
+                      offset: Offset(0, ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: 56,  // Smaller offset for mobile
+                        tablet: 62,  // Medium offset for tablet
+                        desktop: 65, // Original offset for desktop
+                      )),
                       color: const Color(0xFF241242),
                       onSelected: (String newValue) {
                         widget.onChangeLanguage(newValue);

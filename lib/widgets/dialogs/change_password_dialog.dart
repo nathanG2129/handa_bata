@@ -226,6 +226,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                                 tablet: 110,
                                 desktop: 120,
                               ),
+                              height: ResponsiveUtils.valueByDevice(
+                                context: context,
+                                mobile: isMobileSmall ? 45 : 50,
+                                tablet: 60,
+                                desktop: 55,
+                              ),
                               child: Button3D(
                                 backgroundColor: const Color(0xFFF1B33A),
                                 borderColor: const Color(0xFF916D23),

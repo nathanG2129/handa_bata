@@ -756,6 +756,9 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     setState(() {
       double oldHp = _hp;
       
+      // Skip animation updates if game is already over
+      if (_isGameOver) return;
+      
       print('🎮 Updating animations - isCorrect: $isCorrect');
       print('🎮 Before update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
       
@@ -765,36 +768,40 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         } else {
           _hp += 20;
         }
-        // Show both characters' correct animations
-        _kladisAnimation = const KladisCorrect();
-        _kloudAnimation = const KloudCorrect();
+        // Show both characters' correct animations only if game isn't over
+        if (!_isGameOver) {
+          _kladisAnimation = const KladisCorrect();
+          _kloudAnimation = const KloudCorrect();
+        }
       } else {
         if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
           _hp -= (difficulty == 'hard' ? 20 : 10) * blankPairs;
         } else {
           _hp -= (difficulty == 'hard' ? 50 : 25);
         }
-        // Show both characters' wrong animations
-        _kladisAnimation = const KladisWrong();
-        _kloudAnimation = const KloudWrong();
+        // Show both characters' wrong animations only if game isn't over
+        if (!_isGameOver) {
+          _kladisAnimation = const KladisWrong();
+          _kloudAnimation = const KloudWrong();
+        }
       }
 
       _hp = _hp.clamp(0.0, 100.0);
 
+      // Check for game over
       if (_hp <= 0 && oldHp > 0) {
         _hp = 0;
         _isGameOver = true;
-        _kladisAnimation = const KladisDead();
-        _kloudAnimation = const KloudDead();
+        _showDeathAnimation();
       }
 
       print('🎮 After update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
     });
 
-    // Hide animation after delay (except for death animation)
+    // Reset animations only if game isn't over
     if (!_isGameOver) {
       Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
+        if (mounted && !_isGameOver) {
           setState(() {
             _kladisAnimation = const KladisIdle();
             _kloudAnimation = const KloudIdle();
@@ -1309,11 +1316,16 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
 
   void _showDeathAnimation() {
     setState(() {
+      _kladisAnimation = const KladisDead();
+      _kloudAnimation = const KloudDead();
     });
   }
 
   // Update the animation handling for arcade mode
   void _updateAnimationsForArcade(bool isCorrect) {
+    // Skip animation updates if game is over
+    if (_isGameOver) return;
+
     setState(() {
       if (isCorrect) {
         _kladisAnimation = const KladisCorrect();
@@ -1324,15 +1336,17 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       }
     });
 
-    // Reset to idle after animation
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _kladisAnimation = const KladisIdle();
-          _kloudAnimation = const KloudIdle();
-        });
-      }
-    });
+    // Reset to idle only if game isn't over
+    if (!_isGameOver) {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted && !_isGameOver) {
+          setState(() {
+            _kladisAnimation = const KladisIdle();
+            _kloudAnimation = const KloudIdle();
+          });
+        }
+      });
+    }
   }
 }
 

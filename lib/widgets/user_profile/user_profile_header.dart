@@ -345,8 +345,8 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
                                 Text(
                                   widget.nickname,
                                   style: widget.textStyle.copyWith(
-                                    fontSize: isMobileSmall ? 14 : 
-                                             isMobileLarge ? 16 :
+                                    fontSize: isMobileSmall ? 16 : 
+                                             isMobileLarge ? 18 :
                                              isMobileExtraLarge ? 18 : 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -355,9 +355,9 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
                                 Text(
                                   '@${widget.username}',
                                   style: widget.textStyle.copyWith(
-                                    fontSize: isMobileSmall ? 10 : 
-                                             isMobileLarge ? 12 :
-                                             isMobileExtraLarge ? 13 : 14,
+                                    fontSize: isMobileSmall ? 12 : 
+                                             isMobileLarge ? 14 :
+                                             isMobileExtraLarge ? 15 : 16,
                                     color: Colors.white,
                                   ),
                                 ),

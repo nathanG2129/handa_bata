@@ -7,6 +7,7 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/localization/about/localization.dart';
 
 class AboutPage extends StatelessWidget {
   final String selectedLanguage;
@@ -70,7 +71,15 @@ class AboutPage extends StatelessWidget {
                         );
                       },
                       onChangeLanguage: (String newLanguage) {
-                        // Handle language change
+                        // Rebuild the page with the new language
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AboutPage(
+                              selectedLanguage: newLanguage,
+                            ),
+                          ),
+                        );
                       },
                     ),
                     // Main content with constrained width
@@ -87,11 +96,20 @@ class AboutPage extends StatelessWidget {
                                   child: Column(
                                     children: [
                                       const SizedBox(height: 10),
-                                      AboutProjectSection(sizingInformation: sizingInformation),
+                                      AboutProjectSection(
+                                        sizingInformation: sizingInformation,
+                                        selectedLanguage: selectedLanguage,
+                                      ),
                                       const SizedBox(height: 60),
-                                      TeamSection(sizingInformation: sizingInformation),
+                                      TeamSection(
+                                        sizingInformation: sizingInformation,
+                                        selectedLanguage: selectedLanguage,
+                                      ),
                                       const SizedBox(height: 60),
-                                      ContactSection(sizingInformation: sizingInformation),
+                                      ContactSection(
+                                        sizingInformation: sizingInformation,
+                                        selectedLanguage: selectedLanguage,
+                                      ),
                                       const SizedBox(height: 80),
                                     ],
                                   ),
@@ -117,10 +135,12 @@ class AboutPage extends StatelessWidget {
 
 class AboutProjectSection extends StatelessWidget {
   final SizingInformation sizingInformation;
+  final String selectedLanguage;
 
   const AboutProjectSection({
     super.key,
     required this.sizingInformation,
+    required this.selectedLanguage,
   });
 
   @override
@@ -144,13 +164,13 @@ class AboutProjectSection extends StatelessWidget {
       child: Column(
         children: [
           TextWithShadow(
-            text: 'About',
+            text: AboutPageLocalization.translate('about', selectedLanguage),
             fontSize: titleFontSize,
           ),
           Transform.translate(
             offset: const Offset(0, -30),
             child: TextWithShadow(
-              text: 'The Project',
+              text: AboutPageLocalization.translate('theProject', selectedLanguage),
               fontSize: titleFontSize,
             ),
           ),
@@ -171,7 +191,7 @@ class AboutProjectSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 Text(
-                  'Handa Bata is a game-based learning website and mobile application that aims to empower Filipino children in junior high school with the knowledge they need to prepare for, respond to, and recover from earthquakes and typhoons. It was developed in 2023 by four Information Technology students from the University of Santo Tomas in Manila, Philippines. In 2024, the mobile application was developed by a new team of students from the same university.\n\nWe believe that every child should have the opportunity to be safe and resilient during times of disaster, and that technology can be a powerful tool to make this happen. That\'s why we created Handa Bata.',
+                  AboutPageLocalization.translate('projectDescription', selectedLanguage),
                   style: GoogleFonts.rubik(
                     fontSize: descriptionFontSize,
                     color: Colors.white,
@@ -269,10 +289,12 @@ class TeamMemberCard extends StatelessWidget {
 
 class TeamSection extends StatelessWidget {
   final SizingInformation sizingInformation;
+  final String selectedLanguage;
 
   const TeamSection({
     super.key,
     required this.sizingInformation,
+    required this.selectedLanguage,
   });
 
   @override
@@ -311,7 +333,7 @@ class TeamSection extends StatelessWidget {
       child: Column(
         children: [
           TextWithShadow(
-            text: 'Meet the Team',
+            text: AboutPageLocalization.translate('meetTheTeam', selectedLanguage),
             fontSize: titleFontSize,
           ),
           Transform.translate(
@@ -326,7 +348,7 @@ class TeamSection extends StatelessWidget {
                           children: [
                             const SizedBox(height: 40),
                             Text(
-                              'Handa Bata Mobile',
+                              AboutPageLocalization.translate('handaBataMobile', selectedLanguage),
                               style: GoogleFonts.rubik(
                                 fontSize: sectionTitleFontSize,
                                 fontWeight: FontWeight.w600,
@@ -344,7 +366,7 @@ class TeamSection extends StatelessWidget {
                           children: [
                             const SizedBox(height: 40),
                             Text(
-                              'Handa Bata Web',
+                              AboutPageLocalization.translate('handaBataWeb', selectedLanguage),
                               style: GoogleFonts.rubik(
                                 fontSize: sectionTitleFontSize,
                                 fontWeight: FontWeight.w600,
@@ -364,7 +386,7 @@ class TeamSection extends StatelessWidget {
                       // Handa Bata Mobile Team
                       const SizedBox(height: 40),
                       Text(
-                        'Handa Bata Mobile',
+                        AboutPageLocalization.translate('handaBataMobile', selectedLanguage),
                         style: GoogleFonts.rubik(
                           fontSize: sectionTitleFontSize,
                           fontWeight: FontWeight.w600,
@@ -376,7 +398,7 @@ class TeamSection extends StatelessWidget {
                       const SizedBox(height: 60),
                       // Handa Bata Web Team
                       Text(
-                        'Handa Bata Web',
+                        AboutPageLocalization.translate('handaBataWeb', selectedLanguage),
                         style: GoogleFonts.rubik(
                           fontSize: sectionTitleFontSize,
                           fontWeight: FontWeight.w600,
@@ -447,10 +469,12 @@ class TeamMemberData {
 
 class ContactSection extends StatelessWidget {
   final SizingInformation sizingInformation;
+  final String selectedLanguage;
 
   const ContactSection({
     super.key,
     required this.sizingInformation,
+    required this.selectedLanguage,
   });
 
   @override
@@ -474,13 +498,13 @@ class ContactSection extends StatelessWidget {
       child: Column(
         children: [
           TextWithShadow(
-            text: 'Contact Us',
+            text: AboutPageLocalization.translate('contactUs', selectedLanguage),
             fontSize: titleFontSize,
           ),
           Transform.translate(
             offset: const Offset(0, 0),
             child: Text(
-              'For any questions or concerns about Handa Bata, you can email us at handabata.official@gmail.com.',
+              AboutPageLocalization.translate('contactDescription', selectedLanguage),
               style: GoogleFonts.rubik(
                 fontSize: descriptionFontSize,
                 color: Colors.white,

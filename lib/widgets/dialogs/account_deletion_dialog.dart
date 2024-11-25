@@ -216,6 +216,12 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                                     tablet: 110,
                                     desktop: 120,
                                   ),
+                                  height: ResponsiveUtils.valueByDevice(
+                                    context: context,
+                                    mobile: isMobileSmall ? 55 : 55,
+                                    tablet: 60,
+                                    desktop: 52,
+                                  ),
                                   child: Button3D(
                                     onPressed: _handleDelete,
                                     backgroundColor: const Color(0xFFF1B33A),

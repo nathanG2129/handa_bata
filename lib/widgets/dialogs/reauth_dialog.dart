@@ -6,6 +6,8 @@ import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../localization/reauth/localization.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import '../../widgets/loading_widget.dart';
+import '../../pages/splash_page.dart';
 
 class ReauthenticationDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -82,6 +84,12 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
       if (mounted) {
         await _animationController.reverse();
         Navigator.of(context).pop(true);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage),
+          ),
+        );
       }
     } catch (e) {
       print('❌ Reauthentication error: $e');
@@ -143,184 +151,195 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
             }
             return false;
           },
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Dialog(
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.black, width: 1),
-                  borderRadius: BorderRadius.zero,
-                ),
-                backgroundColor: const Color(0xFF351b61),
-                child: SingleChildScrollView(
-                  child: Container(
-                    width: dialogWidth,
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: contentPadding,
-                            left: contentPadding,
-                            right: contentPadding,
-                            bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? contentPadding : contentPadding,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Text(
-                                  ReauthLocalization.translate('title', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    fontSize: isMobileSmall ? 20 :
-                                             isMobileLarge ? 22 :
-                                             isMobileExtraLarge ? 24 : titleFontSize,
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
+          child: Stack(
+            children: [
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Dialog(
+                    shape: const RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.black, width: 1),
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    backgroundColor: const Color(0xFF351b61),
+                    child: SingleChildScrollView(
+                      child: Container(
+                        width: dialogWidth,
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: contentPadding,
+                                left: contentPadding,
+                                right: contentPadding,
+                                bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? contentPadding : contentPadding,
                               ),
-                              SizedBox(height: contentPadding),
-                              Container(
-                                padding: EdgeInsets.all(contentPadding * 0.75),
-                                color: const Color(0xFFFFB74D),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.warning_rounded,
-                                      color: Colors.black,
-                                      size: isMobileSmall ? 20 :
-                                            isMobileLarge ? 22 :
-                                            isMobileExtraLarge ? 24 : 26,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Center(
+                                    child: Text(
+                                      ReauthLocalization.translate('title', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(
+                                        fontSize: isMobileSmall ? 20 :
+                                                 isMobileLarge ? 22 :
+                                                 isMobileExtraLarge ? 24 : titleFontSize,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    SizedBox(width: contentPadding * 0.5),
-                                    Expanded(
-                                      child: Text(
-                                        ReauthLocalization.translate('warning', widget.selectedLanguage),
-                                        style: GoogleFonts.vt323(
+                                  ),
+                                  SizedBox(height: contentPadding),
+                                  Container(
+                                    padding: EdgeInsets.all(contentPadding * 0.75),
+                                    color: const Color(0xFFFFB74D),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.warning_rounded,
                                           color: Colors.black,
-                                          fontSize: isMobileSmall ? 14 :
-                                                   isMobileLarge ? 15 :
-                                                   isMobileExtraLarge ? 16 : 18,
+                                          size: isMobileSmall ? 20 :
+                                                isMobileLarge ? 22 :
+                                                isMobileExtraLarge ? 24 : 26,
                                         ),
+                                        SizedBox(width: contentPadding * 0.5),
+                                        Expanded(
+                                          child: Text(
+                                            ReauthLocalization.translate('warning', widget.selectedLanguage),
+                                            style: GoogleFonts.vt323(
+                                              color: Colors.black,
+                                              fontSize: isMobileSmall ? 14 :
+                                                       isMobileLarge ? 15 :
+                                                       isMobileExtraLarge ? 16 : 18,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: contentPadding),
+                                  Text(
+                                    ReauthLocalization.translate('password_label', widget.selectedLanguage),
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.white,
+                                      fontSize: isMobileSmall ? 14 :
+                                               isMobileLarge ? 15 :
+                                               isMobileExtraLarge ? 16 : 18,
+                                    ),
+                                  ),
+                                  SizedBox(height: contentPadding * 0.5),
+                                  TextField(
+                                    controller: _passwordController,
+                                    obscureText: !_showPassword,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      errorText: _errorMessage,
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _showPassword ? Icons.visibility_off : Icons.visibility,
+                                          color: Colors.grey,
+                                          size: isMobileSmall ? 20 :
+                                                isMobileLarge ? 22 :
+                                                isMobileExtraLarge ? 24 : 26,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showPassword = !_showPassword;
+                                          });
+                                        },
+                                      ),
+                                      border: const OutlineInputBorder(
+                                        borderSide: BorderSide.none,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: contentPadding),
-                              Text(
-                                ReauthLocalization.translate('password_label', widget.selectedLanguage),
-                                style: GoogleFonts.vt323(
-                                  color: Colors.white,
-                                  fontSize: isMobileSmall ? 14 :
-                                           isMobileLarge ? 15 :
-                                           isMobileExtraLarge ? 16 : 18,
-                                ),
-                              ),
-                              SizedBox(height: contentPadding * 0.5),
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: !_showPassword,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  errorText: _errorMessage,
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _showPassword ? Icons.visibility_off : Icons.visibility,
-                                      color: Colors.grey,
-                                      size: isMobileSmall ? 20 :
-                                            isMobileLarge ? 22 :
-                                            isMobileExtraLarge ? 24 : 26,
+                                    style: GoogleFonts.vt323(
+                                      color: Colors.black,
+                                      fontSize: isMobileSmall ? 14 :
+                                               isMobileLarge ? 15 :
+                                               isMobileExtraLarge ? 16 : 18,
                                     ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showPassword = !_showPassword;
-                                      });
-                                    },
                                   ),
-                                  border: const OutlineInputBorder(
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                style: GoogleFonts.vt323(
-                                  color: Colors.black,
-                                  fontSize: isMobileSmall ? 14 :
-                                           isMobileLarge ? 15 :
-                                           isMobileExtraLarge ? 16 : 18,
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          color: const Color(0xFF241242),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: contentPadding,
-                            vertical: contentPadding * 0.75,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: _isLoading ? null : _handleClose,
-                                child: Text(
-                                  ReauthLocalization.translate('cancel_button', widget.selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    color: Colors.white,
-                                    fontSize: buttonTextSize,
-                                  ),
-                                ),
+                            ),
+                            Container(
+                              color: const Color(0xFF241242),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: contentPadding,
+                                vertical: contentPadding * 0.75,
                               ),
-                              SizedBox(width: contentPadding * 0.75),
-                              SizedBox(
-                                width: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: isMobileSmall ? 120 : 150,
-                                  tablet: 160,
-                                  desktop: 170,
-                                ),
-                                height: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: isMobileSmall ? 55 : 55,
-                                  tablet: 80,
-                                  desktop: 55,
-                                ),
-                                child: Button3D(
-                                  onPressed: _isLoading ? () {} : _reauthenticate,
-                                  backgroundColor: const Color(0xFFF1B33A),
-                                  borderColor: const Color(0xFF916D23),
-                                  child: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(
-                                        ReauthLocalization.translate('delete_button', widget.selectedLanguage),
-                                        style: GoogleFonts.vt323(
-                                          color: Colors.white,
-                                          fontSize: buttonTextSize,
-                                        ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: _isLoading ? null : _handleClose,
+                                    child: Text(
+                                      ReauthLocalization.translate('cancel_button', widget.selectedLanguage),
+                                      style: GoogleFonts.vt323(
+                                        color: Colors.white,
+                                        fontSize: buttonTextSize,
                                       ),
-                                ),
+                                    ),
+                                  ),
+                                  SizedBox(width: contentPadding * 0.75),
+                                  SizedBox(
+                                    width: ResponsiveUtils.valueByDevice(
+                                      context: context,
+                                      mobile: isMobileSmall ? 120 : 150,
+                                      tablet: 160,
+                                      desktop: 170,
+                                    ),
+                                    height: ResponsiveUtils.valueByDevice(
+                                      context: context,
+                                      mobile: isMobileSmall ? 55 : 55,
+                                      tablet: 80,
+                                      desktop: 55,
+                                    ),
+                                    child: Button3D(
+                                      onPressed: _isLoading ? () {} : _reauthenticate,
+                                      backgroundColor: const Color(0xFFF1B33A),
+                                      borderColor: const Color(0xFF916D23),
+                                      child: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            ReauthLocalization.translate('delete_button', widget.selectedLanguage),
+                                            style: GoogleFonts.vt323(
+                                              color: Colors.white,
+                                              fontSize: buttonTextSize,
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+              if (_isLoading)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black54,
+                    child: const LoadingWidget(),
+                  ),
+                ),
+            ],
           ),
         );
       },

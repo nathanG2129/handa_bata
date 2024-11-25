@@ -471,11 +471,11 @@ class AuthService {
     try {
       print('\n🚪 SIGNING OUT');
       
-      // 1. Clear all local data first
+      // Clear all local data first
       print('🧹 Clearing local data...');
       await clearAllLocalData();
       
-      // 2. Sign out from Firebase Auth
+      // Sign out from Firebase Auth
       print('🔑 Signing out from Firebase Auth...');
       await _auth.signOut();
       

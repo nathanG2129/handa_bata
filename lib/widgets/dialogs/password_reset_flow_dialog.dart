@@ -99,8 +99,16 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
   }
 
   Future<void> _verifyOTP() async {
+    // Clear previous error
+    setState(() => _errorMessage = null);
+
     if (_otpController.text.isEmpty) {
-      _showError(PasswordResetFlowLocalization.translate('pleaseEnterOTP', widget.selectedLanguage));
+      setState(() {
+        _errorMessage = PasswordResetFlowLocalization.translate(
+          'please_enter_otp',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
@@ -116,8 +124,13 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        _showError(e.toString());
+        setState(() {
+          _isLoading = false;
+          _errorMessage = PasswordResetFlowLocalization.translate(
+            'invalid_otp',
+            widget.selectedLanguage,
+          );
+        });
       }
     }
   }
@@ -191,7 +204,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
     );
   }
 
-  Widget _buildOTPVerification() {
+  Widget _buildOTPVerification(double contentPadding) {
     final otpFieldWidth = ResponsiveUtils.valueByDevice<double>(
       context: context,
       mobile: 150,
@@ -219,6 +232,10 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
           fontSize: titleFontSize,
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 12),
+          _buildErrorMessage(contentPadding),
+        ],
         const SizedBox(height: 12),
         Text(
           PasswordResetFlowLocalization.translate('enter_otp', widget.selectedLanguage),
@@ -518,7 +535,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (!_otpVerified && !_resetComplete)
-                                        _buildOTPVerification()
+                                        _buildOTPVerification(dialogPadding)
                                       else if (_otpVerified && !_resetComplete)
                                         _buildNewPassword()
                                       else

@@ -59,6 +59,7 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -103,16 +104,35 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
   }
 
   Future<void> _verifyOTP() async {
+    setState(() => _errorMessage = null);
+
     setState(() => _isLoading = true);
 
     try {
       if (widget.isEmailChange) {
         // Handle email change verification
         if (widget.onVerify != null) {
-          await widget.onVerify!(_otpController.text);
+          try {
+            await widget.onVerify!(_otpController.text);
+            if (!mounted) return;
+            Navigator.of(context).pop();
+          } catch (e) {
+            setState(() {
+              _isLoading = false;
+              if (e.toString().contains('email-already-in-use')) {
+                _errorMessage = EmailVerificationLocalization.translate(
+                  'email_already_in_use',
+                  widget.selectedLanguage,
+                );
+              } else {
+                _errorMessage = EmailVerificationLocalization.translate(
+                  'email_change_failed',
+                  widget.selectedLanguage,
+                );
+              }
+            });
+          }
         }
-        if (!mounted) return;
-        Navigator.of(context).pop();
       } else {
         // Verify OTP first
         final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
@@ -185,26 +205,54 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
           } catch (e) {
             print('❌ Error during account creation/conversion: $e');
             if (e.toString().contains('Username is already taken')) {
-              throw Exception('This username is no longer available. Please go back and choose another.');
+              setState(() {
+                _errorMessage = EmailVerificationLocalization.translate(
+                  'username_taken',
+                  widget.selectedLanguage,
+                );
+              });
+              return;
             }
             if (e.toString().contains('No pending conversion')) {
-              throw Exception('Conversion process failed. Please try again.');
+              setState(() {
+                _errorMessage = EmailVerificationLocalization.translate(
+                  'conversion_failed',
+                  widget.selectedLanguage,
+                );
+              });
+              return;
             }
-            rethrow;
+            setState(() {
+              _errorMessage = EmailVerificationLocalization.translate(
+                'verification_failed',
+                widget.selectedLanguage,
+              );
+            });
           }
         } else {
-          throw Exception('Invalid verification code');
+          setState(() {
+            _isLoading = false;
+            _errorMessage = EmailVerificationLocalization.translate(
+              'invalid_code',
+              widget.selectedLanguage,
+            );
+          });
         }
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _isLoading = false;
+        _errorMessage = widget.isEmailChange
+          ? EmailVerificationLocalization.translate(
+              'email_verification_failed',
+              widget.selectedLanguage,
+            )
+          : EmailVerificationLocalization.translate(
+              'verification_failed',
+              widget.selectedLanguage,
+            );
+      });
     }
   }
 
@@ -215,26 +263,54 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
 
   Future<void> _sendOTP() async {
     try {
-      setState(() => _canResend = false); // Disable resend button immediately
+      setState(() => _canResend = false);
       
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       await functions
           .httpsCallable(widget.isEmailChange ? 'sendEmailChangeOTP' : 'sendVerificationOTP')
           .call({'email': widget.email});
       
-      // Reset timer after successful resend
       setState(() {
         _timeLeft = 300;
         _startTimer();
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending OTP: $e')),
-      );
-      // Re-enable resend button on error
-      setState(() => _canResend = true);
+      setState(() {
+        _canResend = true;
+        _errorMessage = EmailVerificationLocalization.translate(
+          'send_code_error',
+          widget.selectedLanguage,
+        );
+      });
     }
+  }
+
+  Widget _buildErrorMessage(double contentPadding) {
+    if (_errorMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: EdgeInsets.all(contentPadding * 0.75),
+      color: const Color(0xFFFFB74D),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_rounded,
+            color: Colors.black,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -327,6 +403,10 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                                             : EmailVerificationLocalization.translate('title', widget.selectedLanguage),
                                           fontSize: titleFontSize,
                                         ),
+                                        if (_errorMessage != null) ...[
+                                          const SizedBox(height: 12),
+                                          _buildErrorMessage(dialogPadding),
+                                        ],
                                         const SizedBox(height: 12),
                                         Text(
                                           EmailVerificationLocalization.translate('enter_code', widget.selectedLanguage),

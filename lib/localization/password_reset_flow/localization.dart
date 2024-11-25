@@ -11,12 +11,12 @@ class PasswordResetFlowLocalization {
       'success_message': 'Password reset successful! You can now log in with your new password.',
       'login_button': 'Log In',
       // Validation messages
-      'please_enter_otp': 'Please enter the verification code',
-      'invalid_otp': 'Invalid verification code',
-      'please_enter_password': 'Please enter a new password',
-      'passwords_not_match': 'Passwords do not match',
-      'password_requirements': 'Password must be at least 8 characters long and include uppercase, lowercase, number, and symbol',
-      'resend_code': "Didn't receive the code? Request a new one",
+      'please_enter_otp': 'Please enter the verification code.',
+      'invalid_otp': 'Invalid verification code.',
+      'please_enter_password': 'Please enter a new password.',
+      'passwords_not_match': 'Passwords do not match.',
+      'password_requirements': 'Password must be at least 8 characters long and include uppercase, lowercase, number, and symbol.',
+      'resend_code': "Didn't receive the code? Request a new one.",
     },
     'fil': {
       'title': 'I-reset ang Password',
@@ -29,12 +29,12 @@ class PasswordResetFlowLocalization {
       'success_message': 'Matagumpay na na-reset ang password! Maaari ka nang mag-log in gamit ang iyong bagong password.',
       'login_button': 'Mag-log In',
       // Validation messages
-      'please_enter_otp': 'Mangyaring ilagay ang verification code',
-      'invalid_otp': 'Hindi wastong verification code',
-      'please_enter_password': 'Mangyaring maglagay ng bagong password',
-      'passwords_not_match': 'Hindi magkatugma ang mga password',
-      'password_requirements': 'Ang password ay dapat hindi bababa sa 8 character at may malaking titik, maliit na titik, numero, at simbolo',
-      'resend_code': 'Hindi natanggap ang code? Humiling ng panibago',
+      'please_enter_otp': 'Maaring ilagay ang verification code sa loob ng kahon.',
+      'invalid_otp': 'Hindi wasto ang verification code. Pakisubukan muli.',
+      'please_enter_password': 'Mangyaring maglagay ng bagong password.',
+      'passwords_not_match': 'Hindi magkatugma ang mga password.',
+      'password_requirements': 'Ang password ay dapat hindi bababa sa 8 character at may malaking titik, maliit na titik, numero, at simbolo.',
+      'resend_code': 'Hindi natanggap ang code? Humiling ng panibago.',
     },
   };
 

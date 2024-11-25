@@ -204,10 +204,10 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                              isMobileExtraLarge ? 55 :
                                              isTablet ? 60 : 65;
 
-                      final double titleFontSize = isMobileSmall ? 12 : 
-                                                 isMobileLarge ? 14 :
-                                                 isMobileExtraLarge ? 15 :
-                                                 isTablet ? 16 : 18;
+                      final double titleFontSize = isMobileSmall ? 16 : 
+                                                 isMobileLarge ? 16 :
+                                                 isMobileExtraLarge ? 16 :
+                                                 isTablet ? 18 : 20;
 
                       return Stack(
                         children: [

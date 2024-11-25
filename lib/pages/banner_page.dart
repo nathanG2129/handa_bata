@@ -189,8 +189,8 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
             // Calculate sizes based on device type
             final double bannerWidth = isTablet ? 150 : 200;
             final double bannerHeight = isTablet ? 150 : 200;
-            final double titleFontSize = isMobileSmall ? 16 : 
-                                       isMobileLarge ? 18 :
+            final double titleFontSize = isMobileSmall ? 20 : 
+                                       isMobileLarge ? 20 :
                                        isMobileExtraLarge ? 20 : 22;
             final double gridPadding = isMobileSmall ? 8 : 
                                      isMobileLarge ? 10 :

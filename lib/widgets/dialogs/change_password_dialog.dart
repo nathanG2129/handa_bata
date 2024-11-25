@@ -31,6 +31,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -65,16 +66,108 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
     }
   }
 
-  Future<void> _handleSave() async {
-    if (_newPasswordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            PasswordChangeLocalization.translate('passwords_not_match', widget.selectedLanguage),
+  Widget _buildErrorMessage(double contentPadding) {
+    if (_errorMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: EdgeInsets.all(contentPadding * 0.75),
+      color: const Color(0xFFFFB74D),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_rounded,
+            color: Colors.black,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleSave() async {
+    // Clear previous error
+    setState(() => _errorMessage = null);
+
+    // Check for empty fields
+    if (_currentPasswordController.text.isEmpty ||
+        _newPasswordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'password_required',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check if new password is same as current
+    if (_currentPasswordController.text == _newPasswordController.text) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'same_password',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check if passwords match
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'passwords_not_match',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check password requirements
+    String password = _newPasswordController.text;
+    if (password.length < 8) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'password_requirement_1',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'password_requirement_2',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'password_requirement_3',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      setState(() {
+        _errorMessage = PasswordChangeLocalization.translate(
+          'password_requirement_4',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
@@ -166,6 +259,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> with Single
                                 textAlign: TextAlign.center,
                               ),
                             ),
+                            if (_errorMessage != null) ...[
+                              SizedBox(height: contentPadding),
+                              _buildErrorMessage(contentPadding),
+                            ],
                             SizedBox(height: contentPadding),
                             _buildPasswordField(
                               _currentPasswordController,

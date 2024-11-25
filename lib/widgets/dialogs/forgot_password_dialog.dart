@@ -28,6 +28,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   final TextEditingController _emailController = TextEditingController();
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -61,28 +62,26 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
   }
 
   Future<void> _handleContinue() async {
+    setState(() => _errorMessage = null);
+
     if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ForgotPasswordLocalization.translate('pleaseEnterEmail', widget.selectedLanguage),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _errorMessage = ForgotPasswordLocalization.translate(
+          'please_enter_email',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
     final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegExp.hasMatch(_emailController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ForgotPasswordLocalization.translate('invalidEmail', widget.selectedLanguage),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _errorMessage = ForgotPasswordLocalization.translate(
+          'invalid_email',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
@@ -91,6 +90,33 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
       Navigator.of(context).pop();
       widget.onEmailSubmitted(_emailController.text);
     }
+  }
+
+  Widget _buildErrorMessage(double contentPadding) {
+    if (_errorMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: EdgeInsets.all(contentPadding * 0.75),
+      color: const Color(0xFFFFB74D),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_rounded,
+            color: Colors.black,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -171,6 +197,10 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
+                                if (_errorMessage != null) ...[
+                                  SizedBox(height: contentPadding),
+                                  _buildErrorMessage(contentPadding),
+                                ],
                                 SizedBox(height: contentPadding),
                                 _buildEmailField(),
                               ],

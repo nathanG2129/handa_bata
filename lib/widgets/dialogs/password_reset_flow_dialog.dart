@@ -39,6 +39,7 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
   bool _resetComplete = false;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  String? _errorMessage;
 
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -122,13 +123,41 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
   }
 
   Future<void> _resetPassword() async {
+    // Clear previous error
+    setState(() => _errorMessage = null);
+
     if (_newPasswordController.text.isEmpty) {
-      _showError(PasswordResetFlowLocalization.translate('pleaseEnterNewPassword', widget.selectedLanguage));
+      setState(() {
+        _errorMessage = PasswordResetFlowLocalization.translate(
+          'please_enter_password',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      _showError(PasswordResetFlowLocalization.translate('passwordsDoNotMatch', widget.selectedLanguage));
+      setState(() {
+        _errorMessage = PasswordResetFlowLocalization.translate(
+          'passwords_not_match',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check password requirements
+    String password = _newPasswordController.text;
+    if (password.length < 8 || 
+        !password.contains(RegExp(r'[A-Z]')) ||
+        !password.contains(RegExp(r'[0-9]')) ||
+        !password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      setState(() {
+        _errorMessage = PasswordResetFlowLocalization.translate(
+          'password_requirements',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
@@ -144,8 +173,10 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        _showError(e.toString());
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
       }
     }
   }
@@ -271,6 +302,10 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           text: PasswordResetFlowLocalization.translate('title', widget.selectedLanguage),
           fontSize: titleFontSize,
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 24),
+          _buildErrorMessage(24),
+        ],
         const SizedBox(height: 24),
         _buildPasswordField(
           controller: _newPasswordController,
@@ -393,6 +428,33 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
           text: PasswordResetFlowLocalization.translate('login_button', widget.selectedLanguage),
         ),
       ],
+    );
+  }
+
+  Widget _buildErrorMessage(double contentPadding) {
+    if (_errorMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: EdgeInsets.all(contentPadding * 0.75),
+      color: const Color(0xFFFFB74D),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_rounded,
+            color: Colors.black,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

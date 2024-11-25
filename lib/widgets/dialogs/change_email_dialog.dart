@@ -31,6 +31,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -66,13 +67,68 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
     }
   }
 
+  Widget _buildErrorMessage(double contentPadding) {
+    if (_errorMessage == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: EdgeInsets.all(contentPadding * 0.75),
+      color: const Color(0xFFFFB74D),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_rounded,
+            color: Colors.black,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.vt323(
+                color: Colors.black,
+                fontSize: 18
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   VoidCallback get handleContinue => () {
+    // Clear previous error
+    setState(() => _errorMessage = null);
+
+    // Check for empty fields
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-          EmailChangeLocalization.translate('pleaseCompleteFields', widget.selectedLanguage)
-        )),
-      );
+      setState(() {
+        _errorMessage = EmailChangeLocalization.translate(
+          'password_required',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check email format
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(_emailController.text)) {
+      setState(() {
+        _errorMessage = EmailChangeLocalization.translate(
+          'invalid_email',
+          widget.selectedLanguage,
+        );
+      });
+      return;
+    }
+
+    // Check if new email is same as current
+    if (_emailController.text == widget.currentEmail) {
+      setState(() {
+        _errorMessage = EmailChangeLocalization.translate(
+          'same_email',
+          widget.selectedLanguage,
+        );
+      });
       return;
     }
 
@@ -86,7 +142,10 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
       })
       .catchError((error) {
         if (mounted) {
-          setState(() => _isLoading = false);
+          setState(() {
+            _isLoading = false;
+            _errorMessage = error.toString();
+          });
         }
       });
   };
@@ -177,6 +236,10 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> with SingleTicker
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
+                                    if (_errorMessage != null) ...[
+                                      SizedBox(height: contentPadding),
+                                      _buildErrorMessage(contentPadding),
+                                    ],
                                     SizedBox(height: contentPadding),
                                     TextField(
                                       controller: _emailController,

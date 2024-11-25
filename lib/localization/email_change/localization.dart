@@ -8,14 +8,14 @@ class EmailChangeLocalization {
       'change_button': 'Continue',
       'cancel_button': 'Cancel',
       // Validation messages
-      'invalid_email': 'Please enter a valid email',
-      'same_email': 'New email must be different from current email',
-      'password_required': 'Current password is required',
+      'invalid_email': 'Please enter a valid email.',
+      'same_email': 'New email must be different from current email.',
+      'password_required': 'Your current password is required.',
       // Success/Error messages
-      'email_change_success': 'Email changed successfully',
-      'email_change_error': 'Failed to change email',
-      'verification_sent': 'Verification code sent to your new email',
-      'verification_error': 'Failed to send verification code',
+      'email_change_success': 'Email changed successfully.',
+      'email_change_error': 'Failed to change email.',
+      'verification_sent': 'Verification code sent to your new email.',
+      'verification_error': 'Failed to send verification code.',
     },
     'fil': {
       'title': 'Baguhin ang Email',
@@ -25,14 +25,14 @@ class EmailChangeLocalization {
       'change_button': 'Magpatuloy',
       'cancel_button': 'I-cancel',
       // Validation messages
-      'invalid_email': 'Mangyaring maglagay ng wastong email',
-      'same_email': 'Ang bagong email ay dapat iba sa kasalukuyang email',
-      'password_required': 'Kinakailangan ang kasalukuyang password',
+      'invalid_email': 'Maglagay ng wastong email sa loob ng kahon.',
+      'same_email': 'Ang bagong email ay dapat iba sa kasalukuyang email.',
+      'password_required': 'Kinakailangan ilagay ang password sa loob ng kahon.',
       // Success/Error messages
-      'email_change_success': 'Matagumpay na napalitan ang email',
-      'email_change_error': 'Hindi napalitan ang email',
-      'verification_sent': 'Ang verification code ay ipinadala sa iyong bagong email',
-      'verification_error': 'Hindi maipadala ang verification code',
+      'email_change_success': 'Matagumpay na napalitan ang email.',
+      'email_change_error': 'Hindi napalitan ang email.',
+      'verification_sent': 'Ang verification code ay ipinadala sa iyong bagong email.',
+      'verification_error': 'Hindi maipadala ang verification code.',
     },
   };
 

@@ -409,9 +409,9 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
   Widget _buildButtons(double fontSize) {
     final buttonHeight = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 45,
-      tablet: 50,
-      desktop: 55,
+      mobile: 55,
+      tablet: 60,
+      desktop: 65,
     );
 
     return Column(

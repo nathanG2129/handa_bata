@@ -193,15 +193,15 @@ class AccountSettingsContent extends StatelessWidget {
                                      isMobileExtraLarge ? 18 :
                                      isTablet ? 20 : 22;
 
-        final double buttonWidth = isMobileSmall ? 70 :
-                                 isMobileLarge ? 75 :
-                                 isMobileExtraLarge ? 80 :
-                                 isTablet ? 85 : 90;
+        final double buttonWidth = isMobileSmall ? 90 :
+                                 isMobileLarge ? 90 :
+                                 isMobileExtraLarge ? 90 :
+                                 isTablet ? 130 : 120;
 
-        final double buttonHeight = isMobileSmall ? 55 :
-                                  isMobileLarge ? 60 :
-                                  isMobileExtraLarge ? 65 :
-                                  isTablet ? 70 : 75;
+        final double buttonHeight = isMobileSmall ? 50 :
+                                  isMobileLarge ? 55 :
+                                  isMobileExtraLarge ? 60 :
+                                  isTablet ? 65 : 70;
 
         final double sectionPadding = ResponsiveUtils.valueByDevice(
           context: context,

@@ -284,6 +284,12 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
                                   tablet: 160,
                                   desktop: 170,
                                 ),
+                                height: ResponsiveUtils.valueByDevice(
+                                  context: context,
+                                  mobile: isMobileSmall ? 55 : 55,
+                                  tablet: 80,
+                                  desktop: 55,
+                                ),
                                 child: Button3D(
                                   onPressed: _isLoading ? () {} : _reauthenticate,
                                   backgroundColor: const Color(0xFFF1B33A),

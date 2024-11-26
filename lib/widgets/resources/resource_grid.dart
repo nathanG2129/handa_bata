@@ -218,7 +218,7 @@ class ResourceGrid extends StatelessWidget {
         ),
         const ResourceData(
           title: 'First Aid Guide',
-          src: 'assets/images/infographics/First Aid.jpg',
+          src: 'assets/images/infographics/FirstAid.jpg',
           reference: 'From Philippine Red Cross',
           thumbnailPath: 'assets/images/infographics/previews/FirstAid.jpg',
         ),

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/localization/badge_description/localization.dart';
 
 class BadgeDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> badge;
+  final String selectedLanguage;
 
-  const BadgeDetailsDialog({super.key, required this.badge});
+  const BadgeDetailsDialog({
+    super.key, 
+    required this.badge,
+    required this.selectedLanguage,
+  });
 
   @override
   BadgeDetailsDialogState createState() => BadgeDetailsDialogState();
@@ -45,6 +51,12 @@ class BadgeDetailsDialogState extends State<BadgeDetailsDialog> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
+    final int badgeId = widget.badge['id'] as int;
+    final String description = BadgeDescriptionLocalization.getLocalizedDescription(
+      badgeId,
+      widget.selectedLanguage,
+    );
+
     return WillPopScope(
       onWillPop: () async {
         await _closeDialog();
@@ -90,7 +102,7 @@ class BadgeDetailsDialogState extends State<BadgeDetailsDialog> with SingleTicke
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      widget.badge['description'] ?? 'No description available.',
+                      description,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.vt323(
                         color: Colors.black,

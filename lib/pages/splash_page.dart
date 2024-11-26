@@ -215,7 +215,7 @@ class SplashPageState extends State<SplashPage> {
           }
 
           // Fetch ALL avatars
-          final avatars = await avatarService.fetchAvatars();
+          await avatarService.fetchAvatars();
 
           if (userProfile != null) {
             await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);

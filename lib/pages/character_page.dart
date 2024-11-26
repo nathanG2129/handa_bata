@@ -7,12 +7,15 @@ import 'package:responsive_builder/responsive_builder.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:handabatamae/localization/character/character_localization.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 
 class CharacterPage extends StatefulWidget {
   final VoidCallback onClose;
   final bool selectionMode;
   final int? currentAvatarId;
   final Function(int)? onAvatarSelected;
+  final String selectedLanguage;
 
   const CharacterPage({
     super.key, 
@@ -20,6 +23,7 @@ class CharacterPage extends StatefulWidget {
     this.selectionMode = false,
     this.currentAvatarId,
     this.onAvatarSelected,
+    required this.selectedLanguage,
   });
 
   @override
@@ -117,7 +121,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading avatars: $e')),
+          SnackBar(content: Text(CharacterPageLocalization.translate('errorLoadingAvatars', widget.selectedLanguage) + e.toString())),
         );
       }
     }
@@ -168,7 +172,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
       print('❌ Error updating avatar: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update avatar: $e')),
+          SnackBar(content: Text(CharacterPageLocalization.translate('failedToUpdateAvatar', widget.selectedLanguage) + e.toString())),
         );
       }
     }
@@ -268,7 +272,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
                                         ),
                                         child: Center(
                                           child: Text(
-                                            'Characters',
+                                            CharacterPageLocalization.translate('characters', widget.selectedLanguage),
                                             style: GoogleFonts.vt323(
                                               color: Colors.white,
                                               fontSize: headerFontSize,
@@ -315,23 +319,25 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
                                             vertical: isMobileSmall ? 6 : 8,
                                             horizontal: isMobileSmall ? 12 : 16,
                                           ),
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.white,
-                                              foregroundColor: Colors.black,
-                                              textStyle: GoogleFonts.vt323(
-                                                fontSize: titleFontSize,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                            child: Button3D(
+                                              width: 200,
+                                              height: 45,
+                                              backgroundColor: const Color(0xFFF1B33A),
+                                              borderColor: const Color(0xFF8B5A00),
+                                              onPressed: _selectedAvatarId != null 
+                                                ? () => _handleAvatarUpdate(_selectedAvatarId!)
+                                                : () {}, // Empty function when disabled
+                                              child: Opacity(
+                                                opacity: _selectedAvatarId != null ? 1.0 : 0.5,
+                                                child: Text(
+                                                  CharacterPageLocalization.translate('saveChanges', widget.selectedLanguage),
+                                                  style: GoogleFonts.vt323(
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
                                               ),
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: isMobileSmall ? 6 : 8,
-                                              ),
-                                            ),
-                                            onPressed: _selectedAvatarId != null 
-                                              ? () => _handleAvatarUpdate(_selectedAvatarId!)
-                                              : null,
-                                            child: const Text(
-                                              'Save Changes',
-                                              style: TextStyle(fontSize: 18),
                                             ),
                                           ),
                                         ),
@@ -402,7 +408,7 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
               ),
               const SizedBox(height: 4),
               Text(
-                avatar['title'] ?? 'Avatar',
+                avatar['title'] ?? CharacterPageLocalization.translate('avatar', widget.selectedLanguage),
                 style: GoogleFonts.vt323(
                   color: Colors.white,
                   fontSize: titleFontSize,

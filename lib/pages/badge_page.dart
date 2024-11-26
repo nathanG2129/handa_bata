@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:handabatamae/localization/badge/badge_localization.dart';
 import 'package:handabatamae/pages/badge_details_dialog.dart';
 import 'package:handabatamae/services/badge_service.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
@@ -28,6 +29,7 @@ class BadgePage extends StatefulWidget {
   final List<int>? currentBadgeShowcase;
   final Function(List<int>)? onBadgesSelected;
   final String? currentQuest;
+    final String selectedLanguage;
 
   const BadgePage({
     super.key, 
@@ -36,6 +38,7 @@ class BadgePage extends StatefulWidget {
     this.currentBadgeShowcase,
     this.onBadgesSelected,
     this.currentQuest,
+    required this.selectedLanguage,
   });
 
   @override
@@ -252,7 +255,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'Badges',
+                                          BadgePageLocalization.translate('badges', widget.selectedLanguage),
                                           style: GoogleFonts.vt323(
                                             color: Colors.white,
                                             fontSize: headerFontSize,
@@ -354,10 +357,44 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                 fontSize: fontSize,
               ),
               onChanged: _handleFilterChange,
-              items: BadgeFilter.values.map((filter) => DropdownMenuItem(
-                value: filter,
-                child: Text(_getFilterName(filter)),
-              )).toList(),
+              items: [
+                DropdownMenuItem(
+                  value: BadgeFilter.myCollection,
+                  child: Text(BadgePageLocalization.translate('myCollection', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.allBadges,
+                  child: Text(BadgePageLocalization.translate('all', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.quakeBadges,
+                  child: Text(BadgePageLocalization.translate('quakeBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.stormBadges,
+                  child: Text(BadgePageLocalization.translate('stormBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.volcanoBadges,
+                  child: Text(BadgePageLocalization.translate('volcanoBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.droughtBadges,
+                  child: Text(BadgePageLocalization.translate('droughtBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.tsunamiBadges,
+                  child: Text(BadgePageLocalization.translate('tsunamiBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.floodBadges,
+                  child: Text(BadgePageLocalization.translate('floodBadges', widget.selectedLanguage)),
+                ),
+                DropdownMenuItem(
+                  value: BadgeFilter.arcadeBadges,
+                  child: Text(BadgePageLocalization.translate('arcadeBadges', widget.selectedLanguage)),
+                ),
+              ].toList(),
             );
           },
         ),
@@ -458,7 +495,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       print('❌ Error saving badge showcase: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating badges: $e')),
+        SnackBar(content: Text(BadgePageLocalization.translate('errorUpdatingBadge', widget.selectedLanguage) + e.toString())),
       );
     }
   }
@@ -593,7 +630,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    badge['title'] ?? 'Badge',
+                    badge['title'] ?? BadgePageLocalization.translate('badge', widget.selectedLanguage),
                     style: GoogleFonts.vt323(
                       color: Colors.white,
                       fontSize: titleFontSize,

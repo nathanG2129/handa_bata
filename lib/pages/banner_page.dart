@@ -7,6 +7,8 @@ import 'package:handabatamae/services/banner_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/localization/banner/banner_localization.dart';
 
 enum BannerFilter { all, myCollection }
 
@@ -15,6 +17,7 @@ class BannerPage extends StatefulWidget {
   final bool selectionMode;
   final int? currentBannerId;
   final Function(int)? onBannerSelected;
+  final String selectedLanguage;
 
   const BannerPage({
     super.key, 
@@ -22,6 +25,7 @@ class BannerPage extends StatefulWidget {
     this.selectionMode = false,
     this.currentBannerId,
     this.onBannerSelected,
+    required this.selectedLanguage,
   });
 
   @override
@@ -120,7 +124,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating banner: $e')),
+        SnackBar(content: Text(BannerPageLocalization.translate('errorUpdatingBanner', widget.selectedLanguage) + e.toString())),
       );
     }
   }
@@ -148,14 +152,14 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                 fontSize: 20,
               ),
               onChanged: _handleFilterChange,
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: BannerFilter.all,
-                  child: Text('All'),
+                  child: Text(BannerPageLocalization.translate('all', widget.selectedLanguage)),
                 ),
                 DropdownMenuItem(
                   value: BannerFilter.myCollection,
-                  child: Text('My Collection'),
+                  child: Text(BannerPageLocalization.translate('myCollection', widget.selectedLanguage)),
                 ),
               ],
             );
@@ -262,8 +266,8 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                                     SizedBox(height: gridPadding / 2),
                                     Text(
                                       isUnlocked 
-                                          ? banner['title'] ?? 'Banner'
-                                          : 'Unlocks at Level ${index + 1}',
+                                          ? banner['title'] ?? BannerPageLocalization.translate('banner', widget.selectedLanguage)
+                                          : '${BannerPageLocalization.translate('unlocksAtLevel', widget.selectedLanguage)} ${index + 1}',
                                       style: GoogleFonts.vt323(
                                         color: Colors.white,
                                         fontSize: titleFontSize,
@@ -292,16 +296,26 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
     return ValueListenableBuilder<int?>(
       valueListenable: _selectedBannerNotifier,
       builder: (context, selectedBannerId, _) {
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            textStyle: GoogleFonts.vt323(fontSize: 20),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Button3D(
+            width: 200,
+            height: 45,
+            backgroundColor: const Color(0xFFF1B33A),
+            borderColor: const Color(0xFF8B5A00),
+            onPressed: selectedBannerId != null 
+              ? () => _handleBannerUpdate(selectedBannerId)
+              : () {},
+            child: Opacity(
+              opacity: selectedBannerId != null ? 1.0 : 0.5,
+              child: Text(
+                BannerPageLocalization.translate('saveChanges', widget.selectedLanguage),
+                style: GoogleFonts.vt323(
+                  color: Colors.black,
+                ),
+              ),
+            ),
           ),
-          onPressed: selectedBannerId != null 
-            ? () => _handleBannerUpdate(selectedBannerId)
-            : null,
-          child: const Text('Save Changes'),
         );
       },
     );
@@ -365,7 +379,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data![0].isEmpty) {
-          return const Center(child: Text('No banners found.'));
+          return Center(child: Text(BannerPageLocalization.translate('noBannersFound', widget.selectedLanguage)));
         } else {
           if (!_animationController.isAnimating && !_animationController.isCompleted) {
             _animationController.forward();
@@ -395,10 +409,10 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                       child: Center(
                         child: Text(
-                          'Banners',
+                          BannerPageLocalization.translate('banners', widget.selectedLanguage),
                           style: GoogleFonts.vt323(
                             color: Colors.white,
-                            fontSize: 42,
+                            fontSize: 28,
                           ),
                         ),
                       ),

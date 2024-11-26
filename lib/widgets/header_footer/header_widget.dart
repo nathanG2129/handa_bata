@@ -188,9 +188,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
         return CharacterPage(
           selectionMode: false,
           currentAvatarId: _currentAvatarId,
+          selectedLanguage: widget.selectedLanguage,
           onAvatarSelected: (newAvatarId) async {
             try {
-              // Use UserProfileService for consistent updates
               await _userProfileService.updateProfileWithIntegration('avatarId', newAvatarId);
               Navigator.of(context).pop();
             } catch (e) {
@@ -217,6 +217,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
           onClose: () {
             Navigator.of(context).pop();
           },
+          selectedLanguage: widget.selectedLanguage,
         );
       },
     );
@@ -230,6 +231,7 @@ class HeaderWidgetState extends State<HeaderWidget> {
           onClose: () {
             Navigator.of(context).pop();
           },
+          selectedLanguage: widget.selectedLanguage,
         );
       },
     );

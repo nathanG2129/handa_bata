@@ -154,6 +154,7 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
             return CharacterPage(
               selectionMode: true,
               currentAvatarId: widget.avatarId,
+              selectedLanguage: widget.selectedLanguage,
               onAvatarSelected: (newAvatarId) async {
                 Navigator.of(context).pop();
                 widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
@@ -191,6 +192,7 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
             return BannerPage(
               selectionMode: true,
               currentBannerId: widget.bannerId,
+              selectedLanguage: widget.selectedLanguage,
               onBannerSelected: (newBannerId) async {
                 Navigator.of(context).pop();
                 widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);
@@ -210,6 +212,7 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
             return BadgePage(
               selectionMode: true,
               currentBadgeShowcase: widget.badgeShowcase,
+              selectedLanguage: widget.selectedLanguage,
               onBadgesSelected: (newBadgeIds) async {
                 Navigator.of(context).pop();
                 widget.onUpdateProfile?.call(widget.username, widget.selectedLanguage);

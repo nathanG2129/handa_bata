@@ -98,7 +98,7 @@ class MainPageState extends State<MainPage> {
                                 children: [
                                   SizedBox(
                                     height: sizingInformation.deviceScreenType == DeviceScreenType.mobile
-                                        ? 50  // Smaller spacing for mobile
+                                        ? 25  // Smaller spacing for mobile
                                         : sizingInformation.deviceScreenType == DeviceScreenType.tablet
                                             ? 100  // Medium spacing for tablet
                                             : 150, // Larger spacing for desktop

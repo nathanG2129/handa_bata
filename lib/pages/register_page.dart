@@ -4,13 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/pages/email_verification_dialog.dart';
 import 'package:handabatamae/pages/login_page.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../helpers/validation_helpers.dart';
 import '../helpers/widget_helpers.dart';
 import '../helpers/date_helpers.dart';
 import '../widgets/privacy_policy_error.dart';
 import '../styles/input_styles.dart';
-import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '../localization/register/localization.dart';
 import '../services/auth_service.dart';
@@ -48,6 +48,10 @@ class RegistrationPageState extends State<RegistrationPage> with SingleTickerPro
 
   late AnimationController _dialogAnimationController;
   late Animation<Offset> _dialogSlideAnimation;
+
+  // Add state variables for both password fields
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
@@ -682,18 +686,6 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
   }
 
   Widget _buildForm(SizingInformation sizingInformation) {
-    final buttonWidth = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: MediaQuery.of(context).size.width * 0.8,
-      tablet: 400,
-    );
-
-    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 45,
-      tablet: 55,
-    );
-
     return Form(
       key: _formKey,
       child: Column(
@@ -702,7 +694,7 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
           const SizedBox(height: 10),
           _buildInputFields(),
           const SizedBox(height: 20),
-          _buildButtons(buttonWidth, buttonHeight),
+          _buildButtons(sizingInformation),
         ],
       ),
     );
@@ -743,9 +735,31 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
         const SizedBox(height: 20),
         TextFormField(
           controller: _passwordController,
-          decoration: InputStyles.inputDecoration(RegisterLocalization.translate('password', _selectedLanguage)),
-          style: const TextStyle(color: Colors.white), // Changed text color to white
-          obscureText: true,
+          decoration: InputStyles.inputDecoration(
+            RegisterLocalization.translate('password', _selectedLanguage)
+          ).copyWith(
+            suffixIcon: IconButton(
+              icon: SvgPicture.string(
+                _obscurePassword ? '''
+                  <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M8 6h8v2H8V6zm-4 4V8h4v2H4zm-2 2v-2h2v2H2zm0 2v-2H0v2h2zm2 2H2v-2h2v2zm4 2H4v-2h4v2zm8 0v2H8v-2h8zm4-2v2h-4v-2h4zm2-2v2h-2v-2h2zm0-2h2v2h-2v-2zm-2-2h2v2h-2v-2zm0 0V8h-4v2h4zm-10 1h4v4h-4v-4z" fill="currentColor"/>
+                  </svg>
+                ''' : '''
+                  <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M0 7h2v2H0V7zm4 4H2V9h2v2zm4 2v-2H4v2H2v2h2v-2h4zm8 0H8v2H6v2h2v-2h8v2h2v-2h-2v-2zm4-2h-4v2h4v2h2v-2h-2v-2zm2-2v2h-2V9h2zm0 0V7h2v2h-2z" fill="currentColor"/>
+                  </svg>
+                ''',
+                color: Colors.white70,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+          ),
+          style: const TextStyle(color: Colors.white),
+          obscureText: _obscurePassword,
           validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
           onChanged: (value) {
             setState(() {
@@ -783,9 +797,31 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
         const SizedBox(height: 20),
         TextFormField(
           controller: _confirmPasswordController,
-          decoration: InputStyles.inputDecoration(RegisterLocalization.translate('confirm_password', _selectedLanguage)),
-          style: const TextStyle(color: Colors.white), // Changed text color to white
-          obscureText: true,
+          decoration: InputStyles.inputDecoration(
+            RegisterLocalization.translate('confirm_password', _selectedLanguage)
+          ).copyWith(
+            suffixIcon: IconButton(
+              icon: SvgPicture.string(
+                _obscureConfirmPassword ? '''
+                  <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M8 6h8v2H8V6zm-4 4V8h4v2H4zm-2 2v-2h2v2H2zm0 2v-2H0v2h2zm2 2H2v-2h2v2zm4 2H4v-2h4v2zm8 0v2H8v-2h8zm4-2v2h-4v-2h4zm2-2v2h-2v-2h2zm0-2h2v2h-2v-2zm-2-2h2v2h-2v-2zm0 0V8h-4v2h4zm-10 1h4v4h-4v-4z" fill="currentColor"/>
+                  </svg>
+                ''' : '''
+                  <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M0 7h2v2H0V7zm4 4H2V9h2v2zm4 2v-2H4v2H2v2h2v-2h4zm8 0H8v2H6v2h2v-2h8v2h2v-2h-2v-2zm4-2h-4v2h4v2h2v-2h-2v-2zm2-2v2h-2V9h2zm0 0V7h2v2h-2z" fill="currentColor"/>
+                  </svg>
+                ''',
+                color: Colors.white70,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                });
+              },
+            ),
+          ),
+          style: const TextStyle(color: Colors.white),
+          obscureText: _obscureConfirmPassword,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please confirm your password';
@@ -809,6 +845,8 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
                   }
                 });
               },
+              fillColor: WidgetStateProperty.all(Colors.white),
+              checkColor: Colors.black,
             ),
             Flexible(
               child: Wrap(
@@ -822,8 +860,8 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
                     child: Text(
                       RegisterLocalization.translate('privacy_policy_link', _selectedLanguage),
                       style: const TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -836,8 +874,8 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
                     child: Text(
                       RegisterLocalization.translate('terms_of_service_link', _selectedLanguage),
                       style: const TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -935,23 +973,39 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
     );
   }
 
-  Widget _buildButtons(double buttonWidth, double buttonHeight) {
+  Widget _buildButtons(SizingInformation sizingInformation) {
+    final buttonWidth = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: MediaQuery.of(context).size.width * 0.8,
+      tablet: 400, // Fixed width on tablet
+    );
+
+    // final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 45,
+    //   tablet: 55,
+    // );
+
     return Column(
       children: [
-        CustomButton(
-          text: RegisterLocalization.translate('register_button', _selectedLanguage),
-          color: const Color(0xFF351B61),
-          textColor: Colors.white,
-          onTap: _register,
+        Button3D(
           width: buttonWidth,
-          height: buttonHeight,
+          backgroundColor: const Color(0xFF351B61),
+          borderColor: const Color(0xFF1A0D30),  // Darker purple for 3D effect
+          onPressed: _register,
+          child: Text(
+            RegisterLocalization.translate('register_button', _selectedLanguage),
+            style: GoogleFonts.vt323(
+              color: Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: 20),
-        CustomButton(
-          text: RegisterLocalization.translate('login_instead', _selectedLanguage),
-          color: Colors.white,
-          textColor: Colors.black,
-          onTap: () {
+        Button3D(
+          width: buttonWidth,
+          backgroundColor: Colors.white,
+          borderColor: const Color(0xFFCCCCCC),  // Light gray for white button
+          onPressed: () {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -959,8 +1013,12 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
               ),
             );
           },
-          width: buttonWidth,
-          height: buttonHeight,
+          child: Text(
+            RegisterLocalization.translate('login_instead', _selectedLanguage),
+            style: GoogleFonts.vt323(
+              color: Colors.black,
+            ),
+          ),
         ),
       ],
     );

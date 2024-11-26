@@ -7,9 +7,9 @@ import 'package:handabatamae/models/user_model.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
 import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'login_page.dart';
 import 'package:handabatamae/services/auth_service.dart';
-import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '/localization/splash/localization.dart'; // Import the localization file
 import '../widgets/loading_widget.dart';
@@ -593,36 +593,36 @@ class SplashPageState extends State<SplashPage> {
   }
 
   Widget _buildLoginButton(double width, double height) {
-    return SizedBox(
+    return Button3D(
       width: width,
-      height: height,
-      child: CustomButton(
-        text: SplashLocalization.translate('login', _selectedLanguage),
-        color: const Color(0xFF351B61),
-        textColor: Colors.white,
-        width: width,
-        height: height,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
-          );
-        },
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
+        );
+      },
+      backgroundColor: const Color(0xFF351B61),
+      borderColor: const Color(0xFF1A0D30),  // Darker shade for 3D effect
+      child: Text(
+        SplashLocalization.translate('login', _selectedLanguage),
+        style: GoogleFonts.vt323(
+          color: Colors.white,
+        ),
       ),
     );
   }
 
   Widget _buildPlayNowButton(double width, double height) {
-    return SizedBox(
+    return Button3D(
       width: width,
-      height: height,
-      child: CustomButton(
-        text: SplashLocalization.translate('play_now', _selectedLanguage),
-        color: const Color(0xFFF1B33A),
-        textColor: Colors.black,
-        width: width,
-        height: height,
-        onTap: () => _checkSignInStatus(context),
+      onPressed: () => _checkSignInStatus(context),
+      backgroundColor: const Color(0xFFF1B33A),
+      borderColor: const Color(0xFF916D23),  // Darker gold for 3D effect
+      child: Text(
+        SplashLocalization.translate('play_now', _selectedLanguage),
+        style: GoogleFonts.vt323(
+          color: Colors.black,
+        ),
       ),
     );
   }

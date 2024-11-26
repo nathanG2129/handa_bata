@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:handabatamae/pages/main/main_page.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../services/auth_service.dart';
 import 'register_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../widgets/buttons/custom_button.dart';
 import '../widgets/text_with_shadow.dart';
 import '../styles/input_styles.dart';
 import '../localization/login/localization.dart'; // Import the localization file
@@ -34,6 +34,7 @@ class LoginPageState extends State<LoginPage> {
   int _loginAttempts = 0;
   DateTime? _lastLoginAttempt;
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
     @override
   void initState() {
@@ -281,9 +282,31 @@ class LoginPageState extends State<LoginPage> {
                                   const SizedBox(height: 20),
                                   TextFormField(
                                     controller: _passwordController,
-                                    decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
-                                    style: const TextStyle(color: Colors.white), // Changed text color to white
-                                    obscureText: true,
+                                    decoration: InputStyles.inputDecoration(
+                                      LoginLocalization.translate('password', _selectedLanguage)
+                                    ).copyWith(
+                                      suffixIcon: IconButton(
+                                        icon: SvgPicture.string(
+                                          _obscurePassword ? '''
+                                            <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                              <path d="M8 6h8v2H8V6zm-4 4V8h4v2H4zm-2 2v-2h2v2H2zm0 2v-2H0v2h2zm2 2H2v-2h2v2zm4 2H4v-2h4v2zm8 0v2H8v-2h8zm4-2v2h-4v-2h4zm2-2v2h-2v-2h2zm0-2h2v2h-2v-2zm-2-2h2v2h-2v-2zm0 0V8h-4v2h4zm-10 1h4v4h-4v-4z" fill="currentColor"/>
+                                            </svg>
+                                          ''' : '''
+                                            <svg width="24" height="24" fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                              <path d="M0 7h2v2H0V7zm4 4H2V9h2v2zm4 2v-2H4v2H2v2h2v-2h4zm8 0H8v2H6v2h2v-2h8v2h2v-2h-2v-2zm4-2h-4v2h4v2h2v-2h-2v-2zm2-2v2h-2V9h2zm0 0V7h2v2h-2z" fill="currentColor"/>
+                                            </svg>
+                                          ''',
+                                          color: Colors.white70,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _obscurePassword = !_obscurePassword;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    style: const TextStyle(color: Colors.white),
+                                    obscureText: _obscurePassword,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Please enter your password';
@@ -351,28 +374,27 @@ class LoginPageState extends State<LoginPage> {
       tablet: 400, // Fixed width on tablet
     );
 
-    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 45,
-      tablet: 55,
-    );
 
     return Column(
       children: [
-        CustomButton(
-          text: LoginLocalization.translate('login_button', _selectedLanguage),
-          color: const Color(0xFF351B61),
-          textColor: Colors.white,
-          onTap: _login,
+        Button3D(
+          backgroundColor: const Color(0xFF351B61),
+          borderColor: const Color(0xFF1A0D30),  // Darker purple for 3D effect
+          onPressed: _login,
           width: buttonWidth,
-          height: buttonHeight,
+          child: Text(
+            LoginLocalization.translate('login_button', _selectedLanguage),
+            style: GoogleFonts.vt323(
+              color: Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: 20),
-        CustomButton(
-          text: LoginLocalization.translate('sign_up', _selectedLanguage),
-          color: const Color(0xFFF1B33A),
-          textColor: Colors.black,
-          onTap: () {
+        Button3D(
+          width: buttonWidth,
+          backgroundColor: const Color(0xFFF1B33A),
+          borderColor: const Color(0xFF916D23),  // Darker gold for 3D effect
+          onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -382,8 +404,12 @@ class LoginPageState extends State<LoginPage> {
               ),
             );
           },
-          width: buttonWidth,
-          height: buttonHeight,
+          child: Text(
+            LoginLocalization.translate('sign_up', _selectedLanguage),
+            style: GoogleFonts.vt323(
+              color: Colors.black,
+            ),
+          ),
         ),
       ],
     );

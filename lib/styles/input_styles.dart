@@ -10,15 +10,15 @@ class InputStyles {
       labelText: labelText,
       labelStyle: GoogleFonts.rubik(color: Colors.white), // Changed label color to white
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30.0),
+        borderRadius: BorderRadius.circular(0.0),
         borderSide: const BorderSide(color: Colors.white), // Added white border
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30.0),
+        borderRadius: BorderRadius.circular(0.0),
         borderSide: const BorderSide(color: Colors.white), // Added white border
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30.0),
+        borderRadius: BorderRadius.circular(0.0),
         borderSide: const BorderSide(color: Colors.white), // Added white border
       ),
     );

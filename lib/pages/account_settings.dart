@@ -14,6 +14,7 @@ import 'package:handabatamae/widgets/user_profile/user_profile_header.dart';
 import 'account_settings_content.dart';
 import 'package:handabatamae/services/user_profile_service.dart';
 import 'package:handabatamae/widgets/dialogs/account_deletion_dialog.dart';
+import 'package:handabatamae/widgets/loading_widget.dart';
 
 class AccountSettings extends StatefulWidget {
   final VoidCallback onClose;
@@ -140,7 +141,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   Future<void> _deleteAccount() async {
     AuthService authService = AuthService();
     try {
-      
       // Show confirmation dialog first
       bool confirmed = await AccountDeletionDialog.show(
         context,
@@ -148,11 +148,9 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         _userRole,
       );
       
-      if (!confirmed) {
-        return;
-      }
+      if (!confirmed) return;
 
-      // For non-guest users, require reauthentication before any deletion
+      // For non-guest users, require reauthentication
       if (_userRole != 'guest') {
         bool? reauthSuccess = await showDialog<bool>(
           context: context,
@@ -162,19 +160,18 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
           ),
         );
 
-        if (reauthSuccess != true) {
-          return;
-        }
+        if (reauthSuccess != true) return;
       }
 
+      // Set loading state BEFORE deletion starts
       setState(() => _isLoading = true);
 
-      // Now proceed with account deletion
+      // Delete account and wait for completion
       await authService.deleteUserAccount();
 
       if (!mounted) return;
 
-      // Navigate to splash page and clear navigation stack
+      // Only navigate after successful deletion
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -194,6 +191,7 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         ),
       );
     } finally {
+      // Only clear loading if we haven't navigated away
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -265,7 +263,12 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Container(
+        color: Colors.black54,  // Semi-transparent background
+        child: const Center(
+          child: LoadingWidget(),
+        ),
+      );
     }
 
     return WillPopScope(

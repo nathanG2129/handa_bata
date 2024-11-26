@@ -6,7 +6,6 @@ import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/loading_widget.dart';
 import '../../localization/account_deletion/localization.dart';
-import '../../pages/splash_page.dart';
 
 class AccountDeletionDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -71,26 +70,13 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
   }
 
   Future<void> _handleDelete() async {
-    setState(() => _isLoading = true);
-
     try {
       await _animationController.reverse();
       if (mounted) {
-        if (widget.userRole == 'guest') {
-          // For guests, navigate to SplashPage directly
-          Navigator.of(context).pop(true);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage),
-            ),
-          );
-        } else {
-          // For users, just return true and let parent handle reauth flow
-          Navigator.of(context).pop(true);
-        }
+        // Just return true to let parent handle deletion
+        Navigator.of(context).pop(true);
       }
-    } finally {
+    } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
       }

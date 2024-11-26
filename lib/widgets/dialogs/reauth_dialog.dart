@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../localization/reauth/localization.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import '../../widgets/loading_widget.dart';
-import '../../pages/splash_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ReauthenticationDialog extends StatefulWidget {
@@ -85,23 +84,12 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
       if (mounted) {
         await _animationController.reverse();
         Navigator.of(context).pop(true);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SplashPage(selectedLanguage: widget.selectedLanguage),
-          ),
-        );
       }
     } catch (e) {
       setState(() {
         _errorMessage = ReauthLocalization.translate('invalid_password', widget.selectedLanguage);
+        _isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 

@@ -8,8 +8,8 @@ class Button3D extends StatefulWidget {
   final Widget child;
   final Color backgroundColor;
   final Color borderColor;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
 
   const Button3D({
     super.key,
@@ -17,8 +17,8 @@ class Button3D extends StatefulWidget {
     required this.child,
     this.backgroundColor = const Color(0xFF351b61),
     this.borderColor = Colors.black,
-    this.width = double.infinity,
-    this.height = 50.0,
+    this.width,
+    this.height,
   });
 
   @override
@@ -47,6 +47,14 @@ class _Button3DState extends State<Button3D> {
           desktop: 14.0,
         );
 
+        // Get responsive padding
+        final padding = ResponsiveUtils.valueByDevice<double>(
+          context: context,
+          mobile: 8.0,
+          tablet: 12.0,
+          desktop: 16.0,
+        );
+
         // Scale the child widget (which contains the text)
         final scaledChild = DefaultTextStyle(
           style: GoogleFonts.vt323(
@@ -69,11 +77,26 @@ class _Button3DState extends State<Button3D> {
             duration: const Duration(milliseconds: 1),
             transform: Matrix4.translationValues(
               0,
-              _isPressed ? 8.0 : 0.0,  // Move down when pressed
+              _isPressed ? 8.0 : 0.0,
               0,
             ),
+            // Use intrinsic width/height if no fixed dimensions are provided
             width: widget.width,
             height: widget.height,
+            constraints: BoxConstraints(
+              minWidth: ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 44.0,
+                tablet: 52.0,
+                desktop: 60.0,
+              ),
+              minHeight: ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 44.0,
+                tablet: 52.0,
+                desktop: 60.0,
+              ),
+            ),
             decoration: BoxDecoration(
               color: widget.backgroundColor,
               border: Border(
@@ -92,17 +115,17 @@ class _Button3DState extends State<Button3D> {
                 onTap: widget.onPressed,
                 splashColor: Colors.transparent,
                 highlightColor: Colors.transparent,
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                      ResponsiveUtils.valueByDevice<double>(
-                        context: context,
-                        mobile: 8.0,
-                        tablet: 12.0,
-                        desktop: 16.0,
+                child: IntrinsicWidth(
+                  child: IntrinsicHeight(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: padding * 2,
+                          vertical: padding,
+                        ),
+                        child: scaledChild,
                       ),
                     ),
-                    child: scaledChild,
                   ),
                 ),
               ),

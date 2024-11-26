@@ -440,7 +440,6 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     backgroundColor: const Color(0xFFF1B33A),
                                     borderColor: const Color(0xFF8B5A00),
                                     width: 120,
-                                    height: 60,
                                     onPressed: () {
                                       if (widget.isLastQuestion) return;
                                       

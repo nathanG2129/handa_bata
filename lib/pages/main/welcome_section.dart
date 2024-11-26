@@ -49,25 +49,25 @@ class WelcomeSection extends StatelessWidget {
           desktop: 24,
         );
 
-        final buttonWidth = ResponsiveUtils.valueByDevice(
-          context: context,
-          mobile: 200.0,
-          tablet: 215.0,
-          desktop: 225.0,
-        );
+        // final buttonWidth = ResponsiveUtils.valueByDevice(
+        //   context: context,
+        //   mobile: 200.0,
+        //   tablet: 215.0,
+        //   desktop: 225.0,
+        // );
 
-        final buttonHeight = ResponsiveUtils.valueByDevice(
-          context: context,
-          mobile: 55.0,
-          tablet: 60.0,
-          desktop: 65.0,
-        );
+        // final buttonHeight = ResponsiveUtils.valueByDevice(
+        //   context: context,
+        //   mobile: 55.0,
+        //   tablet: 60.0,
+        //   desktop: 65.0,
+        // );
 
         final buttonFontSize = ResponsiveUtils.valueByDevice(
           context: context,
-          mobile: 20,
-          tablet: 22,
-          desktop: 24,
+          mobile: 24,
+          tablet: 26,
+          desktop: 28,
         );
 
         // Mobile layout (vertical)
@@ -121,8 +121,6 @@ class WelcomeSection extends StatelessWidget {
                       ),
                     );
                   },
-                  width: buttonWidth,
-                  height: buttonHeight,
                   child: Text(
                     MainPageLocalization.translate('playNow', selectedLanguage),
                     style: GoogleFonts.vt323(
@@ -186,8 +184,6 @@ class WelcomeSection extends StatelessWidget {
                           ),
                         );
                       },
-                      width: buttonWidth,
-                      height: buttonHeight,
                       child: Text(
                         MainPageLocalization.translate('playNow', selectedLanguage),
                         style: GoogleFonts.vt323(

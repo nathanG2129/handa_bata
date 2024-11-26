@@ -320,10 +320,9 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
                                             horizontal: isMobileSmall ? 12 : 16,
                                           ),
                                           child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                                             child: Button3D(
                                               width: 200,
-                                              height: 45,
                                               backgroundColor: const Color(0xFFF1B33A),
                                               borderColor: const Color(0xFF8B5A00),
                                               onPressed: _selectedAvatarId != null 

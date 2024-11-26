@@ -430,7 +430,6 @@ class ArcadePageState extends State<ArcadePage> {
           ),
           child: Button3D(
             width: categoryButtonWidth,
-            height: categoryButtonHeight,
             onPressed: () {
               Navigator.push(
                 context,
@@ -496,7 +495,6 @@ class ArcadePageState extends State<ArcadePage> {
         padding: const EdgeInsets.only(bottom: 30),
         child: Button3D(
           width: width,
-          height: height,
           onPressed: () {
             if (isUnlocked) {
               _onCategoryPressed(category);

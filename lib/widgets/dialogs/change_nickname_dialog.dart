@@ -90,9 +90,9 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
 
         final buttonTextSize = ResponsiveUtils.valueByDevice<double>(
           context: context,
-          mobile: 16,
-          tablet: 18,
-          desktop: 20,
+          mobile: 18,
+          tablet: 20,
+          desktop: 22,
         );
 
         final contentPadding = ResponsiveUtils.valueByDevice<double>(
@@ -197,12 +197,6 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
                             ),
                             SizedBox(width: contentPadding * 0.75),
                             SizedBox(
-                              width: ResponsiveUtils.valueByDevice(
-                                context: context,
-                                mobile: isMobileSmall ? 65 : 75,
-                                tablet: 85,
-                                desktop: 95,
-                              ),
                               child: Button3D(
                                 backgroundColor: const Color(0xFFF1B33A),
                                 borderColor: const Color(0xFF8B5A00),

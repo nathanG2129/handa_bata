@@ -487,12 +487,12 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
   }
 
   Widget _buildButtons(double fontSize) {
-    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 55,
-      tablet: 60,
-      desktop: 65,
-    );
+    // final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 55,
+    //   tablet: 60,
+    //   desktop: 65,
+    // );
 
     return Column(
       children: [
@@ -500,7 +500,6 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
           onPressed: _verifyOTP,
           backgroundColor: const Color(0xFFF1B33A),
           borderColor: const Color(0xFF916D23),
-          height: buttonHeight,
           child: Text(
             widget.isEmailChange 
               ? EmailVerificationLocalization.translate('verify_button', widget.selectedLanguage)

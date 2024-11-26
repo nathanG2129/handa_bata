@@ -392,25 +392,24 @@ class PasswordResetFlowDialogState extends State<PasswordResetFlowDialog> with S
     required VoidCallback onPressed,
     required String text,
   }) {
-    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 55,
-      tablet: 60,
-      desktop: 65,
-    );
+    // final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 55,
+    //   tablet: 60,
+    //   desktop: 65,
+    // );
 
     final buttonFontSize = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 18,
-      tablet: 20,
-      desktop: 22,
+      mobile: 20,
+      tablet: 22,
+      desktop: 24,
     );
 
     return Button3D(
       onPressed: onPressed,
       backgroundColor: const Color(0xFFF1B33A),
       borderColor: const Color(0xFF916D23),
-      height: buttonHeight,
       child: Text(
         text,
         style: GoogleFonts.vt323(

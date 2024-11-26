@@ -630,7 +630,6 @@ class StagesPageState extends State<StagesPage> {
           ? darken(const Color(0xFF32c067))
           : const Color(0xFF1A0D30),
         width: width,
-        height: height,
         child: Text(
           'NORMAL',
           style: GoogleFonts.rubik(
@@ -659,7 +658,6 @@ class StagesPageState extends State<StagesPage> {
           ? darken(Colors.red)
           : const Color(0xFF1A0D30),
         width: width,
-        height: height,
         child: Text(
           'HARD',
           style: GoogleFonts.rubik(

@@ -87,12 +87,12 @@ void showArcadeStageDialog(
                 desktop: 28,
               );
 
-              final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-                context: context,
-                mobile: 55,
-                tablet: 60,
-                desktop: 50,
-              );
+              // final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+              //   context: context,
+              //   mobile: 55,
+              //   tablet: 60,
+              //   desktop: 50,
+              // );
 
               final buttonWidth = ResponsiveUtils.valueByDevice<double>(
                 context: context,
@@ -169,7 +169,6 @@ void showArcadeStageDialog(
                         SizedBox(height: contentPadding),
                         Button3D(
                           width: buttonWidth,
-                          height: buttonHeight,
                           backgroundColor: const Color(0xFF351B61),
                           borderColor: const Color(0xFF1A0D30),
                           onPressed: () async {
@@ -183,7 +182,7 @@ void showArcadeStageDialog(
                               
                               if (context.mounted) {
                                 Navigator.of(context).pop();
-                                Navigator.of(context).push(
+                                Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                     builder: (context) => PrerequisitePage(
                                       language: selectedLanguage,

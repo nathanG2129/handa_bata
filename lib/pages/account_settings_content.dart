@@ -342,8 +342,6 @@ class AccountSettingsContent extends StatelessWidget {
               onPressed: onShowDeleteAccountDialog,
               backgroundColor: const Color(0xFFc32929),
               borderColor: darkenColor(const Color(0xFFc32929)),
-              width: buttonWidth,
-              height: buttonHeight,
               child: Text(
                 PlayLocalization.translate('delete', selectedLanguage),
                 style: GoogleFonts.vt323(
@@ -403,8 +401,6 @@ class AccountSettingsContent extends StatelessWidget {
               onPressed: onPressed,
               backgroundColor: buttonColor,
               borderColor: darkenColor(buttonColor),
-              width: buttonWidth,
-              height: buttonHeight,
               child: Text(
                 buttonLabel,
                 style: GoogleFonts.vt323(

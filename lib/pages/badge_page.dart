@@ -557,24 +557,21 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         final bool isEnabled = selectedBadges.isNotEmpty;
         
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           child: Opacity(
-            opacity: isEnabled ? 1.0 : 0.5,  // Lower opacity when disabled
+            opacity: isEnabled ? 1.0 : 0.5,
             child: Button3D(
-              width: 200,
-              height: 45,
               backgroundColor: const Color(0xFFF1B33A),
               borderColor: const Color(0xFF8B5A00),
               onPressed: () {
                 if (isEnabled) {
                   _handleBadgeUpdate(selectedBadges);
                 }
-              },  // Always provide a function, but only do something if enabled
+              },
               child: Text(
-                'Save Changes',
+                BadgePageLocalization.translate('saveChanges', widget.selectedLanguage),
                 style: GoogleFonts.vt323(
-                  fontSize: fontSize,
-                  color: Colors.black,  // Always black, no grey
+                  color: Colors.black,
                 ),
               ),
             ),

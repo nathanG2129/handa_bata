@@ -232,7 +232,6 @@ Widget _buildResumeButton(
   if (!savedState.completed && !savedState.isGameOver) {
     return Button3D(
       width: width,
-      height: height,
       backgroundColor: const Color(0xFF32C067),
       borderColor: const Color(0xFF28A757),
       onPressed: () async {
@@ -246,7 +245,7 @@ Widget _buildResumeButton(
           
           if (context.mounted) {
             Navigator.of(context).pop();
-            Navigator.of(context).push(
+            Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => GameplayPage(
                   language: selectedLanguage,
@@ -302,7 +301,6 @@ Widget _buildPlayButton(
 ) {
   return Button3D(
     width: width,
-    height: height,
     backgroundColor: const Color(0xFF351B61),
     borderColor: const Color(0xFF1A0D30),
     onPressed: () async {
@@ -324,7 +322,7 @@ Widget _buildPlayButton(
         );
 
         Navigator.of(context).pop();
-        Navigator.of(context).push(
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => PrerequisitePage(
               language: selectedLanguage,

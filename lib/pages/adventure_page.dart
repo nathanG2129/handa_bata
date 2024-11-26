@@ -256,12 +256,12 @@ class AdventurePageState extends State<AdventurePage> {
       desktop: 500.0,
     );
 
-    final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 160.0,
-      tablet: 150.0,  // Increased height for tablet to accommodate content
-      desktop: 160.0,
-    );
+    // final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 160.0,
+    //   tablet: 150.0,  // Increased height for tablet to accommodate content
+    //   desktop: 160.0,
+    // );
 
     final categorySpacing = ResponsiveUtils.valueByDevice<double>(
       context: context,
@@ -279,8 +279,8 @@ class AdventurePageState extends State<AdventurePage> {
 
     final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 18.0,
-      tablet: 18.0,  // Smaller font size for tablet descriptions
+      mobile: 20.0,
+      tablet: 22.0,  // Smaller font size for tablet descriptions
       desktop: 25.0,
     );
 
@@ -307,7 +307,6 @@ class AdventurePageState extends State<AdventurePage> {
                 width: categoryButtonWidth,
                 child: Button3D(
                   width: categoryButtonWidth,
-                  height: categoryButtonHeight,
                   onPressed: () => _onCategoryPressed(category),
                   backgroundColor: buttonColor,
                   borderColor: _darkenColor(buttonColor),
@@ -352,12 +351,11 @@ class AdventurePageState extends State<AdventurePage> {
                 alignment: Alignment.center,
                 child: Button3D(
                   width: categoryButtonWidth,
-                  height: categoryButtonHeight,
                   onPressed: () => _onCategoryPressed(category),
                   backgroundColor: buttonColor,
                   borderColor: _darkenColor(buttonColor),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

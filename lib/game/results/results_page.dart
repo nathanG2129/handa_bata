@@ -324,16 +324,16 @@ class ResultsPageState extends State<ResultsPage> {
                                 },
                                 backgroundColor: const Color(0xFF351b61),
                                 borderColor: const Color(0xFF1A0D30),
-                                width: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: 120.0,
-                                  tablet: 150.0,
-                                ),
-                                height: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: 50.0,
-                                  tablet: 60.0,
-                                ),
+                                // width: ResponsiveUtils.valueByDevice(
+                                //   context: context,
+                                //   mobile: 120.0,
+                                //   tablet: 150.0,
+                                // ),
+                                // height: ResponsiveUtils.valueByDevice(
+                                //   context: context,
+                                //   mobile: 50.0,
+                                //   tablet: 60.0,
+                                // ),
                                 child: Text(
                                   ResultsLocalization.translate('back', widget.language),
                                   style: GoogleFonts.vt323(
@@ -385,16 +385,16 @@ class ResultsPageState extends State<ResultsPage> {
                                 },
                                 backgroundColor: const Color(0xFFF1B33A),
                                 borderColor: const Color(0xFF8B5A00),
-                                width: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: 120.0,
-                                  tablet: 150.0,
-                                ),
-                                height: ResponsiveUtils.valueByDevice(
-                                  context: context,
-                                  mobile: 50.0,
-                                  tablet: 60.0,
-                                ),
+                                // width: ResponsiveUtils.valueByDevice(
+                                //   context: context,
+                                //   mobile: 120.0,
+                                //   tablet: 150.0,
+                                // ),
+                                // height: ResponsiveUtils.valueByDevice(
+                                //   context: context,
+                                //   mobile: 50.0,
+                                //   tablet: 60.0,
+                                // ),
                                 child: Text(
                                   ResultsLocalization.translate('playAgain', widget.language),
                                   style: GoogleFonts.vt323(

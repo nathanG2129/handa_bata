@@ -252,19 +252,19 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
   }
 
   Widget _buildActionButtons(double fontSize) {
-    final buttonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 55,
-      tablet: 60,
-      desktop: 50,
-    );
+    // final buttonHeight = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 55,
+    //   tablet: 60,
+    //   desktop: 50,
+    // );
 
-    final buttonWidth = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 120,
-      tablet: 140,
-      desktop: 160,
-    );
+    // final buttonWidth = ResponsiveUtils.valueByDevice<double>(
+    //   context: context,
+    //   mobile: 120,
+    //   tablet: 140,
+    //   desktop: 160,
+    // );
 
     return Container(
       color: const Color(0xFF241242),
@@ -290,8 +290,6 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
             onPressed: _handleContinue,
             backgroundColor: const Color(0xFFF1B33A),
             borderColor: const Color(0xFF916D23),
-            width: buttonWidth,
-            height: buttonHeight,
             child: Text(
               ForgotPasswordLocalization.translate(
                 'continue_button',

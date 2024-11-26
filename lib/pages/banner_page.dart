@@ -297,10 +297,9 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
       valueListenable: _selectedBannerNotifier,
       builder: (context, selectedBannerId, _) {
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           child: Button3D(
             width: 200,
-            height: 45,
             backgroundColor: const Color(0xFFF1B33A),
             borderColor: const Color(0xFF8B5A00),
             onPressed: selectedBannerId != null 

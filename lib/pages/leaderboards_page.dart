@@ -9,9 +9,16 @@ import 'package:handabatamae/widgets/header_footer/header_widget.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import '../localization/leaderboards/localization.dart';
+import '../pages/arcade_page.dart';
 
 class LeaderboardsPage extends StatefulWidget {
-  const LeaderboardsPage({super.key});
+  final String selectedLanguage;
+
+  const LeaderboardsPage({
+    super.key,
+    required this.selectedLanguage,
+  });
 
   @override
   LeaderboardsPageState createState() => LeaderboardsPageState();
@@ -28,6 +35,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = widget.selectedLanguage;
     _fetchCategories();
   }
 
@@ -93,6 +101,15 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
     return '$minutes:$remainingSeconds';
   }
 
+  void _handleBack() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArcadePage(selectedLanguage: _selectedLanguage),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -103,7 +120,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
           });
           return false;
         } else {
-          Navigator.pop(context);
+          _handleBack();
           return false;
         }
       },
@@ -158,9 +175,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                   children: [
                     HeaderWidget(
                       selectedLanguage: _selectedLanguage,
-                      onBack: () {
-                        Navigator.pop(context);
-                      },
+                      onBack: _handleBack,
                       onChangeLanguage: _changeLanguage,
                     ),
                     if (_isLoading)
@@ -173,7 +188,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                               const SizedBox(height: 20),
                               Center(
                                 child: TextWithShadow(
-                                  text: 'Leaderboards',
+                                  text: LeaderboardsLocalization.translate('title', _selectedLanguage),
                                   fontSize: titleFontSize,
                                 ),
                               ),
@@ -191,7 +206,7 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                                   tabs: _categories.map((category) {
                                     return Tab(
                                       child: Text(
-                                        category['name'],
+                                        LeaderboardsLocalization.getArcadeName(category['name'], _selectedLanguage),
                                         style: GoogleFonts.rubik(fontSize: tabFontSize),
                                       ),
                                     );
@@ -213,15 +228,19 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
                                           } else if (snapshot.hasError) {
                                             return Center(child: Text('Error: ${snapshot.error}'));
                                           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                            return const Center(
-                                            child: Text(
-                                              'No records yet, be the first to submit one!',
-                                              style: TextStyle(
-                                              fontFamily: 'Rubik',
-                                              fontSize: 18,
-                                              color: Colors.white,
+                                            return Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                              child: Center(
+                                                child: Text(
+                                                  LeaderboardsLocalization.translate('no_records', _selectedLanguage),
+                                                  style: const TextStyle(
+                                                    fontFamily: 'Rubik',
+                                                    fontSize: 18,
+                                                    color: Colors.white,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                               ),
-                                            ),
                                             );
                                           } else {
                                             List<Map<String, dynamic>> leaderboardData = snapshot.data!;

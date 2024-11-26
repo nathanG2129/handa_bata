@@ -18,6 +18,7 @@ import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
 import 'package:handabatamae/utils/category_text_utils.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/localization/leaderboards/localization.dart';
 
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
@@ -434,7 +435,9 @@ class ArcadePageState extends State<ArcadePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const LeaderboardsPage(),
+                  builder: (context) => LeaderboardsPage(
+                    selectedLanguage: _selectedLanguage,  // Pass the language
+                  ),
                 ),
               );
             },
@@ -454,7 +457,7 @@ class ArcadePageState extends State<ArcadePage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Show the world what you\'re made of and climb the leaderboards!',
+                    LeaderboardsLocalization.translate('description', _selectedLanguage),
                     style: GoogleFonts.vt323(
                       fontSize: descriptionFontSize,
                       color: Colors.white,

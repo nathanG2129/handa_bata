@@ -14,6 +14,7 @@ import '../widgets/dialogs/forgot_password_dialog.dart';
 import '../widgets/dialogs/password_reset_flow_dialog.dart';
 import '../constants/breakpoints.dart';
 import '../utils/responsive_utils.dart';
+import 'splash_page.dart';
 
 class LoginPage extends StatefulWidget {
   final String selectedLanguage;
@@ -173,161 +174,172 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ResponsiveBuilder(
-        breakpoints: AppBreakpoints.screenBreakpoints,
-        builder: (context, sizingInformation) {
-          // Get responsive font sizes using our utility
-          final handaBataFontSize = ResponsiveUtils.valueByDevice<double>(
-            context: context,
-            mobile: 65,
-            tablet: 85,
-            desktop: 100,
-          );
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SplashPage(selectedLanguage: _selectedLanguage),
+          ),
+        );
+        return false;
+      },
+      child: Scaffold(
+        body: ResponsiveBuilder(
+          breakpoints: AppBreakpoints.screenBreakpoints,
+          builder: (context, sizingInformation) {
+            // Get responsive font sizes using our utility
+            final handaBataFontSize = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 65,
+              tablet: 85,
+              desktop: 100,
+            );
 
-          final mobileFontSize = ResponsiveUtils.valueByDevice<double>(
-            context: context,
-            mobile: 55,
-            tablet: 75,
-            desktop: 90,
-          );
+            final mobileFontSize = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 55,
+              tablet: 75,
+              desktop: 90,
+            );
 
-          // Get responsive padding
-          final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
-            context: context,
-            mobile: 40,
-            tablet: 60,
-          );
+            // Get responsive padding
+            final horizontalPadding = ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 40,
+              tablet: 60,
+            );
 
-          return Stack(
-            children: [
-              SvgPicture.asset(
-                'assets/backgrounds/background.svg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-              Center(
-                child: SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600), // Limit width on tablets
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: 40,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 80),
-                          TextWithShadow(
-                            text: 'Handa Bata',
-                            fontSize: handaBataFontSize,
-                          ),
-                          Transform.translate(
-                            offset: const Offset(0, -20.0),
-                            child: Column(
-                              children: [
-                                TextWithShadow(
-                                  text: 'Mobile',
-                                  fontSize: mobileFontSize,
-                                ),
-                                const SizedBox(height: 30),
-                                Text(
-                                  LoginLocalization.translate('welcome', _selectedLanguage),
-                                  style: GoogleFonts.vt323(
-                                    fontSize: 30,
-                                    color: Colors.white,
-                                    shadows: [
-                                      const Shadow(
-                                        offset: Offset(0, 3.0),
-                                        blurRadius: 0.0,
-                                        color: Colors.black,
+            return Stack(
+              children: [
+                SvgPicture.asset(
+                  'assets/backgrounds/background.svg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Center(
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600), // Limit width on tablets
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: 40,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 80),
+                            TextWithShadow(
+                              text: 'Handa Bata',
+                              fontSize: handaBataFontSize,
+                            ),
+                            Transform.translate(
+                              offset: const Offset(0, -20.0),
+                              child: Column(
+                                children: [
+                                  TextWithShadow(
+                                    text: 'Mobile',
+                                    fontSize: mobileFontSize,
+                                  ),
+                                  const SizedBox(height: 30),
+                                  Text(
+                                    LoginLocalization.translate('welcome', _selectedLanguage),
+                                    style: GoogleFonts.vt323(
+                                      fontSize: 30,
+                                      color: Colors.white,
+                                      shadows: [
+                                        const Shadow(
+                                          offset: Offset(0, 3.0),
+                                          blurRadius: 0.0,
+                                          color: Colors.black,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Form section
+                            Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 40),
+                                  TextFormField(
+                                    controller: _usernameController,
+                                    decoration: InputStyles.inputDecoration(LoginLocalization.translate('email', _selectedLanguage)),
+                                    style: const TextStyle(color: Colors.white), // Changed text color to white
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your username';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
+                                    style: const TextStyle(color: Colors.white), // Changed text color to white
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your password';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      TextButton(
+                                        onPressed: _forgotPassword,
+                                        child: Text(
+                                          LoginLocalization.translate('forgot_password', _selectedLanguage),
+                                          style: const TextStyle(color: Colors.white),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 20),
+                                  _buildButtons(sizingInformation),
+                                ],
+                              ),
                             ),
-                          ),
-                          // Form section
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 40),
-                                TextFormField(
-                                  controller: _usernameController,
-                                  decoration: InputStyles.inputDecoration(LoginLocalization.translate('email', _selectedLanguage)),
-                                  style: const TextStyle(color: Colors.white), // Changed text color to white
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your username';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  decoration: InputStyles.inputDecoration(LoginLocalization.translate('password', _selectedLanguage)),
-                                  style: const TextStyle(color: Colors.white), // Changed text color to white
-                                  obscureText: true,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    TextButton(
-                                      onPressed: _forgotPassword,
-                                      child: Text(
-                                        LoginLocalization.translate('forgot_password', _selectedLanguage),
-                                        style: const TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                _buildButtons(sizingInformation),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              // Language selector
-              Positioned(
-                top: ResponsiveUtils.valueByDevice(
-                  context: context,
-                  mobile: 40.0,
-                  tablet: 50.0,
-                  desktop: 60.0,
+                // Language selector
+                Positioned(
+                  top: ResponsiveUtils.valueByDevice(
+                    context: context,
+                    mobile: 40.0,
+                    tablet: 50.0,
+                    desktop: 60.0,
+                  ),
+                  right: ResponsiveUtils.valueByDevice(
+                    context: context,
+                    mobile: 25.0,
+                    tablet: 30.0,
+                    desktop: 35.0,
+                  ),
+                  child: _buildLanguageSelector(),
                 ),
-                right: ResponsiveUtils.valueByDevice(
-                  context: context,
-                  mobile: 25.0,
-                  tablet: 30.0,
-                  desktop: 35.0,
-                ),
-                child: _buildLanguageSelector(),
-              ),
-              if (_isLoading)
-                Container(
-                  color: Colors.black54,
-                  child: const LoadingWidget(),
-                ),
-            ],
-          );
-        },
+                if (_isLoading)
+                  Container(
+                    color: Colors.black54,
+                    child: const LoadingWidget(),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

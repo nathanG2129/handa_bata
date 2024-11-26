@@ -77,7 +77,6 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _initializeResultsPage() async {
     try {
-      print('🎮 Starting results page initialization');
 
       // Calculate stars first
       stars = _calculateStars(
@@ -95,7 +94,6 @@ class ResultsPageState extends State<ResultsPage> {
         _updateProgress(),
         _cleanupGameSave(),
       ]).catchError((e) {
-        print('⚠️ Error in initialization tasks: $e');
         return [null, null];
       });
 
@@ -110,9 +108,7 @@ class ResultsPageState extends State<ResultsPage> {
         setState(() => _isInitialized = true);
       }
 
-      print('✅ Results page initialization complete');
     } catch (e) {
-      print('❌ Error initializing results page: $e');
       if (mounted) {
         setState(() => _isInitialized = true);
       }
@@ -121,7 +117,6 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _loadSounds() async {
     try {
-      print('🎵 Loading result sounds...');
       _soundpool = Soundpool.fromOptions(
         options: const SoundpoolOptions(
           streamType: StreamType.music,
@@ -151,9 +146,7 @@ class ResultsPageState extends State<ResultsPage> {
       _soundId3Stars = results[3];
       
       _isSoundLoaded = true;
-      print('✅ All sounds loaded successfully');
     } catch (e) {
-      print('❌ Error loading sounds: $e');
       _isSoundLoaded = false;
     }
   }
@@ -162,7 +155,6 @@ class ResultsPageState extends State<ResultsPage> {
     if (!_isSoundLoaded) return;
     
     try {
-      print('🎵 Playing sound for $stars stars');
       switch (stars) {
         case 0:
           if (_soundIdFail != null) _soundpool.play(_soundIdFail!);
@@ -178,7 +170,6 @@ class ResultsPageState extends State<ResultsPage> {
           break;
       }
     } catch (e) {
-      print('❌ Error playing sound: $e');
     }
   }
 
@@ -496,8 +487,6 @@ class ResultsPageState extends State<ResultsPage> {
 
   Future<void> _checkBadgeUnlocks() async {
     try {
-      print('\n🎮 Checking Badge Unlocks');
-      print('Game Mode: ${widget.gamemode}');
       
       final badgeUnlockService = BadgeUnlockService();
       GameSaveData? saveData = await _authService.getLocalGameSaveData(widget.category['id']);
@@ -506,11 +495,6 @@ class ResultsPageState extends State<ResultsPage> {
         final recordParts = widget.record.split(':');
         final totalSeconds = (int.parse(recordParts[0]) * 60) + int.parse(recordParts[1]);
         
-        print('\n🎯 Arcade Mode Stats:');
-        print('Total Time: $totalSeconds seconds');
-        print('Accuracy: ${(widget.accuracy * 100).toStringAsFixed(2)}%');
-        print('Streak: ${widget.streak}');
-        print('Avg Time per Question: ${widget.averageTimePerQuestion.toStringAsFixed(2)} seconds');
         
         await badgeUnlockService.checkArcadeBadges(
           totalTime: totalSeconds,
@@ -524,12 +508,6 @@ class ResultsPageState extends State<ResultsPage> {
               ? saveData.normalStageStars 
               : saveData.hardStageStars;
           
-          print('\n🎯 Adventure Mode Stats:');
-          print('Quest: ${widget.category['name']}');
-          print('Stage: ${widget.stageName}');
-          print('Difficulty: ${widget.mode}');
-          print('Stars: $stars');
-          print('All Stage Stars: $stageStars');
           
           await badgeUnlockService.checkAdventureBadges(
             questName: widget.category['name'],
@@ -539,12 +517,9 @@ class ResultsPageState extends State<ResultsPage> {
             allStageStars: stageStars,
           );
         } else {
-          print('⚠️ No save data found for badge checks');
         }
       }
-      print('\n✅ Badge check completed');
     } catch (e) {
-      print('❌ Error checking badge unlocks: $e');
     }
   }
 
@@ -567,10 +542,6 @@ class ResultsPageState extends State<ResultsPage> {
         xpGained = widget.score * multiplier;
       }
 
-      print('\n💫 UPDATING PROGRESS');
-      print('Game Mode: ${widget.gamemode}');
-      print('Score: ${widget.score}');
-      print('XP Gained: $xpGained');
 
       // Send only the XP gain to batchUpdateProfile
       await userProfileService.batchUpdateProfile({
@@ -600,7 +571,6 @@ class ResultsPageState extends State<ResultsPage> {
       await _checkBadgeUnlocks();
 
     } catch (e) {
-      print('❌ Error updating progress: $e');
     }
   }
 
@@ -616,11 +586,8 @@ class ResultsPageState extends State<ResultsPage> {
           stageName: widget.stageName,
           mode: widget.mode,
         );
-        print('🧹 Game save cleaned up - ${widget.isGameOver ? "Game over" : 
-              widget.gamemode == "arcade" ? "Arcade mode" : "Stage completed"}');
       }
     } catch (e) {
-      print('❌ Error cleaning up game save: $e');
     }
   }
 }

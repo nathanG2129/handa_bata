@@ -61,44 +61,34 @@ final Map<String, CachedStage> _categoryCache = {};
   // Add new synchronization method
   Future<void> synchronizeData() async {
     if (_isSyncing) {
-      print('🔄 Stage sync already in progress, skipping...');
       return;
     }
     _isSyncing = true;
 
     try {
-      print('🔄 Starting stage sync process');
       await _updateSyncStatus('syncing');
       
       // Process offline queue first
-      print('📤 Processing offline queue');
       await _processSyncQueue();
 
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        print('📥 Fetching latest stage data from server');
         // Fetch latest data from server
         final serverData = await _fetchServerData();
         
-        print('🔄 Resolving data conflicts');
         // Compare with local data and resolve conflicts
         await _resolveDataConflicts(serverData);
         
-        print('💾 Updating local storage with resolved data');
         // Update local storage with resolved data
         await _updateLocalStorage(serverData);
         
-        print('✅ Stage sync completed successfully');
         await _updateSyncStatus('completed');
       } else {
-        print('📡 No internet connection, marking sync as offline');
         await _updateSyncStatus('offline');
       }
     } catch (e) {
-      print('❌ Error during stage sync: $e');
       await _updateSyncStatus('error');
     } finally {
-      print('🏁 Stage sync process completed');
       _isSyncing = false;
     }
   }
@@ -106,18 +96,14 @@ final Map<String, CachedStage> _categoryCache = {};
   // Add method to process sync queue
   Future<void> _processSyncQueue() async {
     if (_syncQueue.isEmpty) {
-      print('✅ No pending changes in sync queue');
       return;
     }
 
-    print('🔄 Processing ${_syncQueue.length} queued changes');
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult != ConnectivityResult.none) {
-      print('📤 Sending queued changes to server');
       final batch = FirebaseFirestore.instance.batch();
       
       for (var change in _syncQueue) {
-        print('📝 Processing change: ${change['type']}');
         switch (change['type']) {
           case 'update':
             batch.update(_stageDoc, change['data']);
@@ -128,17 +114,13 @@ final Map<String, CachedStage> _categoryCache = {};
         }
       }
 
-      print('💾 Committing batch updates');
       await batch.commit();
       _syncQueue.clear();
       
-      print('🔄 Updating local sync status');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('pending_stage_changes', []);
       
-      print('✅ Sync queue processed successfully');
     } else {
-      print('📡 No internet connection, keeping changes in queue');
     }
   }
 
@@ -155,7 +137,6 @@ final Map<String, CachedStage> _categoryCache = {};
       final resolvedData = await _mergeData(serverData, localData);
       await _updateLocalStorage(resolvedData);
     } catch (e) {
-      print('Error resolving conflicts: $e');
       await _logStageOperation('conflict_resolution_error', 'all', e.toString());
     }
   }
@@ -222,7 +203,6 @@ final Map<String, CachedStage> _categoryCache = {};
       }
       return localCategories;
     } catch (e) {
-      print('Error in fetchCategories: $e');
       return await _getCategoriesFromLocal(language);
     }
   }
@@ -234,24 +214,19 @@ final Map<String, CachedStage> _categoryCache = {};
       if (_stageCache.containsKey(cacheKey)) {
         final cachedData = _stageCache[cacheKey]!;
         if (cachedData.isValid) {
-          print('💾 Returning stages from memory cache');
           return List<Map<String, dynamic>>.from(cachedData.data['stages']);
         }
-        print('📦 Memory cache expired for $cacheKey');
       }
 
       // Add this check for prefetch
       bool isPrefetching = StackTrace.current.toString().contains('_prefetchData');
       if (isPrefetching) {
-        print('🔄 Prefetch detected, forcing fresh data fetch');
         return await _fetchFreshStages(language, categoryId);
       }
 
       // Rest of the existing code...
-      print('🔍 Checking local storage for stages');
       List<Map<String, dynamic>> localStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
       if (localStages.isNotEmpty) {
-        print('📱 Found ${localStages.length} stages in local storage');
         
         // Refresh memory cache from local storage
         _stageCache[cacheKey] = CachedStage(
@@ -265,7 +240,6 @@ final Map<String, CachedStage> _categoryCache = {};
       
       return await _fetchFreshStages(language, categoryId);
     } catch (e) {
-      print('❌ Error in fetchStages: $e');
       return await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
     }
   }
@@ -289,7 +263,6 @@ final Map<String, CachedStage> _categoryCache = {};
       String key = _getStorageKey(categoryId, isArcade);
       return await _getFromLocalWithBackup(key);
     } catch (e) {
-      print('❌ Error getting stages from local: $e');
       return [];
     }
   }
@@ -302,31 +275,25 @@ final Map<String, CachedStage> _categoryCache = {};
   }
 
 Future<List<Map<String, dynamic>>> _getAllRawStages() async {
-  print('🔍 Getting all raw stages from all categories');
   final allStages = <Map<String, dynamic>>[];
   int totalStages = 0;
   
   // First check memory cache
-  print('📦 Checking memory cache...');
   _stageCache.forEach((key, value) {
     if (value.data.containsKey('stages')) {
       final stages = List<Map<String, dynamic>>.from(value.data['stages']);
-      print('📦 Found ${stages.length} stages in memory cache for key: $key');
       allStages.addAll(stages);
       totalStages += stages.length;
     }
   });
 
-  print('📦 Found $totalStages stages in memory cache');
   
   // Return memory cache if we have stages
   if (totalStages > 0) {
-    print('📦 Returning $totalStages stages from memory cache');
     return allStages;
   }
 
   // If nothing in memory, check local storage
-  print('💾 Checking local storage for stages...');
   SharedPreferences prefs = await SharedPreferences.getInstance();
   
   // Get all stage cache keys
@@ -336,21 +303,17 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       .where((key) => !key.endsWith('_backup'))
       .toList();
   
-  print('🔑 Found ${stageKeys.length} stage cache keys in local storage');
   
   // Load stages from each key
   for (var key in stageKeys) {
     try {
       final stages = await _getFromLocalWithBackup(key);
-      print('📦 Found ${stages.length} stages for key: $key');
       allStages.addAll(stages);
       totalStages += stages.length;
     } catch (e) {
-      print('⚠️ Error loading stages for key $key: $e');
     }
   }
   
-  print('📦 Found $totalStages total stages across all storage');
   return allStages;
 }
 
@@ -366,7 +329,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     // Try backup
     String? backupJson = prefs.getString('${key}_backup');
     if (backupJson != null) {
-      print('📦 Restored from backup for $key');
       // Restore main from backup
       await prefs.setString(key, backupJson);
       return _parseStagesJson(backupJson);
@@ -394,7 +356,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           Map<String, dynamic>.from(category)).toList();
       }
     } catch (e) {
-      print('Error getting categories from local: $e');
     }
     return [];
   }
@@ -411,7 +372,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }).toList();
       }
     } catch (e) {
-      print('Error getting stages from local: $e');
     }
     return [];
   }
@@ -513,7 +473,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       
       return null;
     } catch (e) {
-      print('Error in getStageById: $e');
       return null;
     }
   }
@@ -604,7 +563,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       _stageCache.clear();
       
     } catch (e) {
-      print('Error verifying data integrity: $e');
       await _logStageOperation('integrity_check_error', 'all', e.toString());
     }
   }
@@ -635,7 +593,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       await _storeStagesLocally(resolvedStages, 'all');
       await _updateServerStages(resolvedStages);
     } catch (e) {
-      print('Error resolving stage conflicts: $e');
       await _logStageOperation('conflict_resolution_error', 'all', e.toString());
     }
   }
@@ -651,7 +608,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error logging operation: $e');
     }
   }
 
@@ -668,13 +624,11 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       String? existingData = prefs.getString(key);
       if (existingData != null) {
         await prefs.setString('${key}_backup', existingData);
-        print('📦 Created backup for $key');
       }
 
       // Store new data
       String stagesJson = jsonEncode(_sanitizeForStorage(stages));
       await prefs.setString(key, stagesJson);
-      print('✅ Stored ${stages.length} stages for $key');
       
       // Clear old backup
       await prefs.remove('${key}_backup');
@@ -682,7 +636,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       // Clean up old backups periodically
       await _cleanupOldBackups();
     } catch (e) {
-      print('❌ Error storing stages: $e');
       // Keep backup in case of error
     }
   }
@@ -705,7 +658,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
     } catch (e) {
-      print('❌ Error cleaning up backups: $e');
     }
   }
 
@@ -735,7 +687,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         jsonEncode({'categories': categories})
       );
     } catch (e) {
-      print('Error storing categories locally: $e');
     }
   }
 
@@ -747,7 +698,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await prefs.setString('${STAGES_CACHE_KEY}_$key', backup);
       }
     } catch (e) {
-      print('Error restoring from backup: $e');
     }
   }
 
@@ -775,7 +725,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
     } catch (e) {
-      print('Error cleaning up versions: $e');
     }
   }
 
@@ -787,7 +736,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
   bool _validateStageData(Map<String, dynamic> data) {
     // Debug print to see what data we're getting
-    print('Validating stage data: $data');
     
     // More lenient validation for stage updates
     return data.containsKey('stageDescription') || // Stage description is optional
@@ -846,7 +794,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         // Update admin timestamps
         await updateLastAdminUpdateTimestamp();
         
-        print('✅ Category updated successfully: $categoryId');
         await _logStageOperation('update_category', categoryId, 'Updated category');
       } else {
         // Queue for offline sync
@@ -857,38 +804,31 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         });
       }
     } catch (e) {
-      print('❌ Error updating category: $e');
       await _logStageOperation('update_category_error', categoryId, e.toString());
       rethrow;
     }
   }
 
   bool _validateCategoryData(Map<String, dynamic> data) {
-    print('🔍 Validating category data: $data');
     
     // Required fields
     if (!data.containsKey('name') || data['name'].toString().trim().isEmpty) {
-      print('❌ Missing or empty name field');
       return false;
     }
     
     if (!data.containsKey('description') || data['description'].toString().trim().isEmpty) {
-      print('❌ Missing or empty description field');
       return false;
     }
 
     // Optional fields with defaults
     if (data.containsKey('color') && data['color'].toString().trim().isEmpty) {
-      print('⚠️ Empty color field, will use default');
       data['color'] = 'defaultColor';
     }
 
     if (data.containsKey('position') && (data['position'] == null || data['position'] < 0)) {
-      print('⚠️ Invalid position, will use default');
       data['position'] = 0;
     }
 
-    print('✅ Category data validation passed');
     return true;
   }
 
@@ -912,7 +852,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       }
       return [];
     } catch (e) {
-      print('Error fetching questions: $e');
       await _logStageOperation('fetch_questions_error', categoryId, e.toString());
       return [];
     }
@@ -965,7 +904,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           await _storeStagesLocally(currentStages, categoryId);
           await _storeStageDocumentLocally(language, categoryId, stageName, stageData);
           
-          print('✅ Stage document fetched and cached: $stageName');
           return stageData;
         }
       }
@@ -979,7 +917,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       // Finally, try local storage
       return await _getStageDocumentFromLocal(language, categoryId, stageName);
     } catch (e) {
-      print('Error fetching stage document: $e');
       await _logStageOperation('fetch_stage_doc_error', categoryId, e.toString());
       return {};
     }
@@ -1005,9 +942,7 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
 
-      print('✅ Stage document stored locally: $stageName');
     } catch (e) {
-      print('Error storing stage document locally: $e');
       await _logStageOperation('store_stage_doc_error', categoryId, e.toString());
     }
   }
@@ -1021,7 +956,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         return jsonDecode(stageJson) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Error getting stage document from local: $e');
     }
     return {};
   }
@@ -1038,7 +972,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await _logStageOperation('server_update', 'all', 'Updated ${stages.length} stages');
       }
     } catch (e) {
-      print('Error updating server stages: $e');
       await _logStageOperation('server_update_error', 'all', e.toString());
       rethrow;
     }
@@ -1058,7 +991,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await _logStageOperation('batch_update', 'all', 'Updated ${stages.length} stages');
       });
     } catch (e) {
-      print('Error in batch update: $e');
       await _logStageOperation('batch_update_error', 'all', e.toString());
       rethrow;
     }
@@ -1076,7 +1008,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         priority: StagePriority.HIGH
       );
     } catch (e) {
-      print('Error prefetching category: $e');
     }
   }
 
@@ -1120,7 +1051,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
       return isValid;
     } catch (e) {
-      print('Error validating stage data: $e');
       return false;
     }
   }
@@ -1158,7 +1088,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       // Optimize storage
       await _optimizeStorage();
     } catch (e) {
-      print('Error during maintenance: $e');
       await _logStageOperation('maintenance_error', 'all', e.toString());
     }
   }
@@ -1178,7 +1107,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
     } catch (e) {
-      print('Error optimizing storage: $e');
     }
   }
 
@@ -1187,7 +1115,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       var stages = await _getStagesFromLocal('all');
       return stages.any((stage) => stage['id'] == stageId);
     } catch (e) {
-      print('Error checking stage existence: $e');
       return false;
     }
   }
@@ -1207,7 +1134,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       });
     } catch (e) {
-      print('Error cleaning up logs: $e');
     }
   }
 
@@ -1219,7 +1145,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         return DateTime.fromMillisecondsSinceEpoch(timestamp);
       }
     } catch (e) {
-      print('Error getting last access: $e');
     }
     return DateTime.now().subtract(const Duration(days: 31)); // Return old date to trigger cleanup
   }
@@ -1229,7 +1154,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('${key}_last_access', DateTime.now().millisecondsSinceEpoch);
     } catch (e) {
-      print('Error updating last access: $e');
     }
   }
 
@@ -1250,7 +1174,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await prefs.setStringList('pending_stage_changes', []);
       }
     } catch (e) {
-      print('Error handling offline changes: $e');
     }
   }
 
@@ -1266,7 +1189,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         // Add other cases as needed
       }
     } catch (e) {
-      print('Error syncing change: $e');
     }
   }
 
@@ -1286,7 +1208,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       
       await _logStageOperation('recovery_complete', categoryId, 'Successfully recovered from error');
     } catch (e) {
-      print('Error during recovery: $e');
       await _logStageOperation('recovery_failed', categoryId, e.toString());
     }
   }
@@ -1311,7 +1232,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
     } catch (e) {
-      print('Error syncing data: $e');
     }
   }
 
@@ -1371,7 +1291,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       
       return localData;
     } catch (e) {
-      print('Error getting local data: $e');
       return {};
     }
   }
@@ -1414,7 +1333,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       // Update sync status
       await _updateSyncStatus('completed');
     } catch (e) {
-      print('Error updating local storage: $e');
       await _logStageOperation('local_storage_error', 'all', e.toString());
       
       // Try to recover
@@ -1471,7 +1389,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           );
         }
       } catch (e) {
-        print('Error processing queue item: $e');
         await _logStageOperation('queue_processing_error', request.categoryId, e.toString());
       }
     }
@@ -1542,7 +1459,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await _storeStagesLocally([stageData], categoryId);
       }
     } catch (e) {
-      print('Error fetching stage with priority: $e');
       await _logStageOperation('fetch_stage_error', categoryId, e.toString());
     }
   }
@@ -1594,7 +1510,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         _categoryUpdateController.add([categoryData]);
       }
     } catch (e) {
-      print('Error fetching category with priority: $e');
       await _logStageOperation('fetch_category_error', categoryId, e.toString());
     }
   }
@@ -1615,7 +1530,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       }
       return [];
     } catch (e) {
-      print('Error getting data from local storage: $e');
       await _logStageOperation('local_storage_error', key, e.toString());
       return [];
     }
@@ -1643,23 +1557,19 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   // Add the sync method
   Future<void> _syncWithServer() async {
     if (_isSyncing) {
-      print('🔄 Stage sync already in progress, skipping...');
       return;
     }
 
     try {
-      print('🔄 Starting stage sync process');
       _setSyncState(true);
 
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
         // Sync categories by re-fetching them
-        print('📥 Syncing categories...');
         final enCategories = await fetchCategories('en');
         final filCategories = await fetchCategories('fil');
         
         // Sync stages for each category using existing fetchStages method
-        print('📥 Syncing stages for all categories...');
         for (var category in enCategories) {
           await fetchStages('en', category['id']);
         }
@@ -1668,12 +1578,9 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           await fetchStages('fil', category['id']);
         }
 
-        print('✅ Stage sync completed');
       }
     } catch (e) {
-      print('❌ Error in stage sync: $e');
     } finally {
-      print('🏁 Stage sync process completed');
       _setSyncState(false);
     }
   }
@@ -1681,19 +1588,10 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   // Add these methods to StageService class
 
   void _logCacheStatus(String cacheKey, String operation) {
-    print('📦 Cache $operation - Key: $cacheKey');
-    print('💾 Memory cache size: ${_stageCache.length}');
-    print('🗄️ Cache keys: ${_stageCache.keys.join(', ')}');
   }
   Future<void> debugCacheState() async {
     try {
-      print('\n🔍 Stage Service Cache Debug:');
-      print('📦 Memory Cache:');
       _stageCache.forEach((key, value) {
-        print('  Key: $key');
-        print('  Priority: ${value.priority}');
-        print('  Age: ${DateTime.now().difference(value.timestamp).inMinutes}m');
-        print('  Valid: ${value.isValid}\n');
       });
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1701,13 +1599,9 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
           .where((key) => key.startsWith(STAGES_CACHE_KEY))
           .toList();
       
-      print('💾 Local Storage Cache:');
       for (var key in localKeys) {
-        print('  Key: $key');
       }
-      print('------------------------\n');
     } catch (e) {
-      print('❌ Error in debugCacheState: $e');
     }
   }
 
@@ -1763,7 +1657,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   }
 
   Future<void> clearLocalCache() async {
-    print('🧹 Clearing local stage cache');
     _stageCache.clear();
     _categoryCache.clear();
     
@@ -1793,7 +1686,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       }
       return 0;
     } catch (e) {
-      print('Error getting server timestamp: $e');
       return 0;
     }
   }
@@ -1801,7 +1693,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   // Add method to check if server has newer data
   Future<bool> hasServerUpdates() async {
     try {
-      print('🔍 Checking for server updates...');
       
       // Get server timestamp
       int serverTimestamp = await getServerTimestamp();
@@ -1810,12 +1701,9 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       int localTimestamp = prefs.getInt(LOCAL_TIMESTAMP_KEY) ?? 0;
       
-      print('📊 Server timestamp: $serverTimestamp');
-      print('📊 Local timestamp: $localTimestamp');
       
       return serverTimestamp > localTimestamp;
     } catch (e) {
-      print('❌ Error checking server updates: $e');
       return true; // Force refresh on error to be safe
     }
   }
@@ -1824,7 +1712,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   Future<List<Map<String, dynamic>>> _fetchFreshStages(String language, String categoryId) async {
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult != ConnectivityResult.none) {
-      print('🌐 Fetching fresh stages from server');
       
       // Get server timestamp first
       int serverTimestamp = await getServerTimestamp();
@@ -1859,12 +1746,10 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt(LOCAL_TIMESTAMP_KEY, serverTimestamp);
       
-      print('✅ Cached ${stages.length} fresh stages with timestamp: $serverTimestamp');
       
       return stages;
     }
     
-    print('📡 Offline - cannot fetch fresh data');
     return [];
   }
 
@@ -1917,7 +1802,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
         // Update local storage
         await _storeStagesLocally(currentStages, categoryId);
-        print('✅ Stage added and cached successfully');
 
         await _logStageOperation('add_stage', categoryId, 'Added stage: $stageName');
       } else {
@@ -1930,7 +1814,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         });
       }
     } catch (e) {
-      print('Error adding stage: $e');
       await _logStageOperation('add_stage_error', categoryId, e.toString());
       rethrow;
     }
@@ -2018,7 +1901,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
         // Update local storage
         await _storeStagesLocally(currentStages, categoryId);
-        print('✅ Stage updated and cache refreshed');
 
         await _logStageOperation('update_stage', categoryId, 'Updated stage: $stageName');
       } else {
@@ -2031,7 +1913,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         });
       }
     } catch (e) {
-      print('Error updating stage: $e');
       await _logStageOperation('update_stage_error', categoryId, e.toString());
       rethrow;
     }
@@ -2074,7 +1955,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
         // Update local storage
         await _storeStagesLocally(currentStages, categoryId);
-        print('✅ Stage deleted and cache updated');
 
         await _logStageOperation('delete_stage', categoryId, 'Deleted stage: $stageName');
       } else {
@@ -2086,7 +1966,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         });
       }
     } catch (e) {
-      print('Error deleting stage: $e');
       await _logStageOperation('delete_stage_error', categoryId, e.toString());
       rethrow;
     }

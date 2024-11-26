@@ -66,7 +66,6 @@ class ArcadePageState extends State<ArcadePage> {
 
   Future<void> _initializeData() async {
     try {
-      print('\n🎮 Arcade Page Initialization');
       await _stageService.debugCacheState();
       
       setState(() {
@@ -74,24 +73,19 @@ class ArcadePageState extends State<ArcadePage> {
         _errorMessage = null;
       });
 
-      print('📥 Fetching categories for $_selectedLanguage');
       final categories = await _stageService.fetchCategories(_selectedLanguage);
       
       // Load and sync game save data
-      print('💾 Loading game save data');
       setState(() => _isSyncing = true);
       
       await Future.wait(
         categories.map((category) async {
           try {
-            print('🎯 Processing category: ${category['id']}');
             final saveData = await _authService.getLocalGameSaveData(category['id']);
             if (saveData != null) {
               _categorySaveData[category['id']] = saveData;
-              print('✅ Loaded save data for ${category['id']}');
             }
           } catch (e) {
-            print('❌ Error loading save data for category ${category['id']}: $e');
           }
         })
       );
@@ -103,10 +97,8 @@ class ArcadePageState extends State<ArcadePage> {
           _isLoading = false;
           _isSyncing = false;
         });
-        print('✅ Arcade Page initialization complete');
       }
     } catch (e) {
-      print('❌ Error in Arcade Page initialization: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to load categories';

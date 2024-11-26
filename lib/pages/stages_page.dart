@@ -55,9 +55,6 @@ class StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      print('\n🎮 Stages Page - Fetching stages');
-      print('📋 Category: ${widget.category['id']}');
-      print('🌍 Language: ${widget.selectedLanguage}');
       
       await _stageService.debugCacheState();
       
@@ -72,16 +69,13 @@ class StagesPageState extends State<StagesPage> {
           _stages = stages.where((stage) => 
             !stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
-          print('✅ Loaded ${_stages.length} stages');
         });
       }
 
       if (_gameSaveData != null) {
-        print('🎯 Prefetching next stages');
         _prefetchNextStages(0);
       }
     } catch (e) {
-      print('❌ Error fetching stages: $e');
       if (mounted) {
       }
     }
@@ -111,7 +105,6 @@ class StagesPageState extends State<StagesPage> {
         }
       }
     } catch (e) {
-      print('❌ Error prefetching stages: $e');
     }
   }
 
@@ -161,7 +154,6 @@ class StagesPageState extends State<StagesPage> {
         'isUnlocked': false,
       };
     } catch (e) {
-      print('❌ Error fetching stage stats: $e');
       return {
         'personalBest': 0,
         'stars': 0,

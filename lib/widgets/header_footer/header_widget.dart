@@ -69,8 +69,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
     // Listen to profile updates
     _profileSubscription = _userProfileService.profileUpdates.listen((profile) {
-      print('📱 HeaderWidget received profile update');
-      print('New Avatar ID: ${profile.avatarId}');
       
       if (mounted && profile.avatarId != _currentAvatarId) {
         setState(() {
@@ -83,7 +81,6 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
     // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
-      print('📱 HeaderWidget received avatar update');
       if (mounted && _currentAvatarId != null && updates.containsKey(_currentAvatarId)) {
         setState(() {
           _cachedAvatarPath = updates[_currentAvatarId];
@@ -103,11 +100,9 @@ class HeaderWidgetState extends State<HeaderWidget> {
     try {
       // Strong cache check
       if (_cachedAvatarPath != null && _currentAvatarId == avatarId) {
-        print('📦 Using cached avatar image');
         return;
       }
 
-      print('🔄 Updating avatar image for ID: $avatarId');
       
       // Get from service with cache
       final avatar = await _avatarService.getAvatarDetails(
@@ -116,14 +111,12 @@ class HeaderWidgetState extends State<HeaderWidget> {
       );
       
       if (mounted && avatar != null) {
-        print('✅ Got new avatar image: ${avatar['img']}');
         setState(() {
           _cachedAvatarPath = avatar['img'];
           _currentAvatarId = avatarId;
         });
       }
     } catch (e) {
-      print('❌ Error updating avatar image: $e');
     }
   }
 

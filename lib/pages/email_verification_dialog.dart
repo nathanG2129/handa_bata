@@ -153,7 +153,6 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
               String? role = await _authService.getUserRole(currentUser.uid);
               
               if (role == 'guest') {
-                print('🔄 Starting guest conversion process...');
                 // First prepare the conversion
                 await _authService.convertGuestToUser(
                   widget.email,
@@ -162,16 +161,12 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                   '',  // Empty nickname since we'll keep the existing one
                   widget.birthday!,
                 );
-                print('✅ Guest conversion prepared');
 
                 // Now complete the conversion
-                print('🔄 Completing guest conversion...');
                 await _authService.completeGuestConversion();
-                print('✅ Guest conversion completed');
               }
             } else {
               // Create new user account
-              print('👤 Creating new user account...');
               final user = await _authService.registerWithEmailAndPassword(
                 widget.email,
                 widget.password!,
@@ -192,7 +187,6 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
                 'birthday': widget.birthday,
               });
 
-              print('✅ New user account created successfully');
             }
 
             if (!mounted) return;
@@ -203,7 +197,6 @@ class EmailVerificationDialogState extends State<EmailVerificationDialog> with S
               ),
             );
           } catch (e) {
-            print('❌ Error during account creation/conversion: $e');
             if (e.toString().contains('Username is already taken')) {
               setState(() {
                 _errorMessage = EmailVerificationLocalization.translate(

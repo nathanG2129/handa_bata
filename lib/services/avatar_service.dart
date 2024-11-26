@@ -130,7 +130,6 @@ class AvatarService {
             break;
         }
       } catch (e) {
-        print('Error processing load queue: $e');
       }
       await Future.delayed(const Duration(milliseconds: 100));
     }
@@ -158,7 +157,6 @@ class AvatarService {
         'version': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating avatar version: $e');
     }
   }
 
@@ -214,7 +212,6 @@ class AvatarService {
       
       return localAvatars;
     } catch (e) {
-      print('Error in fetchAvatars: $e');
       return [];
     }
   }
@@ -270,7 +267,6 @@ class AvatarService {
     } catch (e) {
       // Try to restore from backup
       await _restoreFromBackup();
-      print('Error storing avatars locally: $e');
     }
   }
 
@@ -282,7 +278,6 @@ class AvatarService {
         await prefs.setString(AVATARS_CACHE_KEY, backup);
       }
     } catch (e) {
-      print('Error restoring from backup: $e');
     }
   }
 
@@ -361,7 +356,6 @@ class AvatarService {
       // Update version
       await _updateVersion();
     } catch (e) {
-      print('Error adding avatar: $e');
       throw Exception('Failed to add avatar');
     }
   }
@@ -403,7 +397,6 @@ class AvatarService {
       await _logAvatarOperation('update', id, changeDetails);
 
     } catch (e) {
-      print('Error updating avatar: $e');
       await _logAvatarOperation('update_error', id, e.toString());
       throw Exception('Failed to update avatar');
     }
@@ -447,7 +440,6 @@ class AvatarService {
       // Update version after successful deletion
       await _updateVersion();
     } catch (e) {
-      print('Error deleting avatar: $e');
       throw Exception('Failed to delete avatar');
     }
   }
@@ -476,7 +468,6 @@ class AvatarService {
         }
       }
     } catch (e) {
-      print('Error cleaning up versions: $e');
     }
   }
 
@@ -490,7 +481,6 @@ class AvatarService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error logging operation: $e');
     }
   }
 
@@ -518,7 +508,6 @@ class AvatarService {
       await _storeAvatarsLocally(resolvedAvatars);
       await _updateServerAvatars(resolvedAvatars);
     } catch (e) {
-      print('Error resolving conflicts: $e');
       await _logAvatarOperation('conflict_resolution_error', -1, e.toString());
     }
   }
@@ -600,7 +589,6 @@ class AvatarService {
 
       return null;
     } catch (e) {
-      print('Error in _fetchAvatarWithPriority: $e');
       return null;
     }
   }
@@ -670,7 +658,6 @@ class AvatarService {
       // Clear memory cache
       _avatarCache.clear();
     } catch (e) {
-      print('Error during maintenance: $e');
     }
   }
 
@@ -688,7 +675,6 @@ class AvatarService {
         }
       });
     } catch (e) {
-      print('Error cleaning up logs: $e');
     }
   }
 
@@ -706,7 +692,6 @@ class AvatarService {
         await _logAvatarOperation('server_update', -1, 'Updated ${avatars.length} avatars');
       }
     } catch (e) {
-      print('Error updating server avatars: $e');
       await _logAvatarOperation('server_update_error', -1, e.toString());
       rethrow;
     }
@@ -764,7 +749,6 @@ class AvatarService {
       _avatarCache.clear();
       
     } catch (e) {
-      print('Error verifying data integrity: $e');
       await _logAvatarOperation('integrity_check_error', -1, e.toString());
     }
   }
@@ -791,57 +775,45 @@ class AvatarService {
   // Add new sync method
   Future<void> _syncWithServer() async {
     if (_isSyncing) {
-      print('🔄 Avatar sync already in progress, skipping...');
       return;
     }
 
     try {
-      print('🔄 Starting avatar sync process');
       _setSyncState(true);
 
       final quality = await _connectionManager.checkConnectionQuality();
       if (quality == ConnectionQuality.OFFLINE) {
-        print('📡 No internet connection, aborting avatar sync');
         return;
       }
 
-      print('📥 Fetching avatar data from server');
       DocumentSnapshot snapshot = await _avatarDoc.get()
           .timeout(SYNC_TIMEOUT);
 
       if (!snapshot.exists) {
-        print('❌ Avatar document not found on server');
         return;
       }
 
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Avatar server revision: $serverRevision, Avatar local revision: $localRevision');
 
       // Only sync if server has newer data
       if (localRevision == null || serverRevision > localRevision) {
-        print('🔄 Server has newer data, updating local cache');
         List<Map<String, dynamic>> serverAvatars = 
             await _fetchAndUpdateLocal(snapshot);
         
-        print('💾 Updating memory cache with ${serverAvatars.length} avatars');
         // Update memory cache
         for (var avatar in serverAvatars) {
           _addToCache(avatar['id'], avatar);
         }
 
-        print('📢 Notifying listeners of avatar updates');
         // Notify listeners of new data
         _avatarUpdateController.add({serverAvatars.first['id']: serverAvatars.first['img']});
       } else {
-        print('✅ Local avatar data is up to date');
       }
 
     } catch (e) {
-      print('❌ Error in avatar sync: $e');
     } finally {
-      print('🏁 Avatar sync process completed');
       _setSyncState(false);
     }
   }
@@ -873,7 +845,6 @@ class AvatarService {
           return ConnectionQuality.GOOD;
       }
     } catch (e) {
-      print('❌ Error checking connection: $e');
       return ConnectionQuality.GOOD; // Default to GOOD on error
     }
   }

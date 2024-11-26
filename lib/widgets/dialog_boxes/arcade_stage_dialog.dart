@@ -30,12 +30,6 @@ void showArcadeStageDialog(
   String selectedLanguage,
   StageService stageService,
 ) {
-  print('\n🎮 Opening Arcade Stage Dialog');
-  print('📋 Stage: $stageNumber');
-  print('🎯 Category: ${category['id']}');
-  print('🌍 Language: $selectedLanguage');
-  print('🏆 Best Record: ${formatTime(bestRecord)}');
-  print('📊 Current Record: ${formatTime(crntRecord)}');
   
   stageService.debugCacheState();
   
@@ -60,7 +54,6 @@ void showArcadeStageDialog(
         ),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('❌ Error loading saved game state: ${snapshot.error}');
           }
 
           return ResponsiveBuilder(
@@ -200,7 +193,6 @@ void showArcadeStageDialog(
                                 );
                               }
                             } catch (e) {
-                              print('❌ Error starting arcade game: $e');
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Failed to start game: $e')),
@@ -250,7 +242,6 @@ Future<Map<String, dynamic>?> _getSavedGameState(
     }
     return null;
   } catch (e) {
-    print('❌ Error getting saved game state: $e');
     return null;
   }
 }
@@ -271,10 +262,8 @@ Future<void> _handleOfflineArcadeStart(
         'mode': mode,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       });
-      print('📱 Added offline change for arcade start');
     }
   } catch (e) {
-    print('❌ Error handling offline start: $e');
     throw GameSaveDataException('Failed to handle offline arcade start: $e');
   }
 }

@@ -55,7 +55,6 @@ class AdminSession {
   
   StreamController<bool> get _controller {
     if (_sessionController == null || _sessionController!.isClosed) {
-      print('🔄 Creating new session controller (getter)');
       _sessionController = StreamController<bool>.broadcast();
     }
     return _sessionController!;
@@ -83,30 +82,22 @@ class AdminSession {
 
   Future<void> startSession() async {
     try {
-      print('\n🔄 STARTING ADMIN SESSION');
       
       // Create a new controller first
-      print('🔄 Creating new session controller');
       _sessionController?.close();
       _sessionController = StreamController<bool>.broadcast();
       
-      print('🔄 Setting up session data');
       _lastActivity = DateTime.now();
       
-      print('💾 Saving session data to SharedPreferences');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_lastActivityKey, _lastActivity!.toIso8601String());
       
-      print('⏰ Initializing session timer');
       _initializeSession();
       
       // Emit the state directly without waiting
-      print('🔄 Emitting initial session state');
       _controller.add(true);
       
-      print('✅ Admin session started successfully\n');
     } catch (e) {
-      print('❌ Error starting session: $e');
       _controller.add(false);
       rethrow;
     }
@@ -123,30 +114,22 @@ class AdminSession {
   }
 
   Future<bool> isSessionValid() async {
-    print('\n🔍 CHECKING SESSION VALIDITY');
     
     if (_lastActivity == null) {
-      print('🔄 No last activity, checking SharedPreferences');
       final prefs = await SharedPreferences.getInstance();
       final lastActivityStr = prefs.getString(_lastActivityKey);
       
       if (lastActivityStr == null) {
-        print('❌ No stored last activity found');
         return false;
       }
       _lastActivity = DateTime.parse(lastActivityStr);
-      print('✅ Loaded last activity: $_lastActivity');
     }
 
     final isValid = _lastActivity != null &&
         DateTime.now().difference(_lastActivity!) < sessionTimeout;
     
-    print(isValid 
-      ? '✅ Session is valid' 
-      : '❌ Session has expired');
 
     if (!isValid) {
-      print('🔄 Ending expired session');
       await endSession();
     }
 
@@ -166,7 +149,6 @@ class AdminSession {
         _controller.add(valid);
       }
     } catch (e) {
-      print('❌ Error checking session: $e');
       if (!_controller.isClosed) {
         _controller.add(false);
       }

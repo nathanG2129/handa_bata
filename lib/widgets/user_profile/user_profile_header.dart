@@ -66,7 +66,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     
     // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
-      print('📱 UserProfileHeader received avatar update');
       if (mounted && updates.containsKey(widget.avatarId)) {
         setState(() {
           _cachedAvatarPath = updates[widget.avatarId];
@@ -119,11 +118,9 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     try {
       // Strong cache check
       if (_cachedAvatarPath != null && widget.avatarId == _currentAvatarId) {
-        print('📦 Using cached avatar image');
         return _cachedAvatarPath;
       }
 
-      print('🔄 Getting avatar image for ID: ${widget.avatarId}');
       
       final avatar = await _avatarService.getAvatarDetails(
         widget.avatarId,
@@ -131,7 +128,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
       );
       
       if (mounted && avatar != null) {
-        print('✅ Got new avatar image: ${avatar['img']}');
         setState(() {
           _cachedAvatarPath = avatar['img'];
           _currentAvatarId = widget.avatarId;
@@ -139,7 +135,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
       }
       return _cachedAvatarPath ?? 'Kladis.png';
     } catch (e) {
-      print('❌ Error getting avatar image: $e');
       return 'Kladis.png';
     }
   }
@@ -239,7 +234,6 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
       }
       return _cachedBannerPath ?? 'Level01.svg';
     } catch (e) {
-      print('Error getting banner image: $e');
       return _cachedBannerPath ?? 'Level01.svg';
     }
   }

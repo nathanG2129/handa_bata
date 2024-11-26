@@ -51,9 +51,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      print('\n🎮 Arcade Stages Page - Fetching stages');
-      print('📋 Category: ${widget.category['id']}');
-      print('🌍 Language: ${widget.selectedLanguage}');
       
       await _stageService.debugCacheState();
       
@@ -68,17 +65,14 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
           _stages = stages.where((stage) => 
             stage['stageName'].toLowerCase().contains('arcade')
           ).toList();
-          print('✅ Loaded ${_stages.length} arcade stages');
         });
       }
 
       // Prefetch arcade stages for next category
       if (_gameSaveData != null) {
-        print('🎯 Prefetching next arcade stages');
         _prefetchNextArcadeStages();
       }
     } catch (e) {
-      print('❌ Error fetching arcade stages: $e');
       if (mounted) {
       }
     }
@@ -91,7 +85,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
       
       if (currentIndex >= 0 && currentIndex < categories.length - 1) {
         final nextCategory = categories[currentIndex + 1];
-        print('🎯 Prefetching arcade stages for ${nextCategory['id']}');
         
         _stageService.queueStageLoad(
           nextCategory['id'],
@@ -100,7 +93,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         );
       }
     } catch (e) {
-      print('❌ Error prefetching next arcade stages: $e');
     }
   }
 
@@ -141,7 +133,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
         'isUnlocked': false,
       };
     } catch (e) {
-      print('❌ Error fetching arcade stats: $e');
       return {
         'bestRecord': -1,
         'crntRecord': -1,

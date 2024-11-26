@@ -44,7 +44,6 @@ class SplashPageState extends State<SplashPage> {
 
   Future<void> _prefetchData() async {
     try {
-      print('🚀 Starting data prefetch check...');
       setState(() => _isLoading = true);
 
       final bannerService = BannerService();
@@ -53,15 +52,12 @@ class SplashPageState extends State<SplashPage> {
       final authService = AuthService();
       final stageService = StageService();
 
-      print('🔧 Initializing UserProfileService...');
       UserProfileService.initialize(bannerService);
 
       // Check for server updates
-      print('🔍 Checking for server-side updates...');
       bool hasUpdates = await stageService.hasServerUpdates();
       
       if (hasUpdates) {
-        print('🔄 Server has newer data, forcing fresh fetch');
         await stageService.clearLocalCache();
         
         // Fetch fresh data - English first since we'll use it for maxScore
@@ -82,7 +78,6 @@ class SplashPageState extends State<SplashPage> {
         // Get current user and their game save data
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          print('👤 User found, updating maxScores...');
           // Update maxScore for each category based on English stages
           for (var entry in allEnStages.entries) {
             String categoryId = entry.key;
@@ -112,9 +107,6 @@ class SplashPageState extends State<SplashPage> {
                     
                     // Log if scores were clamped
                     if (value.scoreNormal > newMaxScore || value.scoreHard > newMaxScore) {
-                      print('⚠️ Scores clamped for stage $key:');
-                      print('Normal: ${value.scoreNormal} -> $clampedNormalScore');
-                      print('Hard: ${value.scoreHard} -> $clampedHardScore');
                     }
                   } else if (value is ArcadeStageData) {
                     // Arcade scores don't need clamping since they're time-based
@@ -139,25 +131,18 @@ class SplashPageState extends State<SplashPage> {
 
               // Save updated data
               await authService.saveGameSaveDataLocally(categoryId, updatedSave);
-              print('✅ Updated maxScores for category: $categoryId');
             }
           }
         }
       }
 
       // More thorough cache check
-      print('🔍 Checking cached game assets...');
       
       final localBadges = await badgeService.getLocalBadges();
       final localBanners = await bannerService.getLocalBanners();
       final localStages = await stageService.getStagesFromLocal('raw', useRawCache: true);
       final localAvatars = await avatarService.fetchAvatars();
 
-      print('📊 Found cached assets:');
-      print('- Badges: ${localBadges.length}');
-      print('- Banners: ${localBanners.length}');
-      print('- Stages: ${localStages.length}');
-      print('- Avatars: ${localAvatars.length}');
 
       // Check for minimum required assets or if fresh data is needed
       if (!hasUpdates && 
@@ -165,12 +150,10 @@ class SplashPageState extends State<SplashPage> {
           localBanners.length >= 8 && 
           localStages.length >= 8 && 
           localAvatars.length >= 8) {
-        print('✅ Found existing cached game assets, skipping full prefetch');
         
         // Just fetch user-specific data
         final userProfile = await authService.getUserProfile();
         if (userProfile != null) {
-          print('👤 Loading user-specific data only');
           await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
           if (userProfile.bannerId > 0) {
             await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
@@ -191,31 +174,23 @@ class SplashPageState extends State<SplashPage> {
         setState(() => _isLoading = false);
         return;
       } else {
-        print('📥 Fresh data needed, starting full prefetch...');
         
         // If we're here, we need to fetch game assets
-        print('📥 No complete cached assets, starting full prefetch...');
 
         // Check connection quality first
-        print('📡 Checking connection quality...');
         final connectionQuality = await avatarService.checkConnectionQuality();
 
         // Priority load current user's avatar
-        print('👤 Checking user profile...');
         final userProfile = await authService.getUserProfile();
         
         // Fetch and store ALL categories
-        print('📥 Fetching all categories...');
         final enCategories = await stageService.fetchCategories('en');
         final filCategories = await stageService.fetchCategories('fil');
-        print('✅ Categories fetched - EN: ${enCategories.length}, FIL: ${filCategories.length}');
 
         // Adjust fetch strategy based on connection quality
         if (connectionQuality == ConnectionQuality.OFFLINE) {
-          print('📱 Offline mode: Using cached data only');
           // Only load from cache, no background fetching
         } else if (connectionQuality == ConnectionQuality.POOR) {
-          print('📡 Poor connection: Loading essential data only');
           // Load only critical data
           if (userProfile != null) {
             await stageService.fetchStages('en', enCategories.first['id']);
@@ -227,33 +202,26 @@ class SplashPageState extends State<SplashPage> {
             await stageService.fetchStages('en', enCategories.first['id']);
           }
         } else {
-          print('🚀 Good connection: Loading all data');
           // Load everything with prioritization
-          print('📥 Fetching stages for all categories...');
           
           // Fetch English stages
           for (var category in enCategories) {
-            print('📥 Fetching EN stages for category: ${category['name']}');
             await stageService.fetchStages('en', category['id']);
           }
 
           // Fetch Filipino stages
           for (var category in filCategories) {
-            print('📥 Fetching FIL stages for category: ${category['name']}');
             await stageService.fetchStages('fil', category['id']);
           }
 
           // Fetch ALL avatars
-          print('📥 Fetching all avatars...');
           final avatars = await avatarService.fetchAvatars();
-          print('✅ Avatars cached: ${avatars.length}');
 
           if (userProfile != null) {
             await avatarService.getAvatarDetails(userProfile.avatarId, priority: LoadPriority.CRITICAL);
           }
 
           // Fetch ALL badges
-          print('📥 Fetching all badges...');
           if (userProfile != null) {
             await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.CURRENT_QUEST);
             await badgeService.fetchBadgesWithPriority('Quake Quest', userProfile.badgeShowcase, priority: BadgePriority.SHOWCASE);
@@ -263,7 +231,6 @@ class SplashPageState extends State<SplashPage> {
           }
 
           // Fetch ALL banners
-          print('📥 Fetching all banners...');
           if (userProfile != null) {
             if (userProfile.bannerId > 0) {
               await bannerService.getBannerDetails(userProfile.bannerId, priority: BannerPriority.CRITICAL);
@@ -274,7 +241,6 @@ class SplashPageState extends State<SplashPage> {
           }
         }
 
-        print('🎉 All data prefetched based on connection quality!');
         
         if (mounted) {
           setState(() => _isLoading = false);
@@ -284,7 +250,6 @@ class SplashPageState extends State<SplashPage> {
         await stageService.updateLastPrefetchTimestamp();
       }
     } catch (e) {
-      print('❌ Error during prefetch: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -369,7 +334,6 @@ class SplashPageState extends State<SplashPage> {
               );
             }
           } catch (e) {
-            print('❌ Error creating guest account: $e');
             if (!context.mounted) return;
             Navigator.of(context).pop(); // Remove loading dialog
             
@@ -393,7 +357,6 @@ class SplashPageState extends State<SplashPage> {
         }
       }
     } catch (e) {
-      print('❌ Error in _checkSignInStatus: $e');
       if (!context.mounted) return;
       
       // Remove loading dialog if still showing

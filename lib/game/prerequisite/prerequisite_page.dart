@@ -101,7 +101,6 @@ class PrerequisitePageState extends State<PrerequisitePage> {
         await _authService.syncCategoryData(widget.category['id']!);
       }
     } catch (e) {
-      print('❌ Error in _checkAndSetPrerequisite: $e');
       setState(() => _errorMessage = e.toString());
     }
   }

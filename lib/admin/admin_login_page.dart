@@ -50,43 +50,32 @@ class AdminLoginPageState extends State<AdminLoginPage> {
   void _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isAuthenticating = true);
-      print('\n🔐 ADMIN LOGIN ATTEMPT');
       
       final username = _usernameController.text;
       final password = _passwordController.text;
 
       try {
-        print('👤 Attempting sign in for username: $username');
         final user = await _authService.signInWithUsernameAndPassword(username, password);
 
         if (!mounted) return;
 
         if (user != null) {
-          print('✅ User authenticated successfully');
-          print('🔍 Checking user role...');
           final role = await _authService.getUserRole(user.uid);
           
           if (role == 'admin') {
-            print('✅ Admin role confirmed');
-            print('🔄 Starting admin session...');
             
             try {
               await AdminSession().startSession();
-              print('✅ Admin session started successfully');
               
               if (!mounted) return;
-              print('🔄 Navigating to AdminHomePage...');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const AdminHomePage()),
               );
-              print('✅ Navigation completed');
             } catch (sessionError) {
-              print('❌ Error starting admin session: $sessionError');
               throw sessionError;
             }
           } else {
-            print('❌ User does not have admin role (current role: $role)');
             setState(() => _isAuthenticating = false);
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +83,6 @@ class AdminLoginPageState extends State<AdminLoginPage> {
             );
           }
         } else {
-          print('❌ Authentication failed - no user returned');
           setState(() => _isAuthenticating = false);
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +90,6 @@ class AdminLoginPageState extends State<AdminLoginPage> {
           );
         }
       } catch (e) {
-        print('❌ Login error: $e');
         _handleAdminLoginError(e);
       }
     }

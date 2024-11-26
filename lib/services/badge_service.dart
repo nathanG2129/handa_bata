@@ -108,7 +108,6 @@ class BatchQueue {
           break;
       }
     } catch (e) {
-      print('Error processing batch operation group: $e');
     }
   }
 
@@ -142,7 +141,6 @@ class BatchQueue {
 
       _badgeService._badgeUpdateController.add(existingBadges);
     } catch (e) {
-      print('Error in batch add: $e');
     }
   }
 
@@ -174,7 +172,6 @@ class BatchQueue {
 
       _badgeService._badgeUpdateController.add(badges);
     } catch (e) {
-      print('Error in batch update: $e');
     }
   }
 
@@ -207,7 +204,6 @@ class BatchQueue {
 
       _badgeService._badgeUpdateController.add(badges);
     } catch (e) {
-      print('Error in batch delete: $e');
     }
   }
 }
@@ -286,7 +282,6 @@ class ProgressiveLoadManager {
       );
 
     } catch (e) {
-      print('Error in progressive loading: $e');
     }
   }
 
@@ -435,7 +430,6 @@ class BadgeService {
 
       return _badgeCache[id]?.data; // Return cached data even if expired
     } catch (e) {
-      print('Error in getBadgeDetails: $e');
       return _badgeCache[id]?.data; // Return cached data on error
     }
   }
@@ -493,7 +487,6 @@ class BadgeService {
       
       return localBadges;
     } catch (e) {
-      print('Error in fetchBadges: $e');
       return [];
     }
   }
@@ -520,7 +513,6 @@ class BadgeService {
       }
       return [];
     } catch (e) {
-      print('Error getting badges from local: $e');
       return [];
     }
   }
@@ -535,7 +527,6 @@ class BadgeService {
       }
       await prefs.setString(BADGES_CACHE_KEY, jsonEncode(badges));
     } catch (e) {
-      print('Error storing badges locally: $e');
     }
   }
 
@@ -551,7 +542,6 @@ class BadgeService {
         
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        print('Error processing queue: $e');
       }
     }
   }
@@ -585,7 +575,6 @@ class BadgeService {
             break;
         }
       } catch (e) {
-        print('Error processing badge $badgeId: $e');
       }
     }
   }
@@ -636,7 +625,6 @@ class BadgeService {
       // Notify stream with fresh data
       _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
-      print('Error adding badge: $e');
       rethrow;
     }
   }
@@ -670,7 +658,6 @@ class BadgeService {
       // Notify stream with fresh data
       _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
-      print('Error updating badge: $e');
       rethrow;
     }
   }
@@ -700,7 +687,6 @@ class BadgeService {
       // Notify stream with fresh data
       _badgeUpdateController.add(List<Map<String, dynamic>>.from(badges));
     } catch (e) {
-      print('Error deleting badge: $e');
       rethrow;
     }
   }
@@ -710,54 +696,42 @@ class BadgeService {
   // Add sync methods
   Future<void> _syncWithServer() async {
     if (_isSyncing) {
-      print('🔄 Badge sync already in progress, skipping...');
       return;
     }
 
     try {
-      print('🔄 Starting badge sync process');
       _setSyncState(true);
 
       final quality = await _connectionManager.checkConnectionQuality();
       if (quality == ConnectionQuality.OFFLINE) {
-        print('📡 No internet connection, aborting badge sync');
         return;
       }
 
-      print('📥 Fetching badge data from server');
       DocumentSnapshot snapshot = await _badgeDoc.get()
           .timeout(SYNC_TIMEOUT);
 
       if (!snapshot.exists) {
-        print('❌ Badge document not found on server');
         return;
       }
 
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Badge server revision: $serverRevision, Badge local revision: $localRevision');
 
       if (localRevision == null || serverRevision > localRevision) {
-        print('🔄 Server has newer data, updating local cache');
         List<Map<String, dynamic>> serverBadges = 
             await _fetchAndUpdateLocal(snapshot);
         
-        print('💾 Updating memory cache with ${serverBadges.length} badges');
         for (var badge in serverBadges) {
           _addToCache(badge['id'], badge);
         }
 
-        print('📢 Notifying listeners of badge updates');
         _badgeUpdateController.add(serverBadges);
       } else {
-        print('✅ Local badge data is up to date');
       }
 
     } catch (e) {
-      print('❌ Error in badge sync: $e');
     } finally {
-      print('🏁 Badge sync process completed');
       _setSyncState(false);
     }
   }
@@ -775,7 +749,6 @@ class BadgeService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getInt(BADGE_REVISION_KEY);
     } catch (e) {
-      print('Error getting local revision: $e');
       return null;
     }
   }
@@ -796,7 +769,6 @@ class BadgeService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt(BADGE_REVISION_KEY, revision);
     } catch (e) {
-      print('Error storing local revision: $e');
     }
   }
 
@@ -858,7 +830,6 @@ class BadgeService {
           return badges;
       }
     } catch (e) {
-      print('Error in fetchBadgesWithPriority: $e');
     }
     return [];
   }
@@ -879,7 +850,6 @@ class BadgeService {
       
       return questBadges;
     } catch (e) {
-      print('Error fetching quest badges: $e');
       return [];
     }
   }
@@ -891,7 +861,6 @@ class BadgeService {
       );
       return badges.whereType<Map<String, dynamic>>().toList();
     } catch (e) {
-      print('Error fetching showcase badges: $e');
       return [];
     }
   }
@@ -905,7 +874,6 @@ class BadgeService {
       }
       return [];
     } catch (e) {
-      print('Error fetching next quest badges: $e');
       return [];
     }
   }
@@ -993,7 +961,6 @@ class BadgeService {
       
       return changes;
     } catch (e) {
-      print('Error getting changes: $e');
       return [];
     }
   }
@@ -1033,12 +1000,10 @@ class BadgeService {
   // Update sync method to use differential updates
   Future<void> _syncWithServerDifferential() async {
     if (_isSyncing) {
-      print('🔄 Badge sync already in progress, skipping...');
       return;
     }
 
     try {
-      print('🔄 Starting badge sync process');
       _setSyncState(true);
 
       DocumentSnapshot snapshot = await _badgeDoc.get()
@@ -1050,11 +1015,9 @@ class BadgeService {
       List<BadgeChange> changes = await _getChanges(snapshot);
       
       if (changes.isEmpty) {
-        print('✅ No changes detected');
         return;
       }
 
-      print('📝 Applying ${changes.length} changes');
       
       // Apply changes to cache and storage
       for (var change in changes) {
@@ -1079,7 +1042,6 @@ class BadgeService {
       _badgeUpdateController.add(updatedBadges);
       
     } catch (e) {
-      print('❌ Error in differential sync: $e');
     } finally {
       _setSyncState(false);
     }
@@ -1101,15 +1063,12 @@ class BadgeService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      print('Error getting current version: $e');
       return null;
     }
   }
 
   // Add this method to verify stream functionality
   void debugStreamState() {
-    print('🔍 Stream has listeners: ${_badgeUpdateController.hasListener}');
-    print('🔍 Stream is closed: ${_badgeUpdateController.isClosed}');
   }
 
   // Make sure to close the stream controller

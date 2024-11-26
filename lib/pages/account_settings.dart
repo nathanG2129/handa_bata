@@ -79,19 +79,16 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
 
   Future<void> _fetchUserProfileAndRole() async {
     try {
-      print('\n🔍 FETCHING USER PROFILE AND ROLE');
       
       // 1. Get profile first
       UserProfile? profile = await _userProfileService.fetchUserProfile();
       if (profile == null) {
         throw Exception('No profile found');
       }
-      print('✅ Profile fetched - ID: ${profile.profileId}');
 
       // 2. Then get role using the profile's ID
       AuthService authService = AuthService();
       String? role = await authService.getUserRole(profile.profileId);
-      print('👤 User role: ${role ?? 'guest'}');
       
       if (!mounted) return;
       setState(() {
@@ -101,9 +98,7 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         _animationController.forward();
       });
       
-      print('✅ Profile and role fetch completed\n');
     } catch (e) {
-      print('❌ Error fetching profile and role: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${PlayLocalization.translate('errorFetchingProfile', widget.selectedLanguage)} $e')),
@@ -116,11 +111,8 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
 
   Future<void> _updateNickname(String newNickname) async {
     try {
-      print('\n🔄 UPDATING NICKNAME');
       await _userProfileService.updateProfileWithIntegration('nickname', newNickname);
-      print('✅ Nickname update completed\n');
     } catch (e) {
-      print('❌ Error updating nickname: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(
@@ -148,7 +140,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
   Future<void> _deleteAccount() async {
     AuthService authService = AuthService();
     try {
-      print('\n🗑️ DELETING ACCOUNT');
       
       // Show confirmation dialog first
       bool confirmed = await AccountDeletionDialog.show(
@@ -158,7 +149,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
       );
       
       if (!confirmed) {
-        print('❌ Deletion cancelled by user');
         return;
       }
 
@@ -173,7 +163,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         );
 
         if (reauthSuccess != true) {
-          print('❌ Reauthentication cancelled or failed');
           return;
         }
       }
@@ -182,7 +171,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
 
       // Now proceed with account deletion
       await authService.deleteUserAccount();
-      print('✅ Account deleted successfully');
 
       if (!mounted) return;
 
@@ -195,7 +183,6 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         (Route<dynamic> route) => false,
       );
     } catch (e) {
-      print('❌ Error during account deletion: $e');
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -246,10 +233,8 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
 
   String _redactEmail(String email) {
     try {
-      print('\n🔒 REDACTING EMAIL');
       List<String> parts = email.split('@');
       if (parts.length != 2) {
-        print('⚠️ Invalid email format');
         return email;
       }
 
@@ -261,10 +246,8 @@ class AccountSettingsState extends State<AccountSettings> with TickerProviderSta
         ? '${username.substring(0, 3)}***********'
         : username;
       
-      print('✅ Email redacted successfully\n');
       return '$redactedUsername@$domain';
     } catch (e) {
-      print('❌ Error redacting email: $e');
       return email;
     }
   }

@@ -177,7 +177,6 @@ class EditStagePageState extends State<EditStagePage> {
         // Pop and return true to indicate successful update
         Navigator.pop(context, true);
       } catch (e) {
-        print('Error saving stage: $e');
         if (!mounted) return;
         
         ScaffoldMessenger.of(context).showSnackBar(

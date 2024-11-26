@@ -114,7 +114,6 @@ class AuthService {
     
     // Listen to auth state changes
     _auth.authStateChanges().listen((User? user) {
-      print('🔐 Auth state changed: ${user?.uid ?? 'No user'}');
     });
     
     Connectivity().onConnectivityChanged.listen(_handleConnectivityChange);
@@ -207,7 +206,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error in registerWithEmailAndPassword: $e');
       rethrow;
     }
   }
@@ -348,8 +346,6 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        print('🔄 Updating user profile - Field: $field');
-        print('📊 Previous value in cache: ${_userCache[user.uid]?.toMap()[field]}');
 
         // Get current profile first
         UserProfile? currentProfile = await getUserProfile();
@@ -387,11 +383,9 @@ class AuthService {
           await saveUserProfileLocally(updatedProfile);
           _addToCache(user.uid, updatedProfile);
 
-          print('📊 Updated value in cache: ${_userCache[user.uid]?.toMap()[field]}');
         }
       }
     } catch (e) {
-      print('❌ Error updating user profile: $e');
       rethrow;
     }
   }
@@ -407,14 +401,12 @@ class AuthService {
       User? user = result.user;
       
       if (user != null) {
-        print('🔄 Fetching game save data after login');
         
         // Get categories and fetch game save data for each
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
         
         for (var category in categories) {
           String categoryId = category['id'];
-          print('📥 Fetching game save data for category: $categoryId');
           
           try {
             // Get game save data from Firestore
@@ -431,25 +423,20 @@ class AuthService {
                 saveDoc.data() as Map<String, dynamic>
               );
               await saveGameSaveDataLocally(categoryId, gameSaveData);
-              print('✅ Saved game data for category: $categoryId');
             } else {
-              print('⚠️ No existing game data for category: $categoryId');
               // Create initial game save data
               List<Map<String, dynamic>> stages = 
                   await _stageService.fetchStages(defaultLanguage, categoryId);
               GameSaveData initialData = await createInitialGameSaveData(stages);
               await saveGameSaveDataLocally(categoryId, initialData);
-              print('✅ Created initial game data for category: $categoryId');
             }
           } catch (e) {
-            print('❌ Error fetching game data for $categoryId: $e');
           }
         }
       }
 
       return user;
     } catch (e) {
-      print('❌ Error during sign in: $e');
       return null;
     }
   }
@@ -469,19 +456,14 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      print('\n🚪 SIGNING OUT');
       
       // Clear all local data first
-      print('🧹 Clearing local data...');
       await clearAllLocalData();
       
       // Sign out from Firebase Auth
-      print('🔑 Signing out from Firebase Auth...');
       await _auth.signOut();
       
-      print('✅ Sign out completed successfully\n');
     } catch (e) {
-      print('❌ Error during sign out: $e');
       rethrow;
     }
   }
@@ -523,21 +505,18 @@ class AuthService {
       
       return UserProfile.guestProfile;
     } catch (e) {
-      print('Error getting user profile: $e');
       return UserProfile.guestProfile;
     }
   }
 
   Future<void> deleteUserAccount() async {
     try {
-      print('\n🗑️ DELETING USER ACCOUNT');
       User? user = _auth.currentUser;
       if (user == null) {
         throw Exception('No user found to delete');
       }
 
       String? role = await getUserRole(user.uid);
-      print('👤 User role: $role');
       
       // For regular users, require reauthentication FIRST before any deletion
       if (role != 'guest') {
@@ -551,25 +530,15 @@ class AuthService {
       }
 
       // Now proceed with deletion in correct order
-      print('🗑️ Deleting Firestore data...');
       await _deleteFirestoreData(user.uid);
-      print('✅ Firestore data deleted');
 
-      print('🗑️ Clearing local data...');
       await clearAllLocalData();
-      print('✅ Local data cleared');
 
-      print('🗑️ Deleting Firebase Auth user...');
       await user.delete();
-      print('✅ Firebase Auth user deleted');
 
-      print('🚪 Signing out...');
       await signOut();
-      print('✅ User signed out');
 
-      print('✅ Account deletion completed successfully\n');
     } catch (e) {
-      print('❌ Error deleting user account: $e');
       rethrow;
     }
   }
@@ -577,7 +546,6 @@ class AuthService {
   // Helper method to handle Firestore deletion
   Future<void> _deleteFirestoreData(String uid) async {
     try {
-      print('🗑️ Starting Firestore data deletion');
       
       // Define all subcollections to delete
       List<String> subcollections = [
@@ -590,7 +558,6 @@ class AuthService {
       
       // Delete all documents in each subcollection
       for (String subcollection in subcollections) {
-        print('🗑️ Deleting $subcollection collection');
         QuerySnapshot subcollectionDocs = 
           await _firestore.collection('User').doc(uid).collection(subcollection).get();
         
@@ -605,9 +572,7 @@ class AuthService {
       // Commit the batch
       await _executeBatchWithRetry(batch);
       
-      print('✅ All Firestore data deleted successfully');
     } catch (e) {
-      print('❌ Error deleting Firestore data: $e');
       rethrow;
     }
   }
@@ -685,7 +650,6 @@ class AuthService {
         ),
       );
     } catch (e) {
-      print('Error in _listenToFirestoreChanges: $e');
     }
   }
 
@@ -755,7 +719,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error updating avatar ID: $e');
       rethrow;
     }
   }
@@ -771,11 +734,9 @@ class AuthService {
         var connectivityResult = await (Connectivity().checkConnectivity());
         if (connectivityResult != ConnectivityResult.none) {
           // Here you would implement your notification system
-          print('Avatar $oldAvatarId was deleted by admin. Reset to default avatar.');
         }
       }
     } catch (e) {
-      print('Error handling deleted avatar: $e');
     }
   }
 
@@ -850,9 +811,7 @@ class AuthService {
         keysToRemove.map((key) => prefs.remove(key))
       );
 
-      print('🧹 Cleared all local data including game saves');
     } catch (e) {
-      print('❌ Error clearing local data: $e');
       rethrow;
     }
   }
@@ -869,7 +828,6 @@ class AuthService {
   /// Returns the updated User object or null if conversion fails.
   Future<User?> convertGuestToUser(String email, String password, String username, String nickname, String birthday) async {
     try {
-      print('\n🔄 CONVERTING GUEST TO USER');
       User? currentUser = _auth.currentUser;
       if (currentUser == null) return null;
 
@@ -885,9 +843,6 @@ class AuthService {
         throw Exception('No guest profile found');
       }
 
-      print('👤 Current profile:');
-      print('Username: ${guestProfile.username}');
-      print('Nickname: ${guestProfile.nickname}');
 
       // Create updated profile with new user data but keep existing nickname
       UserProfile updatedProfile = guestProfile.copyWith(
@@ -898,9 +853,6 @@ class AuthService {
         nickname: guestProfile.nickname // Keep the nickname user has set
       );
 
-      print('👤 Updated profile:');
-      print('Username: ${updatedProfile.username}');
-      print('Nickname: ${updatedProfile.nickname}');
 
       // Store conversion data
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -913,10 +865,8 @@ class AuthService {
         'guestProfile': updatedProfile.toMap(),
       }));
 
-      print('✅ Guest conversion prepared\n');
       return currentUser;
     } catch (e) {
-      print('❌ Error preparing guest conversion: $e');
       rethrow;
     }
   }
@@ -924,7 +874,6 @@ class AuthService {
   // Add new method to complete the conversion after OTP verification
   Future<User?> completeGuestConversion() async {
     try {
-      print('\n🔄 COMPLETING GUEST CONVERSION');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pendingConversionData = prefs.getString('pending_conversion');
       if (pendingConversionData == null) {
@@ -937,7 +886,6 @@ class AuthService {
         throw Exception('No current user found');
       }
 
-      print('👤 Converting guest to regular user...');
       
       // Link email/password to anonymous account
       AuthCredential credential = EmailAuthProvider.credential(
@@ -945,14 +893,12 @@ class AuthService {
         password: conversionData['password'],
       );
 
-      print('🔗 Linking email credential...');
       await currentUser.linkWithCredential(credential);
       
       // Get the updated profile data
       Map<String, dynamic> profileData = conversionData['guestProfile'];
       UserProfile updatedProfile = UserProfile.fromMap(profileData);
 
-      print('💾 Updating Firestore documents...');
       
       // Update in a batch to ensure atomicity
       WriteBatch batch = _firestore.batch();
@@ -990,10 +936,8 @@ class AuthService {
       // Clear pending conversion data
       await prefs.remove('pending_conversion');
 
-      print('✅ Guest conversion completed successfully\n');
       return currentUser;
     } catch (e) {
-      print('❌ Error completing guest conversion: $e');
       rethrow;
     }
   }
@@ -1001,7 +945,6 @@ class AuthService {
   /// Tracks the sync status for each category
   Future<void> updateSyncStatus(String categoryId, String status) async {
     try {
-      print('📝 Updating sync status for $categoryId: $status');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       await prefs.setString('sync_status_$categoryId', status);
@@ -1010,64 +953,49 @@ class AuthService {
         DateTime.now().toIso8601String()
       );
       
-      print('✅ Sync status updated successfully');
     } catch (e) {
-      print('❌ Error updating sync status: $e');
     }
   }
 
   /// Modified save method with queue integration
   Future<void> saveGameSaveDataLocally(String categoryId, GameSaveData data) async {
     try {
-      print('💾 Starting save process for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Create backup of current data
-      print('📦 Creating backup...');
       String? existingData = prefs.getString('game_save_data_$categoryId');
       if (existingData != null) {
         await prefs.setString('game_save_data_backup_$categoryId', existingData);
-        print('✅ Backup created successfully');
       }
 
       // Save new data locally
-      print('💾 Saving new data...');
       String saveDataJson = jsonEncode(data.toMap());
       await prefs.setString('game_save_data_$categoryId', saveDataJson);
       
       // Queue for sync and update status
-      print('🔄 Queueing for sync...');
       await queueOfflineChange(categoryId, data);
       await updateSyncStatus(categoryId, SyncStatus.PENDING);
       
       // Clear backup after successful save
       if (existingData != null) {
         await prefs.remove('game_save_data_backup_$categoryId');
-        print('🧹 Backup cleared after successful save');
       }
       
-      print('✅ Save process completed successfully');
       
       // Try to sync immediately if online
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult != ConnectivityResult.none) {
-        print('🌐 Online connection available, attempting immediate sync...');
         try {
           await syncCategoryData(categoryId);
           await updateSyncStatus(categoryId, SyncStatus.SUCCESS);
           await removeFromQueue(categoryId);
-          print('✅ Immediate sync successful');
         } catch (syncError) {
-          print('⚠️ Immediate sync failed, will retry later: $syncError');
           // Keep in queue for later sync
         }
       } else {
-        print('📱 Offline - changes queued for later sync');
       }
       
     } catch (e) {
-      print('❌ Error in save process: $e');
-      print('Stack trace: ${StackTrace.current}');
       
       // Attempt to restore from backup
       await _restoreGameSaveBackup(categoryId);
@@ -1098,7 +1026,6 @@ class AuthService {
         'isInQueue': queue.any((entry) => entry.categoryId == categoryId),
       };
     } catch (e) {
-      print('❌ Error getting sync status: $e');
       return {
         'status': SyncStatus.FAILED,
         'pendingChanges': 0,
@@ -1116,30 +1043,24 @@ class AuthService {
       String? timestamp = prefs.getString(OfflineQueueKeys.LAST_SYNC_KEY);
       return timestamp != null ? DateTime.parse(timestamp) : null;
     } catch (e) {
-      print('❌ Error getting last sync time: $e');
       return null;
     }
   }
 
   Future<GameSaveData?> getLocalGameSaveData(String categoryId) async {
     try {
-      print('🔍 Getting game data for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? saveDataJson = prefs.getString('game_save_data_$categoryId');
       
       if (saveDataJson != null) {
         Map<String, dynamic> saveDataMap = jsonDecode(saveDataJson);
         final data = GameSaveData.fromMap(saveDataMap);
-        print('✅ Game data loaded successfully');
         return data;
       }
-      print('ℹ️ No game data found for category: $categoryId');
       return null;
     } catch (e) {
-      print('❌ Error loading game data: $e');
       final backup = await _restoreGameSaveBackup(categoryId);
       if (backup != null) {
-        print('🔄 Restored from backup successfully');
         return backup;
       }
       throw GameSaveDataException('${GameSaveError.LOAD_FAILED}: $e');
@@ -1162,7 +1083,6 @@ class AuthService {
 
   Future<GameSaveData> createInitialGameSaveData(List<Map<String, dynamic>> stages) async {
     try {
-      print('🎮 Creating initial game data');
       Map<String, StageDataEntry> stageData = {};
 
       // Group stages by category and type
@@ -1171,18 +1091,15 @@ class AuthService {
 
       for (var stage in stages) {
         // Debug print the stage data
-        print('📝 Processing stage data: ${stage.toString()}');
 
         String stageName = stage['stageName'] ?? '';
         if (stageName.isEmpty) {
-          print('⚠️ Warning: Stage found with missing stageName');
           continue;
         }
 
         // Get category from the parent collection in StageService
         String categoryId = stage['id'] ?? stage['categoryId'] ?? _extractCategoryFromStageName(stageName);
         if (categoryId.isEmpty) {
-          print('⚠️ Warning: Could not determine category for stage: $stageName');
           continue;
         }
 
@@ -1193,7 +1110,6 @@ class AuthService {
         };
 
         bool isArcade = stageName.toLowerCase().contains('arcade');
-        print('🎯 Processing ${isArcade ? 'Arcade' : 'Adventure'} stage: $stageName for category: $categoryId');
 
         if (isArcade) {
           arcadeStages[categoryId] = stageWithCategory;
@@ -1204,10 +1120,8 @@ class AuthService {
 
       // Print summary of collected stages
       adventureStages.forEach((category, stages) {
-        print('📊 Category $category: ${stages.length} adventure stages');
       });
       arcadeStages.forEach((category, _) {
-        print(' Category $category: 1 arcade stage');
       });
 
       // Process arcade stages
@@ -1216,7 +1130,6 @@ class AuthService {
         var arcadeStage = entry.value;
         String arcadeKey = GameSaveData.getArcadeKey(categoryId);
         
-        print('🎮 Creating arcade stage for $arcadeKey');
         stageData[arcadeKey] = ArcadeStageData(
           maxScore: _calculateMaxScore(arcadeStage),
         );
@@ -1231,13 +1144,11 @@ class AuthService {
         categoryStages.sort((a, b) => _getStageNumber(a['stageName'])
             .compareTo(_getStageNumber(b['stageName'])));
 
-        print('🎮 Creating ${categoryStages.length} adventure stages for $categoryId');
         
         for (var stage in categoryStages) {
           int stageNumber = _getStageNumber(stage['stageName']);
           String stageKey = GameSaveData.getStageKey(categoryId, stageNumber);
           
-          print('📝 Creating stage data for $stageKey');
           stageData[stageKey] = AdventureStageData(
             maxScore: _calculateMaxScore(stage),
           );
@@ -1253,7 +1164,6 @@ class AuthService {
       int totalAdventureStages = adventureStages.values
           .fold(0, (sum, stages) => sum + stages.length);
 
-      print('📊 Creating save data with $totalStages stages');
       
       return GameSaveData(
         stageData: stageData,
@@ -1264,8 +1174,6 @@ class AuthService {
         hasSeenPrerequisite: List<bool>.filled(totalStages, false),
       );
     } catch (e) {
-      print('❌ Error creating initial game data: $e');
-      print('Stack trace: ${StackTrace.current}');
       throw GameSaveDataException('${GameSaveError.CREATE_FAILED}: $e');
     }
   }
@@ -1291,7 +1199,6 @@ class AuthService {
 
   Future<GameSaveData?> _restoreGameSaveBackup(String categoryId) async {
     try {
-      print('🔄 Attempting to restore from backup for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? backupJson = prefs.getString('game_save_data_backup_$categoryId');
       if (backupJson != null) {
@@ -1299,7 +1206,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('❌ Error restoring from backup: $e');
       throw GameSaveDataException('${GameSaveError.RESTORE_FAILED}: $e');
     }
   }
@@ -1343,12 +1249,10 @@ class AuthService {
     required bool isArcade,
   }) async {
     try {
-      print('🎮 Updating game progress for ${isArcade ? 'arcade' : 'adventure'} mode');
       
       // Get current game save data
       GameSaveData? localData = await getLocalGameSaveData(categoryId);
       if (localData == null) {
-        print('📝 Creating new game save data');
         localData = GameSaveData.initial(7); // 7 stages per quest
       }
 
@@ -1362,12 +1266,9 @@ class AuthService {
         if (record == null) {
           throw GameSaveDataException('Record is required for arcade mode');
         }
-        print('🎯 Updating arcade record: $record');
         localData.updateArcadeRecord(stageKey, record);
       } else {
         // Update adventure mode progress
-        print('🎯 Updating adventure progress:');
-        print('Score: $score, Stars: $stars, Mode: $mode');
         
         int stageIndex = _getStageNumber(stageName) - 1;
         localData.updateScore(stageKey, score, mode);
@@ -1375,7 +1276,6 @@ class AuthService {
         
         // Unlock next stage if applicable
         if (stars > 0) {
-          print('🔓 Unlocking next stage');
           localData.unlockStage(stageIndex + 1, mode);
         }
       }
@@ -1383,9 +1283,7 @@ class AuthService {
       // Save updated data
       await saveGameSaveDataLocally(categoryId, localData);
       
-      print('✅ Game progress updated successfully');
     } catch (e) {
-      print('❌ Error updating game progress: $e');
       throw GameSaveDataException('Failed to update game progress: $e');
     }
   }
@@ -1399,17 +1297,14 @@ class AuthService {
   /// Checks if a username is already taken
   Future<bool> isUsernameTaken(String username) async {
     try {
-      print('🔍 Checking if username "$username" is taken');
       QuerySnapshot querySnapshot = await _firestore
           .collectionGroup('ProfileData')
           .where('username', isEqualTo: username)
           .get();
       
       bool isTaken = querySnapshot.docs.isNotEmpty;
-      print(isTaken ? '❌ Username is taken' : '✅ Username is available');
       return isTaken;
     } catch (e) {
-      print('❌ Error checking username availability: $e');
       rethrow;
     }
   }
@@ -1506,7 +1401,6 @@ class AuthService {
         _addToCache(currentUser.uid, serverProfile);
       }
     } catch (e) {
-      print('Error during data integrity check: $e');
     }
   }
 
@@ -1539,7 +1433,6 @@ class AuthService {
       // Commit batch
       await _executeBatchWithRetry(batch);
     } catch (e) {
-      print('Error in batch update: $e');
       rethrow;
     }
   }
@@ -1633,7 +1526,6 @@ class AuthService {
       // Clear pending sync
       await prefs.setStringList('pending_guest_sync', []);
     } catch (e) {
-      print('Error syncing offline guests: $e');
     }
   }
 
@@ -1647,7 +1539,6 @@ class AuthService {
         return UserProfile.fromMap(profileMap);
       }
     } catch (e) {
-      print('Error getting profile by tempId: $e');
     }
     return null;
   }
@@ -1709,7 +1600,6 @@ class AuthService {
 
       await saveUserProfileLocally(mergedProfile);
     } catch (e) {
-      print('Error resolving profile conflicts: $e');
       // Keep offline data as backup
       await _backupOfflineData(tempId);
     }
@@ -1743,9 +1633,7 @@ class AuthService {
         await prefs.setString('${backupKey}_progress', jsonEncode(gameProgress));
       }
 
-      print('Backup created with key: $backupKey');
     } catch (e) {
-      print('Error creating backup: $e');
     }
   }
 
@@ -1759,7 +1647,6 @@ class AuthService {
       }
       return false;
     } catch (e) {
-      print('Error restoring profile backup: $e');
       return false;
     }
   }
@@ -1779,7 +1666,6 @@ class AuthService {
         return;
       } catch (e) {
         attempts++;
-        print('Sync attempt $attempts failed: $e');
         
         if (attempts == maxAttempts) {
           // Final attempt failed, restore from backup
@@ -1812,7 +1698,6 @@ class AuthService {
       
       return allProgress;
     } catch (e) {
-      print('Error getting all game progress: $e');
       return {};
     }
   }
@@ -1825,7 +1710,6 @@ class AuthService {
         await prefs.setString(entry.key, jsonEncode(entry.value));
       }
     } catch (e) {
-      print('Error restoring game progress: $e');
     }
   }
 
@@ -1871,10 +1755,8 @@ class AuthService {
           .doc(categoryId)
           .set(localData.toMap());
           
-        print('✅ Synced game data for category: $categoryId');
       }
     } catch (e) {
-      print('❌ Error syncing category data: $e');
       throw GameSaveDataException('Failed to sync category data: $e');
     }
   }
@@ -1882,12 +1764,10 @@ class AuthService {
   // Method to add changes to queue
   Future<void> queueOfflineChange(String categoryId, GameSaveData data) async {
     try {
-      print('🔄 Queueing offline change for category: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Get existing queue
       List<QueueEntry> queue = await getOfflineQueue();
-      print('📊 Current queue size: ${queue.length}');
       
       // Create new entry
       QueueEntry newEntry = QueueEntry(
@@ -1899,17 +1779,13 @@ class AuthService {
       // Add to queue (replace if exists)
       queue.removeWhere((entry) => entry.categoryId == categoryId);
       queue.add(newEntry);
-      print('➕ Added new entry for $categoryId at ${newEntry.timestamp}');
       
       // Save updated queue
       await prefs.setString(
         OfflineQueueKeys.QUEUE_KEY,
         jsonEncode(queue.map((e) => e.toMap()).toList())
       );
-      print('💾 Queue saved successfully');
     } catch (e) {
-      print('❌ Error queueing offline change: $e');
-      print('Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
@@ -1917,13 +1793,11 @@ class AuthService {
   // Method to get queue entries
   Future<List<QueueEntry>> getOfflineQueue() async {
     try {
-      print('🔍 Retrieving offline queue');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Get queue string
       String? queueJson = prefs.getString(OfflineQueueKeys.QUEUE_KEY);
       if (queueJson == null) {
-        print('ℹ️ No queue found, returning empty list');
         return [];
       }
       
@@ -1933,14 +1807,11 @@ class AuthService {
           .map((entry) => QueueEntry.fromMap(entry))
           .toList();
       
-      print('📊 Retrieved queue with ${queue.length} entries');
       queue.forEach((entry) => 
           print('📝 Queue entry: ${entry.toString()}'));
       
       return queue;
     } catch (e) {
-      print('❌ Error getting offline queue: $e');
-      print('Stack trace: ${StackTrace.current}');
       return [];
     }
   }
@@ -1948,24 +1819,19 @@ class AuthService {
   // Method to remove entry from queue
   Future<void> removeFromQueue(String categoryId) async {
     try {
-      print('🗑️ Removing category from queue: $categoryId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Get and update queue
       List<QueueEntry> queue = await getOfflineQueue();
       int sizeBefore = queue.length;
       queue.removeWhere((entry) => entry.categoryId == categoryId);
-      print('📊 Queue size changed from $sizeBefore to ${queue.length}');
       
       // Save updated queue
       await prefs.setString(
         OfflineQueueKeys.QUEUE_KEY,
         jsonEncode(queue.map((e) => e.toMap()).toList())
       );
-      print('✅ Successfully removed $categoryId from queue');
     } catch (e) {
-      print('❌ Error removing from queue: $e');
-      print('Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
@@ -1973,22 +1839,17 @@ class AuthService {
   // Method to backup queue before processing
   Future<void> backupQueue() async {
     try {
-      print('📦 Creating queue backup');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Get current queue
       String? currentQueue = prefs.getString(OfflineQueueKeys.QUEUE_KEY);
       if (currentQueue == null) {
-        print('ℹ️ No queue to backup');
         return;
       }
       
       // Save backup
       await prefs.setString(OfflineQueueKeys.QUEUE_BACKUP_KEY, currentQueue);
-      print('✅ Queue backup created successfully');
     } catch (e) {
-      print('❌ Error backing up queue: $e');
-      print('Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
@@ -1996,23 +1857,18 @@ class AuthService {
   // Method to restore queue from backup
   Future<bool> restoreQueueFromBackup() async {
     try {
-      print('🔄 Attempting to restore queue from backup');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Get backup
       String? backupQueue = prefs.getString(OfflineQueueKeys.QUEUE_BACKUP_KEY);
       if (backupQueue == null) {
-        print('⚠️ No backup found to restore');
         return false;
       }
       
       // Restore from backup
       await prefs.setString(OfflineQueueKeys.QUEUE_KEY, backupQueue);
-      print('✅ Queue restored successfully from backup');
       return true;
     } catch (e) {
-      print('❌ Error restoring queue: $e');
-      print('Stack trace: ${StackTrace.current}');
       return false;
     }
   }
@@ -2020,29 +1876,24 @@ class AuthService {
   /// Main method to process the offline sync queue
   Future<void> processOfflineQueue({bool forceSync = false}) async {
     try {
-      print('🔄 Starting offline queue processing');
       
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        print('📡 No network connection available');
         return;
       }
 
       User? currentUser = _auth.currentUser;
       if (currentUser == null) {
-        print('👤 No user logged in');
         return;
       }
 
       // Backup queue before processing
       await backupQueue();
-      print('📦 Queue backup created');
 
       // Get and sort queue by timestamp
       List<QueueEntry> queue = await getOfflineQueue();
       queue.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       
-      print('📊 Processing ${queue.length} queue entries');
       
       // Track sync progress
       int successCount = 0;
@@ -2052,7 +1903,6 @@ class AuthService {
       // Process each entry
       for (var entry in queue) {
         try {
-          print('🔄 Processing entry for category: ${entry.categoryId}');
           
           // Attempt sync with retry
           bool syncSuccess = await _syncEntryWithRetry(
@@ -2070,19 +1920,14 @@ class AuthService {
             await updateSyncStatus(entry.categoryId, SyncStatus.FAILED);
           }
         } catch (e) {
-          print('❌ Error processing entry: $e');
           failureCount++;
         }
       }
 
       // Log sync completion
       Duration syncDuration = DateTime.now().difference(syncStartTime);
-      print('✅ Sync completed in ${syncDuration.inSeconds}s');
-      print('📊 Success: $successCount, Failures: $failureCount');
 
     } catch (e) {
-      print('❌ Error processing offline queue: $e');
-      print('Stack trace: ${StackTrace.current}');
       await restoreQueueFromBackup();
       rethrow;
     }
@@ -2098,7 +1943,6 @@ class AuthService {
   
   while (attempts < maxRetries) {
     try {
-      print('🔄 Sync attempt ${attempts + 1} for ${entry.categoryId}');
       
       // This code will never be reached in this test
       await _firestore
@@ -2108,19 +1952,15 @@ class AuthService {
           .doc(entry.categoryId)
           .set(entry.gameData);
       
-      print('✅ Sync successful for ${entry.categoryId}');
       return true;
     } catch (e) {
       attempts++;
-      print('❌ Sync attempt $attempts failed: $e');
       
       if (attempts == maxRetries) {
-        print('⚠️ Max retry attempts reached for ${entry.categoryId}');
         return false;
       }
       
       int delaySeconds = SyncRetryConfig.BASE_DELAY_SECONDS * pow(2, attempts).toInt();
-      print('⏳ Waiting ${delaySeconds}s before next attempt');
       await Future.delayed(Duration(seconds: delaySeconds));
     }
   }
@@ -2131,20 +1971,17 @@ class AuthService {
   /// Update NetworkStateHandler to use new sync process
   void _handleConnectivityChange(ConnectivityResult result) async {
     if (result != ConnectivityResult.none) {
-      print('🌐 Network connection restored');
       await processOfflineQueue();
     }
   }
 
   /// Add method for manual sync trigger
   Future<void> triggerManualSync() async {
-    print('🔄 Manual sync triggered');
     await processOfflineQueue(forceSync: true);
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
     try {
-      print('\n🔐 CHANGING PASSWORD');
       User? user = _auth.currentUser;
       if (user == null || user.email == null) {
         throw Exception('No user found or user has no email');
@@ -2157,23 +1994,18 @@ class AuthService {
       );
 
       // Reauthenticate
-      print('🔄 Reauthenticating user');
       await user.reauthenticateWithCredential(credential);
 
       // Change password
-      print('🔄 Updating password');
       await user.updatePassword(newPassword);
       
-      print('✅ Password changed successfully\n');
     } catch (e) {
-      print('❌ Error changing password: $e');
       rethrow;
     }
   }
 
   Future<void> changeEmail(String newEmail, String currentPassword) async {
     try {
-      print('\n🔄 CHANGING EMAIL');
       User? user = _auth.currentUser;
       if (user == null || user.email == null) {
         throw Exception('No user found or user has no email');
@@ -2189,26 +2021,21 @@ class AuthService {
       );
 
       // Reauthenticate
-      print('🔄 Reauthenticating user');
       await user.reauthenticateWithCredential(credential);
 
       // Send OTP to new email
-      print('📧 Sending verification code to new email');
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       await functions
           .httpsCallable('sendEmailChangeOTP')
           .call({'email': newEmail});
 
-      print('✅ Verification code sent successfully\n');
     } catch (e) {
-      print('❌ Error initiating email change: $e');
       rethrow;
     }
   }
 
   Future<void> verifyAndUpdateEmail(String newEmail, String otp) async {
     try {
-      print('\n🔄 VERIFYING AND UPDATING EMAIL');
       User? user = _auth.currentUser;
       if (user == null || user.email == null) {
         throw Exception('No user found or user has no email');
@@ -2219,10 +2046,6 @@ class AuthService {
       }
 
       // Verify OTP
-      print('🔍 Verifying OTP');
-      print('📤 Sending verification request with:');
-      print('   Email: $newEmail');
-      print('   OTP: $otp');
       
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       final result = await functions
@@ -2232,11 +2055,9 @@ class AuthService {
             'otp': otp
           });
 
-      print('📥 Received verification result: ${result.data}');
 
       if (result.data['success']) {
         // Reauthenticate again before updating email
-        print('🔄 Reauthenticating user');
         AuthCredential credential = EmailAuthProvider.credential(
           email: user.email!,
           password: _currentPassword!,
@@ -2244,18 +2065,15 @@ class AuthService {
         await user.reauthenticateWithCredential(credential);
 
         // First verify the new email
-        print('📧 Verifying new email');
         await user.updateEmail(newEmail);
 
         // Update email in main User document
-        print('💾 Updating email in User document');
         await _firestore
             .collection('User')
             .doc(user.uid)
             .update({'email': newEmail});
 
         // Update email in ProfileData document
-        print('💾 Updating email in ProfileData');
         await _firestore
             .collection('User')
             .doc(user.uid)
@@ -2272,14 +2090,12 @@ class AuthService {
         // Clear stored password
         _currentPassword = null;
 
-        print('✅ Email updated successfully in all locations\n');
       } else {
         throw Exception('Verification failed');
       }
     } catch (e) {
       // Clear stored password on error
       _currentPassword = null;
-      print('❌ Error updating email: $e');
       rethrow;
     }
   }
@@ -2288,28 +2104,22 @@ class AuthService {
 
   Future<void> sendPasswordResetOTP(String email) async {
     try {
-      print('\n📧 SENDING PASSWORD RESET OTP');
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       
-      print('📤 Sending OTP to email: $email');
       await functions
           .httpsCallable('sendPasswordResetOTP')
           .call({'email': email});
       
-      print('✅ Password reset OTP sent successfully\n');
     } catch (e) {
-      print('❌ Error sending password reset OTP: $e');
       rethrow;
     }
   }
 
   Future<void> verifyAndResetPassword(String email, String otp, String newPassword) async {
     try {
-      print('\n🔄 VERIFYING AND RESETTING PASSWORD');
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       
       // First verify the OTP
-      print('🔍 Verifying OTP');
       final result = await functions
           .httpsCallable('verifyPasswordResetOTP')
           .call({
@@ -2319,14 +2129,11 @@ class AuthService {
 
       if (result.data['success']) {
         // If OTP is valid, reset the password
-        print('🔐 Resetting password');
         await _auth.sendPasswordResetEmail(email: email);
-        print('✅ Password reset email sent successfully\n');
       } else {
         throw Exception('Invalid verification code');
       }
     } catch (e) {
-      print('❌ Error resetting password: $e');
       rethrow;
     }
   }
@@ -2335,7 +2142,6 @@ class AuthService {
 
   Future<void> verifyPasswordResetOTP(String email, String otp) async {
     try {
-      print('\n🔍 VERIFYING PASSWORD RESET OTP');
       final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
       
       final result = await functions
@@ -2349,16 +2155,13 @@ class AuthService {
         throw Exception('Invalid verification code');
       }
       
-      print('✅ OTP verified successfully\n');
     } catch (e) {
-      print('❌ Error verifying OTP: $e');
       rethrow;
     }
   }
 
   Future<void> resetPassword(String email, String newPassword) async {
     try {
-      print('\n🔐 RESETTING PASSWORD');
       
       // Get user by email
       var methods = await _auth.fetchSignInMethodsForEmail(email);
@@ -2369,7 +2172,6 @@ class AuthService {
       try {
         // Get custom token for temporary auth
         final functions = FirebaseFunctions.instanceFor(region: 'asia-southeast1');
-        print('🔑 Getting custom token for temporary auth');
         final result = await functions
             .httpsCallable('createCustomToken')
             .call({'email': email});
@@ -2379,28 +2181,22 @@ class AuthService {
         }
 
         // Sign in with custom token
-        print('🔄 Signing in temporarily');
         await _auth.signInWithCustomToken(result.data['token']);
         
         // Update password
         if (_auth.currentUser != null) {
-          print('🔐 Updating password');
           await _auth.currentUser!.updatePassword(newPassword);
           
           // Sign out after password update
-          print('🚪 Signing out');
           await _auth.signOut();
           
-          print('✅ Password updated successfully\n');
         } else {
           throw Exception('Failed to authenticate for password reset');
         }
       } catch (e) {
-        print('❌ Error during password reset: $e');
         rethrow;
       }
     } catch (e) {
-      print('❌ Error resetting password: $e');
       rethrow;
     }
   }
@@ -2415,7 +2211,6 @@ class SyncManager {
   static Future<void> handleSync(String tempId, Future<void> Function() syncOperation) async {
     // Check if sync is already in progress
     if (_syncInProgress[tempId] == true) {
-      print('Sync already in progress for $tempId');
       return;
     }
 
@@ -2423,7 +2218,6 @@ class SyncManager {
     final lastAttempt = _lastSyncAttempt[tempId];
     if (lastAttempt != null && 
         DateTime.now().difference(lastAttempt) < _minSyncInterval) {
-      print('Too soon to retry sync for $tempId');
       return;
     }
 
@@ -2440,7 +2234,6 @@ class SyncManager {
       _syncInProgress[tempId] = false;
     } catch (e) {
       _syncInProgress[tempId] = false;
-      print('Error during sync: $e');
       
       // Attempt recovery using AuthService instance
       await _authService.retryFailedSync(tempId);
@@ -2453,7 +2246,6 @@ class NetworkStateHandler {
   
   static Future<void> _handleConnectivityChange(ConnectivityResult result) async {
     if (result != ConnectivityResult.none) {
-      print('🌐 Network connection restored');
       await _authService.processOfflineQueue();
     }
   }

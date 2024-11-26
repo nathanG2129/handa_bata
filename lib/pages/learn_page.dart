@@ -52,7 +52,6 @@ class LearnPageState extends State<LearnPage> {
   }
 
   void _handleLanguageChange(String newLanguage) {
-    print('🌐 Language changed to: $newLanguage');
     setState(() {
       _currentLanguage = newLanguage;
       _isLoading = true;
@@ -74,7 +73,6 @@ class LearnPageState extends State<LearnPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading content: $e');
       setState(() {
         _isLoading = false;
       });
@@ -325,7 +323,6 @@ class LearnPageState extends State<LearnPage> {
     final RegExp imgRegex = RegExp(r'''src=["']([^"']*)["']'''); // Using triple quotes for cleaner escaping
     final RegExp figcaptionRegex = RegExp(r'<figcaption>(.*?)</figcaption>', dotAll: true);
     
-    print('📝 Original text: $text');
     
     // Split text by figures
     final parts = text.split(figureRegex);
@@ -355,17 +352,17 @@ class LearnPageState extends State<LearnPage> {
       // Add figure if there is one
       if (i < figures.length) {
         final figureContent = figures.elementAt(i).group(1) ?? '';
-        print('🔍 Figure content: $figureContent'); // Debug the figure content
+        // Debug the figure content
         
         // Extract image source
         final imgMatch = imgRegex.firstMatch(figureContent);
         final imgSrc = imgMatch?.group(1) ?? '';
-        print('🖼️ Found image source: $imgSrc'); // Debug the image source
+        // Debug the image source
         
         // Extract caption
         final captionMatch = figcaptionRegex.firstMatch(figureContent);
         final caption = captionMatch?.group(1) ?? '';
-        print('📝 Found caption: $caption'); // Debug the caption
+        // Debug the caption
         
         if (imgSrc.isNotEmpty) {
           widgets.add(
@@ -378,8 +375,6 @@ class LearnPageState extends State<LearnPage> {
                     fit: BoxFit.contain,
                     width: double.infinity,
                     errorBuilder: (context, error, stackTrace) {
-                      print('❌ Error loading image $imgSrc: $error');
-                      print('Stack trace: $stackTrace');
                       return const SizedBox();
                     },
                   ),
@@ -571,7 +566,6 @@ class LearnPageState extends State<LearnPage> {
     List<Widget> widgets = [];
 
     if (item.containsKey('img')) {
-      print('🖼️ Found image in list item: ${item['img']}');
       widgets.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -579,7 +573,6 @@ class LearnPageState extends State<LearnPage> {
             item['img'],
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              print('❌ Error loading list image: $error');
               return const SizedBox();
             },
           ),
@@ -664,7 +657,6 @@ class LearnPageState extends State<LearnPage> {
   }
 
   Widget _buildImage(String imagePath) {
-    print('🖼️ Building direct image: $imagePath');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: ClipRRect(
@@ -673,8 +665,6 @@ class LearnPageState extends State<LearnPage> {
           imagePath,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) {
-            print('❌ Error loading direct image $imagePath: $error');
-            print('Stack trace: $stackTrace');
             return const SizedBox();
           },
         ),

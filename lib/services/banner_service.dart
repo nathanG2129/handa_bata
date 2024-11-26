@@ -58,11 +58,9 @@ class BannerService {
   // Update methods that used _userProfileService to use the callback instead
   Future<void> checkLevelUnlock(int newLevel) async {
     try {
-      print('🎯 Checking banner unlocks for level $newLevel');
       
       // Add validation
       if (newLevel < 0 || newLevel > MAX_BANNER_LEVEL) {
-        print('⚠️ Invalid level: $newLevel');
         return;
       }
       
@@ -70,7 +68,6 @@ class BannerService {
       List<int> updatedUnlockedBanners = await _calculateUnlockState(newLevel);
       
       if (quality == ConnectionQuality.OFFLINE) {
-        print('📱 Offline mode: Queueing unlock update');
         await _queueUnlock(PendingBannerUnlock(
           bannerId: newLevel,
           unlockedAtLevel: newLevel,
@@ -81,7 +78,6 @@ class BannerService {
         // Store locally for offline access
         await _storeLocalUnlockState(updatedUnlockedBanners);
       } else if (_profileUpdateCallback != null) {
-        print('🔄 Updating unlock state with ${updatedUnlockedBanners.length} banners');
         _profileUpdateCallback!('unlockedBanner', updatedUnlockedBanners);
       }
       
@@ -91,7 +87,6 @@ class BannerService {
         'Updated unlock state for level $newLevel'
       );
     } catch (e) {
-      print('❌ Error in checkLevelUnlock: $e');
       await _logBannerOperation('unlock_error', newLevel, e.toString());
     }
   }
@@ -190,7 +185,6 @@ class BannerService {
       
       return null;
     } catch (e) {
-      print('Error in getBannerDetails: $e');
       return _bannerCache[id]?.data;  // Return cached data on error
     }
   }
@@ -244,7 +238,6 @@ class BannerService {
       }
       return null;
     } catch (e) {
-      print('Error fetching from server: $e');
       return null;
     }
   }
@@ -283,7 +276,6 @@ class BannerService {
       
       return null;
     } catch (e) {
-      print('Error in _fetchBannerWithPriority: $e');
       return null;
     }
   }
@@ -299,7 +291,6 @@ class BannerService {
           _addToCache(bannerId, banner);
         }
       } catch (e) {
-        print('Error processing banner $bannerId: $e');
       }
     }
   }
@@ -365,7 +356,6 @@ class BannerService {
       }
       return null;
     } catch (e) {
-      print('Error fetching from server: $e');
       return null;
     }
   }
@@ -373,12 +363,10 @@ class BannerService {
   // Unified sync system
   Future<void> _syncWithServer() async {
     if (_isSyncing) {
-      print(' Banner sync already in progress, skipping...');
       return;
     }
 
     try {
-      print('🔄 Starting banner sync process');
       _setSyncStatus(true);
 
       // Add integrity check before proceeding
@@ -388,23 +376,19 @@ class BannerService {
       
       switch (quality) {
         case ConnectionQuality.OFFLINE:
-          print('📱 Offline mode: Skipping sync');
           return;
           
         case ConnectionQuality.POOR:
-          print('📡 Poor connection: Processing critical updates only');
           await _processQueue(BannerPriority.CRITICAL);
           break;
           
         case ConnectionQuality.GOOD:
-          print('🌐 Good connection: Processing high priority updates');
           await _processQueue(BannerPriority.CRITICAL);
           await _processQueue(BannerPriority.HIGH);
           await _processQueue(BannerPriority.MEDIUM);
           break;
           
         case ConnectionQuality.EXCELLENT:
-          print('🚀 Excellent connection: Processing all updates');
           for (var priority in BannerPriority.values) {
             await _processQueue(priority);
           }
@@ -415,10 +399,8 @@ class BannerService {
       }
 
     } catch (e) {
-      print('❌ Error in sync: $e');
       await _logBannerOperation('sync_error', -1, e.toString());
     } finally {
-      print('🏁 Banner sync process completed');
       _setSyncStatus(false);
     }
   }
@@ -435,32 +417,25 @@ class BannerService {
           .timeout(const Duration(seconds: 5));
 
       if (!snapshot.exists) {
-        print('❌ Banner document not found on server');
         return;
       }
 
       int serverRevision = snapshot.get('revision') ?? 0;
       int? localRevision = await _getLocalRevision();
 
-      print('📊 Banner server revision: $serverRevision, Banner local revision: $localRevision');
 
       if (localRevision == null || serverRevision > localRevision) {
-        print('🔄 Server has newer data, updating local cache');
         List<Map<String, dynamic>> serverBanners = 
             await _fetchAndUpdateLocal(snapshot);
         
-        print('💾 Updating memory cache');
         for (var banner in serverBanners) {
           _addToCache(banner['id'], banner);
         }
 
-        print('📢 Notifying listeners of updates');
         _bannerUpdateController.add(serverBanners);
       } else {
-        print('✅ Local data is up to date');
       }
     } catch (e) {
-      print('❌ Error in full sync: $e');
       throw e;
     }
   }
@@ -535,7 +510,6 @@ class BannerService {
             return serverBanners;
           }
         } catch (e) {
-          print('⚠️ Error fetching from server, falling back to local: $e');
         }
       }
       
@@ -543,7 +517,6 @@ class BannerService {
       return await _getBannersFromLocal();
       
     } catch (e) {
-      print('❌ Error in fetchBanners: $e');
       await _logBannerOperation('fetch_error', -1, e.toString());
       return [];
     }
@@ -583,12 +556,10 @@ class BannerService {
       if (success) {
       // Clear backup after successful update
       await prefs.remove('${BANNERS_CACHE_KEY}_backup');
-        print('💾 Banners stored locally');
       } else {
         throw Exception('Failed to store banners locally');
       }
     } catch (e) {
-      print('❌ Error storing banners locally: $e');
       await _restoreFromBackup();
       throw e;
     }
@@ -602,7 +573,6 @@ class BannerService {
         await prefs.setString(BANNERS_CACHE_KEY, backup);
       }
     } catch (e) {
-      print('Error restoring from backup: $e');
     }
   }
 
@@ -618,7 +588,6 @@ class BannerService {
             Map<String, dynamic>.from(banner)
           ).toList();
     } catch (e) {
-          print('⚠️ Error parsing local banners: $e');
           await _restoreFromBackup();
           
           // Try backup
@@ -633,7 +602,6 @@ class BannerService {
     }
     return [];
     } catch (e) {
-      print('❌ Error getting banners from local: $e');
       return [];
     }
   }
@@ -652,7 +620,6 @@ class BannerService {
         }
       }
     } catch (e) {
-      print('Error cleaning up versions: $e');
     }
   }
 
@@ -672,7 +639,6 @@ class BannerService {
         if (metadata != null) 'metadata': metadata,  // Include admin metadata if present
       });
     } catch (e) {
-      print('Error logging operation: $e');
     }
   }
 
@@ -708,7 +674,6 @@ class BannerService {
   // Add data integrity verification
   Future<void> _verifyDataIntegrity() async {
     try {
-      print('🔍 Verifying banner data integrity');
       
       // Get both server and local data
       List<Map<String, dynamic>> serverBanners = [];
@@ -725,7 +690,6 @@ class BannerService {
           int serverRevision = snapshot.get('revision');
           int? localRevision = await _getLocalRevision();
           
-          print('📊 Server revision: $serverRevision, Local revision: ${localRevision ?? "none"}');
           
           // Only check for repairs if server revision is newer
           if (localRevision == null || serverRevision > localRevision) {
@@ -736,7 +700,6 @@ class BannerService {
             for (var banner in serverBanners) {
               int id = banner['id'];
               if (seenIds.contains(id)) {
-                print('⚠️ Found duplicate banner ID: $id');
                 needsRepair = true;
                 break;
               }
@@ -746,7 +709,6 @@ class BannerService {
             // 2. Validate required fields
             for (var banner in serverBanners) {
               if (!_validateBannerData(banner)) {
-                print('⚠️ Invalid banner data found: ${banner['id']}');
                 needsRepair = true;
                 break;
               }
@@ -754,22 +716,18 @@ class BannerService {
 
             // Don't treat count mismatch as an error if we have valid server data
             if (serverBanners.length != localBanners.length) {
-              print('ℹ️ Banner count changed - Server: ${serverBanners.length}, Local: ${localBanners.length}');
             }
 
             // Repair if needed
             if (needsRepair) {
-              print('🔧 Repairing banner data');
               await resolveConflicts(serverBanners, localBanners);
               await _logBannerOperation('integrity_repair', -1, 'Data repaired');
             } else {
               // Update local storage with server data
-              print('📥 Updating local storage with server data');
               await _storeBannersLocally(serverBanners);
               await _storeLocalRevision(serverRevision);
             }
           } else {
-            print('✅ Local data is up to date');
           }
         }
       }
@@ -778,7 +736,6 @@ class BannerService {
       await _verifyUnlockState();
 
     } catch (e) {
-      print('❌ Error verifying data integrity: $e');
       await _logBannerOperation('integrity_check_error', -1, e.toString());
     }
   }
@@ -786,7 +743,6 @@ class BannerService {
   // Add unlock state verification
   Future<void> _verifyUnlockState() async {
     try {
-      print('🔍 Verifying banner unlock state');
       
       // Use current profile instead of fetching
       if (_currentProfile == null) return;
@@ -794,7 +750,6 @@ class BannerService {
       // 1. Verify unlock array size matches banner count
       List<Map<String, dynamic>> banners = await fetchBanners();
       if (_currentProfile!.unlockedBanner.length != banners.length) {
-        print('⚠️ Unlock array size mismatch. Resizing...');
         List<int> newUnlockedBanner = List<int>.filled(banners.length, 0);
         for (int i = 0; i < _currentProfile!.unlockedBanner.length && i < banners.length; i++) {
           newUnlockedBanner[i] = _currentProfile!.unlockedBanner[i];
@@ -814,17 +769,14 @@ class BannerService {
         final isUnlocked = _currentProfile!.level >= bannerLevel;
 
         if (!bannerExists || !isUnlocked) {
-          print('⚠️ Current banner invalid or locked. Resetting to default...');
           if (_profileUpdateCallback != null) {
             _profileUpdateCallback!('bannerId', 0);
           }
         }
       }
 
-      print('✅ Banner unlock state verified');
 
     } catch (e) {
-      print('❌ Error verifying unlock state: $e');
       await _logBannerOperation('unlock_verify_error', -1, e.toString());
     }
   }
@@ -877,9 +829,7 @@ class BannerService {
       // Notify listeners of the changes
       _bannerUpdateController.add(resolvedBanners);
       
-      print('✅ Banner conflicts resolved successfully');
     } catch (e) {
-      print('❌ Error resolving conflicts: $e');
       await _logBannerOperation('conflict_resolution_error', -1, e.toString());
     }
   }
@@ -896,7 +846,6 @@ class BannerService {
         await _logBannerOperation('server_update', -1, 'Updated ${banners.length} banners');
       }
     } catch (e) {
-      print('Error updating server banners: $e');
       await _logBannerOperation('server_update_error', -1, e.toString());
       rethrow;
     }
@@ -927,7 +876,6 @@ class BannerService {
         }
       );
     } catch (e) {
-      print('Error adding banner: $e');
       await _logBannerOperation('add_error', -1, e.toString());
       rethrow;
     }
@@ -935,7 +883,6 @@ class BannerService {
 
   Future<void> updateBanner(int id, Map<String, dynamic> updatedBanner) async {
     try {
-      print('🔄 Updating banner $id');
       
       // Fetch current banners
       List<Map<String, dynamic>> banners = await fetchBanners();
@@ -962,7 +909,6 @@ class BannerService {
         // Notify listeners of the update
         _bannerUpdateController.add(banners);
 
-        print('✅ Banner updated successfully');
         
         // Log admin update
         await _logBannerOperation(
@@ -977,7 +923,6 @@ class BannerService {
         );
       }
     } catch (e) {
-      print('❌ Error updating banner: $e');
       await _logBannerOperation('update_error', id, e.toString());
       rethrow;
     }
@@ -1020,7 +965,6 @@ class BannerService {
         }
       );
     } catch (e) {
-      print('❌ Error deleting banner: $e');
       await _logBannerOperation('delete_error', id, e.toString());
       rethrow;
     }
@@ -1050,7 +994,6 @@ class BannerService {
       }
       return 0;
     } catch (e) {
-      print('Error getting next banner ID: $e');
       return 0; // Start with 0 in case of error
     }
   }
@@ -1138,7 +1081,6 @@ class BannerService {
       
       return [];
     } catch (e) {
-      print('Error in recovery attempt: $e');
       return [];
     }
   }
@@ -1151,7 +1093,6 @@ class BannerService {
   // Add level-based loading methods
   Future<void> loadBannersForLevel(int userLevel) async {
     try {
-      print('🎯 Loading banners for user level $userLevel');
       
       // Current level banner (CRITICAL)
       await getBannerDetails(
@@ -1161,7 +1102,6 @@ class BannerService {
       
       // Next level banner (HIGH)
       if (userLevel < MAX_BANNER_LEVEL) {
-        print('🔄 Preloading next level banner');
         queueBannerLoad(
           getBannerIdForLevel(userLevel + 1), 
           BannerPriority.HIGH
@@ -1173,7 +1113,6 @@ class BannerService {
       for (var level = userLevel + 2; 
            level <= min(maxPreload, MAX_BANNER_LEVEL); 
            level++) {
-        print('📥 Queueing banner for level $level');
         queueBannerLoad(
           getBannerIdForLevel(level), 
           BannerPriority.MEDIUM
@@ -1190,7 +1129,6 @@ class BannerService {
         );
       }
     } catch (e) {
-      print('❌ Error in loadBannersForLevel: $e');
       await _logBannerOperation('level_load_error', userLevel, e.toString());
     }
   }
@@ -1251,36 +1189,30 @@ class BannerService {
   // Add prewarm methods
   Future<void> prewarmBannerCache(int userLevel) async {
     if (_isPrewarming) {
-      print('🔄 Cache prewarming already in progress');
       return;
     }
 
     try {
-      print('🔥 Starting banner cache prewarm for level $userLevel');
       _isPrewarming = true;
 
       final quality = await _connectionManager.checkConnectionQuality();
       
       switch (quality) {
         case ConnectionQuality.OFFLINE:
-          print('📱 Offline mode: Prewarming from local storage');
           await _prewarmFromLocal(userLevel);
           break;
 
         case ConnectionQuality.POOR:
-          print('📡 Poor connection: Prewarming critical banners only');
           await _prewarmCriticalBanners(userLevel);
           break;
 
         case ConnectionQuality.GOOD:
         case ConnectionQuality.EXCELLENT:
-          print('🚀 Good connection: Full prewarm');
           await _prewarmAllBanners(userLevel);
           break;
       }
 
     } catch (e) {
-      print('❌ Error prewarming cache: $e');
       await _logBannerOperation('prewarm_error', userLevel, e.toString());
     } finally {
       _isPrewarming = false;
@@ -1370,7 +1302,6 @@ class BannerService {
     BannerPriority priority = BannerPriority.HIGH
   }) async {
     try {
-      print('🎯 Loading banners for user level $userLevel');
       final banners = await fetchBanners();
       
       // Process banners based on level
@@ -1398,7 +1329,6 @@ class BannerService {
       
       return banners;
     } catch (e) {
-      print('❌ Error loading banners for level: $e');
       await _logBannerOperation('level_load_error', userLevel, e.toString());
       return [];
     }
@@ -1432,7 +1362,6 @@ class BannerService {
     int? userLevel,
   }) async {
     try {
-      print('👁️ Viewport changed: $startIndex to $endIndex');
       
       // Initialize batch tracking for this cache key
       _loadedBatches[cacheKey] ??= {};
@@ -1458,7 +1387,6 @@ class BannerService {
       );
 
     } catch (e) {
-      print('❌ Error handling viewport change: $e');
     }
   }
 
@@ -1537,8 +1465,6 @@ class BannerService {
 
   Future<void> _queueUnlock(PendingBannerUnlock unlock) async {
     try {
-      print('💾 Queueing banner unlock for sync');
-      print('📊 Unlock state to queue: ${unlock.unlockState}');
       
       final prefs = await SharedPreferences.getInstance();
       List<String> pendingUnlocks = prefs.getStringList(PENDING_UNLOCKS_KEY) ?? [];
@@ -1554,11 +1480,8 @@ class BannerService {
       pendingUnlocks.add(unlockJson);
       await prefs.setStringList(PENDING_UNLOCKS_KEY, pendingUnlocks);
       
-      print('✅ Banner unlock queued successfully');
-      print('📊 Total pending unlocks: ${pendingUnlocks.length}');
       
     } catch (e) {
-      print('❌ Error queueing unlock: $e');
       await _logBannerOperation('queue_error', unlock.bannerId, e.toString());
     }
   }
@@ -1570,7 +1493,6 @@ class BannerService {
       
       if (pendingUnlocks.isEmpty) return;
       
-      print('🔄 Processing ${pendingUnlocks.length} pending unlocks');
       
       for (String unlockJson in pendingUnlocks) {
         try {
@@ -1586,7 +1508,6 @@ class BannerService {
           // 2. Add Validation
           if (_currentProfile != null) {
             if (unlock.unlockState.length != _currentProfile!.unlockedBanner.length) {
-              print('⚠️ Unlock state size mismatch');
               continue;
             }
             
@@ -1598,26 +1519,19 @@ class BannerService {
             
             // 4. Add Detailed Logging
             if (_profileUpdateCallback != null) {
-              print('🔄 Applying merged unlock state');
-              print('📊 Current state: ${_currentProfile!.unlockedBanner}');
-              print('📊 Pending state: ${unlock.unlockState}');
-              print('📊 Merged state: $mergedState');
               
               _profileUpdateCallback!('unlockedBanner', mergedState);
             }
           }
         } catch (e) {
-          print('❌ Error processing unlock: $e');
           continue;  // Skip failed unlock but continue others
         }
       }
       
       // Clear processed unlocks
       await prefs.setStringList(PENDING_UNLOCKS_KEY, []);
-      print('✅ Processed all pending unlocks');
       
     } catch (e) {
-      print('❌ Error processing pending banner unlocks: $e');
       await _logBannerOperation('sync_error', -1, e.toString());
     }
   }
@@ -1647,7 +1561,6 @@ class BannerService {
   // Add these helper methods first
   Future<List<int>> _calculateUnlockState(int userLevel) async {
     try {
-      print('📊 Calculating banner unlock state for level $userLevel');
       
       // Get current unlock state first
       List<int> currentUnlocks = await _getLocalUnlockState();
@@ -1666,10 +1579,8 @@ class BannerService {
         }
       );
       
-      print('✅ Generated unlock state: ${newUnlockState.length} banners');
       return newUnlockState;
     } catch (e) {
-      print('❌ Error calculating unlock state: $e');
       throw e;
     }
   }
@@ -1693,7 +1604,6 @@ class BannerService {
       // Clear backup after successful update
       await prefs.remove('${BANNERS_CACHE_KEY}_backup');
     } catch (e) {
-      print('❌ Error storing local unlock state: $e');
       await _restoreFromBackup();  // Use existing restore method
     }
   }
@@ -1706,7 +1616,6 @@ class BannerService {
         return List<int>.from(jsonDecode(storedState));
       }
     } catch (e) {
-      print('❌ Error getting local unlock state: $e');
     }
     return [];
   }
@@ -1723,7 +1632,6 @@ class BannerService {
 
   Future<void> validateAndSelectBanner(int bannerId, UserProfile profile) async {
     try {
-      print('🎯 Validating banner selection: $bannerId');
       
       // Basic validation
       if (bannerId < 0 || bannerId > MAX_BANNER_LEVEL) {
@@ -1746,7 +1654,6 @@ class BannerService {
 
       // Update banner selection
       if (_profileUpdateCallback != null) {
-        print('✅ Updating selected banner to: $bannerId');
         _profileUpdateCallback!('bannerId', bannerId);
       }
 
@@ -1756,7 +1663,6 @@ class BannerService {
         'Banner selected successfully'
       );
     } catch (e) {
-      print('❌ Error selecting banner: $e');
       await _logBannerOperation('selection_error', bannerId, e.toString());
       throw e;  // Re-throw for UI handling
     }
@@ -1776,7 +1682,6 @@ class BannerService {
   void _setupConnectivityListener() {
     _connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
       if (result != ConnectivityResult.none) {
-        print('🌐 Connection restored, processing pending unlocks');
         await _processPendingUnlocks();
       }
     });
@@ -1785,18 +1690,15 @@ class BannerService {
   // Add to syncBanners method
   Future<void> syncBanners() async {
     try {
-      print('🔄 Starting banner sync process');
       
       final quality = await _connectionManager.checkConnectionQuality();
       if (quality != ConnectionQuality.OFFLINE) {
         await _processPendingUnlocks();
         // Rest of sync logic...
       } else {
-        print('📡 Offline: Skipping sync');
       }
       
     } catch (e) {
-      print('❌ Error in syncBanners: $e');
       await _logBannerOperation('sync_error', -1, e.toString());
     }
   }

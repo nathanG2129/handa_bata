@@ -174,7 +174,6 @@ class UserProfileService {
 
   void _initializeService() async {
     try {
-      print('\n🔄 INITIALIZING USER PROFILE SERVICE');
       
       // 1. Version check first
       await _validateProfileVersion();
@@ -192,9 +191,7 @@ class UserProfileService {
       // 4. Initialize service integrations
       await initializeIntegrations();
 
-      print('✅ Service initialization complete\n');
     } catch (e) {
-      print('❌ Error in service initialization: $e');
       // Don't rethrow as this is called in constructor
     }
   }
@@ -205,19 +202,15 @@ class UserProfileService {
       if (user == null) return null;
 
       String userId = user.uid;
-      print('🔍 Fetching profile for user: $userId');
 
       // Check memory cache first
       if (_profileCache.containsKey(userId) && _isCacheValid(userId)) {
-        print('💾 Returning from memory cache');
         return _profileCache[userId];
       }
 
       // Check local storage
       UserProfile? localProfile = await _getProfileFromLocal(userId);
       if (localProfile != null) {
-        print('📱 Found local profile');
-        print('🎯 Local unlocked badges: ${localProfile.unlockedBadge}');
         _updateCache(userId, localProfile);
         return localProfile;
       }
@@ -225,7 +218,6 @@ class UserProfileService {
       // Try to fetch from server if online
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        print('🌐 Online, fetching from Firestore');
         DocumentSnapshot doc = await _firestore
             .collection('User')
             .doc(userId)
@@ -234,9 +226,7 @@ class UserProfileService {
             .get();
 
         if (doc.exists) {
-          print('📄 Found Firestore profile');
           UserProfile profile = UserProfile.fromMap(doc.data() as Map<String, dynamic>);
-          print('🎯 Server unlocked badges: ${profile.unlockedBadge}');
           await _saveProfileLocally(userId, profile);
           _updateCache(userId, profile);
           _bannerService.updateCurrentProfile(profile);
@@ -245,14 +235,12 @@ class UserProfileService {
       }
 
       // If we get here, create a new profile with default values
-      print('📝 Creating new profile with default values');
       UserProfile newProfile = await _createDefaultProfile(userId);
       await _saveProfileLocally(userId, newProfile);
       _updateCache(userId, newProfile);
       return newProfile;
 
     } catch (e) {
-      print('❌ Error in fetchUserProfile: $e');
       return null;
     }
   }
@@ -285,9 +273,6 @@ class UserProfileService {
   Future<void> updateProfile(String field, dynamic value) async {
     try {
       if (field == 'unlockedBadge') {
-        print(' Updating unlocked badges');
-        print('📊 Previous value: ${(await fetchUserProfile())?.unlockedBadge}');
-        print('📊 New value: $value');
         
         // Verify the update
         await _verifyBadgeUpdate(value as List<int>);
@@ -361,7 +346,6 @@ class UserProfileService {
       // Verify after update
       if (field == 'unlockedBadge') {
         UserProfile? updated = await fetchUserProfile();
-        print('📊 After update: ${updated?.unlockedBadge}');
       }
     } catch (e) {
       await _logOperation('update_error', e.toString());
@@ -377,7 +361,6 @@ class UserProfileService {
     List<int> currentUnlocks = current.unlockedBadge;
     for (int i = 0; i < currentUnlocks.length && i < newBadges.length; i++) {
       if (currentUnlocks[i] == 1 && newBadges[i] != 1) {
-        print('⚠️ Warning: Badge $i would be unlocked->locked');
         newBadges[i] = 1;
       }
     }
@@ -581,7 +564,6 @@ class UserProfileService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error logging operation: $e');
     }
   }
 
@@ -791,8 +773,6 @@ class UserProfileService {
   // Add batch update method
   Future<void> batchUpdateProfile(Map<String, dynamic> updates) async {
     try {
-      print('\n🔄 BATCH PROFILE UPDATE');
-      print('Updates: $updates');
 
       User? user = _auth.currentUser;
       if (user == null) return;
@@ -818,7 +798,6 @@ class UserProfileService {
       bool isXPUpdate = updates.containsKey('exp');
 
       if (isXPUpdate) {
-        print('\n💫 PROCESSING XP UPDATE');
         
         // 1. Calculate current total XP
         int currentTotalXP = 0;
@@ -826,13 +805,10 @@ class UserProfileService {
           currentTotalXP += i * 100;  // Add up XP required for previous levels
         }
         currentTotalXP += currentProfile.exp;  // Add current level's XP
-        print('Current total XP: $currentTotalXP');
 
         // 2. Add new XP gain
         int xpGain = updates['exp'] as int;
-        print('XP gain: $xpGain');
         int newTotalXP = currentTotalXP + xpGain;
-        print('New total XP: $newTotalXP');
 
         // 3. Calculate new level and exp
         int remainingXP = newTotalXP;
@@ -847,21 +823,15 @@ class UserProfileService {
         int newExp = remainingXP;
         int newExpCap = newLevel * 100;
 
-        print('New level: $newLevel');
-        print('New exp: $newExp');
-        print('New exp cap: $newExpCap');
 
         // Check for banner unlocks on level up
         if (newLevel > currentProfile.level || currentProfile.unlockedBanner[0] != 1) {
-          print('🎯 Updating banner unlocks for level $newLevel');
-          print('Previous unlock state: ${currentProfile.unlockedBanner}');
           
           List<int> newUnlockedBanner = List<int>.from(currentProfile.unlockedBanner);
           for (int i = 0; i < newLevel && i < newUnlockedBanner.length; i++) {
             newUnlockedBanner[i] = 1;
           }
           
-          print('New unlock state: $newUnlockedBanner');
           updates['unlockedBanner'] = newUnlockedBanner;
         }
 
@@ -894,10 +864,8 @@ class UserProfileService {
         _queueUpdate(userId, updates);
       }
 
-      print('✅ Batch update completed successfully\n');
 
     } catch (e) {
-      print('❌ Error in batchUpdateProfile: $e');
       await _logOperation('batch_update_error', e.toString());
       throw Exception('Failed to update profile: $e');
     }
@@ -940,7 +908,6 @@ class UserProfileService {
   // Add integration methods
   Future<void> initializeIntegrations() async {
     try {
-      print('🔄 Initializing service integrations');
       
       // Initialize service states
       _updateServiceState(BADGE_SERVICE, isInitialized: true);
@@ -953,9 +920,7 @@ class UserProfileService {
         await synchronizeServices();
       }
 
-      print('✅ Service integrations initialized');
     } catch (e) {
-      print('❌ Error initializing integrations: $e');
       await _logProfileUpdate(
         field: 'initialization',
         oldValue: 'error',
@@ -975,13 +940,11 @@ class UserProfileService {
 
   // Add registration methods
   void registerServiceCallback(String service, ServiceCallback callback) {
-    print('🔄 Registering callback for $service');
     _serviceCallbacks[service] = callback;
     _lastServiceSync[service] = DateTime.now();
   }
 
   void unregisterServiceCallback(String service) {
-    print('🔄 Unregistering callback for $service');
     _serviceCallbacks.remove(service);
     _lastServiceSync.remove(service);
     _updateServiceState(service, isInitialized: true);  // Add this
@@ -989,9 +952,6 @@ class UserProfileService {
 
   // Add notification method
   Future<void> notifyServices(String field, dynamic value) async {
-    print('\n📢 Notifying services of update');
-    print('Field: $field');
-    print('Value: $value');
 
     try {
       // Determine which service to notify based on field
@@ -1003,7 +963,6 @@ class UserProfileService {
       };
 
       if (targetService != null && _serviceCallbacks.containsKey(targetService)) {
-        print('🎯 Notifying $targetService');
         await Future.microtask(() {
           _serviceCallbacks[targetService]?.call(field, value);
         });
@@ -1011,7 +970,6 @@ class UserProfileService {
       }
 
     } catch (e) {
-      print('❌ Error notifying services: $e');
       await _logProfileUpdate(
         field: field,
         oldValue: 'notification_error',
@@ -1024,10 +982,6 @@ class UserProfileService {
   // Update updateProfileWithIntegration to use service notification
   Future<void> updateProfileWithIntegration(String field, dynamic value) async {
     try {
-      print('\n🔄 PROFILE UPDATE INTEGRATION');
-      print('Field: $field');
-      print('New value: $value');
-      print('Connection: ${await Connectivity().checkConnectivity()}');
 
       // 1. Get current profile
       UserProfile? currentProfile = await fetchUserProfile();
@@ -1037,7 +991,6 @@ class UserProfileService {
 
       // 2. For avatar updates, ensure the avatar is cached
       if (field == 'avatarId') {
-        print('🎯 Pre-fetching avatar details');
         final avatar = await _avatarService.getAvatarDetails(
           value as int,
           priority: LoadPriority.CRITICAL
@@ -1045,7 +998,6 @@ class UserProfileService {
         if (avatar == null) {
           throw Exception('Avatar not found');
         }
-        print('✅ Avatar details cached');
       }
 
       // 3. Apply updates locally first
@@ -1055,17 +1007,14 @@ class UserProfileService {
       final updates = {field: value};
       UserProfile updatedProfile = currentProfile.copyWith(updates: updates);
       
-      print('💾 Saving profile locally');
       await _saveProfileLocally(user.uid, updatedProfile);
       _updateCache(user.uid, updatedProfile);
       
-      print('📢 Notifying UI listeners');
       _profileUpdateController.add(updatedProfile);
 
       // 4. Update Firestore if online
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
-        print('🌐 Updating Firestore');
         await _retryOperation(() async {
           await _firestore
               .collection('User')
@@ -1074,26 +1023,20 @@ class UserProfileService {
               .doc(user.uid)
               .update(updates);
         });
-        print('✅ Firestore updated');
         
         // Notify services only when online
         await notifyServices(field, value);
       } else {
         // Queue update for later sync
         _queueUpdate(user.uid, updates);
-        print('📱 Offline - updates queued for later sync');
       }
 
-      print('✅ Profile update completed successfully\n');
 
       // Add this: Update total badge count when badges change
       if (field == 'unlockedBadge') {
-        print('🎯 Updating total badge count');
         await updateTotalBadgeCount();
-        print('✅ Badge count updated');
       }
     } catch (e) {
-      print('❌ Error in profile update: $e');
       await _logOperation('profile_update_error', e.toString());
       rethrow;
     }
@@ -1105,7 +1048,6 @@ class UserProfileService {
     required UserProfile currentProfile,
   }) async {
     try {
-      print('🔄 Preparing profile update for field: $field');
       Map<String, dynamic> updates = {};
 
       // Handle array fields
@@ -1138,7 +1080,6 @@ class UserProfileService {
         );
 
         if (!validationResult.isValid) {
-          print('⚠️ Array validation failed: ${validationResult.error}');
           if (validationResult.needsRecover) {
             // Handle recovery if needed
             throw Exception('Array validation failed: ${validationResult.error}');
@@ -1167,10 +1108,8 @@ class UserProfileService {
         };
       }
 
-      print('✅ Update prepared successfully');
       return updates;
     } catch (e) {
-      print('❌ Error preparing profile update: $e');
       rethrow;
     }
   }
@@ -1181,10 +1120,6 @@ class UserProfileService {
     required List<int> currentArray,
   }) {
     try {
-      print('\n🔍 VALIDATING ARRAY UPDATE');
-      print('Field: $field');
-      print('Current array: $currentArray');
-      print('New array: $newArray');
 
       // Common validations for all arrays
       if (newArray.isEmpty) {
@@ -1210,7 +1145,6 @@ class UserProfileService {
         needsRecover: true
       );
     } catch (e) {
-      print('❌ Error in array validation: $e');
       return ArrayValidationResult.invalid(
         'Validation error: $e',
         needsRecover: true
@@ -1223,11 +1157,9 @@ class UserProfileService {
     required List<int> newArray,
     required List<int> currentArray,
   }) {
-    print('🔐 Validating unlock array');
 
     // 1. Size validation
     if (newArray.length != currentArray.length) {
-      print('⚠️ Size mismatch - Current: ${currentArray.length}, New: ${newArray.length}');
       return ArrayValidationResult.invalid(
         'Array size mismatch',
         needsRecover: true
@@ -1236,7 +1168,6 @@ class UserProfileService {
 
     // 2. Value validation (must be 0 or 1)
     if (!newArray.every((value) => value == 0 || value == 1)) {
-      print('⚠️ Invalid values detected');
       return ArrayValidationResult.invalid('Array must contain only 0s and 1s');
     }
 
@@ -1246,18 +1177,15 @@ class UserProfileService {
 
     for (int i = 0; i < currentArray.length; i++) {
       if (currentArray[i] == 1 && newArray[i] == 0) {
-        print('⚠️ Attempted to remove unlock at index $i');
         correctedArray[i] = 1;
         needsCorrection = true;
       }
     }
 
     if (needsCorrection) {
-      print('🔧 Array corrected to preserve unlocks');
       return ArrayValidationResult.valid(correctedArray);
     }
 
-    print('✅ Unlock array validation passed');
     return ArrayValidationResult.valid(newArray);
   }
 
@@ -1265,28 +1193,23 @@ class UserProfileService {
     required List<int> newArray,
     required List<int> currentArray,
   }) {
-    print('🎯 Validating badge showcase');
 
     // 1. Size validation (must be exactly 3)
     if (newArray.length != 3) {
-      print('⚠️ Invalid showcase length: ${newArray.length}');
       return ArrayValidationResult.invalid('Showcase must have exactly 3 slots');
     }
 
     // 2. Value validation (-1 or valid badge id)
     if (!newArray.every((value) => value >= -1)) {
-      print('⚠️ Invalid badge IDs detected');
       return ArrayValidationResult.invalid('Invalid badge IDs in showcase');
     }
 
     // 3. Check for duplicates (except -1)
     final validBadges = newArray.where((id) => id != -1).toList();
     if (validBadges.toSet().length != validBadges.length) {
-      print('⚠️ Duplicate badges detected');
       return ArrayValidationResult.invalid('Duplicate badges not allowed');
     }
 
-    print('✅ Badge showcase validation passed');
     return ArrayValidationResult.valid(newArray);
   }
 
@@ -1294,9 +1217,6 @@ class UserProfileService {
     required List<int> current,
     required List<int> update,
   }) {
-    print('🔄 Merging unlock arrays');
-    print('📊 Current: $current');
-    print('📊 Update: $update');
 
     // Create new array preserving all unlocks
     List<int> merged = List<int>.filled(current.length, 0);
@@ -1305,7 +1225,6 @@ class UserProfileService {
       merged[i] = current[i] | (i < update.length ? update[i] : 0);
     }
 
-    print('📊 Merged result: $merged');
     return merged;
   }
 
@@ -1317,14 +1236,8 @@ class UserProfileService {
     Map<String, dynamic>? metadata,
   }) async {
     try {
-      print('\n📝 PROFILE UPDATE LOG');
-      print('Field: $field');
-      print('Old value: $oldValue');
-      print('New value: $newValue');
       if (details != null) {
-        print('Details: $details');
       }
-      print('Timestamp: ${DateTime.now()}\n');
 
       // Get user info for context
       User? user = _auth.currentUser;
@@ -1359,7 +1272,6 @@ class UserProfileService {
           .add(logEntry);
 
     } catch (e) {
-      print('⚠️ Error logging profile update: $e');
     }
   }
 
@@ -1378,14 +1290,10 @@ class UserProfileService {
     String? error,
   }) async {
     try {
-      print('\n🔄 ATTEMPTING PROFILE RECOVERY');
-      print('Field: $field');
-      print('Error: $error');
 
       // 1. Try to restore from backup first
       UserProfile? backupProfile = await _getProfileBackup();
       if (backupProfile != null) {
-        print('✅ Restored from backup');
         return {
           field: switch (field) {
             'unlockedBadge' => backupProfile.unlockedBadge,
@@ -1402,15 +1310,12 @@ class UserProfileService {
 
       // 2. If no backup, try to repair arrays
       if (ARRAY_FIELDS.contains(field)) {
-        print(' Attempting array repair');
         return await _repairArrayField(field, currentProfile);
       }
 
       // 3. Last resort: Reset to safe defaults
-      print('⚠️ Using safe defaults');
       return _getSafeDefaults(field, currentProfile);
     } catch (e) {
-      print('❌ Recovery failed: $e');
       throw Exception('Profile recovery failed: $e');
     }
   }
@@ -1419,7 +1324,6 @@ class UserProfileService {
     String field,
     UserProfile currentProfile,
   ) async {
-    print('🔧 Repairing array field: $field');
     
     switch (field) {
       case 'unlockedBadge':
@@ -1476,14 +1380,12 @@ class UserProfileService {
         return UserProfile.fromMap(jsonDecode(backupJson));
       }
     } catch (e) {
-      print('❌ Error getting backup: $e');
     }
     return null;
   }
 
   Future<void> synchronizeServices() async {
     try {
-      print('\n🔄 STARTING SERVICE SYNCHRONIZATION');
       
       // Get current profile
       UserProfile? profile = await fetchUserProfile();
@@ -1501,9 +1403,7 @@ class UserProfileService {
         _syncAvatarService(profile),
       ]);
 
-      print('✅ Service synchronization complete\n');
     } catch (e) {
-      print('❌ Error in service sync: $e');
       await _logProfileUpdate(
         field: 'service_sync',
         oldValue: 'sync_error',
@@ -1515,25 +1415,21 @@ class UserProfileService {
 
   Future<void> validateServiceStates() async {
     try {
-      print('🔍 Validating service states');
       
       // Check each service's last sync time
       for (var entry in _lastServiceSync.entries) {
         final timeSinceSync = DateTime.now().difference(entry.value);
         if (timeSinceSync > const Duration(minutes: 30)) {
-          print('⚠️ Service ${entry.key} needs sync');
           await handleServiceConflicts(entry.key);
         }
       }
     } catch (e) {
-      print('❌ Error validating service states: $e');
       rethrow;
     }
   }
 
   Future<void> handleServiceConflicts(String service) async {
     try {
-      print('🔄 Handling conflicts for $service');
       
       UserProfile? profile = await fetchUserProfile();
       if (profile == null) return;
@@ -1550,14 +1446,12 @@ class UserProfileService {
           break;
       }
     } catch (e) {
-      print('❌ Error handling service conflicts: $e');
       await handleServiceError(service, 'Conflict resolution failed: $e');
     }
   }
 
   Future<void> _syncBadgeService(UserProfile profile) async {
     try {
-      print('🎯 Syncing Badge Service');
       if (_serviceCallbacks.containsKey(BADGE_SERVICE)) {
         _serviceCallbacks[BADGE_SERVICE]!('unlockedBadge', profile.unlockedBadge);
         _lastServiceSync[BADGE_SERVICE] = DateTime.now();
@@ -1572,9 +1466,6 @@ class UserProfileService {
   }
 
   Future<void> handleServiceError(String service, String error) async {
-    print('\n❌ SERVICE ERROR');
-    print('Service: $service');
-    print('Error: $error');
 
     try {
       switch (service) {
@@ -1597,7 +1488,6 @@ class UserProfileService {
       await _autoRecoverProfile();  // Attempt recovery after error
 
     } catch (e) {
-      print('❌ Error handling service error: $e');
       await _logProfileUpdate(
         field: 'service_error',
         oldValue: service,
@@ -1609,7 +1499,6 @@ class UserProfileService {
 
   Future<void> handleBadgeServiceError(String error) async {
     try {
-      print('🎯 Handling Badge Service error');
       
       // 1. Log the error
       await _logProfileUpdate(
@@ -1639,13 +1528,11 @@ class UserProfileService {
         await updateProfileWithIntegration('badgeShowcase', [-1, -1, -1]);
       }
     } catch (e) {
-      print('❌ Error in badge error handler: $e');
     }
   }
 
   Future<void> handleBannerServiceError(String error) async {
     try {
-      print('🎯 Handling Banner Service error');
       
       // Similar to badge error handling but for banners
       await _logProfileUpdate(
@@ -1672,13 +1559,11 @@ class UserProfileService {
         await updateProfileWithIntegration('bannerId', 0);
       }
     } catch (e) {
-      print('❌ Error in banner error handler: $e');
     }
   }
 
   Future<void> handleAvatarServiceError(String error) async {
     try {
-      print('🎯 Handling Avatar Service error');
       
       await _logProfileUpdate(
         field: 'avatar_service',
@@ -1695,13 +1580,11 @@ class UserProfileService {
         await updateProfileWithIntegration('avatarId', 0);
       }
     } catch (e) {
-      print('❌ Error in avatar error handler: $e');
     }
   }
 
   Future<void> _syncBannerService(UserProfile profile) async {
   try {
-    print('🎯 Syncing Banner Service');
     if (_serviceCallbacks.containsKey(BANNER_SERVICE)) {
       _serviceCallbacks[BANNER_SERVICE]?.call('unlockedBanner', profile.unlockedBanner);
       _lastServiceSync[BANNER_SERVICE] = DateTime.now();
@@ -1713,7 +1596,6 @@ class UserProfileService {
 
 Future<void> _syncAvatarService(UserProfile profile) async {
   try {
-    print('🎯 Syncing Avatar Service');
     if (_serviceCallbacks.containsKey(AVATAR_SERVICE)) {
       _serviceCallbacks[AVATAR_SERVICE]?.call('avatarId', profile.avatarId);
       _lastServiceSync[AVATAR_SERVICE] = DateTime.now();
@@ -1725,7 +1607,6 @@ Future<void> _syncAvatarService(UserProfile profile) async {
 
 Future<void> _resolveBadgeConflicts(UserProfile profile) async {
   try {
-    print('🔄 Resolving Badge Service conflicts');
     final badges = await BadgeService().fetchBadges();
     
     // Check array size
@@ -1739,14 +1620,12 @@ Future<void> _resolveBadgeConflicts(UserProfile profile) async {
       await handleBadgeServiceError('Invalid showcase badges');
     }
   } catch (e) {
-    print('❌ Error resolving badge conflicts: $e');
     rethrow;
   }
 }
 
 Future<void> _resolveBannerConflicts(UserProfile profile) async {
   try {
-    print('🔄 Resolving Banner Service conflicts');
     final banners = await BannerService().fetchBanners();
     
     // Check array size
@@ -1760,19 +1639,16 @@ Future<void> _resolveBannerConflicts(UserProfile profile) async {
       await handleBannerServiceError('Invalid banner selection');
     }
   } catch (e) {
-    print('❌ Error resolving banner conflicts: $e');
     rethrow;
   }
 }
 
 Future<void> _resolveAvatarConflicts(UserProfile profile) async {
   try {
-    print('🔄 Resolving Avatar Service conflicts');
     if (!await AvatarService().getAvatarById(profile.avatarId)) {
       await handleAvatarServiceError('Invalid avatar selection');
     }
   } catch (e) {
-    print('❌ Error resolving avatar conflicts: $e');
     rethrow;
   }
 }
@@ -1817,12 +1693,9 @@ ServiceState? getServiceState(String service) {
 // Add these methods to UserProfileService
 Future<void> _storeProfileVersion() async {
   try {
-    print('💾 Storing profile version');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt(PROFILE_VERSION_KEY, CURRENT_PROFILE_VERSION);
-    print('✅ Profile version stored: $CURRENT_PROFILE_VERSION');
   } catch (e) {
-    print('❌ Error storing profile version: $e');
     await _logProfileUpdate(
       field: 'version',
       oldValue: 'unknown',
@@ -1834,19 +1707,14 @@ Future<void> _storeProfileVersion() async {
 
 Future<void> _validateProfileVersion() async {
   try {
-    print('🔍 Validating profile version');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final storedVersion = prefs.getInt(PROFILE_VERSION_KEY) ?? 0;
     
-    print('📊 Stored version: $storedVersion');
-    print('📊 Current version: $CURRENT_PROFILE_VERSION');
 
     if (storedVersion < CURRENT_PROFILE_VERSION) {
-      print('⚠️ Profile needs migration');
       await _migrateProfile(fromVersion: storedVersion);
     }
   } catch (e) {
-    print('❌ Error validating profile version: $e');
     await _logProfileUpdate(
       field: 'version_check',
       oldValue: 'error',
@@ -1858,9 +1726,6 @@ Future<void> _validateProfileVersion() async {
 
 Future<void> _migrateProfile({required int fromVersion}) async {
   try {
-    print('\n🔄 STARTING PROFILE MIGRATION');
-    print('From version: $fromVersion');
-    print('To version: $CURRENT_PROFILE_VERSION');
 
     // Get current profile
     UserProfile? profile = await fetchUserProfile();
@@ -1870,7 +1735,6 @@ Future<void> _migrateProfile({required int fromVersion}) async {
 
     // Apply migrations sequentially
     for (int version = fromVersion + 1; version <= CURRENT_PROFILE_VERSION; version++) {
-      print('📦 Applying migration to version $version');
       await _applyMigration(profile, version);
     }
 
@@ -1878,10 +1742,8 @@ Future<void> _migrateProfile({required int fromVersion}) async {
     
     // Store new version
     await _storeProfileVersion();
-    print('✅ Profile migration complete\n');
 
   } catch (e) {
-    print('❌ Error migrating profile: $e');
     await _logProfileUpdate(
       field: 'migration',
       oldValue: fromVersion.toString(),
@@ -1893,7 +1755,6 @@ Future<void> _migrateProfile({required int fromVersion}) async {
 }
 
 Future<void> _applyMigration(UserProfile profile, int toVersion) async {
-  print('🔨 Applying migration to version $toVersion');
   
   switch (toVersion) {
     case 1:
@@ -1901,13 +1762,11 @@ Future<void> _applyMigration(UserProfile profile, int toVersion) async {
       break;
     // Add cases for future versions
     default:
-      print('⚠️ Unknown version: $toVersion');
   }
 }
 
 Future<void> _migrateToV1(UserProfile profile) async {
   try {
-    print('🔄 Migrating to version 1');
     
     // Example migration: Ensure arrays have correct sizes
     final badges = await BadgeService().fetchBadges();
@@ -1941,9 +1800,7 @@ Future<void> _migrateToV1(UserProfile profile) async {
       await batchUpdateProfile(updates);
     }
 
-    print('✅ Migration to version 1 complete');
   } catch (e) {
-    print('❌ Error in V1 migration: $e');
     rethrow;
   }
 }
@@ -1955,11 +1812,9 @@ static const Duration RECOVERY_COOLDOWN = Duration(minutes: 30);
 // Add to UserProfileService class
 Future<void> _autoRecoverProfile() async {
   try {
-    print('\n🔄 STARTING AUTO RECOVERY');
     
     // Check if we should attempt recovery
     if (!await _shouldAttemptRecovery()) {
-      print('⚠️ Recovery attempts exceeded or in cooldown');
       return;
     }
 
@@ -1972,7 +1827,6 @@ Future<void> _autoRecoverProfile() async {
     // Validate profile integrity
     final validationResult = await _validateProfileIntegrity(profile);
     if (!validationResult.isValid) {
-      print('⚠️ Profile integrity check failed: ${validationResult.error}');
       await _repairProfileData(profile, validationResult.error);
     }
 
@@ -1983,7 +1837,6 @@ Future<void> _autoRecoverProfile() async {
     );
 
   } catch (e) {
-    print('❌ Error in auto recovery: $e');
     await _logRecoveryAttempt(
       success: false,
       details: 'Auto recovery failed: $e'
@@ -1993,7 +1846,6 @@ Future<void> _autoRecoverProfile() async {
 
 Future<ValidationResult> _validateProfileIntegrity(UserProfile profile) async {
   try {
-    print('🔍 Validating profile integrity');
 
     // 1. Check array sizes
     final badges = await BadgeService().fetchBadges();
@@ -2036,10 +1888,8 @@ Future<ValidationResult> _validateProfileIntegrity(UserProfile profile) async {
       );
     }
 
-    print('✅ Profile integrity check passed');
     return const ValidationResult(isValid: true);
   } catch (e) {
-    print('❌ Error validating profile integrity: $e');
     return ValidationResult(
       isValid: false,
       error: 'Validation error: $e'
@@ -2049,8 +1899,6 @@ Future<ValidationResult> _validateProfileIntegrity(UserProfile profile) async {
 
 Future<void> _repairProfileData(UserProfile profile, String? error) async {
   try {
-    print('\n🔧 REPAIRING PROFILE DATA');
-    print('Error to fix: $error');
 
     Map<String, dynamic> updates = {};
     bool needsUpdate = false;
@@ -2086,11 +1934,9 @@ Future<void> _repairProfileData(UserProfile profile, String? error) async {
     // Apply updates if needed
     if (needsUpdate) {
       await batchUpdateProfile(updates);
-      print('✅ Profile repairs completed');
     }
 
   } catch (e) {
-    print('❌ Error repairing profile: $e');
     rethrow;
   }
 }
@@ -2116,7 +1962,6 @@ Future<bool> _shouldAttemptRecovery() async {
 
     return true;
   } catch (e) {
-    print('❌ Error checking recovery eligibility: $e');
     return false;
   }
 }
@@ -2133,9 +1978,6 @@ Future<void> _logRecoveryAttempt({
   Map<String, dynamic>? metadata,
 }) async {
   try {
-    print('\n📝 LOGGING RECOVERY ATTEMPT');
-    print('Success: $success');
-    print('Details: $details');
 
     // Get user info
     User? user = _auth.currentUser;
@@ -2166,7 +2008,6 @@ Future<void> _logRecoveryAttempt({
     await _trackRecoverySuccess(success);
 
   } catch (e) {
-    print('❌ Error logging recovery attempt: $e');
   }
 }
 
@@ -2198,12 +2039,8 @@ Future<void> _trackRecoverySuccess(bool success) async {
     
     await prefs.setStringList(RECOVERY_LOGS_KEY, logs);
     
-    print('✅ Recovery tracking updated');
-    print('📊 Total attempts: ${attempts + 1}');
-    print('📊 Last 10 attempts: $logs');
 
   } catch (e) {
-    print('❌ Error tracking recovery: $e');
   }
 }
 
@@ -2212,7 +2049,6 @@ Future<int> _getRecoveryAttempts() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(RECOVERY_ATTEMPTS_KEY) ?? 0;
   } catch (e) {
-    print('❌ Error getting recovery attempts: $e');
     return 0;
   }
 }
@@ -2226,7 +2062,6 @@ Future<List<Map<String, dynamic>>> getRecoveryHistory() async {
       Map<String, dynamic>.from(jsonDecode(log))
     ).toList();
   } catch (e) {
-    print('❌ Error getting recovery history: $e');
     return [];
   }
 }
@@ -2237,9 +2072,7 @@ Future<void> resetRecoveryTracking() async {
     await prefs.remove(RECOVERY_ATTEMPTS_KEY);
     await prefs.remove(LAST_RECOVERY_KEY);
     await prefs.remove(RECOVERY_LOGS_KEY);
-    print('✅ Recovery tracking reset');
   } catch (e) {
-    print('❌ Error resetting recovery tracking: $e');
   }
 }
 
@@ -2258,7 +2091,6 @@ Future<void> updateTotalStagesCleared() async {
 
     // Check each category's stages from local storage first
     for (String category in categories) {
-      print('🔍 Checking local stages for $category quest');
       
       // Try to get local save data first
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -2297,21 +2129,16 @@ Future<void> updateTotalStagesCleared() async {
           // Count normal mode clears
           if (normalStars[i] > 0) {
             totalCleared++;
-            print('📊 Stage ${i + 1} normal mode cleared:');
-            print('   Normal stars: ${normalStars[i]}');
           }
           
           // Count hard mode clears
           if (hardStars[i] > 0) {
             totalCleared++;
-            print('📊 Stage ${i + 1} hard mode cleared:');
-            print('   Hard stars: ${hardStars[i]}');
           }
         }
       }
     }
 
-    print('📊 Total stages cleared (including both modes): $totalCleared');
 
     // Update locally first
     UserProfile updatedProfile = profile.copyWith(
@@ -2332,9 +2159,7 @@ Future<void> updateTotalStagesCleared() async {
           .update({'totalStageCleared': totalCleared});
     }
 
-    print('✅ Total stages cleared updated successfully');
   } catch (e) {
-    print('❌ Error updating total stages cleared: $e');
   }
 }
 
@@ -2371,7 +2196,6 @@ Future<void> updateTotalBadgeCount() async {
           .update({'totalBadgeUnlocked': totalBadges});
     }
   } catch (e) {
-    print('Error updating badge count: $e');
   }
 }
 }

@@ -20,10 +20,7 @@ class AdminHomePage extends StatefulWidget {
 class AdminHomePageState extends State<AdminHomePage> {
   @override
   void dispose() {
-    print('\n🧹 DISPOSING ADMIN HOME PAGE');
-    print('🔄 Cleaning up admin session...');
     AdminSession().dispose();
-    print('✅ Admin session cleanup complete');
     super.dispose();
   }
 
@@ -64,7 +61,6 @@ class AdminHomePageState extends State<AdminHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print('\n🏠 BUILDING ADMIN HOME PAGE');
     return SecureRoute(
       child: Scaffold(
         backgroundColor: const Color(0xFF381c64),

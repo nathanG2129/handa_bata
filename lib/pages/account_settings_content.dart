@@ -35,7 +35,6 @@ class AccountSettingsContent extends StatelessWidget {
 
   Future<void> _handleEmailChange(BuildContext context) async {
     try {
-      print('\n🔄 INITIATING EMAIL CHANGE');
       final authService = AuthService();
       
       // Show initial dialog for new email and current password
@@ -110,9 +109,7 @@ class AccountSettingsContent extends StatelessWidget {
         },
       );
       
-      print('✅ Email change process completed\n');
     } catch (e) {
-      print('❌ Error in email change process: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -143,7 +140,6 @@ class AccountSettingsContent extends StatelessWidget {
 
   Future<void> _updatePassword(BuildContext context, String currentPassword, String newPassword) async {
     try {
-      print('\n🔄 UPDATING PASSWORD');
       AuthService authService = AuthService();
       await authService.changePassword(currentPassword, newPassword);
       
@@ -156,9 +152,7 @@ class AccountSettingsContent extends StatelessWidget {
           backgroundColor: Colors.green,
         ),
       );
-      print('✅ Password update completed\n');
     } catch (e) {
-      print('❌ Error updating password: $e');
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

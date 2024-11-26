@@ -178,7 +178,6 @@ class GameplayPageState extends State<GameplayPage> {
       await _audioPlayer.setVolume(_musicVolume);
       await _audioPlayer.play();
     } catch (e) {
-      print('❌ Error playing background music: $e');
     }
   }
 
@@ -199,7 +198,6 @@ class GameplayPageState extends State<GameplayPage> {
   
   @override
   void dispose() {
-    print('🎮 Disposing GameplayPage');
     _isDisposing = true;
 
     // Cancel timers
@@ -218,7 +216,6 @@ class GameplayPageState extends State<GameplayPage> {
         await _audioPlayer.setVolume(0);
         await _audioPlayer.dispose();
       } catch (e) {
-        print('❌ Error disposing audio: $e');
       }
     });
 
@@ -759,8 +756,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       // Skip animation updates if game is already over
       if (_isGameOver) return;
       
-      print('🎮 Updating animations - isCorrect: $isCorrect');
-      print('🎮 Before update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
       
       if (isCorrect) {
         if (questionType == 'Matching Type' || questionType == 'Fill in the Blanks') {
@@ -795,7 +790,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         _showDeathAnimation();
       }
 
-      print('🎮 After update - Kladis: ${_kladisAnimation.runtimeType}, Kloud: ${_kloudAnimation.runtimeType}');
     });
 
     // Reset animations only if game isn't over
@@ -834,7 +828,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         context: context,
       );
     } catch (e) {
-      print('❌ Error handling game quit: $e');
       _cleanup();
       _navigateBack();
     }
@@ -869,7 +862,6 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         _initializeQuestions();
       }
     } catch (e) {
-      print('❌ Error loading saved game: $e');
       _initializeQuestions();
     }
   }
@@ -1308,9 +1300,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
       await _gameSaveManager.saveGameState(
         state: _createGameState(),
       );
-      print('✅ Auto-saved game state');
     } catch (e) {
-      print('❌ Error auto-saving: $e');
     }
   }
 

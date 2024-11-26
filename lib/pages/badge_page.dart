@@ -403,9 +403,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
   }
 
   List<Map<String, dynamic>> _filterBadges(List<Map<String, dynamic>> badges, BadgeFilter filter) {
-    print('🔍 Filtering badges:');
-    print('Total badges: ${badges.length}');
-    print('Unlocked badges array: $_unlockedBadges');
 
     // Add handling for allBadges filter
     if (filter == BadgeFilter.allBadges) {
@@ -473,7 +470,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
 
   Future<void> _handleBadgeUpdate(List<int> badgeIds) async {
     try {
-      print('💾 Saving badge selection: $badgeIds');
       
       // Create a fixed-size List<int> with explicit typing
       final List<int> badgeShowcase = List<int>.filled(3, -1);
@@ -483,8 +479,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         badgeShowcase[i] = badgeIds[i];
       }
 
-      print('📝 Final badge showcase: $badgeShowcase');
-      print('📝 Badge showcase type: ${badgeShowcase.runtimeType}');
 
       // Use UserProfileService instead of AuthService
       await _userProfileService.updateProfileWithIntegration('badgeShowcase', badgeShowcase);
@@ -492,7 +486,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
       widget.onBadgesSelected?.call(badgeShowcase);
       _closeDialog();
     } catch (e) {
-      print('❌ Error saving badge showcase: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(BadgePageLocalization.translate('errorUpdatingBadge', widget.selectedLanguage) + e.toString())),
@@ -712,7 +705,6 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         _badges = badges;
       });
     } catch (e) {
-      print('Error refreshing badges: $e');
     }
   }
 

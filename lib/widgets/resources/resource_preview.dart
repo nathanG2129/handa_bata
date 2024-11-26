@@ -263,7 +263,6 @@ class _ResourcePreviewState extends State<ResourcePreview> {
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
-                              print('Error loading thumbnail for video ${widget.data.src}: $error');
                               return Container(
                                 width: 320,
                                 height: 180,

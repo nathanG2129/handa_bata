@@ -443,13 +443,9 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     onPressed: () {
                                       if (widget.isLastQuestion) return;
                                       
-                                      print('🎮 Quit Game button pressed');
                                       Navigator.of(context).pop();
-                                      print('🎮 Dialog closed, calling onQuitGame');
                                       widget.onQuitGame().then((_) {
-                                        print('🎮 onQuitGame completed successfully');
                                       }).catchError((e) {
-                                        print('❌ Error in onQuitGame: $e');
                                       });
                                     },
                                     child: Text(

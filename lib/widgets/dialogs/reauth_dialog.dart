@@ -92,7 +92,6 @@ class _ReauthenticationDialogState extends State<ReauthenticationDialog> with Si
         );
       }
     } catch (e) {
-      print('❌ Reauthentication error: $e');
       setState(() {
         _errorMessage = ReauthLocalization.translate('invalid_password', widget.selectedLanguage);
       });

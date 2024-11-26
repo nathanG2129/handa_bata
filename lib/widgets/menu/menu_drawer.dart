@@ -84,7 +84,6 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
   }
 
   Future<void> _closeDrawer() async {
-    print('🚪 Closing drawer');
     await _animationController.reverse();
     if (mounted) {
       widget.onClose();
@@ -616,7 +615,6 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         case 'Emergency Go Bag':
           return 'Other Information';
         default:
-          print('⚠️ Warning: No category mapping for title: $title');
           return 'Other Information';
       }
     }
@@ -624,7 +622,6 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     return InkWell(
       onTap: onTap ?? () async {
         final category = getCategory(title);
-        print('🔍 Selected learn item: $title in category: $category');
         
         // Store navigation data
         final navigationData = {
@@ -660,11 +657,9 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                 category: navigationData['category']!,
                 title: navigationData['title']!,
                 onBack: () {
-                  print('↩️ Navigating back from Learn');
                   Navigator.pop(context);
                 },
                 onLanguageChange: (String newLanguage) {
-                  print('🌐 Language changed to: $newLanguage');
                 },
               ),
             ),

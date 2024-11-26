@@ -26,9 +26,7 @@ class GameSaveManager {
 
       // Save new state
       await prefs.setString('game_progress_$docId', jsonEncode(state.toJson()));
-      print('✅ Game state saved locally');
     } catch (e) {
-      print('❌ Error saving game state: $e');
       throw Exception('Failed to save game state: $e');
     }
   }
@@ -49,7 +47,6 @@ class GameSaveManager {
       }
       return null;
     } catch (e) {
-      print('❌ Error getting game state: $e');
       return await _restoreFromBackup(categoryId, stageName, mode);
     }
   }
@@ -70,7 +67,6 @@ class GameSaveManager {
       }
       return null;
     } catch (e) {
-      print('❌ Error restoring from backup: $e');
       return null;
     }
   }
@@ -83,25 +79,20 @@ class GameSaveManager {
     required BuildContext context,
   }) async {
     try {
-      print('🎮 Starting handleGameQuit');
 
       // Only save state for non-arcade modes
       if (!state.isArcadeMode) {
         await saveGameState(state: state);
-        print('💾 Game state saved');
       }
 
       // Execute cleanup callback
       onCleanup();
-      print('🧹 Cleanup completed');
 
       // Navigate back
       if (context.mounted) {
         navigateBack(context);
-        print('◀️ Navigation completed');
       }
     } catch (e) {
-      print('❌ Error in handleGameQuit: $e');
       if (context.mounted) {
         navigateBack(context);
       }
@@ -124,9 +115,7 @@ class GameSaveManager {
         prefs.remove('game_progress_backup_$docId'),
       ]);
       
-      print('🗑️ Saved game deleted');
     } catch (e) {
-      print('❌ Error deleting saved game: $e');
     }
   }
 } 

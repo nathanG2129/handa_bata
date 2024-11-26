@@ -45,7 +45,6 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
     
     _badgeSubscription = _badgeService.badgeUpdates.listen(
       (updatedBadges) {
-        print('📝 Received badge update. Count: ${updatedBadges.length}');
         if (mounted) {
           setState(() {
             _badges = List<Map<String, dynamic>>.from(updatedBadges);
@@ -53,7 +52,6 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
         }
       },
       onError: (error) {
-        print('❌ Error in badge stream: $error');
       },
     );
 
@@ -69,7 +67,6 @@ class _AdminBadgePageState extends State<AdminBadgePage> {
         });
       }
     } catch (e) {
-      print('❌ Error fetching badges: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

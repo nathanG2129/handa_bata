@@ -148,8 +148,6 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
-      print('\n🎯 UPDATING AVATAR');
-      print('New Avatar ID: $avatarId');
 
       // Pre-fetch avatar details to ensure it's in cache
       final avatar = await _avatarService.getAvatarDetails(
@@ -169,7 +167,6 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
       _closeDialog();
 
     } catch (e) {
-      print('❌ Error updating avatar: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(CharacterPageLocalization.translate('failedToUpdateAvatar', widget.selectedLanguage) + e.toString())),

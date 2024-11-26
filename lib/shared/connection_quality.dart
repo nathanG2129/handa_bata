@@ -42,7 +42,6 @@ class ConnectionManager {
       if (latency.inMilliseconds < 300) return ConnectionQuality.GOOD;
       return ConnectionQuality.POOR;
     } catch (e) {
-      print('Error checking connection quality: $e');
       return ConnectionQuality.OFFLINE;
     }
   }

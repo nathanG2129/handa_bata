@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/models/user_model.dart';
@@ -11,7 +14,7 @@ import '../localization/play/localization.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/widgets/dialogs/change_email_dialog.dart';
 
-class AccountSettingsContent extends StatelessWidget {
+class AccountSettingsContent extends StatefulWidget {
   final UserProfile userProfile;
   final VoidCallback onShowChangeNicknameDialog;
   final VoidCallback onLogout;
@@ -33,6 +36,48 @@ class AccountSettingsContent extends StatelessWidget {
     required this.userRole,
   });
 
+  @override
+  State<AccountSettingsContent> createState() => _AccountSettingsContentState();
+}
+
+class _AccountSettingsContentState extends State<AccountSettingsContent> {
+  bool _isOnline = true;
+  StreamSubscription? _connectionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnection();
+    _listenToConnectionChanges();
+  }
+
+  @override
+  void dispose() {
+    _connectionSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkConnection() async {
+    final quality = await ConnectionManager().checkConnectionQuality();
+    if (mounted) {
+      setState(() {
+        _isOnline = quality != ConnectionQuality.OFFLINE;
+      });
+    }
+  }
+
+  void _listenToConnectionChanges() {
+    _connectionSubscription = ConnectionManager()
+        .connectionQuality
+        .listen((quality) {
+      if (mounted) {
+        setState(() {
+          _isOnline = quality != ConnectionQuality.OFFLINE;
+        });
+      }
+    });
+  }
+
   Future<void> _handleEmailChange(BuildContext context) async {
     try {
       final authService = AuthService();
@@ -44,8 +89,8 @@ class AccountSettingsContent extends StatelessWidget {
         context: context,
         builder: (BuildContext dialogContext) {
           return ChangeEmailDialog(
-            currentEmail: userProfile.email,
-            selectedLanguage: selectedLanguage,
+            currentEmail: widget.userProfile.email,
+            selectedLanguage: widget.selectedLanguage,
             onEmailChanged: (newEmail, currentPassword) async {
               try {
                 // Initiate email change and send OTP
@@ -62,7 +107,7 @@ class AccountSettingsContent extends StatelessWidget {
                   barrierDismissible: false,
                   builder: (BuildContext verifyContext) => EmailVerificationDialog(
                     email: newEmail,
-                    selectedLanguage: selectedLanguage,
+                    selectedLanguage: widget.selectedLanguage,
                     isEmailChange: true,
                     onVerify: (otp) async {
                       try {
@@ -72,7 +117,7 @@ class AccountSettingsContent extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              PlayLocalization.translate('emailChangeSuccess', selectedLanguage)
+                              PlayLocalization.translate('emailChangeSuccess', widget.selectedLanguage)
                             ),
                             backgroundColor: Colors.green,
                           ),
@@ -82,7 +127,7 @@ class AccountSettingsContent extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              '${PlayLocalization.translate('errorVerifyingEmail', selectedLanguage)} $e'
+                              '${PlayLocalization.translate('errorVerifyingEmail', widget.selectedLanguage)} $e'
                             ),
                             backgroundColor: Colors.red,
                           ),
@@ -97,14 +142,14 @@ class AccountSettingsContent extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${PlayLocalization.translate('errorChangingEmail', selectedLanguage)} $e'
+                      '${PlayLocalization.translate('errorChangingEmail', widget.selectedLanguage)} $e'
                     ),
                     backgroundColor: Colors.red,
                   ),
                 );
               }
             },
-            darkenColor: darkenColor,
+            darkenColor: widget.darkenColor,
           );
         },
       );
@@ -114,7 +159,7 @@ class AccountSettingsContent extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${PlayLocalization.translate('errorChangingEmail', selectedLanguage)} $e'
+              '${PlayLocalization.translate('errorChangingEmail', widget.selectedLanguage)} $e'
             ),
             backgroundColor: Colors.red,
           ),
@@ -129,10 +174,10 @@ class AccountSettingsContent extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return ChangePasswordDialog(
-          selectedLanguage: selectedLanguage,
+          selectedLanguage: widget.selectedLanguage,
           onPasswordChanged: (currentPassword, newPassword) => 
               _updatePassword(context, currentPassword, newPassword),
-          darkenColor: darkenColor,
+          darkenColor: widget.darkenColor,
         );
       },
     );
@@ -147,7 +192,7 @@ class AccountSettingsContent extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            PlayLocalization.translate('passwordChangeSuccess', selectedLanguage)
+            PlayLocalization.translate('passwordChangeSuccess', widget.selectedLanguage)
           ),
           backgroundColor: Colors.green,
         ),
@@ -157,7 +202,7 @@ class AccountSettingsContent extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${PlayLocalization.translate('errorChangingPassword', selectedLanguage)} $e'
+            '${PlayLocalization.translate('errorChangingPassword', widget.selectedLanguage)} $e'
           ),
           backgroundColor: Colors.red,
         ),
@@ -210,31 +255,31 @@ class AccountSettingsContent extends StatelessWidget {
             children: [
               _buildSection(
                 context: context,
-                title: PlayLocalization.translate('nickname', selectedLanguage),
-                content: userProfile.nickname,
-                buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                title: PlayLocalization.translate('nickname', widget.selectedLanguage),
+                content: widget.userProfile.nickname,
+                buttonLabel: PlayLocalization.translate('change', widget.selectedLanguage),
                 buttonColor: const Color(0xFF4d278f),
-                onPressed: onShowChangeNicknameDialog,
+                onPressed: widget.onShowChangeNicknameDialog,
                 titleFontSize: titleFontSize,
                 contentFontSize: contentFontSize,
                 buttonWidth: buttonWidth,
                 buttonHeight: buttonHeight,
                 padding: sectionPadding,
               ),
-              if (userRole != 'guest') ...[
+              if (widget.userRole != 'guest') ...[
                 _buildSection(
                   context: context,
-                  title: PlayLocalization.translate('birthday', selectedLanguage),
-                  content: userProfile.birthday,
+                  title: PlayLocalization.translate('birthday', widget.selectedLanguage),
+                  content: widget.userProfile.birthday,
                   titleFontSize: titleFontSize,
                   contentFontSize: contentFontSize,
                   padding: sectionPadding,
                 ),
                 _buildSection(
                   context: context,
-                  title: PlayLocalization.translate('email', selectedLanguage),
-                  content: redactEmail(userProfile.email),
-                  buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                  title: PlayLocalization.translate('email', widget.selectedLanguage),
+                  content: widget.redactEmail(widget.userProfile.email),
+                  buttonLabel: PlayLocalization.translate('change', widget.selectedLanguage),
                   buttonColor: const Color(0xFF4d278f),
                   onPressed: () => _handleEmailChange(context),
                   titleFontSize: titleFontSize,
@@ -245,9 +290,9 @@ class AccountSettingsContent extends StatelessWidget {
                 ),
                 _buildSection(
                   context: context,
-                  title: PlayLocalization.translate('password', selectedLanguage),
+                  title: PlayLocalization.translate('password', widget.selectedLanguage),
                   content: '********',
-                  buttonLabel: PlayLocalization.translate('change', selectedLanguage),
+                  buttonLabel: PlayLocalization.translate('change', widget.selectedLanguage),
                   buttonColor: const Color(0xFF4d278f),
                   onPressed: () => _handlePasswordChange(context),
                   titleFontSize: titleFontSize,
@@ -259,21 +304,21 @@ class AccountSettingsContent extends StatelessWidget {
               ],
               _buildSection(
                 context: context,
-                title: userRole == 'guest' 
-                  ? PlayLocalization.translate('register', selectedLanguage)
-                  : PlayLocalization.translate('logout', selectedLanguage),
-                buttonLabel: userRole == 'guest'
-                  ? PlayLocalization.translate('registerButton', selectedLanguage)
-                  : PlayLocalization.translate('logoutButton', selectedLanguage),
-                buttonColor: userRole == 'guest' ? const Color(0xFF4d278f) : Colors.red,
-                onPressed: userRole == 'guest'
+                title: widget.userRole == 'guest' 
+                  ? PlayLocalization.translate('register', widget.selectedLanguage)
+                  : PlayLocalization.translate('logout', widget.selectedLanguage),
+                buttonLabel: widget.userRole == 'guest'
+                  ? PlayLocalization.translate('registerButton', widget.selectedLanguage)
+                  : PlayLocalization.translate('logoutButton', widget.selectedLanguage),
+                buttonColor: widget.userRole == 'guest' ? const Color(0xFF4d278f) : Colors.red,
+                onPressed: widget.userRole == 'guest'
                   ? () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => RegistrationPage(selectedLanguage: selectedLanguage),
+                        builder: (context) => RegistrationPage(selectedLanguage: widget.selectedLanguage),
                       ),
                     )
-                  : onLogout,
+                  : widget.onLogout,
                 content: '',
                 titleFontSize: titleFontSize,
                 contentFontSize: contentFontSize,
@@ -316,7 +361,7 @@ class AccountSettingsContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            PlayLocalization.translate('accountRemoval', selectedLanguage),
+            PlayLocalization.translate('accountRemoval', widget.selectedLanguage),
             style: GoogleFonts.rubik(
               fontSize: titleFontSize,
               fontWeight: FontWeight.bold,
@@ -324,7 +369,7 @@ class AccountSettingsContent extends StatelessWidget {
           ),
           SizedBox(height: padding),
           Text(
-            PlayLocalization.translate('accountRemovalDescription', selectedLanguage),
+            PlayLocalization.translate('accountRemovalDescription', widget.selectedLanguage),
             style: GoogleFonts.rubik(
               fontSize: contentFontSize,
             ),
@@ -332,15 +377,18 @@ class AccountSettingsContent extends StatelessWidget {
           SizedBox(height: padding),
           Align(
             alignment: Alignment.centerLeft,
-            child: Button3D(
-              onPressed: onShowDeleteAccountDialog,
-              backgroundColor: const Color(0xFFc32929),
-              borderColor: darkenColor(const Color(0xFFc32929)),
-              child: Text(
-                PlayLocalization.translate('delete', selectedLanguage),
-                style: GoogleFonts.vt323(
-                  color: Colors.white,
-                  fontSize: contentFontSize,
+            child: Opacity(
+              opacity: _isOnline ? 1.0 : 0.5,
+              child: Button3D(
+                onPressed: _isOnline ? widget.onShowDeleteAccountDialog : () {},
+                backgroundColor: const Color(0xFFc32929),
+                borderColor: widget.darkenColor(const Color(0xFFc32929)),
+                child: Text(
+                  PlayLocalization.translate('delete', widget.selectedLanguage),
+                  style: GoogleFonts.vt323(
+                    color: Colors.white,
+                    fontSize: contentFontSize,
+                  ),
                 ),
               ),
             ),
@@ -391,20 +439,53 @@ class AccountSettingsContent extends StatelessWidget {
             ),
           ),
           if (buttonLabel != null && buttonColor != null && onPressed != null && buttonWidth != null && buttonHeight != null)
-            Button3D(
-              onPressed: onPressed,
-              backgroundColor: buttonColor,
-              borderColor: darkenColor(buttonColor),
-              child: Text(
-                buttonLabel,
-                style: GoogleFonts.vt323(
-                  color: buttonTextColor,
-                  fontSize: contentFontSize,
+            Opacity(
+              opacity: !_isOnline && _requiresConnection(buttonLabel, title) ? 0.5 : 1.0,
+              child: Button3D(
+                onPressed: !_isOnline && _requiresConnection(buttonLabel, title) 
+                  ? () {} 
+                  : onPressed,
+                backgroundColor: buttonColor,
+                borderColor: widget.darkenColor(buttonColor),
+                child: Text(
+                  buttonLabel,
+                  style: GoogleFonts.vt323(
+                    color: buttonTextColor,
+                    fontSize: contentFontSize,
+                  ),
                 ),
               ),
             ),
         ],
       ),
     );
+  }
+
+  bool _requiresConnection(String buttonLabel, String sectionTitle) {
+    // These actions always require internet connection
+    final offlineRestrictedActions = [
+      PlayLocalization.translate('logoutButton', widget.selectedLanguage),
+      PlayLocalization.translate('delete', widget.selectedLanguage),
+    ];
+
+    // If it's one of the always-restricted actions, return true
+    if (offlineRestrictedActions.contains(buttonLabel)) {
+      return true;
+    }
+
+    // For "change" buttons, check which section they belong to
+    if (buttonLabel == PlayLocalization.translate('change', widget.selectedLanguage)) {
+      // Check which section this "change" button belongs to
+      if (sectionTitle == PlayLocalization.translate('email', widget.selectedLanguage) ||
+          sectionTitle == PlayLocalization.translate('password', widget.selectedLanguage)) {
+        return true;  // Email and password changes require connection
+      }
+
+      if (sectionTitle == PlayLocalization.translate('nickname', widget.selectedLanguage)) {
+        return false;  // Nickname change doesn't require connection
+      }
+    }
+
+    return false;  // Default to not requiring connection
   }
 }

@@ -2200,6 +2200,32 @@ class AuthService {
       rethrow;
     }
   }
+
+  // Add this method to AuthService
+  Future<bool> hasRegisteredAccount() async {
+    try {
+      // Check current user first
+      User? currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        String? role = await getUserRole(currentUser.uid);
+        // Return true only if user is not a guest
+        return role != null && role != 'guest';
+      }
+
+      // If no current user, check local storage for saved user profile
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? profileJson = prefs.getString(USER_PROFILE_KEY);
+      if (profileJson != null) {
+        // If we have a local profile, it means user has registered before
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      // If there's an error, assume no registered account for safety
+      return false;
+    }
+  }
 }
 
 class SyncManager {

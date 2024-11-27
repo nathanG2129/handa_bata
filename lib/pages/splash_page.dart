@@ -31,12 +31,14 @@ class SplashPage extends StatefulWidget {
 class SplashPageState extends State<SplashPage> {
   String _selectedLanguage = 'en';
   bool _isLoading = true;
+  bool _hasRegisteredAccount = false;
 
   @override
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    // Call prefetch after build is complete
+    // Check for registered account on init
+    _checkRegisteredAccount();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _prefetchData();
     });
@@ -253,6 +255,15 @@ class SplashPageState extends State<SplashPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _checkRegisteredAccount() async {
+    bool hasAccount = await AuthService().hasRegisteredAccount();
+    if (mounted) {
+      setState(() {
+        _hasRegisteredAccount = hasAccount;
+      });
     }
   }
 
@@ -593,20 +604,29 @@ class SplashPageState extends State<SplashPage> {
   }
 
   Widget _buildLoginButton(double width, double height) {
-    return Button3D(
-      width: width,
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage(selectedLanguage: _selectedLanguage)),
-        );
-      },
-      backgroundColor: const Color(0xFF351B61),
-      borderColor: const Color(0xFF1A0D30),  // Darker shade for 3D effect
-      child: Text(
-        SplashLocalization.translate('login', _selectedLanguage),
-        style: GoogleFonts.vt323(
-          color: Colors.white,
+    return Opacity(
+      opacity: _hasRegisteredAccount ? 0.5 : 1.0,
+      child: Button3D(
+        width: width,
+        onPressed: _hasRegisteredAccount 
+          ? () {}  // Disable button if user has account
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(
+                    selectedLanguage: _selectedLanguage
+                  ),
+                ),
+              );
+            },
+        backgroundColor: const Color(0xFF351B61),
+        borderColor: const Color(0xFF1A0D30),
+        child: Text(
+          SplashLocalization.translate('login', _selectedLanguage),
+          style: GoogleFonts.vt323(
+            color: Colors.white,
+          ),
         ),
       ),
     );

@@ -62,11 +62,11 @@ class SplashPageState extends State<SplashPage> {
       if (hasUpdates) {
         await stageService.clearLocalCache();
         
-        // Fetch fresh data - English first since we'll use it for maxScore
+        // Fetch fresh data
         final enCategories = await stageService.fetchCategories('en');
         final filCategories = await stageService.fetchCategories('fil');
         
-        // Fetch all English stages first
+        // Fetch stages
         Map<String, List<Map<String, dynamic>>> allEnStages = {};
         for (var category in enCategories) {
           allEnStages[category['id']] = await stageService.fetchStages('en', category['id']);

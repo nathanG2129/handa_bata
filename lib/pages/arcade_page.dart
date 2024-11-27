@@ -66,8 +66,6 @@ class ArcadePageState extends State<ArcadePage> {
 
   Future<void> _initializeData() async {
     try {
-      await _stageService.debugCacheState();
-      
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -97,6 +95,10 @@ class ArcadePageState extends State<ArcadePage> {
           _isLoading = false;
           _isSyncing = false;
         });
+      }
+
+      if (categories.isNotEmpty) {
+        _prefetchFirstCategory();
       }
     } catch (e) {
       if (mounted) {

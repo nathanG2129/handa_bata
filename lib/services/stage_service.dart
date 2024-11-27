@@ -207,14 +207,19 @@ final Map<String, CachedStage> _categoryCache = {};
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchStages(String language, String categoryId) async {
+  Future<List<Map<String, dynamic>>> fetchStages(
+    String language, 
+    String categoryId, {
+    bool isArcade = false
+  }) async {
     try {
       // Check memory cache first
       String cacheKey = '${language}_${categoryId}_stages';
       if (_stageCache.containsKey(cacheKey)) {
         final cachedData = _stageCache[cacheKey]!;
         if (cachedData.isValid) {
-          return List<Map<String, dynamic>>.from(cachedData.data['stages']);
+          final stages = List<Map<String, dynamic>>.from(cachedData.data['stages']);
+          return _filterStages(stages, isArcade);
         }
       }
 
@@ -224,10 +229,9 @@ final Map<String, CachedStage> _categoryCache = {};
         return await _fetchFreshStages(language, categoryId);
       }
 
-      // Rest of the existing code...
-      List<Map<String, dynamic>> localStages = await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+      // Try local storage
+      List<Map<String, dynamic>> localStages = await getStagesFromLocal(categoryId);
       if (localStages.isNotEmpty) {
-        
         // Refresh memory cache from local storage
         _stageCache[cacheKey] = CachedStage(
           data: {'stages': localStages},
@@ -235,15 +239,25 @@ final Map<String, CachedStage> _categoryCache = {};
           priority: StagePriority.HIGH
         );
         
-        return localStages;
+        return _filterStages(localStages, isArcade);
       }
       
-      return await _fetchFreshStages(language, categoryId);
+      // If nothing in local storage, fetch fresh
+      final stages = await _fetchFreshStages(language, categoryId);
+      return _filterStages(stages, isArcade);
     } catch (e) {
-      return await getStagesFromLocal('${STAGES_CACHE_KEY}_$categoryId');
+      final stages = await getStagesFromLocal(categoryId);
+      return _filterStages(stages, isArcade);
     }
   }
 
+  // Helper method to filter stages based on arcade flag
+  List<Map<String, dynamic>> _filterStages(List<Map<String, dynamic>> stages, bool isArcade) {
+    return stages.where((stage) {
+      final stageName = stage['stageName'].toString().toLowerCase();
+      return isArcade ? stageName.contains('arcade') : !stageName.contains('arcade');
+    }).toList();
+  }
 
   // Add these constants at the top of StageService
   static const String LOCAL_STORAGE_VERSION = 'stage_storage_v1_';
@@ -260,7 +274,7 @@ final Map<String, CachedStage> _categoryCache = {};
         return await _getAllRawStages();
       }
 
-      String key = _getStorageKey(categoryId, isArcade);
+      String key = getStorageKey(categoryId, isArcade);
       return await _getFromLocalWithBackup(key);
     } catch (e) {
       return [];
@@ -268,7 +282,7 @@ final Map<String, CachedStage> _categoryCache = {};
   }
 
   // Add helper methods
-  String _getStorageKey(String categoryId, bool isArcade) {
+  String getStorageKey(String categoryId, bool isArcade) {
     return isArcade 
         ? '${LOCAL_STORAGE_VERSION}${STAGES_CACHE_KEY}_arcade_$categoryId'
         : '${LOCAL_STORAGE_VERSION}${STAGES_CACHE_KEY}_$categoryId';
@@ -617,7 +631,7 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     bool isArcade = false,
   }) async {
     try {
-      String key = _getStorageKey(categoryId, isArcade);
+      String key = getStorageKey(categoryId, isArcade);
       SharedPreferences prefs = await SharedPreferences.getInstance();
       
       // Create backup first
@@ -1586,24 +1600,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   }
 
   // Add these methods to StageService class
-
-  void _logCacheStatus(String cacheKey, String operation) {
-  }
-  Future<void> debugCacheState() async {
-    try {
-      _stageCache.forEach((key, value) {
-      });
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      final localKeys = prefs.getKeys()
-          .where((key) => key.startsWith(STAGES_CACHE_KEY))
-          .toList();
-      
-      for (var key in localKeys) {
-      }
-    } catch (e) {
-    }
-  }
 
   // Add this method to StageService class
   dynamic _sanitizeForStorage(dynamic data) {

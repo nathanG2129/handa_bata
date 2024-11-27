@@ -31,7 +31,6 @@ void showArcadeStageDialog(
   StageService stageService,
 ) {
   
-  stageService.debugCacheState();
   
   // Get the category text using the shared utility
   final categoryText = getCategoryText(category['name']!, selectedLanguage);

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:responsive_builder/responsive_builder.dart';
@@ -15,7 +14,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   ResponsiveSizingConfig.instance.setCustomBreakpoints(
     AppBreakpoints.screenBreakpoints
   );
@@ -57,7 +55,7 @@ class MyApp extends StatelessWidget {
           const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
         ],
       ),
-      title: 'Your App Name',
+      title: 'Handa Bata Mobile',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

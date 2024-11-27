@@ -26,9 +26,7 @@ void showStageDialog(
   String selectedLanguage,
   StageService stageService,
 ) {
-  
-  stageService.debugCacheState();
-  
+
   showGeneralDialog(
     context: context,
     barrierDismissible: true,

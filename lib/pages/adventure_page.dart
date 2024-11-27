@@ -63,8 +63,6 @@ class AdventurePageState extends State<AdventurePage> {
 
   Future<void> _initializeData() async {
     try {
-      await _stageService.debugCacheState();
-      
       setState(() {
         _isLoading = true;
         _errorMessage = null;

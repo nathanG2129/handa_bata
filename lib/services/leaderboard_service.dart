@@ -39,33 +39,26 @@ class LeaderboardService {
 
   Future<List<LeaderboardEntry>> getLeaderboard(String categoryId) async {
     try {
-      print('🎯 Getting leaderboard for category: $categoryId');
       
       // Check cache first
       final cachedData = await _getCachedLeaderboard(categoryId);
       if (cachedData != null && cachedData.isNotEmpty) {
-        print('📦 Found cached data with ${cachedData.length} entries');
         return cachedData;
       }
-      print('❌ No cache found or empty, fetching from Firestore');
 
       // If no cache or empty cache, fetch from Firestore
       final leaderboardData = await _fetchLeaderboardFromFirestore(categoryId);
-      print('🔥 Fetched ${leaderboardData.length} entries from Firestore');
       
       // Only cache if we have data
       if (leaderboardData.isNotEmpty) {
         await _cacheLeaderboard(categoryId, leaderboardData);
-        print('💾 Cached leaderboard data');
       }
       
       return leaderboardData;
     } catch (e) {
-      print('❌ Error in getLeaderboard: $e');
       // Return cached data if available, even if expired
       final cachedData = await _getCachedLeaderboard(categoryId, ignoreExpiry: true);
       if (cachedData != null) {
-        print('🔄 Returning expired cache as fallback');
         return cachedData;
       }
       return []; // Return empty list instead of throwing
@@ -73,13 +66,11 @@ class LeaderboardService {
   }
 
   Future<List<LeaderboardEntry>> _fetchLeaderboardFromFirestore(String categoryId) async {
-    print('🔍 Fetching from Firestore for category: $categoryId');
     
     try {
       final leaderboardRef = _firestore.collection('Leaderboards').doc(categoryId);
       final snapshot = await leaderboardRef.get();
 
-      print('📄 Leaderboard document exists? ${snapshot.exists}');
 
       // Check both existence and data validity
       final data = snapshot.data();
@@ -88,7 +79,6 @@ class LeaderboardService {
                             (data['entries'] as List).isNotEmpty;
 
       if (!snapshot.exists || !hasValidEntries) {
-        print('🆕 No existing leaderboard or empty entries, aggregating data...');
         return _aggregateAndUpdateLeaderboard(categoryId);
       }
 
@@ -96,17 +86,14 @@ class LeaderboardService {
           .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
           .toList();
       
-      print('📊 Found ${entries.length} entries in Firestore');
       return entries;
     } catch (e) {
-      print('❌ Error fetching from Firestore: $e');
       // Try aggregating as fallback
       return _aggregateAndUpdateLeaderboard(categoryId);
     }
   }
 
   Future<List<LeaderboardEntry>> _aggregateAndUpdateLeaderboard(String categoryId) async {
-    print('🔄 Starting leaderboard aggregation for category: $categoryId');
     List<LeaderboardEntry> entries = [];
     
     try {
@@ -116,7 +103,6 @@ class LeaderboardService {
           .where('hasArcadeRecord', isEqualTo: true)  // Only get users with arcade records
           .get();
       
-      print('👥 Found ${userSnapshot.docs.length} users with arcade records');
 
       // Get all game save data in one batch
       final futures = userSnapshot.docs.map((userDoc) async {
@@ -145,14 +131,12 @@ class LeaderboardService {
           if (arcadeData is! ArcadeStageData || arcadeData.crntRecord == -1) return null;
 
           final profileData = profileDoc.data() as Map<String, dynamic>;
-          print('✅ Found valid record for user: ${userDoc.id}');
           return LeaderboardEntry(
             nickname: profileData['nickname'] as String,
             crntRecord: arcadeData.crntRecord,
             avatarId: profileData['avatarId'] as int,
           );
         } catch (e) {
-          print('❌ Error processing user ${userDoc.id}: $e');
           return null;
         }
       });
@@ -161,46 +145,38 @@ class LeaderboardService {
       final results = await Future.wait(futures);
       entries = results.whereType<LeaderboardEntry>().toList();
 
-      print('📝 Found ${entries.length} valid entries');
 
       if (entries.isNotEmpty) {
         // Sort entries
         entries.sort((a, b) => a.crntRecord.compareTo(b.crntRecord));
-        print('🔄 Sorted entries by record time');
 
         // Store in Firestore
         await _firestore.collection('Leaderboards').doc(categoryId).set({
           'entries': entries.map((e) => e.toMap()).toList(),
           'lastUpdated': FieldValue.serverTimestamp(),
         });
-        print('💾 Stored aggregated data in Firestore');
       }
 
       return entries;
     } catch (e) {
-      print('❌ Error in aggregation: $e');
       return entries;
     }
   }
 
   Future<void> _cacheLeaderboard(String categoryId, List<LeaderboardEntry> entries) async {
-    print('💾 Caching ${entries.length} entries for category: $categoryId');
     final prefs = await SharedPreferences.getInstance();
     final cacheData = {
       'entries': entries.map((e) => e.toMap()).toList(),
       'timestamp': DateTime.now().toIso8601String(),
     };
     await prefs.setString('$CACHE_KEY_PREFIX$categoryId', jsonEncode(cacheData));
-    print('✅ Cache updated successfully');
   }
 
   Future<List<LeaderboardEntry>?> _getCachedLeaderboard(String categoryId, {bool ignoreExpiry = false}) async {
-    print('🔍 Checking cache for category: $categoryId');
     final prefs = await SharedPreferences.getInstance();
     final cachedJson = prefs.getString('$CACHE_KEY_PREFIX$categoryId');
     
     if (cachedJson == null) {
-      print('❌ No cache found');
       return null;
     }
 
@@ -208,20 +184,17 @@ class LeaderboardService {
     final timestamp = DateTime.parse(cachedData['timestamp']);
 
     if (!ignoreExpiry && DateTime.now().difference(timestamp) > CACHE_DURATION) {
-      print('⏰ Cache expired');
       return null;
     }
 
     final entries = (cachedData['entries'] as List)
         .map((e) => LeaderboardEntry.fromMap(e))
         .toList();
-    print('📦 Found ${entries.length} entries in cache');
     return entries;
   }
 
   Future<void> updateLeaderboard(String categoryId, String userId, int newRecord) async {
     try {
-      print('🔄 Updating leaderboard for category: $categoryId');
       
       // Get current leaderboard first
       final leaderboardRef = _firestore.collection('Leaderboards').doc(categoryId);
@@ -244,7 +217,6 @@ class LeaderboardService {
           .get();
 
       if (!profileDoc.exists) {
-        print('❌ User profile not found');
         return;
       }
 
@@ -275,14 +247,11 @@ class LeaderboardService {
       });
 
       await batch.commit();
-      print('✅ Leaderboard updated successfully');
 
       // Clear cache to force refresh
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$CACHE_KEY_PREFIX$categoryId');
-      print('🗑️ Cache cleared for refresh');
     } catch (e) {
-      print('❌ Error updating leaderboard: $e');
       rethrow;
     }
   }
@@ -309,26 +278,20 @@ class LeaderboardService {
   // Add method to update when arcade record changes
   Future<void> updateArcadeRecord(String categoryId, String userId, ArcadeStageData arcadeData) async {
     try {
-      print('🎮 Processing arcade record update');
       
       // Only update if there's a valid record
       if (arcadeData.crntRecord == -1) {
-        print('⚠️ Invalid record, skipping update');
         return;
       }
 
-      print('📊 New record: ${arcadeData.crntRecord}');
       await updateLeaderboard(categoryId, userId, arcadeData.crntRecord);
-      print('✅ Arcade record processed successfully');
     } catch (e) {
-      print('❌ Error updating arcade record: $e');
       rethrow;
     }
   }
 
   Future<void> batchUpdateLeaderboards(Map<String, ArcadeStageData> categoryRecords, String userId) async {
     try {
-      print('🔄 Starting batch update for ${categoryRecords.length} categories');
       
       // Process each category in parallel
       await Future.wait(
@@ -337,9 +300,7 @@ class LeaderboardService {
         )
       );
 
-      print('✅ Batch update completed successfully');
     } catch (e) {
-      print('❌ Error in batch update: $e');
       rethrow;
     }
   }

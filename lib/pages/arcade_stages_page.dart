@@ -51,30 +51,28 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-      
-      await _stageService.debugCacheState();
-      
 
-      List<Map<String, dynamic>> stages = await _stageService.fetchStages(
-        widget.selectedLanguage, 
-        widget.category['id']!,
-      );
-      
-      if (mounted) {
-        setState(() {
-          _stages = stages.where((stage) => 
-            stage['stageName'].toLowerCase().contains('arcade')
-          ).toList();
-        });
-      }
+        List<Map<String, dynamic>> stages = await _stageService.fetchStages(
+            widget.selectedLanguage, 
+            widget.category['id']!,
+            isArcade: true,
+        );
+        
+        
+        if (mounted) {
+            setState(() {
+                _stages = stages;  // No need to filter here anymore
+            });
+        }
 
-      // Prefetch arcade stages for next category
-      if (_gameSaveData != null) {
-        _prefetchNextArcadeStages();
-      }
+        // Prefetch arcade stages for next category
+        if (_gameSaveData != null) {
+            _prefetchNextArcadeStages();
+        }
     } catch (e) {
-      if (mounted) {
-      }
+        if (mounted) {
+            // Handle error state
+        }
     }
   }
 

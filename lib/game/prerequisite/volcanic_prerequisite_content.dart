@@ -142,14 +142,15 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
     } else if (widget.stageName.contains('2')) {
       tutorials = [
         TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'identification', widget.language),
+          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
-            'assets/instructions/Identification01.jpg',
-            'assets/instructions/Identification02.jpg',
-            'assets/instructions/Identification03.jpg',
-            'assets/instructions/Identification04.jpg',
+            'assets/instructions/MatchingType01.jpg',
+            'assets/instructions/MatchingType02.jpg',
+            'assets/instructions/MatchingType03.jpg',
+            'assets/instructions/MatchingType04.jpg',
+            'assets/instructions/MatchingType05.jpg',
           ],
-          description: TutorialLocalization.getDescription(mode, 'identification', widget.language),
+          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -199,42 +200,12 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
           language: widget.language,
         ),
       ];
-    } else if (widget.stageName.contains('4')) {
-      tutorials = [
-        TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
-          imagePaths: const [
-            'assets/instructions/MatchingType01.jpg',
-            'assets/instructions/MatchingType02.jpg',
-            'assets/instructions/MatchingType03.jpg',
-            'assets/instructions/MatchingType04.jpg',
-            'assets/instructions/MatchingType05.jpg',
-          ],
-          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
-          onNext: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => GameplayPage(
-                  language: widget.language,
-                  category: widget.category,
-                  stageName: widget.stageName,
-                  stageData: widget.stageData,
-                  mode: widget.mode,
-                  gamemode: widget.gamemode,
-                ),
-              ),
-            );
-          },
-          isLastPage: true,
-          language: widget.language,
-        ),
-      ];
     } else {
       tutorials = [
         TutorialPage(
-          title: 'Unknown Stage',
+          title: '',
           imagePaths: const [],
-          description: 'No tutorial available for this stage.',
+          description: '',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(

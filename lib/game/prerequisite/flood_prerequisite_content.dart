@@ -171,6 +171,19 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
     } else if (widget.stageName.contains('3')) {
       tutorials = [
         TutorialPage(
+          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
+          imagePaths: const [
+            'assets/instructions/MatchingType01.jpg',
+            'assets/instructions/MatchingType02.jpg',
+            'assets/instructions/MatchingType03.jpg',
+            'assets/instructions/MatchingType04.jpg',
+            'assets/instructions/MatchingType05.jpg',
+          ],
+          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
+          onNext: _nextTutorial,
+          language: widget.language,
+        ),
+        TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
             'assets/instructions/FillinTheBlanks01.jpg',
@@ -195,36 +208,7 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
               ),
             );
           },
-          isLastPage: true,
-          language: widget.language,
-        ),
-      ];
-    } else if (widget.stageName.contains('4')) {
-      tutorials = [
-        TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
-          imagePaths: const [
-            'assets/instructions/MatchingType01.jpg',
-            'assets/instructions/MatchingType02.jpg',
-            'assets/instructions/MatchingType03.jpg',
-            'assets/instructions/MatchingType04.jpg',
-            'assets/instructions/MatchingType05.jpg',
-          ],
-          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
-          onNext: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => GameplayPage(
-                  language: widget.language,
-                  category: widget.category,
-                  stageName: widget.stageName,
-                  stageData: widget.stageData,
-                  mode: widget.mode,
-                  gamemode: widget.gamemode,
-                ),
-              ),
-            );
-          },
+          onBack: () => setState(() => _currentTutorial--),
           isLastPage: true,
           language: widget.language,
         ),
@@ -232,9 +216,9 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
     } else {
       tutorials = [
         TutorialPage(
-          title: 'Unknown Stage',
+          title: '',
           imagePaths: const [],
-          description: 'No tutorial available for this stage.',
+          description: '',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(

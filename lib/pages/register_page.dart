@@ -823,10 +823,10 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
           obscureText: _obscureConfirmPassword,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return _selectedLanguage == 'en' ? 'Please confirm your password' : 'I-type muli ang iyong password';
+              return _selectedLanguage == 'en' ? 'Please confirm your password.' : 'I-type muli ang iyong password.';
             }
             if (value != _passwordController.text) {
-              return _selectedLanguage == 'en' ? 'Passwords do not match' : 'Hindi magkatugma ang mga password';
+              return _selectedLanguage == 'en' ? 'Passwords do not match.' : 'Hindi magkatugma ang mga password.';
             }
             return null;
           },
@@ -884,7 +884,7 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
           ],
         ),
         if (_showPrivacyPolicyError)
-          PrivacyPolicyError(showError: _showPrivacyPolicyError),
+          PrivacyPolicyError(showError: _showPrivacyPolicyError, selectedLanguage: _selectedLanguage),
       ],
     );
   }

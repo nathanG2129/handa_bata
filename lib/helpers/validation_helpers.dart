@@ -1,24 +1,31 @@
 // lib/helpers/validation_helpers.dart
 
-String? validateEmail(String? value) {
+import '../localization/validation/localization.dart';
+
+String? validateEmail(String? value, String language) {
   if (value == null || value.isEmpty) {
-    return 'Please enter your email';
+    return ValidationLocalization.translate('required_email', language);
   }
-  final RegExp emailRegex = RegExp(
-    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-  );
+  final RegExp emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
   if (!emailRegex.hasMatch(value)) {
-    return 'Please enter a valid email address';
+    return ValidationLocalization.translate('invalid_email', language);
   }
   return null;
 }
 
-String? passwordValidator(String? value, bool isPasswordLengthValid, bool hasUppercase, bool hasNumber, bool hasSymbol) {
+String? passwordValidator(
+  String? value, 
+  bool isPasswordLengthValid, 
+  bool hasUppercase, 
+  bool hasNumber, 
+  bool hasSymbol,
+  String language,
+) {
   if (value == null || value.isEmpty) {
-    return 'Please enter your password';
+    return ValidationLocalization.translate('required_password', language);
   }
   if (!isPasswordLengthValid || !hasUppercase || !hasNumber || !hasSymbol) {
-    return 'Password does not meet the requirements';
+    return ValidationLocalization.translate('password_requirements_not_met', language);
   }
   return null;
 }
@@ -32,12 +39,47 @@ void validatePassword(String value, Function(bool, bool, bool, bool) updatePassw
   updatePasswordValidation(isPasswordLengthValid, hasUppercase, hasNumber, hasSymbol);
 }
 
-String? validateUsername(String? value) {
+String? validateUsername(String? value, String language) {
   if (value == null || value.isEmpty) {
-    return 'Please enter your username';
+    return ValidationLocalization.translate('required_username', language);
   }
   if (value.length < 4 || value.length > 16) {
-    return 'Username must be between 4 and 16 characters';
+    return ValidationLocalization.translate('invalid_username', language);
   }
   return null;
+}
+
+String? validateBirthday(String? value, String language) {
+  if (value == null || value.isEmpty) {
+    return ValidationLocalization.translate('required_birthday', language);
+  }
+
+  try {
+    final parts = value.split('-');
+    if (parts.length != 3) return ValidationLocalization.translate('invalid_date', language);
+    
+    final birthday = DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+    
+    final today = DateTime.now();
+    int age = today.year - birthday.year;
+    if (today.month < birthday.month || 
+        (today.month == birthday.month && today.day < birthday.day)) {
+      age--;
+    }
+    
+    if (age < 11) {
+      return ValidationLocalization.translate('too_young', language);
+    }
+    if (age > 16) {
+      return ValidationLocalization.translate('too_old', language);
+    }
+    
+    return null;
+  } catch (e) {
+    return ValidationLocalization.translate('invalid_date', language);
+  }
 }

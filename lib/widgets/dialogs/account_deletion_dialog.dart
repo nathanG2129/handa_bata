@@ -190,9 +190,7 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> with Sing
                                                 : AccountDeletionLocalization.translate('user_warning', widget.selectedLanguage),
                                               style: GoogleFonts.vt323(
                                                 color: Colors.black,
-                                                fontSize: isMobileSmall ? 14 :
-                                                         isMobileLarge ? 15 :
-                                                         isMobileExtraLarge ? 16 : 18,
+                                                fontSize: 18,
                                               ),
                                             ),
                                           ),

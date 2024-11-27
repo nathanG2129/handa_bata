@@ -709,28 +709,27 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
             RegisterLocalization.translate('username', _selectedLanguage),
           ),
           style: const TextStyle(color: Colors.white),
-          validator: validateUsername,
+          validator: (value) => validateUsername(value, _selectedLanguage),
         ),
         const SizedBox(height: 20),
         TextFormField(
           controller: _emailController,
-          decoration: InputStyles.inputDecoration(RegisterLocalization.translate('email', _selectedLanguage)),
-          style: const TextStyle(color: Colors.white), // Changed text color to white
-          validator: validateEmail,
+          decoration: InputStyles.inputDecoration(
+            RegisterLocalization.translate('email', _selectedLanguage)
+          ),
+          style: const TextStyle(color: Colors.white),
+          validator: (value) => validateEmail(value, _selectedLanguage),
         ),
         const SizedBox(height: 20),
         TextFormField(
           controller: _birthdayController,
-          decoration: InputStyles.inputDecoration(RegisterLocalization.translate('birthday', _selectedLanguage)),
-          style: const TextStyle(color: Colors.white), // Changed text color to white
+          decoration: InputStyles.inputDecoration(
+            RegisterLocalization.translate('birthday', _selectedLanguage)
+          ),
+          style: const TextStyle(color: Colors.white),
           readOnly: true,
-          onTap: () => selectDate(context, _birthdayController), // Use selectDate from date_helpers.dart
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your birthday';
-            }
-            return null;
-          },
+          onTap: () => selectDate(context, _birthdayController),
+          validator: (value) => validateBirthday(value, _selectedLanguage),
         ),
         const SizedBox(height: 20),
         TextFormField(
@@ -760,7 +759,7 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
           ),
           style: const TextStyle(color: Colors.white),
           obscureText: _obscurePassword,
-          validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol),
+          validator: (value) => passwordValidator(value, _isPasswordLengthValid, _hasUppercase, _hasNumber, _hasSymbol, _selectedLanguage),
           onChanged: (value) {
             setState(() {
               _isPasswordFieldTouched = true;
@@ -824,10 +823,10 @@ Bukod dito, ang mga music track at sound effects na ginagamit namin sa aming web
           obscureText: _obscureConfirmPassword,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please confirm your password';
+              return _selectedLanguage == 'en' ? 'Please confirm your password' : 'I-type muli ang iyong password';
             }
             if (value != _passwordController.text) {
-              return 'Passwords do not match';
+              return _selectedLanguage == 'en' ? 'Passwords do not match' : 'Hindi magkatugma ang mga password';
             }
             return null;
           },

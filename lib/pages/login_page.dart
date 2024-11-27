@@ -274,7 +274,7 @@ class LoginPageState extends State<LoginPage> {
                                     style: const TextStyle(color: Colors.white), // Changed text color to white
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Please enter your username';
+                                        return _selectedLanguage == 'en' ? 'Please enter your username' : 'Ilagay ang iyong username';
                                       }
                                       return null;
                                     },
@@ -309,7 +309,7 @@ class LoginPageState extends State<LoginPage> {
                                     obscureText: _obscurePassword,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Please enter your password';
+                                        return _selectedLanguage == 'en' ? 'Please enter your password' : 'Ilagay ang iyong password';
                                       }
                                       return null;
                                     },

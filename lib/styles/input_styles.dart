@@ -21,6 +21,18 @@ class InputStyles {
         borderRadius: BorderRadius.circular(0.0),
         borderSide: const BorderSide(color: Colors.white), // Added white border
       ),
+      errorStyle: GoogleFonts.rubik(
+        color: const Color(0xFFc82c2c),  // Brighter red for better visibility
+        fontSize: 14,
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(0.0),
+        borderSide: const BorderSide(color: Color(0xFFFF6B6B)),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(0.0),
+        borderSide: const BorderSide(color: Color(0xFFFF6B6B)),
+      ),
     );
   }
 }

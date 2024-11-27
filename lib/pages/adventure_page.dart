@@ -192,6 +192,34 @@ class AdventurePageState extends State<AdventurePage> {
   }
 
   void _onCategoryPressed(Map<String, dynamic> category) {
+    // try {
+    //   final stages = await _stageService.fetchStages(_selectedLanguage, category['id']);
+      
+    //   print('\n=== Category: ${category['name']} ===');
+    //   for (var stage in stages) {
+    //     print('\nStage ${stage['stageName']}:');
+        
+    //     final stageDoc = await _stageService.fetchStageDocument(
+    //       _selectedLanguage, 
+    //       category['id'], 
+    //       stage['stageName']
+    //     );
+        
+    //     if (stageDoc['questions'] != null) {
+    //       List<dynamic> questions = stageDoc['questions'];
+    //       for (int i = 0; i < questions.length; i++) {
+    //         final question = questions[i];
+    //         final type = question['type'] ?? 'Unknown';
+    //         print('- Question ${i + 1}: $type');
+    //       }
+    //     }
+    //   }
+    //   print('\n==================\n');
+    // } catch (e) {
+    //   print('Error fetching stages: $e');
+    // }
+
+    // // Existing navigation code
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -202,7 +230,7 @@ class AdventurePageState extends State<AdventurePage> {
             'name': category['name'],
           },
           selectedLanguage: _selectedLanguage,
-          gameSaveData: _categorySaveData[category['id']], // Pass cached data
+          gameSaveData: _categorySaveData[category['id']],
         ),
       ),
     );

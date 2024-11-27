@@ -214,29 +214,22 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
         ),
       ];
     } else {
-      tutorials = [
-        TutorialPage(
-          title: '',
-          imagePaths: const [],
-          description: '',
-          onNext: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => GameplayPage(
-                  language: widget.language,
-                  category: widget.category,
-                  stageName: widget.stageName,
-                  stageData: widget.stageData,
-                  mode: widget.mode,
-                  gamemode: widget.gamemode,
-                ),
-              ),
-            );
-          },
-          isLastPage: true,
-          language: widget.language,
-        ),
-      ];
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => GameplayPage(
+              language: widget.language,
+              category: widget.category,
+              stageName: widget.stageName,
+              stageData: widget.stageData,
+              mode: widget.mode,
+              gamemode: widget.gamemode,
+            ),
+          ),
+        );
+      });
+      
+      return Container();
     }
 
     return tutorials[_currentTutorial];

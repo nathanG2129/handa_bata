@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/resources/resource_preview.dart';
+import '../../localization/resources/localization.dart';
 
 class ResourceGrid extends StatelessWidget {
   final String category;
@@ -13,231 +14,245 @@ class ResourceGrid extends StatelessWidget {
   });
 
   List<ResourceData> getResources() {
+    // Helper function to build reference string
+    String buildReference(String organization) {
+      // Add 'the' prefix based on language
+      final thePrefix = ResourcesLocalization.translate('the', selectedLanguage);
+      final fromPrefix = ResourcesLocalization.translate('from', selectedLanguage);
+      
+      // If organization starts with 'the', remove it and let translation handle it
+      final cleanOrg = organization.startsWith('the ') 
+        ? organization.substring(4)  // Remove 'the ' from the start
+        : organization;
+        
+      return '$fromPrefix ${thePrefix}$cleanOrg';
+    }
+
     if (category == 'Videos') {
       return [
-        const ResourceData(
+        ResourceData(
           title: 'Alam mo ba? Lindol',
           src: 'zXLyMMFGbhM',
-          reference: 'From the Philippine Information Agency',
+          reference: buildReference('the Philippine Information Agency'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'DOST BLTB Series Lindol',
           src: 'ZKdAH9uf1WE',
-          reference: 'From the Department of Science and Technology',
+          reference: buildReference('the Department of Science and Technology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Earthquake Epicenter',
           src: 'nnHzsX11ofI',
-          reference: 'From the Department of Education',
+          reference: buildReference('the Department of Education'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Earthquake and Its Hazards',
           src: 'Py9k7dacoKo',
-          reference: 'From the Philippine Institute of Volcanology and Seismology',
+          reference: buildReference('the Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Mga Dapat Malaman sa Big One',
           src: 'T-WoRReLpKY',
-          reference: 'From the Philippine Institute of Volcanology and Seismology',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Duck, Cover, and Hold',
           src: 'XUoYj1fN2Cs',
-          reference: 'From Rappler',
+          reference: buildReference('Rappler'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Earthquake Drill',
           src: 'EKAhY84FPbs',
-          reference: 'From the Philippine Institute of Volcanology and Seismology',
+          reference: buildReference('the Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'When is the time to evacuate?',
           src: 'zplJvqDQrVw',
-          reference: 'From the Philippine Institute of Volcanology and Seismology',
+          reference: buildReference('the Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Are you ready for it?',
           src: 'lpe_0P8sUZg',
-          reference: 'From the Philippine Information Agency',
+          reference: buildReference('the Philippine Information Agency'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Alam mo ba? Bagyo',
           src: 'uz9sclC3nBE',
-          reference: 'From the Philippine Information Agency',
+          reference: buildReference('the Philippine Information Agency'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Typhoon',
           src: 'eSxN7e6uCbo',
-          reference: 'From the Department of Science and Technology',
+          reference: buildReference('the Department of Science and Technology'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'DOST BLTB Series Bagyo',
           src: 'nXfj-Id_La0',
-          reference: 'From the Philippine Atmospheric, Geophysical and Astronomical Services Administration',
+          reference: buildReference('the Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Modified Tropical Cyclone Warning Signal System',
           src: 'ke2drZ-2YfU',
-          reference: 'From the Philippine Atmospheric, Geophysical and Astronomical Services Administration',
+          reference: buildReference('the Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Tropical Cyclone Wind Signals, Explained',
           src: 'KyOnxOhnMaM',
-          reference: 'From GMA Integrated News',
+          reference: buildReference('GMA Integrated News'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Heavy Rainfall and Thunderstorm Warning System',
           src: 'l0hsjostU_g',
-          reference: 'From the Philippine Atmospheric, Geophysical and Astronomical Services Administration',
+          reference: buildReference('the Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Ano-ano ang yellow, orange at red rainfall warning?',
           src: 'uys9waXWW3M',
-          reference: 'From GMA Integrated News',
+          reference: buildReference('GMA Integrated News'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Mga Hakbang sa Pagbuo ng Community Based DRRMP',
           src: 'zddS3dJupno',
-          reference: 'From the Department of Education',
+          reference: buildReference('the Department of Education'),
           thumbnailPath: '',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Emergency Go Bag',
           src: 'm9whRKDsEAA',
-          reference: 'From the Office of Civil Defense Region XII - SOCCSKSARGEN',
+          reference: buildReference('the Office of Civil Defense Region XII - SOCCSKSARGEN'),
           thumbnailPath: '',
         ),
       ];
     } else {
       return [
-        const ResourceData(
+        ResourceData(
           title: 'Community and Family Earthquake Safety Guide',
           src: 'assets/images/infographics/CommunityAndFamilyEarthquakeSafetyGuide.png',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/CommunityAndFamilyEarthquakeSafetyGuide.png',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Earthquake: Are You Prepared?',
           src: 'assets/images/infographics/EarthquakeAreYouPrepared.jpg',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/EarthquakeAreYouPrepared.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Emergency Go Bag',
           src: 'assets/images/infographics/EmergencyGoBag.jfif',
-          reference: 'From NDRRMC',
+          reference: buildReference('National Disaster Risk Reduction and Management Council'),
           thumbnailPath: 'assets/images/infographics/previews/EmergencyGoBag.jfif',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Gabay sa mga Abiso, Klasipikasyon, at Sukat ng Ulan',
           src: 'assets/images/infographics/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg',
-          reference: 'From PAGASA',
+          reference: buildReference('Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: 'assets/images/infographics/previews/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Heavy Rainfall Warnings',
           src: 'assets/images/infographics/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg',
-          reference: 'From Philippine Information Agency',
+          reference: buildReference('Philippine Information Agency'),
           thumbnailPath: 'assets/images/infographics/previews/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Lindol... Handa Ka Na Ba?',
           src: 'assets/images/infographics/LindolHandaKaNaBa.jpg',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/LindolHandaKaNaBa.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'May Naramdamang Lindol: Gabay sa Pag-uulat ng Lindol',
           src: 'assets/images/infographics/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Mga Uri ng Bagyo',
           src: 'assets/images/infographics/MgaUriNgBagyoPhilippineInformationAgency.jpg',
-          reference: 'From Philippine Information Agency',
+          reference: buildReference('Philippine Information Agency'),
           thumbnailPath: 'assets/images/infographics/previews/MgaUriNgBagyoPhilippineInformationAgency.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'PHIVOLCS Earthquake Intensity Scale',
           src: 'assets/images/infographics/PHIVOLCSEarthquakeIntensityScale.jpg',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/PHIVOLCSEarthquakeIntensityScale.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Rainfall Warning System',
           src: 'assets/images/infographics/RainfallWarningSystemPayongPAGASA.jpeg',
-          reference: 'From PAGASA',
+          reference: buildReference('Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: 'assets/images/infographics/previews/RainfallWarningSystemPayongPAGASA.jpeg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Tropical Cyclone Warning System',
           src: 'assets/images/infographics/TropicalCycloneWarningSystemPayongPAGASA.jpeg',
-          reference: 'From PAGASA',
+          reference: buildReference('Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: 'assets/images/infographics/previews/TropicalCycloneWarningSystemPayongPAGASA.jpeg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Tropical Cyclone Wind Signal',
           src: 'assets/images/infographics/TropicalCycloneWindSignalPhilippineInformationAgency.jpg',
-          reference: 'From Philippine Information Agency',
+          reference: buildReference('Philippine Information Agency'),
           thumbnailPath: 'assets/images/infographics/previews/TropicalCycloneWindSignalPhilippineInformationAgency.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Volcanic Eruption Safety Guide',
           src: 'assets/images/infographics/VolcanicEruption.jpg',
-          reference: 'From Philippine Red Cross',
+          reference: buildReference('Philippine Red Cross'),
           thumbnailPath: 'assets/images/infographics/previews/VolcanicEruption.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Drought Preparedness Guide',
           src: 'assets/images/infographics/Drought_Preparedness.jpeg',
-          reference: 'From NDRRMC',
+          reference: buildReference('National Disaster Risk Reduction and Management Council'),
           thumbnailPath: 'assets/images/infographics/previews/Drought_Preparedness.jpeg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Earthquake Preparedness',
           src: 'assets/images/infographics/EarthquakePreparedness.jpg',
-          reference: 'From PHIVOLCS',
+          reference: buildReference('Philippine Institute of Volcanology and Seismology'),
           thumbnailPath: 'assets/images/infographics/previews/EarthquakePreparedness.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'First Aid Guide',
           src: 'assets/images/infographics/FirstAid.jpg',
-          reference: 'From Philippine Red Cross',
+          reference: buildReference('Philippine Red Cross'),
           thumbnailPath: 'assets/images/infographics/previews/FirstAid.jpg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Flood Preparedness Guide',
           src: 'assets/images/infographics/Flood_Preparedness.jpeg',
-          reference: 'From NDRRMC',
+          reference: buildReference('National Disaster Risk Reduction and Management Council'),
           thumbnailPath: 'assets/images/infographics/previews/Flood_Preparedness.jpeg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'Typhoon Preparedness Guide',
           src: 'assets/images/infographics/TyphoonPreparedness.jpeg',
-          reference: 'From PAGASA',
+          reference: buildReference('Philippine Atmospheric, Geophysical and Astronomical Services Administration'),
           thumbnailPath: 'assets/images/infographics/previews/TyphoonPreparedness.jpeg',
         ),
-        const ResourceData(
+        ResourceData(
           title: 'What To Do During Volcanic Eruption',
           src: 'assets/images/infographics/WhatToDoVolcanicEruption.jpg',
-          reference: 'From Philippine Red Cross',
+          reference: buildReference('Philippine Red Cross'),
           thumbnailPath: 'assets/images/infographics/previews/WhatToDoVolcanicEruption.jpg',
         ),
       ];
@@ -252,17 +267,17 @@ class ResourceGrid extends StatelessWidget {
     // Adjust grid spacing and aspect ratio based on screen size
     final gridSpacing = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 16.0,
-      tablet: 20.0,
+      mobile: 40.0,
+      tablet: 40.0,
       desktop: 24.0,
     );
 
     // Adjust aspect ratio to give more height for content
     final childAspectRatio = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 0.8,
-      tablet: 0.7,  // Made taller for tablet to accommodate text
-      desktop: 0.8,
+      mobile: 1.0,
+      tablet: 1.0,  // Made taller for tablet to accommodate text
+      desktop: 1.0,
     );
 
     // Adjust number of columns based on screen width
@@ -278,9 +293,9 @@ class ResourceGrid extends StatelessWidget {
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.valueByDevice<double>(
           context: context,
-          mobile: 50,
-          tablet: 30,  // Reduced padding for tablet to use more space
-          desktop: 50,
+          mobile: 0,
+          tablet: 0,  // Reduced padding for tablet to use more space
+          desktop: 0,
         ),
       ),
       child: GridView.builder(

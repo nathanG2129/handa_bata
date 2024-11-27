@@ -23,6 +23,14 @@ class ResourcesPage extends StatefulWidget {
 }
 
 class _ResourcesPageState extends State<ResourcesPage> {
+  late String _selectedLanguage;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.selectedLanguage;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -30,7 +38,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
+            builder: (context) => MainPage(selectedLanguage: _selectedLanguage),
           ),
         );
         return false;
@@ -74,17 +82,19 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   children: [
                     // Header
                     HeaderWidget(
-                      selectedLanguage: widget.selectedLanguage,
+                      selectedLanguage: _selectedLanguage,
                       onBack: () {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MainPage(selectedLanguage: widget.selectedLanguage),
+                            builder: (context) => MainPage(selectedLanguage: _selectedLanguage),
                           ),
                         );
                       },
                       onChangeLanguage: (String newLanguage) {
-                        // Handle language change
+                        setState(() {
+                          _selectedLanguage = newLanguage;
+                        });
                       },
                     ),
                     // Main content with constrained width
@@ -108,7 +118,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                                       const SizedBox(height: 20),
                                       ResourceGrid(
                                         category: widget.category,
-                                        selectedLanguage: widget.selectedLanguage,
+                                        selectedLanguage: _selectedLanguage,
                                       ),
                                       const SizedBox(height: 40),
                                     ],
@@ -117,7 +127,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                               ),
                             ),
                             // Footer outside of constraints
-                            FooterWidget(selectedLanguage: widget.selectedLanguage),
+                            FooterWidget(selectedLanguage: _selectedLanguage),
                           ],
                         ),
                       ),

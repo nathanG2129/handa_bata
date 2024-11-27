@@ -4,6 +4,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:handabatamae/widgets/resources/resource_grid.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class ResourcePreview extends StatefulWidget {
   final ResourceData data;
@@ -217,9 +218,23 @@ class _ResourcePreviewState extends State<ResourcePreview> {
 
   @override
   Widget build(BuildContext context) {
+    final titleFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 18.0,
+      tablet: 20.0,
+      desktop: 24.0,
+    );
+
+    final referenceFontSize = ResponsiveUtils.valueByDevice<double>(
+      context: context,
+      mobile: 16.0,
+      tablet: 14.0,
+      desktop: 22.0,
+    );
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.0),
       ),
       child: Material(
         color: Colors.transparent,
@@ -322,7 +337,7 @@ class _ResourcePreviewState extends State<ResourcePreview> {
                     Text(
                       widget.data.title,
                       style: GoogleFonts.rubik(
-                        fontSize: 24,
+                        fontSize: titleFontSize,
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
@@ -334,7 +349,7 @@ class _ResourcePreviewState extends State<ResourcePreview> {
                     Text(
                       widget.data.reference,
                       style: GoogleFonts.rubik(
-                        fontSize: 24,
+                        fontSize: referenceFontSize,
                         color: Colors.white.withOpacity(0.7),
                       ),
                       textAlign: TextAlign.center,

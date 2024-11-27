@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
 
 class QuakePrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -36,34 +37,37 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
   @override
   Widget build(BuildContext context) {
     List<Widget> tutorials;
+    String mode = widget.stageName.contains('Arcade') ? 'arcade' : 'adventure';
 
     if (widget.stageName.contains('Arcade')) {
       tutorials = [
         TutorialPage(
-          title: 'Multiple Choice',
+          title: TutorialLocalization.getTitle(mode, 'multiple_choice', widget.language),
           imagePaths: const [
             'assets/instructions/MultipleChoice01.jpg',
             'assets/instructions/MultipleChoice02.jpg',
           ],
-          description: 'Read the question carefully and choose the correct answer. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
           onNext: _nextTutorial,
           isFirstPage: true,
+          language: widget.language,
         ),
         TutorialPage(
-          title: 'Identification',
+          title: TutorialLocalization.getTitle(mode, 'identification', widget.language),
           imagePaths: const [
             'assets/instructions/Identification01.jpg',
             'assets/instructions/Identification02.jpg',
             'assets/instructions/Identification03.jpg',
             'assets/instructions/Identification04.jpg',
           ],
-          description: 'Select a letter one at a time to form an answer. Your answer will be checked instantly once you fill in the last tile. Answer carefully to prevent Kladis and Kloud\'s health bar from going down.',
+          description: TutorialLocalization.getDescription(mode, 'identification', widget.language),
           onNext: _nextTutorial,
           onBack: () => setState(() => _currentTutorial--),
           isFirstPage: false,
+          language: widget.language,
         ),
         TutorialPage(
-          title: 'Fill in the Blanks',
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
             'assets/instructions/FillinTheBlanks01.jpg',
             'assets/instructions/FillinTheBlanks02.jpg',
@@ -72,13 +76,14 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/FillinTheBlanks05.jpg',
             'assets/instructions/FillinTheBlanks06.jpg',
           ],
-          description: 'Fill in the blanks with the correct letters to complete the word. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: _nextTutorial,
           onBack: () => setState(() => _currentTutorial--),
           isFirstPage: false,
+          language: widget.language,
         ),
         TutorialPage(
-          title: 'Matching Type',
+          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
             'assets/instructions/MatchingType01.jpg',
             'assets/instructions/MatchingType02.jpg',
@@ -86,7 +91,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/MatchingType04.jpg',
             'assets/instructions/MatchingType05.jpg',
           ],
-          description: 'Match the items correctly to their corresponding pairs. Avoid incorrect matches, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -104,17 +109,18 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           onBack: () => setState(() => _currentTutorial--),
           isFirstPage: false,
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     } else if (widget.stageName.contains('1')) {
       tutorials = [
         TutorialPage(
-          title: 'Multiple Choice',
+          title: TutorialLocalization.getTitle(mode, 'multiple_choice', widget.language),
           imagePaths: const [
             'assets/instructions/MultipleChoice01.jpg',
             'assets/instructions/MultipleChoice02.jpg',
           ],
-          description: 'Read the question carefully and choose the correct answer. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -130,19 +136,20 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             );
           },
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     } else if (widget.stageName.contains('2')) {
       tutorials = [
         TutorialPage(
-          title: 'Identification',
+          title: TutorialLocalization.getTitle(mode, 'identification', widget.language),
           imagePaths: const [
             'assets/instructions/Identification01.jpg',
             'assets/instructions/Identification02.jpg',
             'assets/instructions/Identification03.jpg',
             'assets/instructions/Identification04.jpg',
           ],
-          description: 'Select a letter one at a time to form an answer. Your answer will be checked instantly once you fill in the last tile. Answer carefully to prevent Kladis and Kloud\'s health bar from going down.',
+          description: TutorialLocalization.getDescription(mode, 'identification', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -158,12 +165,13 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             );
           },
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     } else if (widget.stageName.contains('3')) {
       tutorials = [
         TutorialPage(
-          title: 'Fill in the Blanks',
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
             'assets/instructions/FillinTheBlanks01.jpg',
             'assets/instructions/FillinTheBlanks02.jpg',
@@ -172,7 +180,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/FillinTheBlanks05.jpg',
             'assets/instructions/FillinTheBlanks06.jpg',
           ],
-          description: 'Fill in the blanks with the correct letters to complete the word. Avoid incorrect answers, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -188,12 +196,13 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             );
           },
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     } else if (widget.stageName.contains('4')) {
       tutorials = [
         TutorialPage(
-          title: 'Matching Type',
+          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
             'assets/instructions/MatchingType01.jpg',
             'assets/instructions/MatchingType02.jpg',
@@ -201,7 +210,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/MatchingType04.jpg',
             'assets/instructions/MatchingType05.jpg',
           ],
-          description: 'Match the items correctly to their corresponding pairs. Avoid incorrect matches, or Kladis and Kloud\'s health bars will decrease.',
+          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -217,6 +226,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             );
           },
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     } else {
@@ -240,6 +250,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             );
           },
           isLastPage: true,
+          language: widget.language,
         ),
       ];
     }

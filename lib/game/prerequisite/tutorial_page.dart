@@ -5,6 +5,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/learn/carousel_widget.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
 
 class TutorialPage extends StatefulWidget {
   final String title;
@@ -14,6 +15,7 @@ class TutorialPage extends StatefulWidget {
   final VoidCallback? onBack;
   final bool isLastPage;
   final bool isFirstPage;
+  final String language;
 
   const TutorialPage({
     super.key,
@@ -24,6 +26,7 @@ class TutorialPage extends StatefulWidget {
     this.onBack,
     this.isLastPage = false,
     this.isFirstPage = true,
+    required this.language,
   });
 
   @override
@@ -78,8 +81,8 @@ class _TutorialPageState extends State<TutorialPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const TextWithShadow(
-                text: 'How to Play',
+              TextWithShadow(
+                text: TutorialLocalization.getUIText('headers', 'how_to_play', widget.language),
                 fontSize: 36,
               ),
               TextWithShadow(
@@ -115,7 +118,7 @@ class _TutorialPageState extends State<TutorialPage> {
                       onPressed: widget.onBack!,
                       backgroundColor: const Color(0xFF351B61),
                       child: Text(
-                        'Back',
+                        TutorialLocalization.getUIText('buttons', 'back', widget.language),
                         style: GoogleFonts.vt323(
                           fontSize: 24,
                           color: Colors.white,
@@ -128,7 +131,9 @@ class _TutorialPageState extends State<TutorialPage> {
                     onPressed: widget.onNext,
                     backgroundColor: const Color(0xFF351B61),
                     child: Text(
-                      widget.isLastPage ? 'Start Game' : 'Next',
+                      widget.isLastPage 
+                        ? TutorialLocalization.getUIText('buttons', 'start_game', widget.language)
+                        : TutorialLocalization.getUIText('buttons', 'next', widget.language),
                       style: GoogleFonts.vt323(
                         fontSize: 24,
                         color: Colors.white,

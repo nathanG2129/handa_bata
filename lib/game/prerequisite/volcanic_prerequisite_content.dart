@@ -44,8 +44,8 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'multiple_choice', widget.language),
           imagePaths: const [
-            'assets/instructions/MultipleChoice01.jpg',
-            'assets/instructions/MultipleChoice02.jpg',
+            'assets/instructions/MultipleChoice01.png',
+            'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
           onNext: _nextTutorial,
@@ -55,10 +55,10 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'identification', widget.language),
           imagePaths: const [
-            'assets/instructions/Identification01.jpg',
-            'assets/instructions/Identification02.jpg',
-            'assets/instructions/Identification03.jpg',
-            'assets/instructions/Identification04.jpg',
+            'assets/instructions/Identification01.png',
+            'assets/instructions/Identification02.png',
+            'assets/instructions/Identification03.png',
+            'assets/instructions/Identification04.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'identification', widget.language),
           onNext: _nextTutorial,
@@ -69,10 +69,12 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
-            'assets/instructions/FillinTheBlanks01.jpg',
-            'assets/instructions/FillinTheBlanks02.jpg',
-            'assets/instructions/FillinTheBlanks03.jpg',
-            'assets/instructions/FillinTheBlanks04.jpg',
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
+            'assets/instructions/FillinTheBlanks05.png',
+            'assets/instructions/FillinTheBlanks06.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: _nextTutorial,
@@ -83,11 +85,11 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
-            'assets/instructions/MatchingType01.jpg',
-            'assets/instructions/MatchingType02.jpg',
-            'assets/instructions/MatchingType03.jpg',
-            'assets/instructions/MatchingType04.jpg',
-            'assets/instructions/MatchingType05.jpg',
+            'assets/instructions/MatchingType01.png',
+            'assets/instructions/MatchingType02.png',
+            'assets/instructions/MatchingType03.png',
+            'assets/instructions/MatchingType04.png',
+            'assets/instructions/MatchingType05.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: () {
@@ -115,8 +117,8 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'multiple_choice', widget.language),
           imagePaths: const [
-            'assets/instructions/MultipleChoice01.jpg',
-            'assets/instructions/MultipleChoice02.jpg',
+            'assets/instructions/MultipleChoice01.png',
+            'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
           onNext: () {
@@ -142,11 +144,11 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
-            'assets/instructions/MatchingType01.jpg',
-            'assets/instructions/MatchingType02.jpg',
-            'assets/instructions/MatchingType03.jpg',
-            'assets/instructions/MatchingType04.jpg',
-            'assets/instructions/MatchingType05.jpg',
+            'assets/instructions/MatchingType01.png',
+            'assets/instructions/MatchingType02.png',
+            'assets/instructions/MatchingType03.png',
+            'assets/instructions/MatchingType04.png',
+            'assets/instructions/MatchingType05.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: () {
@@ -172,12 +174,12 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
-            'assets/instructions/FillinTheBlanks01.jpg',
-            'assets/instructions/FillinTheBlanks02.jpg',
-            'assets/instructions/FillinTheBlanks03.jpg',
-            'assets/instructions/FillinTheBlanks04.jpg',
-            'assets/instructions/FillinTheBlanks05.jpg',
-            'assets/instructions/FillinTheBlanks06.jpg',
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
+            'assets/instructions/FillinTheBlanks05.png',
+            'assets/instructions/FillinTheBlanks06.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: () {

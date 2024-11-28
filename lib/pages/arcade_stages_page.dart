@@ -144,12 +144,16 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     if (category == null) return Colors.grey;
     if (category.contains('Quake')) {
       return const Color(0xFFF5672B);
-    } else if (category.contains('Storm') || category.contains('Flood')) {
+    } else if (category.contains('Storm')) {
+      return const Color(0xFF2C28E1); 
+    } else if (category.contains('Flood')) {
       return const Color(0xFF2C62DE);
     } else if (category.contains('Volcano')) {
       return const Color(0xFFB3261E);
-    } else if (category.contains('Drought') || category.contains('Tsunami')) {
-      return const Color(0xFF31111D);
+    } else if (category.contains('Drought')) {
+      return const Color(0xFF8D6647);
+    } else if (category.contains('Tsunami')) {
+      return const Color(0xFF033C72);
     } else {
       return Colors.grey;
     }

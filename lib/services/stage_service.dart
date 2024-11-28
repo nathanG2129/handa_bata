@@ -2007,9 +2007,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     {int questionCount = 25}
   ) async {
     try {
-      print('\n=== Getting Randomized Arcade Questions ===');
-      print('Category ID: $categoryId');
-      print('Language: $language');
       
       // Get all non-arcade stages for this category
       List<Map<String, dynamic>> stages = await getStagesFromLocal(categoryId, useRawCache: false);
@@ -2020,7 +2017,6 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         (stage['language'] ?? 'en') == language
       ).toList();
 
-      print('Found ${stages.length} non-arcade stages');
 
       // Collect all questions from these stages
       List<Map<String, dynamic>> allQuestions = [];
@@ -2031,14 +2027,12 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         }
       }
 
-      print('Total available questions: ${allQuestions.length}');
 
       // Shuffle questions
       allQuestions.shuffle();
 
       // If we don't have enough questions, repeat some to reach the desired count
       if (allQuestions.length < questionCount) {
-        print('Not enough questions, repeating some to reach $questionCount');
         final originalQuestions = List<Map<String, dynamic>>.from(allQuestions);
         while (allQuestions.length < questionCount) {
           originalQuestions.shuffle(); // Shuffle again for more randomness
@@ -2048,12 +2042,9 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
 
       // Take exactly questionCount questions
       final selectedQuestions = allQuestions.take(questionCount).toList();
-      print('Final question count: ${selectedQuestions.length}');
-      print('=== End of Randomized Arcade Questions ===\n');
 
       return selectedQuestions;
     } catch (e) {
-      print('Error getting randomized arcade questions: $e');
       return [];
     }
   }

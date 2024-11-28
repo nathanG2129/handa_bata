@@ -87,12 +87,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
                 }).toList();
 
                 // Debug prints
-                print('\n=== Arcade Stage Questions [${widget.category['name']}] [Lang: ${widget.selectedLanguage}] ===');
-                print('Total Questions: ${arcadeQuestions.length}');
-                print('Max Score: $maxScore');
-                print('First Question: ${arcadeQuestions.first['question']}');
-                print('Last Question: ${arcadeQuestions.last['question']}');
-                print('=== End of Arcade Questions ===\n');
             }
         }
         
@@ -109,7 +103,6 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     } catch (e) {
         if (mounted) {
             // Handle error state
-            print('Error fetching arcade stages: $e');
         }
     }
   }

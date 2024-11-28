@@ -393,7 +393,6 @@ class AuthService {
 
   /// Checks and recovers missing arcade stages in game save data
   Future<void> _recoverMissingArcadeStages(String userId, List<Map<String, dynamic>> categories) async {
-    print('\n=== Checking for Missing Arcade Stages ===');
     try {
       for (var category in categories) {
         String categoryId = category['id'];
@@ -413,9 +412,6 @@ class AuthService {
           
           // Check if arcade stage exists
           if (!gameSaveData.stageData.containsKey(arcadeKey)) {
-            print('Missing Arcade Stage Found:');
-            print('Category ID: $categoryId');
-            print('Arcade Key: $arcadeKey');
             
             // Create arcade stage data
             Map<String, StageDataEntry> updatedStageData = Map.from(gameSaveData.stageData);
@@ -446,13 +442,10 @@ class AuthService {
             // Save locally
             await saveGameSaveDataLocally(categoryId, updatedGameSaveData);
             
-            print('Arcade Stage Recovery Complete for $categoryId');
           }
         }
       }
-      print('=== Arcade Stage Check Complete ===\n');
     } catch (e) {
-      print('Error during arcade stage recovery: $e');
     }
   }
 
@@ -500,7 +493,6 @@ class AuthService {
               await saveGameSaveDataLocally(categoryId, initialData);
             }
           } catch (e) {
-            print('Error processing category $categoryId: $e');
           }
         }
       }
@@ -1357,11 +1349,6 @@ class AuthService {
           crntRecord: -1,
         );
 
-        print('\n=== Creating Arcade Stage Data ===');
-        print('Category ID: $categoryId');
-        print('Arcade Key: $arcadeKey');
-        print('Max Score: ${_calculateMaxScore(entry.value)}');
-        print('=== End of Arcade Stage Data ===\n');
       }
 
       // If no arcade stages exist in data, create them for each category
@@ -1377,11 +1364,6 @@ class AuthService {
             crntRecord: -1,
           );
 
-          print('\n=== Creating Default Arcade Stage Data ===');
-          print('Category ID: $categoryId');
-          print('Arcade Key: $arcadeKey');
-          print('Default Max Score: 100');
-          print('=== End of Default Arcade Stage Data ===\n');
         }
       }
 

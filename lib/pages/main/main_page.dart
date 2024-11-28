@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/splash_page.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:responsive_builder/responsive_builder.dart';
-import 'package:handabatamae/services/stage_service.dart';
 import 'header_section.dart';
 import 'welcome_section.dart';
 import 'adventure_section.dart';
@@ -26,51 +25,6 @@ class MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
-    _printStoredStages();
-  }
-
-  Future<void> _printStoredStages() async {
-    final stageService = StageService();
-    final stages = await stageService.getStagesFromLocal('all', useRawCache: true);
-    
-    print('=== Stored Arcade Stages with All Questions ===');
-    
-    // Counter to track duplicates
-    final Map<String, int> stageCount = {};
-    
-    for (var stage in stages) {
-      final stageName = stage['stageName'] as String;
-      final language = stage['language'] ?? 'unknown';
-      
-      // Only process arcade stages
-      if (stageName.toLowerCase().contains('arcade')) {
-        // Count occurrences of this stage
-        stageCount[stageName] = (stageCount[stageName] ?? 0) + 1;
-        
-        print('\nStage: $stageName [Lang: $language]');
-        
-        if (stage['questions'] != null && (stage['questions'] as List).isNotEmpty) {
-          final questions = stage['questions'] as List;
-          print('Total Questions: ${questions.length}');
-          for (var i = 0; i < questions.length; i++) {
-            final question = questions[i];
-            print('Question ${i + 1}: ${question['question']}');
-          }
-        } else {
-          print('No questions found for this stage');
-        }
-        print('-------------------');
-      }
-    }
-    
-    print('\nDuplicate Summary:');
-    stageCount.forEach((stage, count) {
-      if (count > 1) {
-        print('$stage appears $count times');
-      }
-    });
-    
-    print('\n=== End of Stored Stages ===');
   }
 
   void _changeLanguage(String language) {

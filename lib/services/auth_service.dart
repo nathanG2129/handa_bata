@@ -653,6 +653,7 @@ class AuthService {
 
       // 1. Delete user's data from all leaderboards if we have their nickname
       if (nickname != null) {
+        final leaderboardService = LeaderboardService();
         QuerySnapshot leaderboardsSnapshot = await _firestore
             .collection('Leaderboards')
             .get();
@@ -665,6 +666,9 @@ class AuthService {
             'entries': entries,
             'lastUpdated': FieldValue.serverTimestamp(),
           });
+
+          // Clear cache for this leaderboard
+          await leaderboardService.clearLeaderboardCache(doc.id);
         }
       }
 

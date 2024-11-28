@@ -732,4 +732,21 @@ class LeaderboardService {
       rethrow;
     }
   }
+
+  // Make this method public
+  Future<void> clearLeaderboardCache(String categoryId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('$CACHE_KEY_PREFIX$categoryId');
+  }
+
+  // Add method to clear all leaderboard caches
+  Future<void> clearAllLeaderboardCaches() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys()
+        .where((key) => key.startsWith(CACHE_KEY_PREFIX));
+    
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+  }
 } 

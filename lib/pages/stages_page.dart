@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/models/game_save_data.dart';
 import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/pages/adventure_page.dart';
+import 'package:handabatamae/pages/register_page.dart';
 import 'package:handabatamae/pages/user_profile.dart';
 import 'package:handabatamae/services/auth_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
@@ -45,12 +46,23 @@ class StagesPageState extends State<StagesPage> {
   String _selectedMode = 'Normal';
   bool _isUserProfileVisible = false;
   GameSaveData? _gameSaveData; // Cached game save data from parent
+  bool _isGuestUser = true; // Default to true until we check
 
   @override
   void initState() {
     super.initState();
     _gameSaveData = widget.gameSaveData; // Store the passed data
+    _checkUserStatus();
     _fetchStages();
+  }
+
+  Future<void> _checkUserStatus() async {
+    bool isGuest = !await AuthService().hasRegisteredAccount();
+    if (mounted) {
+      setState(() {
+        _isGuestUser = isGuest;
+      });
+    }
   }
 
   Future<void> _fetchStages() async {
@@ -149,29 +161,36 @@ class StagesPageState extends State<StagesPage> {
       if (saveData != null) {
         // Get progress stats from GameSaveData
         final stats = saveData.getStageStats(stageKey, _selectedMode);
+
+        // Lock stages 4+ for guest users
+        bool isLocked = _isGuestUser && stageIndex >= 3; // Index 3 is stage 4
+
         return {
           'personalBest': stats['personalBest'] ?? 0,
           'stars': stats['stars'] ?? 0,
           'maxScore': stats['maxScore'] ?? 0,
           'savedGame': savedGameState?.toJson(), // Game state from GameSaveManager
-          'isUnlocked': saveData.canUnlockStage(stageIndex, _selectedMode.toLowerCase()),
+          'isUnlocked': isLocked ? false : saveData.canUnlockStage(stageIndex, _selectedMode.toLowerCase()),
         };
       }
 
+      // Default response with guest user check
+      bool isLocked = _isGuestUser && stageIndex >= 3;
       return {
         'personalBest': 0,
         'stars': 0,
         'maxScore': 0,
         'savedGame': savedGameState?.toJson(),
-        'isUnlocked': false,
+        'isUnlocked': !isLocked, // Lock if guest user and stage 4+
       };
     } catch (e) {
+      bool isLocked = _isGuestUser && stageIndex >= 3;
       return {
         'personalBest': 0,
         'stars': 0,
         'maxScore': 0,
         'savedGame': null,
-        'isUnlocked': false,
+        'isUnlocked': !isLocked, // Lock if guest user and stage 4+
       };
     }
   }
@@ -264,6 +283,40 @@ class StagesPageState extends State<StagesPage> {
     });
   }
 
+  void _onLockedStagePressed() {
+    if (_isGuestUser) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Stage Locked'),
+            content: const Text('Please register an account to unlock stages 4 and beyond.'),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text('Register Now'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegistrationPage(
+                        selectedLanguage: widget.selectedLanguage,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   Widget _buildStageButton(BuildContext context, int index, double buttonSize) {
     final stageNumber = index + 1;
     final stageCategory = widget.category['name'];
@@ -300,7 +353,11 @@ class StagesPageState extends State<StagesPage> {
               widget.selectedLanguage,
               _stageService,
             );
-          } : null,
+          } : () {
+            if (_isGuestUser && index >= 3) {
+              _onLockedStagePressed();
+            }
+          },
           child: Stack(
             alignment: Alignment.center,
             children: [

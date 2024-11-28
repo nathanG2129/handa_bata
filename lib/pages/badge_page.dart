@@ -166,65 +166,64 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
         color: Colors.transparent,
         child: Stack(
           children: [
-            // Backdrop with gesture detector
-            GestureDetector(
-              onTap: _closeDialog,
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
+            // Background with gesture detector
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _closeDialog,
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                ),
               ),
             ),
             // Dialog content
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
               child: Center(
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: _syncNotifier,
-                  builder: (context, isSyncing, _) {
-                    if (_isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                child: GestureDetector(
+                  onTap: () {}, // Prevent background tap from closing
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _syncNotifier,
+                    builder: (context, isSyncing, _) {
+                      if (_isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    if (_errorMessage != null) {
-                      return _buildErrorState();
-                    }
+                      if (_errorMessage != null) {
+                        return _buildErrorState();
+                      }
 
-                    return ResponsiveBuilder(
-                      builder: (context, sizingInformation) {
-                        // Check for specific mobile breakpoints
-                        final screenWidth = MediaQuery.of(context).size.width;
-                        final bool isMobileSmall = screenWidth <= 375;
-                        final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
-                        final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
-                        final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+                      return ResponsiveBuilder(
+                        builder: (context, sizingInformation) {
+                          // Check for specific mobile breakpoints
+                          final screenWidth = MediaQuery.of(context).size.width;
+                          final bool isMobileSmall = screenWidth <= 375;
+                          final bool isMobileLarge = screenWidth <= 414 && screenWidth > 375;
+                          final bool isMobileExtraLarge = screenWidth <= 480 && screenWidth > 414;
+                          final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
 
-                        // Calculate sizes based on device type
-                        final double headerFontSize = isMobileSmall ? 28 : 
-                                                    isMobileLarge ? 32 :
-                                                    isMobileExtraLarge ? 36 :
-                                                    isTablet ? 38 : 42;
+                          // Calculate sizes based on device type
+                          final double headerFontSize = isMobileSmall ? 28 : 
+                                                      isMobileLarge ? 32 :
+                                                      isMobileExtraLarge ? 36 :
+                                                      isTablet ? 38 : 42;
 
-                      final double gridPadding = isMobileSmall ? 8 : 
-                                               isMobileLarge ? 10 :
-                                               isMobileExtraLarge ? 12 :
-                                               isTablet ? 14 : 16;
+                        final double gridPadding = isMobileSmall ? 14 : 
+                                                 isMobileLarge ? 14 :
+                                                 isMobileExtraLarge ? 14 :
+                                                 isTablet ? 16 : 16;
 
-                        final double badgeSize = isMobileSmall ? 48 : 
-                                               isMobileLarge ? 52 :
-                                               isMobileExtraLarge ? 55 :
-                                               isTablet ? 60 : 65;
+                          final double badgeSize = isMobileSmall ? 48 : 
+                                                 isMobileLarge ? 52 :
+                                                 isMobileExtraLarge ? 55 :
+                                                 isTablet ? 60 : 65;
 
-                        final double titleFontSize = isMobileSmall ? 16 : 
-                                                   isMobileLarge ? 16 :
-                                                   isMobileExtraLarge ? 16 :
-                                                   isTablet ? 18 : 20;
+                          final double titleFontSize = isMobileSmall ? 20 : 
+                                                     isMobileLarge ? 20 :
+                                                     isMobileExtraLarge ? 20 :
+                                                     isTablet ? 22 : 24;
 
-                        return SlideTransition(
-                          position: _slideAnimation,
-                          child: GestureDetector(
-                            onTap: () {}, // Prevent tap from propagating
-                            behavior: HitTestBehavior.opaque,
+                          return SlideTransition(
+                            position: _slideAnimation,
                             child: Container(
                               constraints: BoxConstraints(
                                 maxWidth: ResponsiveUtils.valueByDevice(
@@ -233,7 +232,8 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                   tablet: MediaQuery.of(context).size.width * 0.6,
                                   desktop: 800,
                                 ),
-                                maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                minHeight: MediaQuery.of(context).size.height * 0.7,
+                                maxHeight: MediaQuery.of(context).size.height * 0.7,
                               ),
                               margin: EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -315,11 +315,11 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                                 ),
                               ),
                             ),
-                          ),
+                          );
+                        },
                       );
-                      },
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
             ),
@@ -329,7 +329,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildFilterDropdown(double fontSize) {
+  Widget _buildFilterDropdown(double titleFontSize) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -349,7 +349,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               style: GoogleFonts.vt323(
                 color: Colors.white,
-                fontSize: fontSize,
+                fontSize: titleFontSize,
               ),
               onChanged: _handleFilterChange,
               items: [
@@ -620,6 +620,7 @@ class _BadgePageState extends State<BadgePage> with SingleTickerProviderStateMix
                       color: Colors.white,
                       fontSize: titleFontSize,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

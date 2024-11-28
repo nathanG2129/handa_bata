@@ -20,6 +20,35 @@ import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:handabatamae/localization/leaderboards/localization.dart';
 
+typedef OnWidgetSizeChange = void Function(Size size);
+
+class MeasureSize extends StatefulWidget {
+  final Widget child;
+  final OnWidgetSizeChange onChange;
+
+  const MeasureSize({
+    Key? key,
+    required this.onChange,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  MeasureSizeState createState() => MeasureSizeState();
+}
+
+class MeasureSizeState extends State<MeasureSize> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = context.size;
+      if (size != null) {
+        widget.onChange(size);
+      }
+    });
+    return widget.child;
+  }
+}
+
 class ArcadePage extends StatefulWidget {
   final String selectedLanguage;
 
@@ -40,6 +69,7 @@ class ArcadePageState extends State<ArcadePage> {
   Map<String, GameSaveData> _categorySaveData = {}; // Cache for all categories
   late String _selectedLanguage;
   bool _isUserProfileVisible = false;
+  double _maxButtonHeight = 0.0;  // Add this line
 
   @override
   void initState() {
@@ -52,6 +82,7 @@ class ArcadePageState extends State<ArcadePage> {
         setState(() {
           _categories = categories;
           _sortCategories();
+          _maxButtonHeight = 0.0;  // Reset max height when categories change
         });
       }
     });
@@ -341,7 +372,6 @@ class ArcadePageState extends State<ArcadePage> {
       return _buildErrorState();
     }
 
-    // Get responsive values for buttons - same as adventure_page.dart
     final arcadeButtonSpacing = ResponsiveUtils.valueByDevice<double>(
       context: context,
       mobile: 30.0,
@@ -354,13 +384,6 @@ class ArcadePageState extends State<ArcadePage> {
       mobile: 300.0,
       tablet: 350.0,
       desktop: 500.0,
-    );
-
-    final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
-      context: context,
-      mobile: 160.0,
-      tablet: 150.0,
-      desktop: 160.0,
     );
 
     final categorySpacing = ResponsiveUtils.valueByDevice<double>(
@@ -379,8 +402,8 @@ class ArcadePageState extends State<ArcadePage> {
 
     final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
       context: context,
-      mobile: 18.0,
-      tablet: 18.0,
+      mobile: 20.0,
+      tablet: 22.0,
       desktop: 25.0,
     );
 
@@ -395,24 +418,99 @@ class ArcadePageState extends State<ArcadePage> {
           ),
         ),
         SizedBox(height: arcadeButtonSpacing),
-        // Wrap categories in a grid for tablet
+        // Wrap categories in a grid for tablet with consistent heights
         if (sizingInformation.deviceScreenType == DeviceScreenType.tablet)
-          Wrap(
-            spacing: categorySpacing,
-            runSpacing: categorySpacing,
-            alignment: WrapAlignment.center,
-            children: _buildCategoryButtons(
-              categoryButtonWidth,
-              categoryButtonHeight,
-              titleFontSize,
-              descriptionFontSize,
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // First pass: measure all buttons and store measurements
+              final measurements = _categories.map((category) {
+                final buttonColor = _getButtonColor(category['name']);
+                final categoryText = getCategoryText(category['name'], _selectedLanguage);
+                final isUnlocked = _isCategoryUnlocked(category['id']);
+                final key = GlobalKey();
+
+                return MeasureSize(
+                  onChange: (Size size) {
+                    if (size.height > _maxButtonHeight && mounted) {
+                      setState(() {
+                        _maxButtonHeight = size.height;
+                      });
+                    }
+                  },
+                  child: Button3D(
+                    key: key,
+                    width: categoryButtonWidth,
+                    onPressed: () {},
+                    backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
+                    borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                categoryText['name']!,
+                                style: GoogleFonts.vt323(
+                                  fontSize: titleFontSize,
+                                  color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                isUnlocked 
+                                  ? categoryText['description']!
+                                  : _selectedLanguage == 'fil'
+                                    ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
+                                    : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                                style: GoogleFonts.vt323(
+                                  fontSize: descriptionFontSize,
+                                  color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList();
+
+              // Add measurement widgets to the tree
+              return Stack(
+                children: [
+                  // Invisible measurement widgets
+                  Opacity(
+                    opacity: 0,
+                    child: Wrap(
+                      spacing: categorySpacing,
+                      runSpacing: categorySpacing,
+                      children: measurements,
+                    ),
+                  ),
+                  // Actual visible buttons with consistent height
+                  Wrap(
+                    spacing: categorySpacing,
+                    runSpacing: categorySpacing,
+                    alignment: WrapAlignment.center,
+                    children: _buildCategoryButtons(
+                      categoryButtonWidth,
+                      _maxButtonHeight > 0 ? _maxButtonHeight : null,
+                      titleFontSize,
+                      descriptionFontSize,
+                    ),
+                  ),
+                ],
+              );
+            },
           )
         // Single column layout for mobile and desktop
         else
           ..._buildCategoryButtons(
             categoryButtonWidth,
-            categoryButtonHeight,
+            null,
             titleFontSize,
             descriptionFontSize,
           ),
@@ -468,7 +566,7 @@ class ArcadePageState extends State<ArcadePage> {
 
   List<Widget> _buildCategoryButtons(
     double width,
-    double height,
+    double? height,
     double titleFontSize,
     double descriptionFontSize,
   ) {
@@ -477,7 +575,6 @@ class ArcadePageState extends State<ArcadePage> {
       final categoryText = getCategoryText(category['name'], _selectedLanguage);
       final isUnlocked = _isCategoryUnlocked(category['id']);
 
-      // Get responsive lock icon size
       final lockIconSize = ResponsiveUtils.valueByDevice<double>(
         context: context,
         mobile: 32.0,
@@ -487,55 +584,60 @@ class ArcadePageState extends State<ArcadePage> {
 
       return Padding(
         padding: const EdgeInsets.only(bottom: 30),
-        child: Button3D(
+        child: SizedBox(
           width: width,
-          onPressed: () {
-            if (isUnlocked) {
-              _onCategoryPressed(category);
-            }
-          },
-          backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
-          borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      categoryText['name']!,
-                      style: GoogleFonts.vt323(
-                        fontSize: titleFontSize,
-                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+          height: height,
+          child: Button3D(
+            width: width,
+            height: height,
+            onPressed: () {
+              if (isUnlocked) {
+                _onCategoryPressed(category);
+              }
+            },
+            backgroundColor: buttonColor.withOpacity(isUnlocked ? 1.0 : 0.5),
+            borderColor: _darkenColor(buttonColor).withOpacity(isUnlocked ? 1.0 : 0.5),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        categoryText['name']!,
+                        style: GoogleFonts.vt323(
+                          fontSize: titleFontSize,
+                          color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      isUnlocked 
-                        ? categoryText['description']!
-                        : _selectedLanguage == 'fil'
-                          ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
-                          : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
-                      style: GoogleFonts.vt323(
-                        fontSize: descriptionFontSize,
-                        color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                      const SizedBox(height: 10),
+                      Text(
+                        isUnlocked 
+                          ? categoryText['description']!
+                          : _selectedLanguage == 'fil'
+                            ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
+                            : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                        style: GoogleFonts.vt323(
+                          fontSize: descriptionFontSize,
+                          color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!isUnlocked)
-                Positioned(
-                  right: 5,  // Adjusted positioning
-                  top: 0,
-                  child: SvgPicture.string(
-                    _getLockSvg(),
-                    width: lockIconSize,
-                    height: lockIconSize,
+                    ],
                   ),
                 ),
-            ],
+                if (!isUnlocked)
+                  Positioned(
+                    right: 5,
+                    top: 0,
+                    child: SvgPicture.string(
+                      _getLockSvg(),
+                      width: lockIconSize,
+                      height: lockIconSize,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       );

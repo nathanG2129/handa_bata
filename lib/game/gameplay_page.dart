@@ -166,12 +166,12 @@ class GameplayPageState extends State<GameplayPage> {
 
   Future<void> _playBackgroundMusic() async {
     try {
-      await _audioPlayer.setLoopMode(LoopMode.one);
       // Choose music based on gamemode
       String musicFile = widget.gamemode == 'arcade' 
           ? 'assets/sound/bgm/ArcBGM.mp3'
           : 'assets/sound/bgm/AdvBGM.mp3';
       await _audioPlayer.setAsset(musicFile);
+      await _audioPlayer.setLoopMode(LoopMode.one);
       setState(() {
         _bgMusicLoaded = true;
       });

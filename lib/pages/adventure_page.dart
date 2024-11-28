@@ -17,6 +17,35 @@ import 'user_profile.dart'; // Import UserProfilePage
 import 'package:handabatamae/models/stage_models.dart';
 import 'package:handabatamae/services/auth_service.dart'; // Import AuthService
 
+typedef OnWidgetSizeChange = void Function(Size size);
+
+class MeasureSize extends StatefulWidget {
+  final Widget child;
+  final OnWidgetSizeChange onChange;
+
+  const MeasureSize({
+    Key? key,
+    required this.onChange,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  _MeasureSizeState createState() => _MeasureSizeState();
+}
+
+class _MeasureSizeState extends State<MeasureSize> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = context.size;
+      if (size != null) {
+        widget.onChange(size);
+      }
+    });
+    return widget.child;
+  }
+}
+
 class AdventurePage extends StatefulWidget {
   final String selectedLanguage;
 
@@ -37,6 +66,7 @@ class AdventurePageState extends State<AdventurePage> {
   Map<String, GameSaveData> _categorySaveData = {};
   late String _selectedLanguage;
   bool _isUserProfileVisible = false;
+  double _maxButtonHeight = 0.0;
 
   @override
   void initState() {
@@ -49,6 +79,7 @@ class AdventurePageState extends State<AdventurePage> {
         setState(() {
           _categories = categories;
           _sortCategories();
+          _maxButtonHeight = 0.0;
         });
       }
     });
@@ -274,31 +305,24 @@ class AdventurePageState extends State<AdventurePage> {
       desktop: 500.0,
     );
 
-    // final categoryButtonHeight = ResponsiveUtils.valueByDevice<double>(
-    //   context: context,
-    //   mobile: 160.0,
-    //   tablet: 150.0,  // Increased height for tablet to accommodate content
-    //   desktop: 160.0,
-    // );
-
     final categorySpacing = ResponsiveUtils.valueByDevice<double>(
       context: context,
       mobile: 20.0,
-      tablet: 30.0,  // Reduced spacing for tablet grid
+      tablet: 30.0,
       desktop: 40.0,
     );
 
     final titleFontSize = ResponsiveUtils.valueByDevice<double>(
       context: context,
       mobile: 24.0,
-      tablet: 24.0,  // Slightly smaller for tablet to prevent overflow
+      tablet: 24.0,
       desktop: 32.0,
     );
 
     final descriptionFontSize = ResponsiveUtils.valueByDevice<double>(
       context: context,
       mobile: 20.0,
-      tablet: 22.0,  // Smaller font size for tablet descriptions
+      tablet: 22.0,
       desktop: 25.0,
     );
 
@@ -313,51 +337,121 @@ class AdventurePageState extends State<AdventurePage> {
           ),
         ),
         SizedBox(height: adventureButtonSpacing),
-        // Wrap categories in a grid for tablet
+        // Wrap categories in a grid for tablet with consistent heights
         if (sizingInformation.deviceScreenType == DeviceScreenType.tablet)
-          Wrap(
-            spacing: categorySpacing,
-            runSpacing: categorySpacing,
-            alignment: WrapAlignment.center,
-            children: _categories.map((category) {
-              final buttonColor = _getButtonColor(category['name']);
-              return SizedBox(
-                width: categoryButtonWidth,
-                child: Button3D(
-                  width: categoryButtonWidth,
-                  onPressed: () => _onCategoryPressed(category),
-                  backgroundColor: buttonColor,
-                  borderColor: _darkenColor(buttonColor),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),  // Reduced padding
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          category['name'],
-                          style: GoogleFonts.vt323(
-                            fontSize: titleFontSize,
-                            color: Colors.white,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // First pass: measure all buttons and store measurements
+              final measurements = _categories.map((category) {
+                final buttonColor = _getButtonColor(category['name']);
+                final key = GlobalKey();
+                return MeasureSize(
+                  onChange: (Size size) {
+                    if (size.height > _maxButtonHeight && mounted) {
+                      setState(() {
+                        _maxButtonHeight = size.height;
+                      });
+                    }
+                  },
+                  child: Button3D(
+                    key: key,
+                    width: categoryButtonWidth,
+                    onPressed: () {},
+                    backgroundColor: buttonColor,
+                    borderColor: _darkenColor(buttonColor),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category['name'],
+                            style: GoogleFonts.vt323(
+                              fontSize: titleFontSize,
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,  // Limit to 2 lines
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),  // Reduced spacing
-                        Text(
-                          category['description'],
-                          style: GoogleFonts.vt323(
-                            fontSize: descriptionFontSize,
-                            color: Colors.white,
+                          const SizedBox(height: 4),
+                          Text(
+                            category['description'],
+                            style: GoogleFonts.vt323(
+                              fontSize: descriptionFontSize,
+                              color: Colors.white,
+                            ),
+                            maxLines: 10,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 3,  // Limit to 3 lines
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                );
+              }).toList();
+
+              // Add measurement widgets to the tree
+              return Stack(
+                children: [
+                  // Invisible measurement widgets
+                  Opacity(
+                    opacity: 0,
+                    child: Wrap(
+                      spacing: categorySpacing,
+                      runSpacing: categorySpacing,
+                      children: measurements,
+                    ),
+                  ),
+                  // Actual visible buttons with consistent height
+                  Wrap(
+                    spacing: categorySpacing,
+                    runSpacing: categorySpacing,
+                    alignment: WrapAlignment.center,
+                    children: _categories.map((category) {
+                      final buttonColor = _getButtonColor(category['name']);
+                      return SizedBox(
+                        width: categoryButtonWidth,
+                        height: _maxButtonHeight > 0 ? _maxButtonHeight : null,
+                        child: Button3D(
+                          width: categoryButtonWidth,
+                          height: _maxButtonHeight > 0 ? _maxButtonHeight : null,
+                          onPressed: () => _onCategoryPressed(category),
+                          backgroundColor: buttonColor,
+                          borderColor: _darkenColor(buttonColor),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  category['name'],
+                                  style: GoogleFonts.vt323(
+                                    fontSize: titleFontSize,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  category['description'],
+                                  style: GoogleFonts.vt323(
+                                    fontSize: descriptionFontSize,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 10,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               );
-            }).toList(),
+            },
           )
         // Single column layout for mobile and desktop
         else

@@ -17,29 +17,29 @@ Map<String, String> getCategoryText(String categoryName, String selectedLanguage
     return {
       'name': 'Inferno',
       'description': selectedLanguage == 'fil'
-          ? 'Harapin ang matinding init ng bulkang nagbabaga!'
-          : 'Face the intense heat of an erupting volcano!',
+          ? 'Ipakita ang iyong tapang laban sa matinding pagputok ng bulkan!'
+          : 'Demonstrate your valor against the fierce volcanic eruption!',
     };
   } else if (categoryName.contains('Drought')) {
     return {
       'name': 'Scorch',
       'description': selectedLanguage == 'fil'
-          ? 'Tiisin ang init ng nakakapasong tagtuyot!'
-          : 'Endure the scorching heat of a devastating drought!',
+          ? 'Subukan ang iyong katatagan laban sa walang tigil na init ng tagtuyot!'
+          : 'Test your resilience against the relentless heat of drought!',
     };
   } else if (categoryName.contains('Flood')) {
     return {
       'name': 'Deluge',
       'description': selectedLanguage == 'fil'
-          ? 'Labanan ang rumaragasang baha!'
-          : 'Battle against the surging floodwaters!',
+          ? 'Ipakita ang iyong lakas laban sa mapanirang puwersa ng baha!'
+          : 'Show your strength against the devastating force of floods!',
     };
   } else if (categoryName.contains('Tsunami')) {
     return {
       'name': 'Surge',
       'description': selectedLanguage == 'fil'
-          ? 'Makipagsapalaran sa napakalaking alon ng tsunami!'
-          : 'Brave the massive waves of a tsunami!',
+          ? 'Patunayan ang iyong kagitingan laban sa napakalaking lakas ng tsunami!'
+          : 'Prove your strength against the overwhelming power of tsunamis!',
     };
   } else {
     return {

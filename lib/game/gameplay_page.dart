@@ -948,54 +948,54 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
     switch (questionType) {
       case 'Multiple Choice':
         questionWidget = MultipleChoiceQuestion(
-          key: _multipleChoiceQuestionKey, // Use the global key to access the state
+          key: _multipleChoiceQuestionKey,
           questionData: currentQuestion,
           selectedOptionIndex: _selectedOptionIndex,
           onOptionSelected: _handleMultipleChoiceAnswerSubmission,
-          onOptionsShown: _startTimer, // Start the timer when options are shown
-          sfxVolume: _sfxVolume, // Pass the SFX volume
+          onOptionsShown: _startTimer,
+          sfxVolume: _sfxVolume,
           gamemode: widget.gamemode,
         );
         break;
       case 'Fill in the Blanks':
         questionWidget = FillInTheBlanksQuestion(
-          key: _fillInTheBlanksQuestionKey, // Use the global key to access the state
+          key: _fillInTheBlanksQuestionKey,
           questionData: currentQuestion,
           controller: _controller,
           isCorrect: _isCorrect ?? false,
           onAnswerSubmitted: _handleFillInTheBlanksAnswerSubmission,
-          onOptionsShown: _startTimer, // Pass the callback to start the timer
+          onOptionsShown: _startTimer,
           nextQuestion: () {},
-          onVisualDisplayComplete: _handleFitBVisualDisplayComplete, // Add this callback
-          sfxVolume: _sfxVolume, // Pass the SFX volume
+          onVisualDisplayComplete: _handleFitBVisualDisplayComplete,
+          sfxVolume: _sfxVolume,
           gamemode: widget.gamemode,
-          updateHealth: _updateHealth, // Pass the updateHealth method
-          updateStopwatch: _updateStopwatch, // Pass the updateStopwatch method
-          currentQuestionIndex: currentQuestionIndex, // Pass the current question index
+          updateHealth: _updateHealth,
+          updateStopwatch: _updateStopwatch,
+          currentQuestionIndex: currentQuestionIndex,
         );
         break;
       case 'Matching Type':
         questionWidget = MatchingTypeQuestion(
-          key: _matchingTypeQuestionKey, // Use the global key to access the state
+          key: _matchingTypeQuestionKey,
           questionData: currentQuestion,
-          onOptionsShown: _startMatchingTimer, // Start the timer when options are shown
-          onAnswerChecked: _handleMatchingTypeAnswerSubmission, // Use the new method
-          onVisualDisplayComplete: _handleVisualDisplayComplete, // Add this line
-          sfxVolume: _sfxVolume, // Pass the SFX volume
+          onOptionsShown: _startMatchingTimer,
+          onAnswerChecked: _handleMatchingTypeAnswerSubmission,
+          onVisualDisplayComplete: _handleVisualDisplayComplete,
+          sfxVolume: _sfxVolume,
           gamemode: widget.gamemode,
-          updateHealth: _updateHealth, // Pass the updateHealth method
-          updateStopwatch: _updateStopwatch, // Pass the updateStopwatch method
-          currentQuestionIndex: currentQuestionIndex, // Pass the current question index
+          updateHealth: _updateHealth,
+          updateStopwatch: _updateStopwatch,
+          currentQuestionIndex: currentQuestionIndex,
         );
         break;
       case 'Identification':
         questionWidget = IdentificationQuestion(
-          key: _identificationQuestionKey, // Use the global key to access the state
+          key: _identificationQuestionKey,
           questionData: currentQuestion,
           controller: _controller,
           onAnswerSubmitted: _handleIdentificationAnswerSubmission,
-          onOptionsShown: _startTimer, // Pass the callback to start the timer
-          sfxVolume: _sfxVolume, // Pass the SFX volume
+          onOptionsShown: _startTimer,
+          sfxVolume: _sfxVolume,
           gamemode: widget.gamemode,
         );
         break;
@@ -1008,208 +1008,211 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
         );
     }
   
-    return Scaffold(
-      body: Stack(
-        children: [
-          ResponsiveBuilder(
-            builder: (context, sizingInformation) {
-              // Get the device screen type
-              final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
-              
-              return Scaffold(
-                backgroundColor: const Color(0xFF5E31AD),
-                body: SafeArea(
-                  child: Column(
-                    children: [
-                      ProgressBar(
-                        progress: _progress,
-                        totalTime: totalTime,
-                      ),
-                      SizedBox(height: isTablet ? 80 : 24),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 50.0 : 16.0
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                // Get the device screen type
+                final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+                
+                return Scaffold(
+                  backgroundColor: const Color(0xFF5E31AD),
+                  body: SafeArea(
+                    child: Column(
+                      children: [
+                        ProgressBar(
+                          progress: _progress,
+                          totalTime: totalTime,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${currentQuestionIndex + 1} of $_totalQuestions',
-                              style: GoogleFonts.vt323(
-                                fontSize: isTablet ? 32 : 24, 
-                                color: Colors.white
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.settings, 
-                                color: Colors.white,
-                                size: isTablet ? 32 : 24,
-                              ),
-                              onPressed: () async {
-                                List<Map<String, String>> availableVoices = widget.language == 'fil'
-                                    ? [
-                                        {"name": _maleVoiceFil, "locale": "fil-PH"},
-                                        {"name": _femaleVoiceFil, "locale": "fil-PH"}
-                                      ]
-                                    : [
-                                        {"name": _maleVoiceEn, "locale": "en-US"},
-                                        {"name": _femaleVoiceEn, "locale": "en-US"}
-                                      ];
-  
-                                // Ensure the selectedVoice is valid for the current language
-                                if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
-                                  setState(() {
-                                    _selectedVoice = availableVoices.first['name']!;
-                                  });
-                                }
-                                await showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return SettingsDialog(
-                                      flutterTts: flutterTts, // Pass the flutterTts instance
-                                      isTextToSpeechEnabled: _isTextToSpeechEnabled,
-                                      onTextToSpeechChanged: (bool value) {
-                                        setState(() {
-                                          _isTextToSpeechEnabled = value;
-                                        });
-                                        if (value) {
-                                          String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                          flutterTts.setLanguage(locale);
-                                          flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
-                                          flutterTts.setSpeechRate(_speechRate);
-                                          flutterTts.setVolume(_ttsVolume);
-                                        }
-                                      },
-                                      selectedVoice: _selectedVoice,
-                                      onVoiceChanged: (String? newValue) {
-                                        setState(() {
-                                          _selectedVoice = newValue!;
-                                        });
-                                        String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                        flutterTts.setVoice({"name": newValue!, "locale": locale});
-                                      },
-                                      speed: _speechRate, // Use the state variable
-                                      onSpeedChanged: (double value) {
-                                        setState(() {
-                                          _speechRate = value;
-                                        });
-                                        flutterTts.setSpeechRate(value);
-                                      },
-                                      ttsVolume: _ttsVolume, // Use the state variable
-                                      onTtsVolumeChanged: (double value) {
-                                        setState(() {
-                                          _ttsVolume = value;
-                                        });
-                                        flutterTts.setVolume(value);
-                                      },
-                                      availableVoices: availableVoices,
-                                      musicVolume: _musicVolume, // Use the state variable
-                                      onMusicVolumeChanged: (double value) {
-                                        setState(() {
-                                          _musicVolume = value;
-                                        });
-                                        _audioPlayer.setVolume(value);
-                                      },
-                                      sfxVolume: _sfxVolume, // Use the state variable
-                                      onSfxVolumeChanged: (double value) {
-                                        setState(() {
-                                          _sfxVolume = value;
-                                        });
-                                      },
-                                      onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
-                                      isLastQuestion: _isLastAnsweredQuestion(),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: isTablet ? 16 : 8),
-                      Expanded(
-                        child: Scrollbar(
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isTablet ? 50.0 : 16.0
-                              ),
-                              child: questionWidget,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (widget.gamemode == 'arcade')
+                        SizedBox(height: isTablet ? 80 : 24),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 25.0),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: _isGameOver 
-                                      ? (isTablet ? 128 : 96) 
-                                      : (isTablet ? 64 : 48),
-                                    height: isTablet ? 64 : 48,
-                                    child: _kladisAnimation!,
-                                  ),
-                                  SizedBox(width: isTablet ? 20 : 10),
-                                  Text(
-                                    _stopwatchTime,
-                                    style: GoogleFonts.vt323(
-                                      fontSize: isTablet ? 32 : 24,
-                                      color: Colors.white
-                                    ),
-                                  ),
-                                  SizedBox(width: isTablet ? 20 : 10),
-                                  SizedBox(
-                                    width: _isGameOver 
-                                      ? (isTablet ? 128 : 96) 
-                                      : (isTablet ? 64 : 48),
-                                    height: isTablet ? 64 : 48,
-                                    child: _kloudAnimation!,
-                                  ),
-                                ],
-                              ),
-                            ],
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isTablet ? 50.0 : 16.0
                           ),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 25.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              SizedBox(
-                                width: _isGameOver 
-                                  ? (isTablet ? 128 : 96) 
-                                  : (isTablet ? 64 : 48),
-                                height: isTablet ? 64 : 48,
-                                child: _kladisAnimation!,
+                              Text(
+                                '${currentQuestionIndex + 1} of $_totalQuestions',
+                                style: GoogleFonts.vt323(
+                                  fontSize: isTablet ? 32 : 24, 
+                                  color: Colors.white
+                                ),
                               ),
-                              const SizedBox(width: 5),
-                              HPBar(hp: _hp),
-                              const SizedBox(width: 5),
-                              SizedBox(
-                                width: _isGameOver 
-                                  ? (isTablet ? 128 : 96) 
-                                  : (isTablet ? 64 : 48),
-                                height: isTablet ? 64 : 48,
-                                child: _kloudAnimation!,
+                              IconButton(
+                                icon: Icon(
+                                  Icons.settings, 
+                                  color: Colors.white,
+                                  size: isTablet ? 32 : 24,
+                                ),
+                                onPressed: () async {
+                                  List<Map<String, String>> availableVoices = widget.language == 'fil'
+                                      ? [
+                                          {"name": _maleVoiceFil, "locale": "fil-PH"},
+                                          {"name": _femaleVoiceFil, "locale": "fil-PH"}
+                                        ]
+                                      : [
+                                          {"name": _maleVoiceEn, "locale": "en-US"},
+                                          {"name": _femaleVoiceEn, "locale": "en-US"}
+                                        ];
+  
+                                  // Ensure the selectedVoice is valid for the current language
+                                  if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
+                                    setState(() {
+                                      _selectedVoice = availableVoices.first['name']!;
+                                    });
+                                  }
+                                  await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return SettingsDialog(
+                                        flutterTts: flutterTts, // Pass the flutterTts instance
+                                        isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                                        onTextToSpeechChanged: (bool value) {
+                                          setState(() {
+                                            _isTextToSpeechEnabled = value;
+                                          });
+                                          if (value) {
+                                            String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                            flutterTts.setLanguage(locale);
+                                            flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
+                                            flutterTts.setSpeechRate(_speechRate);
+                                            flutterTts.setVolume(_ttsVolume);
+                                          }
+                                        },
+                                        selectedVoice: _selectedVoice,
+                                        onVoiceChanged: (String? newValue) {
+                                          setState(() {
+                                            _selectedVoice = newValue!;
+                                          });
+                                          String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                          flutterTts.setVoice({"name": newValue!, "locale": locale});
+                                        },
+                                        speed: _speechRate, // Use the state variable
+                                        onSpeedChanged: (double value) {
+                                          setState(() {
+                                            _speechRate = value;
+                                          });
+                                          flutterTts.setSpeechRate(value);
+                                        },
+                                        ttsVolume: _ttsVolume, // Use the state variable
+                                        onTtsVolumeChanged: (double value) {
+                                          setState(() {
+                                            _ttsVolume = value;
+                                          });
+                                          flutterTts.setVolume(value);
+                                        },
+                                        availableVoices: availableVoices,
+                                        musicVolume: _musicVolume, // Use the state variable
+                                        onMusicVolumeChanged: (double value) {
+                                          setState(() {
+                                            _musicVolume = value;
+                                          });
+                                          _audioPlayer.setVolume(value);
+                                        },
+                                        sfxVolume: _sfxVolume, // Use the state variable
+                                        onSfxVolumeChanged: (double value) {
+                                          setState(() {
+                                            _sfxVolume = value;
+                                          });
+                                        },
+                                        onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
+                                        isLastQuestion: _isLastAnsweredQuestion(),
+                                      );
+                                    },
+                                  );
+                                },
                               ),
                             ],
                           ),
                         ),
-                    ],
+                        SizedBox(height: isTablet ? 16 : 8),
+                        Expanded(
+                          child: Scrollbar(
+                            thumbVisibility: true,
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isTablet ? 50.0 : 16.0
+                                ),
+                                child: questionWidget,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (widget.gamemode == 'arcade')
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 25.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: _isGameOver 
+                                        ? (isTablet ? 128 : 96) 
+                                        : (isTablet ? 64 : 48),
+                                      height: isTablet ? 64 : 48,
+                                      child: _kladisAnimation!,
+                                    ),
+                                    SizedBox(width: isTablet ? 20 : 10),
+                                    Text(
+                                      _stopwatchTime,
+                                      style: GoogleFonts.vt323(
+                                        fontSize: isTablet ? 32 : 24,
+                                        color: Colors.white
+                                      ),
+                                    ),
+                                    SizedBox(width: isTablet ? 20 : 10),
+                                    SizedBox(
+                                      width: _isGameOver 
+                                        ? (isTablet ? 128 : 96) 
+                                        : (isTablet ? 64 : 48),
+                                      height: isTablet ? 64 : 48,
+                                      child: _kloudAnimation!,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 25.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: _isGameOver 
+                                    ? (isTablet ? 128 : 96) 
+                                    : (isTablet ? 64 : 48),
+                                  height: isTablet ? 64 : 48,
+                                  child: _kladisAnimation!,
+                                ),
+                                const SizedBox(width: 5),
+                                HPBar(hp: _hp),
+                                const SizedBox(width: 5),
+                                SizedBox(
+                                  width: _isGameOver 
+                                    ? (isTablet ? 128 : 96) 
+                                    : (isTablet ? 64 : 48),
+                                  height: isTablet ? 64 : 48,
+                                  child: _kloudAnimation!,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

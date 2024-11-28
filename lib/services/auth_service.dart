@@ -631,16 +631,74 @@ class AuthService {
         }
       }
 
-      // Now proceed with deletion in correct order
-      await _deleteFirestoreData(user.uid);
+      // Get user's nickname before deletion for leaderboard cleanup
+      String? nickname;
+      try {
+        final profileDoc = await _firestore
+            .collection('User')
+            .doc(user.uid)
+            .collection('ProfileData')
+            .doc(user.uid)
+            .get();
+        
+        if (profileDoc.exists) {
+          nickname = profileDoc.get('nickname') as String;
+        }
+      } catch (e) {
+        // Continue even if we can't get the nickname
+      }
 
+      // Start a batch write for Firestore operations
+      WriteBatch batch = _firestore.batch();
+
+      // 1. Delete user's data from all leaderboards if we have their nickname
+      if (nickname != null) {
+        QuerySnapshot leaderboardsSnapshot = await _firestore
+            .collection('Leaderboards')
+            .get();
+
+        for (var doc in leaderboardsSnapshot.docs) {
+          List<dynamic> entries = doc.get('entries') ?? [];
+          entries.removeWhere((entry) => entry['nickname'] == nickname);
+          
+          batch.update(doc.reference, {
+            'entries': entries,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      // 2. Delete user's Firestore data
+      DocumentReference userDoc = _firestore.collection('User').doc(user.uid);
+      
+      // Delete subcollections first
+      for (String collection in ['ProfileData', 'GameSaveData']) {
+        QuerySnapshot subcollection = await userDoc.collection(collection).get();
+        for (var doc in subcollection.docs) {
+          batch.delete(doc.reference);
+        }
+      }
+      
+      // Delete main user document
+      batch.delete(userDoc);
+
+      // 3. Commit all Firestore changes
+      await batch.commit();
+
+      // 4. Clear local data
       await clearAllLocalData();
 
+      // 5. Finally delete the auth user
       await user.delete();
 
+      // 6. Sign out
       await signOut();
 
     } catch (e) {
+      // If error occurs during deletion, try to sign out anyway
+      try {
+        await _auth.signOut();
+      } catch (_) {}
       rethrow;
     }
   }
@@ -2032,10 +2090,11 @@ class AuthService {
       // ignore: unused_local_variable
       Duration syncDuration = DateTime.now().difference(syncStartTime);
 
-      // After processing game save queue, process leaderboard and avatar queues
+      // After processing game save queue, process all queued updates
       final leaderboardService = LeaderboardService();
       await leaderboardService.processLeaderboardQueue();
       await leaderboardService.processAvatarUpdateQueue();
+      await leaderboardService.processNicknameUpdateQueue();
 
     } catch (e) {
       await restoreQueueFromBackup();

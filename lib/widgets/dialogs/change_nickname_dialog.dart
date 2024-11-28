@@ -5,6 +5,8 @@ import 'package:responsive_builder/responsive_builder.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import '../../localization/play/localization.dart';
 import '../../utils/responsive_utils.dart';
+import '../../services/user_profile_service.dart';
+import '../../services/leaderboard_service.dart';
 
 class ChangeNicknameDialog extends StatefulWidget {
   final String currentNickname;
@@ -62,10 +64,31 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
   }
 
   Future<void> _handleSave() async {
-    await _animationController.reverse();
-    if (mounted) {
-      Navigator.of(context).pop();
-      widget.onNicknameChanged(_controller.text);
+    try {
+      await _animationController.reverse();
+      if (mounted) {
+        final userProfileService = UserProfileService();
+        final currentUser = await userProfileService.fetchUserProfile();
+        
+        if (currentUser != null) {
+          // Update leaderboards
+          final leaderboardService = LeaderboardService();
+          await leaderboardService.updateNicknameInLeaderboards(
+            currentUser.profileId,
+            widget.currentNickname,
+            _controller.text,
+          );
+        }
+
+        Navigator.of(context).pop();
+        widget.onNicknameChanged(_controller.text);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update nickname: $e')),
+        );
+      }
     }
   }
 

@@ -65,7 +65,24 @@ class LeaderboardsPageState extends State<LeaderboardsPage> with SingleTickerPro
   }
 
   Future<List<LeaderboardEntry>> _fetchLeaderboardData(String categoryId) async {
-    return _leaderboardService.getLeaderboard(categoryId);
+    try {
+      final entries = await _leaderboardService.getLeaderboard(categoryId);
+      
+      // Sort entries by record (ascending for time-based records)
+      entries.sort((a, b) => a.crntRecord.compareTo(b.crntRecord));
+      
+      return entries;
+    } catch (e) {
+      // Show error message to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(
+            LeaderboardsLocalization.translate('error_loading', widget.selectedLanguage)
+          )),
+        );
+      }
+      return [];
+    }
   }
 
   String formatTime(int seconds) {

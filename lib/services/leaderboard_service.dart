@@ -40,57 +40,108 @@ class LeaderboardService {
 
   Future<List<LeaderboardEntry>> getLeaderboard(String categoryId) async {
     try {
-      
-      // Check cache first
+      // Check cache first with a shorter duration for leaderboards
       final cachedData = await _getCachedLeaderboard(categoryId);
       if (cachedData != null && cachedData.isNotEmpty) {
+        // Try to refresh cache in background if it's getting old
+        _refreshCacheIfNeeded(categoryId, cachedData);
         return cachedData;
       }
 
-      // If no cache or empty cache, fetch from Firestore
-      final leaderboardData = await _fetchLeaderboardFromFirestore(categoryId);
-      
-      // Only cache if we have data
-      if (leaderboardData.isNotEmpty) {
-        await _cacheLeaderboard(categoryId, leaderboardData);
-      }
-      
-      return leaderboardData;
-    } catch (e) {
-      // Return cached data if available, even if expired
-      final cachedData = await _getCachedLeaderboard(categoryId, ignoreExpiry: true);
-      if (cachedData != null) {
-        return cachedData;
-      }
-      return []; // Return empty list instead of throwing
-    }
-  }
-
-  Future<List<LeaderboardEntry>> _fetchLeaderboardFromFirestore(String categoryId) async {
-    
-    try {
+      // If no cache, fetch from Firestore
       final leaderboardRef = _firestore.collection('Leaderboards').doc(categoryId);
       final snapshot = await leaderboardRef.get();
 
-
-      // Check both existence and data validity
-      final data = snapshot.data();
-      final hasValidEntries = data != null && 
-                            data['entries'] != null && 
-                            (data['entries'] as List).isNotEmpty;
-
-      if (!snapshot.exists || !hasValidEntries) {
-        return _aggregateAndUpdateLeaderboard(categoryId);
+      if (!snapshot.exists || !snapshot.data()?['entries']?.isNotEmpty) {
+        // If no data exists, aggregate from user records
+        final entries = await _aggregateAndUpdateLeaderboard(categoryId);
+        await _cacheLeaderboard(categoryId, entries);
+        return entries;
       }
 
-      final entries = (data['entries'] as List)
+      // Convert and cache the data
+      final entries = (snapshot.data()!['entries'] as List)
           .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
           .toList();
       
+      await _cacheLeaderboard(categoryId, entries);
       return entries;
+
     } catch (e) {
-      // Try aggregating as fallback
-      return _aggregateAndUpdateLeaderboard(categoryId);
+      // On error, try to return cached data even if expired
+      final cachedData = await _getCachedLeaderboard(categoryId, ignoreExpiry: true);
+      return cachedData ?? [];
+    }
+  }
+
+  Future<void> _refreshCacheIfNeeded(String categoryId, List<LeaderboardEntry> currentCache) async {
+    try {
+      // Check if cache is getting old (e.g., more than 2 minutes old)
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = '$CACHE_KEY_PREFIX$categoryId';
+      final cacheData = prefs.getString(cacheKey);
+      
+      if (cacheData != null) {
+        final data = jsonDecode(cacheData);
+        final cacheTime = DateTime.parse(data['timestamp']);
+        
+        if (DateTime.now().difference(cacheTime) > const Duration(minutes: 2)) {
+          // Refresh in background
+          _firestore
+              .collection('Leaderboards')
+              .doc(categoryId)
+              .get()
+              .then((snapshot) async {
+                if (snapshot.exists && snapshot.data()?['entries']?.isNotEmpty) {
+                  final entries = (snapshot.data()!['entries'] as List)
+                      .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
+                      .toList();
+                  await _cacheLeaderboard(categoryId, entries);
+                }
+              })
+              .catchError((_) {
+                // Ignore errors in background refresh
+              });
+        }
+      }
+    } catch (e) {
+      // Ignore errors in background refresh
+    }
+  }
+
+  Future<void> _cacheLeaderboard(String categoryId, List<LeaderboardEntry> entries) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cacheData = {
+      'entries': entries.map((e) => e.toMap()).toList(),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    await prefs.setString('$CACHE_KEY_PREFIX$categoryId', jsonEncode(cacheData));
+  }
+
+  Future<List<LeaderboardEntry>?> _getCachedLeaderboard(
+    String categoryId, {
+    bool ignoreExpiry = false
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedJson = prefs.getString('$CACHE_KEY_PREFIX$categoryId');
+      
+      if (cachedJson == null) return null;
+
+      final cachedData = jsonDecode(cachedJson);
+      final timestamp = DateTime.parse(cachedData['timestamp']);
+
+      // Use a shorter cache duration for leaderboards
+      if (!ignoreExpiry && 
+          DateTime.now().difference(timestamp) > const Duration(minutes: 5)) {
+        return null;
+      }
+
+      return (cachedData['entries'] as List)
+          .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return null;
     }
   }
 
@@ -162,36 +213,6 @@ class LeaderboardService {
     } catch (e) {
       return entries;
     }
-  }
-
-  Future<void> _cacheLeaderboard(String categoryId, List<LeaderboardEntry> entries) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cacheData = {
-      'entries': entries.map((e) => e.toMap()).toList(),
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-    await prefs.setString('$CACHE_KEY_PREFIX$categoryId', jsonEncode(cacheData));
-  }
-
-  Future<List<LeaderboardEntry>?> _getCachedLeaderboard(String categoryId, {bool ignoreExpiry = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cachedJson = prefs.getString('$CACHE_KEY_PREFIX$categoryId');
-    
-    if (cachedJson == null) {
-      return null;
-    }
-
-    final cachedData = jsonDecode(cachedJson);
-    final timestamp = DateTime.parse(cachedData['timestamp']);
-
-    if (!ignoreExpiry && DateTime.now().difference(timestamp) > CACHE_DURATION) {
-      return null;
-    }
-
-    final entries = (cachedData['entries'] as List)
-        .map((e) => LeaderboardEntry.fromMap(e))
-        .toList();
-    return entries;
   }
 
   Future<void> updateLeaderboard(String categoryId, String userId, int newRecord) async {
@@ -575,6 +596,138 @@ class LeaderboardService {
       // Clear queue after processing
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('avatar_update_queue');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateNicknameInLeaderboards(String userId, String oldNickname, String newNickname) async {
+    try {
+      // First try online update
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _updateNicknameOnline(userId, oldNickname, newNickname);
+      } else {
+        // If offline, queue the update
+        await _queueNicknameUpdate(userId, oldNickname, newNickname);
+      }
+    } catch (e) {
+      // If online update fails, queue it
+      await _queueNicknameUpdate(userId, oldNickname, newNickname);
+      rethrow;
+    }
+  }
+
+  Future<void> _updateNicknameOnline(String userId, String oldNickname, String newNickname) async {
+    try {
+      // Get all leaderboards
+      final leaderboardsSnapshot = await _firestore
+          .collection('Leaderboards')
+          .get();
+
+      // Update each leaderboard in a batch
+      final batch = _firestore.batch();
+      
+      for (var doc in leaderboardsSnapshot.docs) {
+        final data = doc.data();
+        if (data['entries'] == null) continue;
+
+        List<LeaderboardEntry> entries = (data['entries'] as List)
+            .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
+            .toList();
+
+        // Find and update user's entries
+        bool hasUpdated = false;
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].nickname == oldNickname) {
+            entries[i] = LeaderboardEntry(
+              nickname: newNickname,
+              crntRecord: entries[i].crntRecord,
+              avatarId: entries[i].avatarId,
+            );
+            hasUpdated = true;
+          }
+        }
+
+        if (hasUpdated) {
+          batch.update(doc.reference, {
+            'entries': entries.map((e) => e.toMap()).toList(),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+
+          // Clear cache for this leaderboard
+          await _clearLeaderboardCache(doc.id);
+        }
+      }
+
+      await batch.commit();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _queueNicknameUpdate(String userId, String oldNickname, String newNickname) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get existing queue
+      List<Map<String, dynamic>> queue = await _getNicknameUpdateQueue();
+      
+      // Remove any existing updates for this user
+      queue.removeWhere((update) => update['userId'] == userId);
+      
+      // Add new update
+      queue.add({
+        'userId': userId,
+        'oldNickname': oldNickname,
+        'newNickname': newNickname,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Save queue
+      await prefs.setString('nickname_update_queue', jsonEncode(queue));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getNicknameUpdateQueue() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? queueJson = prefs.getString('nickname_update_queue');
+      if (queueJson != null) {
+        return List<Map<String, dynamic>>.from(jsonDecode(queueJson));
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> processNicknameUpdateQueue() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      List<Map<String, dynamic>> queue = await _getNicknameUpdateQueue();
+      if (queue.isEmpty) return;
+
+      // Process each queued update
+      for (var update in queue) {
+        try {
+          await _updateNicknameOnline(
+            update['userId'],
+            update['oldNickname'],
+            update['newNickname'],
+          );
+        } catch (e) {
+          continue;
+        }
+      }
+
+      // Clear queue after processing
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('nickname_update_queue');
     } catch (e) {
       rethrow;
     }

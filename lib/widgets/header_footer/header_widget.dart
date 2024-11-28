@@ -98,17 +98,18 @@ class HeaderWidgetState extends State<HeaderWidget> {
 
   Future<void> _updateAvatarImage(int avatarId) async {
     try {
+
       // Strong cache check
       if (_cachedAvatarPath != null && _currentAvatarId == avatarId) {
         return;
       }
 
-      
       // Get from service with cache
       final avatar = await _avatarService.getAvatarDetails(
         avatarId,
         priority: LoadPriority.HIGH,
       );
+      
       
       if (mounted && avatar != null) {
         setState(() {
@@ -117,6 +118,13 @@ class HeaderWidgetState extends State<HeaderWidget> {
         });
       }
     } catch (e) {
+      // On error, use default avatar
+      if (mounted) {
+        setState(() {
+          _cachedAvatarPath = 'Kladis.png';
+          _currentAvatarId = avatarId;
+        });
+      }
     }
   }
 

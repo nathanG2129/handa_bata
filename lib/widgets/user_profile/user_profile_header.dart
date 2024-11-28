@@ -59,11 +59,13 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   String? _cachedBannerPath;
   late StreamSubscription<List<Map<String, dynamic>>> _bannerSubscription;
   int _currentAvatarId = 0;
+  ConnectionQuality _currentQuality = ConnectionQuality.EXCELLENT;
 
   @override
   void initState() {
     super.initState();
-    
+    _currentAvatarId = widget.avatarId;
+
     // Listen to avatar updates
     _avatarSubscription = _avatarService.avatarUpdates.listen((updates) {
       if (mounted && updates.containsKey(widget.avatarId)) {
@@ -75,11 +77,15 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
 
     // Add connection quality listener
     _connectionSubscription = _avatarService.connectionQuality.listen((quality) {
-      if (mounted) {
+      if (mounted && quality != _currentQuality) {
+        setState(() {
+          _currentQuality = quality;
+        });
       }
     });
 
-    _getAvatarImage();
+    // Initial avatar load
+    _loadAvatar();
 
     // Add banner subscription
     _bannerSubscription = _bannerService.bannerUpdates.listen((banners) {
@@ -93,6 +99,19 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
     });
 
     _getBannerImage();
+  }
+
+  Future<void> _loadAvatar() async {
+    if (!mounted) return;
+    
+    final avatar = await _getAvatarImage();
+    
+    if (mounted && avatar != null) {
+      setState(() {
+        _cachedAvatarPath = avatar;
+        _currentAvatarId = widget.avatarId;
+      });
+    }
   }
 
   @override
@@ -116,16 +135,17 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
 
   Future<String?> _getAvatarImage() async {
     try {
+
       // Strong cache check
       if (_cachedAvatarPath != null && widget.avatarId == _currentAvatarId) {
         return _cachedAvatarPath;
       }
 
-      
       final avatar = await _avatarService.getAvatarDetails(
         widget.avatarId,
         priority: LoadPriority.HIGH,
       );
+      
       
       if (mounted && avatar != null) {
         setState(() {
@@ -135,6 +155,13 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
       }
       return _cachedAvatarPath ?? 'Kladis.png';
     } catch (e) {
+      // On error, use default avatar and update state
+      if (mounted) {
+        setState(() {
+          _cachedAvatarPath = 'Kladis.png';
+          _currentAvatarId = widget.avatarId;
+        });
+      }
       return 'Kladis.png';
     }
   }
@@ -241,9 +268,8 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
   @override
   void didUpdateWidget(UserProfileHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Check if avatar changed
     if (oldWidget.avatarId != widget.avatarId) {
-      _getAvatarImage();
+      _loadAvatar();
     }
     // Check if banner changed
     if (oldWidget.bannerId != widget.bannerId) {

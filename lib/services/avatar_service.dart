@@ -112,7 +112,9 @@ class AvatarService {
         await _processQueue(LoadPriority.CRITICAL);
 
         // Process other queues based on connection quality
-        switch (await _connectionManager.checkConnectionQuality()) {
+        final quality = await _connectionManager.checkConnectionQuality();
+        
+        switch (quality) {
           case ConnectionQuality.EXCELLENT:
             await _processQueue(LoadPriority.HIGH);
             await _processQueue(LoadPriority.MEDIUM);
@@ -126,7 +128,10 @@ class AvatarService {
             await _processQueue(LoadPriority.HIGH);
             break;
           case ConnectionQuality.OFFLINE:
-            // Only process from cache
+            // Process all queues when offline since we'll use local storage
+            await _processQueue(LoadPriority.HIGH);
+            await _processQueue(LoadPriority.MEDIUM);
+            await _processQueue(LoadPriority.LOW);
             break;
         }
       } catch (e) {
@@ -137,16 +142,29 @@ class AvatarService {
 
   Future<void> _processQueue(LoadPriority priority) async {
     final queue = _loadQueues[priority]!;
+    
     while (queue.isNotEmpty) {
       final request = queue.removeFirst();
+      
       try {
         final result = await _fetchAvatarWithPriority(
           request.avatarId, 
           request.priority
         );
-        request.completer.complete(result);
+        
+        if (!request.completer.isCompleted) {
+          request.completer.complete(result);
+        }
       } catch (e) {
-        request.completer.completeError(e);
+        if (!request.completer.isCompleted) {
+          // Return default avatar on error
+          final defaultAvatar = {
+            'id': request.avatarId,
+            'img': 'Kladis.png',
+            'title': 'Default Avatar',
+          };
+          request.completer.complete(defaultAvatar);
+        }
       }
     }
   }
@@ -524,6 +542,7 @@ class AvatarService {
     int id, {
     LoadPriority priority = LoadPriority.HIGH
   }) async {
+    
     // Check memory cache first
     if (_avatarCache.containsKey(id) && _avatarCache[id]!.isValid) {
       return _avatarCache[id]!.data;
@@ -548,8 +567,18 @@ class AvatarService {
     LoadPriority priority
   ) async {
     try {
-      // Check local storage first
+      
+      // Check memory cache first for better performance
+      if (_avatarCache.containsKey(id) && _avatarCache[id]!.isValid) {
+        return _avatarCache[id]!.data;
+      }
+
+      // Check connection quality early
+      final isOffline = await _connectionManager.checkConnectionQuality() == ConnectionQuality.OFFLINE;
+
+      // Check local storage
       List<Map<String, dynamic>> localAvatars = await _getAvatarsFromLocal();
+      
       var avatar = localAvatars.firstWhere(
         (a) => a['id'] == id,
         orElse: () => {},
@@ -560,14 +589,18 @@ class AvatarService {
         return avatar;
       }
 
-      // Only fetch from server for HIGH or CRITICAL priority when offline
-      if (await _connectionManager.checkConnectionQuality() == ConnectionQuality.OFFLINE && 
-          priority != LoadPriority.CRITICAL &&
-          priority != LoadPriority.HIGH) {
-        return null;
+      // If we're offline and nothing in local storage, return default
+      if (isOffline) {
+        final defaultAvatar = {
+          'id': id,
+          'img': 'Kladis.png',
+          'title': 'Default Avatar',
+        };
+        _addToCache(id, defaultAvatar);
+        return defaultAvatar;
       }
 
-      // Fetch from server with timeout based on priority
+      // Only proceed with server fetch for online cases
       final timeout = _getTimeoutForPriority(priority);
       DocumentSnapshot doc = await _avatarDoc.get().timeout(timeout);
             
@@ -583,13 +616,29 @@ class AvatarService {
           
         if (serverAvatar.isNotEmpty) {
           _addToCache(id, serverAvatar);
+          // Also store in local storage for offline access
+          await _storeAvatarsLocally(avatars);
           return serverAvatar;
         }
       }
 
-      return null;
+      // If all else fails, return default avatar data
+      final defaultAvatar = {
+        'id': id,
+        'img': 'Kladis.png',
+        'title': 'Default Avatar',
+      };
+      _addToCache(id, defaultAvatar);
+      return defaultAvatar;
     } catch (e) {
-      return null;
+      // On error, return default avatar data instead of null
+      final defaultAvatar = {
+        'id': id,
+        'img': 'Kladis.png',
+        'title': 'Default Avatar',
+      };
+      _addToCache(id, defaultAvatar);
+      return defaultAvatar;
     }
   }
 

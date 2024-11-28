@@ -633,7 +633,6 @@ class StagesPageState extends State<StagesPage> {
         borderColor: _selectedMode == 'Normal'
           ? darken(const Color(0xFF32c067))
           : const Color(0xFF1A0D30),
-        width: width,
         child: Text(
           'NORMAL',
           style: GoogleFonts.rubik(
@@ -641,7 +640,7 @@ class StagesPageState extends State<StagesPage> {
             fontSize: ResponsiveUtils.valueByDevice<double>(
               context: context,
               mobile: 14,
-              tablet: 16,
+              tablet: 14,
               desktop: 18,
             ),
             fontWeight: FontWeight.w500,
@@ -669,7 +668,7 @@ class StagesPageState extends State<StagesPage> {
             fontSize: ResponsiveUtils.valueByDevice<double>(
               context: context,
               mobile: 14,
-              tablet: 16,
+              tablet: 14,
               desktop: 18,
             ),
             fontWeight: FontWeight.w500,

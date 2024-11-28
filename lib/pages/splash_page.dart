@@ -398,62 +398,73 @@ class SplashPageState extends State<SplashPage> {
     });
   }
 
+  Future<bool> _onWillPop() async {
+    // If loading, prevent back
+    if (_isLoading) return false;
+    
+    // Otherwise, allow back (exits app)
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          ResponsiveBuilder(
-            builder: (context, sizingInformation) {
-              return Stack(
-                children: [
-                  // Background
-                  SvgPicture.asset(
-                    'assets/backgrounds/background.svg',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  
-                  // Language Dropdown
-                  Positioned(
-                    top: ResponsiveUtils.valueByDevice(
-                      context: context,
-                      mobile: 40.0,
-                      tablet: 50.0,
-                      desktop: 60.0,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            ResponsiveBuilder(
+              builder: (context, sizingInformation) {
+                return Stack(
+                  children: [
+                    // Background
+                    SvgPicture.asset(
+                      'assets/backgrounds/background.svg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
-                    right: ResponsiveUtils.valueByDevice(
-                      context: context,
-                      mobile: 25.0,
-                      tablet: 30.0,
-                      desktop: 35.0,
+                    
+                    // Language Dropdown
+                    Positioned(
+                      top: ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: 40.0,
+                        tablet: 50.0,
+                        desktop: 60.0,
+                      ),
+                      right: ResponsiveUtils.valueByDevice(
+                        context: context,
+                        mobile: 25.0,
+                        tablet: 30.0,
+                        desktop: 35.0,
+                      ),
+                      child: _buildLanguageDropdown(),
                     ),
-                    child: _buildLanguageDropdown(),
-                  ),
-                  
-                  // Main Content
-                  SafeArea(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: ResponsiveUtils.valueByDevice(
-                            context: context,
-                            mobile: 600.0,
-                            tablet: 800.0,
-                            desktop: 1200.0,
+                    
+                    // Main Content
+                    SafeArea(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: ResponsiveUtils.valueByDevice(
+                              context: context,
+                              mobile: 600.0,
+                              tablet: 800.0,
+                              desktop: 1200.0,
+                            ),
                           ),
+                          child: _buildMainContent(context),
                         ),
-                        child: _buildMainContent(context),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-          if (_isLoading) _buildLoadingOverlay(),
-        ],
+                  ],
+                );
+              },
+            ),
+            if (_isLoading) _buildLoadingOverlay(),
+          ],
+        ),
       ),
     );
   }

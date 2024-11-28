@@ -207,8 +207,6 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
             'assets/instructions/FillinTheBlanks02.jpg',
             'assets/instructions/FillinTheBlanks03.jpg',
             'assets/instructions/FillinTheBlanks04.jpg',
-            'assets/instructions/FillinTheBlanks05.jpg',
-            'assets/instructions/FillinTheBlanks06.jpg',
           ],
           description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: () {

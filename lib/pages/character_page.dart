@@ -9,6 +9,7 @@ import 'package:handabatamae/shared/connection_quality.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/localization/character/character_localization.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/services/leaderboard_service.dart';
 
 class CharacterPage extends StatefulWidget {
   final VoidCallback onClose;
@@ -148,7 +149,6 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
 
   Future<void> _handleAvatarUpdate(int avatarId) async {
     try {
-
       // Pre-fetch avatar details to ensure it's in cache
       final avatar = await _avatarService.getAvatarDetails(
         avatarId,
@@ -162,6 +162,16 @@ class CharacterPageState extends State<CharacterPage> with SingleTickerProviderS
       // Update profile through UserProfileService
       await userProfileService.updateProfileWithIntegration('avatarId', avatarId);
       
+      // Update leaderboards
+      final leaderboardService = LeaderboardService();
+      final currentUser = await userProfileService.fetchUserProfile();
+      if (currentUser != null) {
+        await leaderboardService.updateAvatarInLeaderboards(
+          currentUser.profileId,
+          avatarId,
+        );
+      }
+
       // Notify callback and close dialog
       widget.onAvatarSelected?.call(avatarId);
       _closeDialog();

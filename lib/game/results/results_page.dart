@@ -18,6 +18,7 @@ import '../../services/badge_unlock_service.dart';
 import 'package:handabatamae/services/game_save_manager.dart';
 import 'package:handabatamae/localization/results/localization.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:handabatamae/services/leaderboard_service.dart';
 
 class ResultsPage extends StatefulWidget {
   final int score;
@@ -542,7 +543,6 @@ class ResultsPageState extends State<ResultsPage> {
         xpGained = widget.score * multiplier;
       }
 
-
       // Send only the XP gain to batchUpdateProfile
       await userProfileService.batchUpdateProfile({
         'exp': xpGained,
@@ -550,6 +550,7 @@ class ResultsPageState extends State<ResultsPage> {
 
       // Update game progress
       if (!widget.isGameOver) {
+        // First update game progress which handles offline/online automatically
         await _authService.updateGameProgress(
           categoryId: widget.category['id'],
           stageName: widget.stageName,
@@ -559,6 +560,16 @@ class ResultsPageState extends State<ResultsPage> {
           record: widget.gamemode == 'arcade' ? _convertRecordToSeconds(widget.record) : null,
           isArcade: widget.gamemode == 'arcade',
         );
+
+        // For arcade mode, queue leaderboard update (will be processed when online)
+        if (widget.gamemode == 'arcade') {
+          final leaderboardService = LeaderboardService();
+          await leaderboardService.queueLeaderboardUpdate(
+            widget.category['id'],
+            currentProfile.profileId,
+            _convertRecordToSeconds(widget.record),
+          );
+        }
 
         // Update total stages cleared after game progress is updated
         await userProfileService.updateTotalStagesCleared();
@@ -571,6 +582,7 @@ class ResultsPageState extends State<ResultsPage> {
       await _checkBadgeUnlocks();
 
     } catch (e) {
+      // Handle errors
     }
   }
 

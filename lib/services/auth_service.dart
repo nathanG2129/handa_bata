@@ -14,6 +14,7 @@ import '../models/game_save_data.dart'; // Add this import
 import '../services/stage_service.dart'; // Add this import
 import '../services/banner_service.dart'; // Add this import
 import '../services/badge_service.dart'; // Add this import
+import '../services/leaderboard_service.dart'; // Add this import
 // For BuildContext and VoidCallback
 
 /// Represents a single entry in the offline changes queue
@@ -456,15 +457,116 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      
-      // Clear all local data first
-      await clearAllLocalData();
-      
-      // Sign out from Firebase Auth
-      await _auth.signOut();
-      
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Write logout log before signing out
+        await _firestore
+            .collection('Logs')
+            .doc(user.uid)
+            .collection('profile_updates')
+            .add({
+          'timestamp': FieldValue.serverTimestamp(),
+          'action': 'logout',
+          'userId': user.uid,
+          'success': true,
+        });
+
+        // Clear local data
+        await clearAllLocalData();
+
+        // Clear offline queue
+        await _clearOfflineQueue();
+        
+        // Finally, sign out
+        await _auth.signOut();
+      }
     } catch (e) {
+      // If logging fails, still try to sign out
+      await _auth.signOut();
       rethrow;
+    }
+  }
+
+  // Helper method to clear offline queue
+  Future<void> _clearOfflineQueue() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove(OfflineQueueKeys.QUEUE_KEY);
+      await prefs.remove(OfflineQueueKeys.LAST_SYNC_KEY);
+      await prefs.remove(OfflineQueueKeys.QUEUE_BACKUP_KEY);
+    } catch (e) {
+      debugPrint('Error clearing offline queue: $e');
+    }
+  }
+
+  // Add this method to track login attempts
+  Future<void> logLoginAttempt({
+    required String userId,
+    required bool success,
+    String? errorMessage,
+  }) async {
+    try {
+      await _firestore
+          .collection('Logs')
+          .doc(userId)
+          .collection('profile_updates')
+          .add({
+        'timestamp': FieldValue.serverTimestamp(),
+        'action': 'login',
+        'userId': userId,
+        'success': success,
+        'error': errorMessage,
+      });
+    } catch (e) {
+      debugPrint('Error logging login attempt: $e');
+    }
+  }
+
+  // Add this method to track registration attempts
+  Future<void> logRegistrationAttempt({
+    required String userId,
+    required bool success,
+    String? errorMessage,
+  }) async {
+    try {
+      await _firestore
+          .collection('Logs')
+          .doc(userId)
+          .collection('profile_updates')
+          .add({
+        'timestamp': FieldValue.serverTimestamp(),
+        'action': 'register',
+        'userId': userId,
+        'success': success,
+        'error': errorMessage,
+      });
+    } catch (e) {
+      debugPrint('Error logging registration attempt: $e');
+    }
+  }
+
+  // Add this method to track profile updates
+  Future<void> logProfileUpdate({
+    required String userId,
+    required String updateType,
+    required bool success,
+    String? errorMessage,
+  }) async {
+    try {
+      await _firestore
+          .collection('Logs')
+          .doc(userId)
+          .collection('profile_updates')
+          .add({
+        'timestamp': FieldValue.serverTimestamp(),
+        'action': 'profile_update',
+        'updateType': updateType, // e.g., 'email', 'password', 'nickname'
+        'userId': userId,
+        'success': success,
+        'error': errorMessage,
+      });
+    } catch (e) {
+      debugPrint('Error logging profile update: $e');
     }
   }
 
@@ -1823,7 +1925,7 @@ class AuthService {
       
       // Get and update queue
       List<QueueEntry> queue = await getOfflineQueue();
-      int sizeBefore = queue.length;
+      // int sizeBefore = queue.length;
       queue.removeWhere((entry) => entry.categoryId == categoryId);
       
       // Save updated queue
@@ -1896,7 +1998,9 @@ class AuthService {
       
       
       // Track sync progress
+      // ignore: unused_local_variable
       int successCount = 0;
+      // ignore: unused_local_variable
       int failureCount = 0;
       DateTime syncStartTime = DateTime.now();
 
@@ -1925,7 +2029,13 @@ class AuthService {
       }
 
       // Log sync completion
+      // ignore: unused_local_variable
       Duration syncDuration = DateTime.now().difference(syncStartTime);
+
+      // After processing game save queue, process leaderboard and avatar queues
+      final leaderboardService = LeaderboardService();
+      await leaderboardService.processLeaderboardQueue();
+      await leaderboardService.processAvatarUpdateQueue();
 
     } catch (e) {
       await restoreQueueFromBackup();

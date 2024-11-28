@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/game_save_data.dart';
@@ -195,7 +196,23 @@ class LeaderboardService {
 
   Future<void> updateLeaderboard(String categoryId, String userId, int newRecord) async {
     try {
-      
+      // First try online update
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _updateLeaderboardOnline(categoryId, userId, newRecord);
+      } else {
+        // If offline, queue the update
+        await _queueLeaderboardUpdate(categoryId, userId, newRecord);
+      }
+    } catch (e) {
+      // If online update fails, queue it
+      await _queueLeaderboardUpdate(categoryId, userId, newRecord);
+      rethrow;
+    }
+  }
+
+  Future<void> _updateLeaderboardOnline(String categoryId, String userId, int newRecord) async {
+    try {
       // Get current leaderboard first
       final leaderboardRef = _firestore.collection('Leaderboards').doc(categoryId);
       final snapshot = await leaderboardRef.get();
@@ -221,14 +238,18 @@ class LeaderboardService {
       }
 
       // Update or add user's entry
-      final nickname = (profileDoc.data() as Map<String, dynamic>)['nickname'] as String;
-      final newEntry = LeaderboardEntry(nickname: nickname, crntRecord: newRecord, avatarId: (profileDoc.data() as Map<String, dynamic>)['avatarId'] as int);
+      final profileData = profileDoc.data() as Map<String, dynamic>;
+      final newEntry = LeaderboardEntry(
+        nickname: profileData['nickname'] as String,
+        crntRecord: newRecord,
+        avatarId: profileData['avatarId'] as int,
+      );
       
       // Remove existing entry for this user if exists
-      entries.removeWhere((e) => e.nickname == nickname);
+      entries.removeWhere((e) => e.nickname == newEntry.nickname);
       entries.add(newEntry);
       
-      // Sort entries
+      // Sort entries by record (ascending for time-based records)
       entries.sort((a, b) => a.crntRecord.compareTo(b.crntRecord));
 
       // Update Firestore in batch
@@ -249,11 +270,81 @@ class LeaderboardService {
       await batch.commit();
 
       // Clear cache to force refresh
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('$CACHE_KEY_PREFIX$categoryId');
+      await _clearLeaderboardCache(categoryId);
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<void> _queueLeaderboardUpdate(String categoryId, String userId, int newRecord) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get existing queue
+      List<Map<String, dynamic>> queue = await _getLeaderboardQueue();
+      
+      // Add new update to queue
+      queue.add({
+        'categoryId': categoryId,
+        'userId': userId,
+        'record': newRecord,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Save queue
+      await prefs.setString('leaderboard_update_queue', jsonEncode(queue));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getLeaderboardQueue() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? queueJson = prefs.getString('leaderboard_update_queue');
+      if (queueJson != null) {
+        return List<Map<String, dynamic>>.from(jsonDecode(queueJson));
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> processLeaderboardQueue() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      List<Map<String, dynamic>> queue = await _getLeaderboardQueue();
+      if (queue.isEmpty) return;
+
+      // Process each queued update
+      for (var update in queue) {
+        try {
+          await _updateLeaderboardOnline(
+            update['categoryId'],
+            update['userId'],
+            update['record'],
+          );
+        } catch (e) {
+          // Continue processing other updates even if one fails
+          continue;
+        }
+      }
+
+      // Clear queue after processing
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('leaderboard_update_queue');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Add method to clear cache
+  Future<void> _clearLeaderboardCache(String categoryId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('$CACHE_KEY_PREFIX$categoryId');
   }
 
   // Clean up old caches
@@ -300,6 +391,190 @@ class LeaderboardService {
         )
       );
 
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> queueLeaderboardUpdate(String categoryId, String userId, int newRecord) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get existing queue
+      List<Map<String, dynamic>> queue = await _getLeaderboardQueue();
+      
+      // Remove any existing updates for this category/user combination
+      queue.removeWhere((update) => 
+        update['categoryId'] == categoryId && update['userId'] == userId
+      );
+      
+      // Add new update to queue
+      queue.add({
+        'categoryId': categoryId,
+        'userId': userId,
+        'record': newRecord,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Save queue
+      await prefs.setString('leaderboard_update_queue', jsonEncode(queue));
+
+      // Try to process immediately if online
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        try {
+          await _updateLeaderboardOnline(categoryId, userId, newRecord);
+          // If successful, remove from queue
+          queue.removeWhere((update) => 
+            update['categoryId'] == categoryId && update['userId'] == userId
+          );
+          await prefs.setString('leaderboard_update_queue', jsonEncode(queue));
+        } catch (e) {
+          // Keep in queue if update fails
+        }
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Add method to update avatar in leaderboard entries
+  Future<void> updateAvatarInLeaderboards(String userId, int newAvatarId) async {
+    try {
+      // First try online update
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult != ConnectivityResult.none) {
+        await _updateAvatarOnline(userId, newAvatarId);
+      } else {
+        // If offline, queue the update
+        await _queueAvatarUpdate(userId, newAvatarId);
+      }
+    } catch (e) {
+      // If online update fails, queue it
+      await _queueAvatarUpdate(userId, newAvatarId);
+      rethrow;
+    }
+  }
+
+  Future<void> _updateAvatarOnline(String userId, int newAvatarId) async {
+    try {
+      // Get user's nickname first
+      final profileDoc = await _firestore
+          .collection('User')
+          .doc(userId)
+          .collection('ProfileData')
+          .doc(userId)
+          .get();
+
+      if (!profileDoc.exists) return;
+      final nickname = profileDoc.get('nickname') as String;
+
+      // Get all leaderboards
+      final leaderboardsSnapshot = await _firestore
+          .collection('Leaderboards')
+          .get();
+
+      // Update each leaderboard in a batch
+      final batch = _firestore.batch();
+      
+      for (var doc in leaderboardsSnapshot.docs) {
+        final data = doc.data();
+        if (data['entries'] == null) continue;
+
+        List<LeaderboardEntry> entries = (data['entries'] as List)
+            .map((e) => LeaderboardEntry.fromMap(e as Map<String, dynamic>))
+            .toList();
+
+        // Find and update user's entries
+        bool hasUpdated = false;
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].nickname == nickname) {
+            entries[i] = LeaderboardEntry(
+              nickname: nickname,
+              crntRecord: entries[i].crntRecord,
+              avatarId: newAvatarId,
+            );
+            hasUpdated = true;
+          }
+        }
+
+        if (hasUpdated) {
+          batch.update(doc.reference, {
+            'entries': entries.map((e) => e.toMap()).toList(),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+
+          // Clear cache for this leaderboard
+          await _clearLeaderboardCache(doc.id);
+        }
+      }
+
+      await batch.commit();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _queueAvatarUpdate(String userId, int newAvatarId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      // Get existing queue
+      List<Map<String, dynamic>> queue = await _getAvatarUpdateQueue();
+      
+      // Remove any existing updates for this user
+      queue.removeWhere((update) => update['userId'] == userId);
+      
+      // Add new update
+      queue.add({
+        'userId': userId,
+        'avatarId': newAvatarId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Save queue
+      await prefs.setString('avatar_update_queue', jsonEncode(queue));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getAvatarUpdateQueue() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? queueJson = prefs.getString('avatar_update_queue');
+      if (queueJson != null) {
+        return List<Map<String, dynamic>>.from(jsonDecode(queueJson));
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> processAvatarUpdateQueue() async {
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) return;
+
+      List<Map<String, dynamic>> queue = await _getAvatarUpdateQueue();
+      if (queue.isEmpty) return;
+
+      // Process each queued update
+      for (var update in queue) {
+        try {
+          await _updateAvatarOnline(
+            update['userId'],
+            update['avatarId'],
+          );
+        } catch (e) {
+          continue;
+        }
+      }
+
+      // Clear queue after processing
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('avatar_update_queue');
     } catch (e) {
       rethrow;
     }

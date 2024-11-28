@@ -51,17 +51,54 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-
+        // Get arcade stage structure
         List<Map<String, dynamic>> stages = await _stageService.fetchStages(
             widget.selectedLanguage, 
             widget.category['id']!,
             isArcade: true,
         );
         
+        if (stages.isNotEmpty) {
+            // Get randomized questions for the arcade stage
+            final arcadeQuestions = await _stageService.getRandomizedArcadeQuestions(
+                widget.category['id']!,
+                widget.selectedLanguage
+            );
+
+            // Update the arcade stage with the randomized questions
+            if (arcadeQuestions.isNotEmpty) {
+                // Calculate maxScore based on question types
+                final int maxScore = arcadeQuestions.fold(0, (sum, question) {
+                    switch (question['type']) {
+                        case 'Multiple Choice': return sum + 1;
+                        case 'Fill in the Blanks': return sum + (question['answer'] as List).length;
+                        case 'Identification': return sum + 1;
+                        case 'Matching Type': return sum + (question['answerPairs'] as List).length;
+                        default: return sum;
+                    }
+                });
+
+                stages = stages.map((stage) {
+                    return {
+                        ...stage,
+                        'questions': arcadeQuestions,
+                        'maxScore': maxScore, // Add maxScore to stage data
+                    };
+                }).toList();
+
+                // Debug prints
+                print('\n=== Arcade Stage Questions [${widget.category['name']}] [Lang: ${widget.selectedLanguage}] ===');
+                print('Total Questions: ${arcadeQuestions.length}');
+                print('Max Score: $maxScore');
+                print('First Question: ${arcadeQuestions.first['question']}');
+                print('Last Question: ${arcadeQuestions.last['question']}');
+                print('=== End of Arcade Questions ===\n');
+            }
+        }
         
         if (mounted) {
             setState(() {
-                _stages = stages;  // No need to filter here anymore
+                _stages = stages;
             });
         }
 
@@ -72,6 +109,7 @@ class ArcadeStagesPageState extends State<ArcadeStagesPage> {
     } catch (e) {
         if (mounted) {
             // Handle error state
+            print('Error fetching arcade stages: $e');
         }
     }
   }

@@ -391,6 +391,71 @@ class AuthService {
     }
   }
 
+  /// Checks and recovers missing arcade stages in game save data
+  Future<void> _recoverMissingArcadeStages(String userId, List<Map<String, dynamic>> categories) async {
+    print('\n=== Checking for Missing Arcade Stages ===');
+    try {
+      for (var category in categories) {
+        String categoryId = category['id'];
+        String arcadeKey = GameSaveData.getArcadeKey(categoryId);
+        
+        // Get current game save data
+        DocumentSnapshot saveDoc = await _firestore
+            .collection('User')
+            .doc(userId)
+            .collection('GameSaveData')
+            .doc(categoryId)
+            .get();
+
+        if (saveDoc.exists) {
+          Map<String, dynamic> saveData = saveDoc.data() as Map<String, dynamic>;
+          GameSaveData gameSaveData = GameSaveData.fromMap(saveData);
+          
+          // Check if arcade stage exists
+          if (!gameSaveData.stageData.containsKey(arcadeKey)) {
+            print('Missing Arcade Stage Found:');
+            print('Category ID: $categoryId');
+            print('Arcade Key: $arcadeKey');
+            
+            // Create arcade stage data
+            Map<String, StageDataEntry> updatedStageData = Map.from(gameSaveData.stageData);
+            updatedStageData[arcadeKey] = ArcadeStageData(
+              maxScore: 100, // Default max score for recovered arcade stages
+              bestRecord: -1,
+              crntRecord: -1,
+            );
+
+            // Create updated game save data
+            GameSaveData updatedGameSaveData = GameSaveData(
+              stageData: updatedStageData,
+              normalStageStars: gameSaveData.normalStageStars,
+              hardStageStars: gameSaveData.hardStageStars,
+              unlockedNormalStages: gameSaveData.unlockedNormalStages,
+              unlockedHardStages: gameSaveData.unlockedHardStages,
+              hasSeenPrerequisite: gameSaveData.hasSeenPrerequisite,
+            );
+
+            // Save updated data
+            await _firestore
+                .collection('User')
+                .doc(userId)
+                .collection('GameSaveData')
+                .doc(categoryId)
+                .set(updatedGameSaveData.toMap());
+
+            // Save locally
+            await saveGameSaveDataLocally(categoryId, updatedGameSaveData);
+            
+            print('Arcade Stage Recovery Complete for $categoryId');
+          }
+        }
+      }
+      print('=== Arcade Stage Check Complete ===\n');
+    } catch (e) {
+      print('Error during arcade stage recovery: $e');
+    }
+  }
+
   Future<User?> signInWithUsernameAndPassword(String username, String password) async {
     try {
       String? email = await getEmailByUsername(username);
@@ -405,6 +470,9 @@ class AuthService {
         
         // Get categories and fetch game save data for each
         List<Map<String, dynamic>> categories = await _stageService.fetchCategories(defaultLanguage);
+        
+        // Check and recover missing arcade stages
+        await _recoverMissingArcadeStages(user.uid, categories);
         
         for (var category in categories) {
           String categoryId = category['id'];
@@ -432,6 +500,7 @@ class AuthService {
               await saveGameSaveDataLocally(categoryId, initialData);
             }
           } catch (e) {
+            print('Error processing category $categoryId: $e');
           }
         }
       }
@@ -1254,18 +1323,12 @@ class AuthService {
       Map<String, Map<String, dynamic>> arcadeStages = {};
 
       for (var stage in stages) {
-        // Debug print the stage data
-
         String stageName = stage['stageName'] ?? '';
-        if (stageName.isEmpty) {
-          continue;
-        }
+        if (stageName.isEmpty) continue;
 
         // Get category from the parent collection in StageService
         String categoryId = stage['id'] ?? stage['categoryId'] ?? _extractCategoryFromStageName(stageName);
-        if (categoryId.isEmpty) {
-          continue;
-        }
+        if (categoryId.isEmpty) continue;
 
         // Add category to stage data
         Map<String, dynamic> stageWithCategory = {
@@ -1282,21 +1345,44 @@ class AuthService {
         }
       }
 
-      // Print summary of collected stages
-      adventureStages.forEach((category, stages) {
-      });
-      arcadeStages.forEach((category, _) {
-      });
-
       // Process arcade stages
       for (var entry in arcadeStages.entries) {
         String categoryId = entry.key;
-        var arcadeStage = entry.value;
         String arcadeKey = GameSaveData.getArcadeKey(categoryId);
         
+        // Create arcade stage data with initial values
         stageData[arcadeKey] = ArcadeStageData(
-          maxScore: _calculateMaxScore(arcadeStage),
+          maxScore: _calculateMaxScore(entry.value),
+          bestRecord: -1,  // -1 indicates no record yet
+          crntRecord: -1,
         );
+
+        print('\n=== Creating Arcade Stage Data ===');
+        print('Category ID: $categoryId');
+        print('Arcade Key: $arcadeKey');
+        print('Max Score: ${_calculateMaxScore(entry.value)}');
+        print('=== End of Arcade Stage Data ===\n');
+      }
+
+      // If no arcade stages exist in data, create them for each category
+      for (var entry in adventureStages.entries) {
+        String categoryId = entry.key;
+        if (!arcadeStages.containsKey(categoryId)) {
+          String arcadeKey = GameSaveData.getArcadeKey(categoryId);
+          
+          // Create default arcade stage data
+          stageData[arcadeKey] = ArcadeStageData(
+            maxScore: 100,  // Default max score for arcade
+            bestRecord: -1,
+            crntRecord: -1,
+          );
+
+          print('\n=== Creating Default Arcade Stage Data ===');
+          print('Category ID: $categoryId');
+          print('Arcade Key: $arcadeKey');
+          print('Default Max Score: 100');
+          print('=== End of Default Arcade Stage Data ===\n');
+        }
       }
 
       // Process adventure stages
@@ -1308,7 +1394,6 @@ class AuthService {
         categoryStages.sort((a, b) => _getStageNumber(a['stageName'])
             .compareTo(_getStageNumber(b['stageName'])));
 
-        
         for (var stage in categoryStages) {
           int stageNumber = _getStageNumber(stage['stageName']);
           String stageKey = GameSaveData.getStageKey(categoryId, stageNumber);
@@ -1322,13 +1407,12 @@ class AuthService {
       // Calculate total stages including arcade
       int totalStages = adventureStages.values
           .fold(0, (sum, stages) => sum + stages.length)
-          + 1; 
+          + 1;  // +1 for arcade stage
 
       // Calculate total adventure stages (without arcade)
       int totalAdventureStages = adventureStages.values
           .fold(0, (sum, stages) => sum + stages.length);
 
-      
       return GameSaveData(
         stageData: stageData,
         normalStageStars: List<int>.filled(totalAdventureStages, 0),

@@ -275,7 +275,18 @@ final Map<String, CachedStage> _categoryCache = {};
       }
 
       String key = getStorageKey(categoryId, isArcade);
-      return await _getFromLocalWithBackup(key);
+      List<Map<String, dynamic>> stages = await _getFromLocalWithBackup(key);
+
+      // If no stages found with arcade key, try getting from all stages
+      if (stages.isEmpty && isArcade) {
+        // Try getting all stages and filter for arcade
+        stages = await _getFromLocalWithBackup(getStorageKey(categoryId, false));
+        stages = stages.where((stage) => 
+          stage['stageName'].toString().toLowerCase().contains('arcade')
+        ).toList();
+      }
+
+      return stages;
     } catch (e) {
       return [];
     }
@@ -626,7 +637,7 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
   }
 
   Future<void> _storeStagesLocally(
-    List<Map<String, dynamic>> stages, 
+    List<Map<String, dynamic>> newStages, 
     String categoryId, {
     bool isArcade = false,
   }) async {
@@ -640,15 +651,37 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         await prefs.setString('${key}_backup', existingData);
       }
 
-      // Store new data
-      String stagesJson = jsonEncode(_sanitizeForStorage(stages));
+      // Get existing stages
+      List<Map<String, dynamic>> existingStages = [];
+      if (existingData != null) {
+        final decoded = jsonDecode(existingData);
+        existingStages = List<Map<String, dynamic>>.from(decoded);
+      }
+
+      // Merge stages
+      Map<String, Map<String, dynamic>> mergedStagesMap = {};
+      
+      // Add existing stages to map
+      for (var stage in existingStages) {
+        String stageKey = '${stage['stageName']}_${stage['language'] ?? 'en'}';
+        mergedStagesMap[stageKey] = stage;
+      }
+      
+      // Add or update new stages
+      for (var stage in newStages) {
+        String stageKey = '${stage['stageName']}_${stage['language'] ?? 'en'}';
+        mergedStagesMap[stageKey] = stage;
+      }
+
+      // Convert map back to list
+      List<Map<String, dynamic>> mergedStages = mergedStagesMap.values.toList();
+
+      // Store merged data
+      String stagesJson = jsonEncode(_sanitizeForStorage(mergedStages));
       await prefs.setString(key, stagesJson);
       
-      // Clear old backup
+      // Clear old backup after successful save
       await prefs.remove('${key}_backup');
-      
-      // Clean up old backups periodically
-      await _cleanupOldBackups();
     } catch (e) {
       // Keep backup in case of error
     }
@@ -1724,6 +1757,7 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         return {
           'stageName': doc.id,
+          'language': language,  // Add language to stage data
           ...data,
         };
       }).toList();
@@ -1964,6 +1998,63 @@ Future<List<Map<String, dynamic>>> _getAllRawStages() async {
     } catch (e) {
       await _logStageOperation('delete_stage_error', categoryId, e.toString());
       rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getRandomizedArcadeQuestions(
+    String categoryId,
+    String language,
+    {int questionCount = 25}
+  ) async {
+    try {
+      print('\n=== Getting Randomized Arcade Questions ===');
+      print('Category ID: $categoryId');
+      print('Language: $language');
+      
+      // Get all non-arcade stages for this category
+      List<Map<String, dynamic>> stages = await getStagesFromLocal(categoryId, useRawCache: false);
+      
+      // Filter stages by language and exclude arcade stages
+      stages = stages.where((stage) => 
+        !stage['stageName'].toLowerCase().contains('arcade') &&
+        (stage['language'] ?? 'en') == language
+      ).toList();
+
+      print('Found ${stages.length} non-arcade stages');
+
+      // Collect all questions from these stages
+      List<Map<String, dynamic>> allQuestions = [];
+      for (var stage in stages) {
+        if (stage['questions'] != null) {
+          final stageQuestions = List<Map<String, dynamic>>.from(stage['questions']);
+          allQuestions.addAll(stageQuestions);
+        }
+      }
+
+      print('Total available questions: ${allQuestions.length}');
+
+      // Shuffle questions
+      allQuestions.shuffle();
+
+      // If we don't have enough questions, repeat some to reach the desired count
+      if (allQuestions.length < questionCount) {
+        print('Not enough questions, repeating some to reach $questionCount');
+        final originalQuestions = List<Map<String, dynamic>>.from(allQuestions);
+        while (allQuestions.length < questionCount) {
+          originalQuestions.shuffle(); // Shuffle again for more randomness
+          allQuestions.addAll(originalQuestions.take(questionCount - allQuestions.length));
+        }
+      }
+
+      // Take exactly questionCount questions
+      final selectedQuestions = allQuestions.take(questionCount).toList();
+      print('Final question count: ${selectedQuestions.length}');
+      print('=== End of Randomized Arcade Questions ===\n');
+
+      return selectedQuestions;
+    } catch (e) {
+      print('Error getting randomized arcade questions: $e');
+      return [];
     }
   }
 }

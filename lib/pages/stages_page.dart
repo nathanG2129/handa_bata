@@ -67,25 +67,26 @@ class StagesPageState extends State<StagesPage> {
 
   Future<void> _fetchStages() async {
     try {
-        
         // Try local storage first
         List<Map<String, dynamic>> localStages = await _stageService.getStagesFromLocal(
             widget.category['id']!,
             useRawCache: false,
         );
 
+        // Filter stages by current language and exclude arcade stages
         if (localStages.isNotEmpty) {
             if (mounted) {
                 setState(() {
                     _stages = localStages.where((stage) => 
-                        !stage['stageName'].toLowerCase().contains('arcade')
+                        !stage['stageName'].toLowerCase().contains('arcade') &&
+                        (stage['language'] ?? 'en') == widget.selectedLanguage
                     ).toList();
                 });
                 return;
             }
         }
 
-        // If local storage empty, try server
+        // If local storage empty or no stages in current language, try server
         List<Map<String, dynamic>> stages = await _stageService.fetchStages(
             widget.selectedLanguage, 
             widget.category['id']!

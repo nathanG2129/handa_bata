@@ -543,6 +543,19 @@ class ResultsPageState extends State<ResultsPage> {
         xpGained = widget.score * multiplier;
       }
 
+      print('\n=== Results Page Update Progress ===');
+      print('Game Mode: ${widget.gamemode}');
+      print('Category: ${widget.category['name']}');
+      print('Stage: ${widget.stageName}');
+      print('Score: ${widget.score}');
+      print('Max Score: ${widget.stageData['maxScore']}');
+      print('XP Gained: $xpGained');
+      if (widget.gamemode == 'arcade') {
+        print('Record: ${widget.record}');
+        print('Is Game Over: ${widget.isGameOver}');
+      }
+      print('=== End of Update Progress ===\n');
+
       // Send only the XP gain to batchUpdateProfile
       await userProfileService.batchUpdateProfile({
         'exp': xpGained,
@@ -550,39 +563,65 @@ class ResultsPageState extends State<ResultsPage> {
 
       // Update game progress
       if (!widget.isGameOver) {
+        print('\n=== Updating Game Progress ===');
+        
+        // Get the proper stage key based on game mode
+        String stageKey;
+        if (widget.gamemode == 'arcade') {
+          print('Old Stage Key (from stageName): ${widget.stageName}');
+          stageKey = GameSaveData.getArcadeKey(widget.category['id']);
+          print('New Stage Key (from categoryId): $stageKey');
+          print('Category ID used: ${widget.category['id']}');
+        } else {
+          stageKey = widget.stageName;
+        }
+
         // First update game progress which handles offline/online automatically
         await _authService.updateGameProgress(
           categoryId: widget.category['id'],
-          stageName: widget.stageName,
+          stageName: stageKey, // Use the proper key here
           score: widget.score,
           stars: stars,
           mode: widget.mode.toLowerCase(),
           record: widget.gamemode == 'arcade' ? _convertRecordToSeconds(widget.record) : null,
           isArcade: widget.gamemode == 'arcade',
         );
+        print('Game Progress Updated Successfully');
 
         // For arcade mode, queue leaderboard update (will be processed when online)
         if (widget.gamemode == 'arcade') {
           final leaderboardService = LeaderboardService();
+          final recordInSeconds = _convertRecordToSeconds(widget.record);
+          print('Queueing Leaderboard Update:');
+          print('Profile ID: ${currentProfile.profileId}');
+          print('Record (seconds): $recordInSeconds');
           await leaderboardService.queueLeaderboardUpdate(
             widget.category['id'],
             currentProfile.profileId,
-            _convertRecordToSeconds(widget.record),
+            recordInSeconds,
           );
+          print('Leaderboard Update Queued Successfully');
         }
 
         // Update total stages cleared after game progress is updated
         await userProfileService.updateTotalStagesCleared();
+        print('Total Stages Cleared Updated');
 
         // Delete saved game state if exists
         await _cleanupGameSave();
+        print('Game Save Cleaned Up');
+        print('=== End of Game Progress Update ===\n');
       }
 
       // Check for badge unlocks
       await _checkBadgeUnlocks();
 
     } catch (e) {
-      // Handle errors
+      print('\n=== Error in Update Progress ===');
+      print('Error: $e');
+      print('Stack Trace:');
+      print(StackTrace.current);
+      print('=== End of Error ===\n');
     }
   }
 

@@ -675,7 +675,7 @@ class StagesPageState extends State<StagesPage> {
             ResponsiveUtils.valueByDevice<double>(
               context: context,
               mobile: 100,
-              tablet: 120,
+              tablet: 140,
               desktop: 140,
             ),
             ResponsiveUtils.valueByDevice<double>(

@@ -7,6 +7,7 @@ import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:handabatamae/utils/responsive_utils.dart';
 
 class AdminLoginPage extends StatelessWidget {
   const AdminLoginPage({super.key});
@@ -40,44 +41,63 @@ class AdminLoginPage extends StatelessWidget {
                 child: Center(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: ResponsiveUtils.valueByDevice<EdgeInsets>(
+                        context: context,
+                        mobile: const EdgeInsets.symmetric(horizontal: 16),
+                        tablet: const EdgeInsets.symmetric(horizontal: 20),
+                        desktop: const EdgeInsets.symmetric(horizontal: 20),
+                      ),
                       child: ResponsiveBuilder(
                         builder: (context, sizingInformation) {
                           final isTabletOrMobile = sizingInformation.deviceScreenType == DeviceScreenType.tablet || 
                                                  sizingInformation.deviceScreenType == DeviceScreenType.mobile;
+                          final isMobile = sizingInformation.deviceScreenType == DeviceScreenType.mobile;
 
                           if (isTabletOrMobile) {
                             // Mobile/Tablet Layout (Vertical)
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Kladis and Kloud SVG
+                                // Kladis and Kloud SVG with responsive size
                                 SvgPicture.asset(
                                   'assets/characters/KladisandKloud.svg',
-                                  width: 300,
-                                  height: 300,
+                                  width: ResponsiveUtils.valueByDevice<double>(
+                                    context: context,
+                                    mobile: 200,
+                                    tablet: 300,
+                                  ),
+                                  height: ResponsiveUtils.valueByDevice<double>(
+                                    context: context,
+                                    mobile: 200,
+                                    tablet: 300,
+                                  ),
                                 ),
-                                const SizedBox(height: 40),
-                                _buildContent(),
+                                SizedBox(height: isMobile ? 20 : 40),
+                                _buildContent(isMobile, context),
                               ],
                             );
                           }
 
-                          // Desktop Layout (Horizontal)
+                          // Desktop Layout (Horizontal) with responsive constraints
                           return Center(
                             child: Container(
-                              constraints: const BoxConstraints(maxWidth: 1200),
+                              constraints: BoxConstraints(
+                                maxWidth: ResponsiveUtils.valueByDevice<double>(
+                                  context: context,
+                                  mobile: 600,
+                                  tablet: 900,
+                                  desktop: 1200,
+                                ),
+                              ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Left side - Content
                                   Expanded(
                                     flex: 3,
-                                    child: _buildContent(),
+                                    child: _buildContent(false, context),
                                   ),
                                   const SizedBox(width: 20),
-                                  // Right side - Kladis and Kloud SVG
                                   Expanded(
                                     flex: 2,
                                     child: SvgPicture.asset(
@@ -104,56 +124,95 @@ class AdminLoginPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(bool isMobile, BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Title
-        const TextWithShadow(
+        // Title with responsive font size
+        TextWithShadow(
           text: 'Download the App',
-          fontSize: 48,
+          fontSize: ResponsiveUtils.valueByDevice<double>(
+            context: context,
+            mobile: 32,
+            tablet: 40,
+            desktop: 48,
+          ),
         ),
-        const SizedBox(height: 20),
-        // Description
+        SizedBox(height: isMobile ? 12 : 20),
+        // Description with responsive constraints and font size
         Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          constraints: BoxConstraints(
+            maxWidth: ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 300,
+              tablet: 400,
+              desktop: 500,
+            ),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 12,
+              tablet: 20,
+              desktop: 20,
+            ),
+          ),
           child: Text(
             'Experience Handa Bata on your mobile device! Download the latest version of our app and start your disaster preparedness journey with Kladis and Kloud.',
             textAlign: TextAlign.center,
             style: GoogleFonts.rubik(
-              fontSize: 18,
+              fontSize: ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 14,
+                tablet: 16,
+                desktop: 18,
+              ),
               color: Colors.white,
               height: 1.5,
             ),
           ),
         ),
-        const SizedBox(height: 40),
-        // Download Button with Stacked Icon
+        SizedBox(height: isMobile ? 24 : 40),
+        // Download Button with responsive width
         Stack(
           children: [
             Button3D(
-              width: 250,
+              width: ResponsiveUtils.valueByDevice<double>(
+                context: context,
+                mobile: 200,
+                tablet: 220,
+                desktop: 250,
+              ),
               backgroundColor: const Color(0xFFF1B33A),
               borderColor: const Color(0xFF8B5A00),
               onPressed: _downloadAPK,
               child: Text(
                 'Download APK',
                 style: GoogleFonts.rubik(
-                  fontSize: 20,
+                  fontSize: ResponsiveUtils.valueByDevice<double>(
+                    context: context,
+                    mobile: 16,
+                    tablet: 18,
+                    desktop: 20,
+                  ),
                   color: Colors.white,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        // Version Info
+        SizedBox(height: isMobile ? 12 : 20),
+        // Version Info with responsive font size
         Text(
           'Version 1.0.0',
           style: GoogleFonts.rubik(
-            fontSize: 14,
+            fontSize: ResponsiveUtils.valueByDevice<double>(
+              context: context,
+              mobile: 12,
+              tablet: 13,
+              desktop: 14,
+            ),
             color: Colors.white70,
           ),
         ),

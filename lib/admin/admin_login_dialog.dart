@@ -26,7 +26,6 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> with SingleTickerPr
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _staySignedIn = false;
   bool _isAuthenticating = false;
   final AuthService _authService = AuthService();
 
@@ -287,45 +286,6 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> with SingleTickerPr
                                     },
                                   ),
                                   const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Checkbox(
-                                        value: _staySignedIn,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _staySignedIn = value ?? false;
-                                          });
-                                        },
-                                        fillColor: MaterialStateProperty.resolveWith<Color>(
-                                          (Set<MaterialState> states) {
-                                            if (states.contains(MaterialState.selected)) {
-                                              return const Color(0xFFF1B33A);
-                                            }
-                                            return Colors.white;
-                                          },
-                                        ),
-                                      ),
-                                      Text(
-                                        'Stay signed in',
-                                        style: GoogleFonts.vt323(
-                                          fontSize: 16,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      TextButton(
-                                        onPressed: _forgotPassword,
-                                        child: Text(
-                                          'Forgot your password?',
-                                          style: GoogleFonts.vt323(
-                                            fontSize: 16,
-                                            color: Colors.white,
-                                            decoration: TextDecoration.underline,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),

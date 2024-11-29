@@ -12,6 +12,7 @@ import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/dialog_boxes/stage_dialog.dart';
+import 'package:handabatamae/widgets/dialogs/stage_lock_dialog.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../widgets/header_footer/header_widget.dart'; // Import HeaderWidget
 import '../widgets/header_footer/footer_widget.dart'; // Import FooterWidget 
@@ -289,29 +290,19 @@ class StagesPageState extends State<StagesPage> {
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Stage Locked'),
-            content: const Text('Please register an account to unlock stages 4 and beyond.'),
-            actions: [
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              TextButton(
-                child: const Text('Register Now'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RegistrationPage(
-                        selectedLanguage: widget.selectedLanguage,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+          return StageLockDialog(
+            selectedLanguage: widget.selectedLanguage,
+            onRegister: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RegistrationPage(
+                    selectedLanguage: widget.selectedLanguage,
+                  ),
+                ),
+              );
+            },
+            darkenColor: darken,
           );
         },
       );

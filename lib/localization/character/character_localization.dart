@@ -8,7 +8,7 @@ class CharacterPageLocalization {
       'failedToUpdateAvatar': 'Failed to update avatar: ',
     },
     'fil': {
-      'characters': 'Mga Characters',
+      'characters': 'Mga Character',
       'saveChanges': 'I-save ang mga Pagbabago',
       'avatar': 'Avatar',
       'errorLoadingAvatars': 'May error sa pag-load ng mga avatar: ',

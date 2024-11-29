@@ -2447,6 +2447,22 @@ class AuthService {
       User? currentUser = _auth.currentUser;
       if (currentUser != null) {
         String? role = await getUserRole(currentUser.uid);
+        
+        // Get username from Firestore for online user
+        try {
+          DocumentSnapshot profileDoc = await _firestore
+              .collection('User')
+              .doc(currentUser.uid)
+              .collection('ProfileData')
+              .doc(currentUser.uid)
+              .get();
+              
+          String username = profileDoc.get('username') as String;
+          print('ONLINE: $username has a registered account!');
+        } catch (e) {
+          print('ONLINE: User has a registered account! (Could not fetch username)');
+        }
+        
         // Return true only if user is not a guest
         return role != null && role != 'guest';
       }
@@ -2455,13 +2471,18 @@ class AuthService {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? profileJson = prefs.getString(USER_PROFILE_KEY);
       if (profileJson != null) {
-        // If we have a local profile, it means user has registered before
+        // Get username from local profile
+        Map<String, dynamic> profileMap = jsonDecode(profileJson);
+        String username = profileMap['username'] as String;
+        print('OFFLINE: $username has a registered account!');
         return true;
       }
 
+      print('ACCOUNT: No registered account found in device!');
       return false;
     } catch (e) {
       // If there's an error, assume no registered account for safety
+      print('ACCOUNT: Error checking for registered account: $e');
       return false;
     }
   }

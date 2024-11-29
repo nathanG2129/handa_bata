@@ -191,8 +191,8 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
             final bool isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
 
             // Calculate sizes based on device type
-            final double bannerWidth = isTablet ? 150 : 200;
-            final double bannerHeight = isTablet ? 150 : 200;
+            final double bannerWidth = isTablet ? 150 : 150;
+            final double bannerHeight = isTablet ? 150 : 150;
             final double titleFontSize = isMobileSmall ? 20 : 
                                        isMobileLarge ? 20 :
                                        isMobileExtraLarge ? 20 : 22;
@@ -220,7 +220,7 @@ class _BannerPageState extends State<BannerPage> with SingleTickerProviderStateM
               child: GridView.builder(
                 padding: EdgeInsets.all(gridPadding),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isTablet ? 2 : 1,
+                  crossAxisCount: isTablet ? 3 : 1,
                   crossAxisSpacing: gridPadding,
                   mainAxisSpacing: gridPadding,
                   childAspectRatio: isTablet ? 1.5 : 1.2,

@@ -1,205 +1,162 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'admin_home_page.dart';
-import 'security/admin_session.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:handabatamae/admin/widgets/admin_header_widget.dart';
+import 'package:handabatamae/admin/widgets/admin_footer_widget.dart';
+import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/widgets/text_with_shadow.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class AdminLoginPage extends StatefulWidget {
+class AdminLoginPage extends StatelessWidget {
   const AdminLoginPage({super.key});
 
-  @override
-  AdminLoginPageState createState() => AdminLoginPageState();
-}
-
-class AdminLoginPageState extends State<AdminLoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _staySignedIn = false;
-  bool _isAuthenticating = false;
-
-  final AuthService _authService = AuthService();
-
-  Future<bool> _validateAdminAccess(String username) async {
-    // Check if user has admin role
-    return true;
+  Future<void> _downloadAPK() async {
+    // Replace this URL with your actual APK download URL
+    const url = 'https://example.com/handabata.apk';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      debugPrint('Could not launch $url');
+    }
   }
 
-  void _showSecurityAlert() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Security Alert'),
-        content: const Text('Multiple failed login attempts detected'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background SVG
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/backgrounds/background.svg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Column(
+            children: [
+              const AdminHeaderWidget(),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ResponsiveBuilder(
+                        builder: (context, sizingInformation) {
+                          final isTabletOrMobile = sizingInformation.deviceScreenType == DeviceScreenType.tablet || 
+                                                 sizingInformation.deviceScreenType == DeviceScreenType.mobile;
+
+                          if (isTabletOrMobile) {
+                            // Mobile/Tablet Layout (Vertical)
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Kladis and Kloud SVG
+                                SvgPicture.asset(
+                                  'assets/characters/KladisandKloud.svg',
+                                  width: 300,
+                                  height: 300,
+                                ),
+                                const SizedBox(height: 40),
+                                _buildContent(),
+                              ],
+                            );
+                          }
+
+                          // Desktop Layout (Horizontal)
+                          return Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 1200),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Left side - Content
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildContent(),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  // Right side - Kladis and Kloud SVG
+                                  Expanded(
+                                    flex: 2,
+                                    child: SvgPicture.asset(
+                                      'assets/characters/KladisandKloud.svg',
+                                      width: 350,
+                                      height: 350,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const AdminFooterWidget(),
+            ],
           ),
         ],
       ),
     );
   }
 
-  void _handleAdminLoginError(dynamic error) {
-    setState(() => _isAuthenticating = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Login error: $error')),
-    );
-  }
-
-  void _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isAuthenticating = true);
-      
-      final username = _usernameController.text;
-      final password = _passwordController.text;
-
-      try {
-        final user = await _authService.signInWithUsernameAndPassword(username, password);
-
-        if (!mounted) return;
-
-        if (user != null) {
-          final role = await _authService.getUserRole(user.uid);
-          
-          if (role == 'admin') {
-            
-            try {
-              await AdminSession().startSession();
-              
-              if (!mounted) return;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminHomePage()),
-              );
-            } catch (sessionError) {
-              throw sessionError;
-            }
-          } else {
-            setState(() => _isAuthenticating = false);
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('You do not have admin privileges.')),
-            );
-          }
-        } else {
-          setState(() => _isAuthenticating = false);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login failed. Please try again.')),
-          );
-        }
-      } catch (e) {
-        _handleAdminLoginError(e);
-      }
-    }
-  }
-
-  void _forgotPassword() {
-    // Handle forgot password
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
+  Widget _buildContent() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Scaffold(
-          appBar: AppBar(
-            title: const Text('Admin Login'),
-          ),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(40.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Text(
-                      'Admin Panel',
-                      style: TextStyle(fontSize: 46, fontWeight: FontWeight.bold, color: Colors.black),
-                    ),
-                    const SizedBox(height: 75),
-                    SizedBox(
-                      width: 400, // Set the desired width
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _usernameController,
-                            decoration: InputDecoration(
-                              labelText: 'Username',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(30.0), // Oblong shape
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your username';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(30.0), // Oblong shape
-                              ),
-                            ),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 10), // Space between password field and the row of buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  Checkbox(
-                                    value: _staySignedIn,
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        _staySignedIn = value!;
-                                      });
-                                    },
-                                  ),
-                                  const Text('Stay signed in'),
-                                ],
-                              ),
-                              TextButton(
-                                onPressed: _forgotPassword,
-                                child: const Text('Forgot password?'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10), // Space between the row of buttons and the login button
-                          ElevatedButton(
-                            onPressed: _login,
-                            child: const Text('Login'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        // Title
+        const TextWithShadow(
+          text: 'Download the App',
+          fontSize: 48,
+        ),
+        const SizedBox(height: 20),
+        // Description
+        Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Experience Handa Bata on your mobile device! Download the latest version of our app and start your disaster preparedness journey with Kladis and Kloud.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.rubik(
+              fontSize: 18,
+              color: Colors.white,
+              height: 1.5,
             ),
           ),
         ),
-        if (_isAuthenticating)
-          Container(
-            color: Colors.black54,
-            child: const Center(
-              child: CircularProgressIndicator(),
+        const SizedBox(height: 40),
+        // Download Button with Stacked Icon
+        Stack(
+          children: [
+            Button3D(
+              width: 250,
+              backgroundColor: const Color(0xFFF1B33A),
+              borderColor: const Color(0xFF8B5A00),
+              onPressed: _downloadAPK,
+              child: Text(
+                'Download APK',
+                style: GoogleFonts.rubik(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Version Info
+        Text(
+          'Version 1.0.0',
+          style: GoogleFonts.rubik(
+            fontSize: 14,
+            color: Colors.white70,
           ),
+        ),
       ],
     );
   }

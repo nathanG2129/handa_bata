@@ -13,7 +13,7 @@ class AdminLoginPage extends StatelessWidget {
 
   Future<void> _downloadAPK() async {
     // Replace this URL with your actual APK download URL
-    const url = 'https://example.com/handabata.apk';
+    const url = 'https://firebasestorage.googleapis.com/v0/b/handabatamae.appspot.com/o/HBMobile_ReleaseV6.apk?alt=media&token=f9f2d1c3-c3c8-48cb-b281-42e3646af8e7';
     if (await canLaunch(url)) {
       await launch(url);
     } else {

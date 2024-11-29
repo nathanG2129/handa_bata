@@ -702,6 +702,7 @@ class StagesPageState extends State<StagesPage> {
         borderColor: _selectedMode == 'Normal'
           ? darken(const Color(0xFF32c067))
           : const Color(0xFF1A0D30),
+        width: width,
         child: Text(
           'NORMAL',
           style: GoogleFonts.rubik(

@@ -544,16 +544,28 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
       builder: (context, sizingInformation) {
         final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
         final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
         
-        // Calculate dynamic widths based on screen size
-        final containerWidth = isTablet 
-            ? 200.0 
-            : (screenWidth - (screenWidth * 0.3)) / 2;
+        // Calculate dynamic sizes based on screen dimensions
+        final dynamicPadding = EdgeInsets.symmetric(
+          horizontal: screenWidth * (isTablet ? 0.15 : 0.05), // 15% for tablet, 5% for phone
+          vertical: screenHeight * 0.01
+        );
         
-        // Calculate consistent padding for both selected and unselected pairs
-        final horizontalPadding = isTablet 
-            ? const EdgeInsets.symmetric(horizontal: 200.0)  // Tablet padding
-            : const EdgeInsets.symmetric(horizontal: 16.0);  // Phone padding
+        // Calculate dynamic option height
+        final optionHeight = screenHeight * (isTablet ? 0.12 : 0.08); // 12% for tablet, 8% for phone
+        
+        // Calculate dynamic font sizes
+        final titleFontSize = screenWidth * (isTablet ? 0.035 : 0.06);
+        final questionFontSize = screenWidth * (isTablet ? 0.025 : 0.045);
+        final optionFontSize = screenWidth * (isTablet ? 0.018 : 0.035);
+        
+        // Calculate dynamic spacing
+        final verticalSpacing = screenHeight * 0.02;
+        final horizontalSpacing = screenWidth * 0.02;
+        
+        // Calculate color bar width
+        final colorBarWidth = screenWidth * (isTablet ? 0.015 : 0.03);
 
         return Column(
           children: [
@@ -564,17 +576,15 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                   children: [
                     TextWithShadow(
                       text: 'Matching Type',
-                      fontSize: isTablet ? 36 : 28,
+                      fontSize: titleFontSize,
                     ),
-                    SizedBox(height: isTablet ? 24 : 16),
+                    SizedBox(height: verticalSpacing),
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 12.0 : 4.0
-                      ),
+                      padding: dynamicPadding,
                       child: Text(
                         questionText,
                         style: GoogleFonts.rubik(
-                          fontSize: isTablet ? 28 : 20,
+                          fontSize: questionFontSize,
                           color: Colors.white
                         ),
                         textAlign: TextAlign.center,
@@ -588,90 +598,82 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                 children: [
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 12.0 : 4.0
-                      ),
+                      padding: dynamicPadding,
                       child: Text(
                         questionText,
                         style: GoogleFonts.rubik(
-                          fontSize: isTablet ? 28 : 20,
+                          fontSize: questionFontSize,
                           color: Colors.white
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   ),
-                  SizedBox(height: isTablet ? 24 : 16),
-                  // Matched Pairs Section with consistent padding
+                  SizedBox(height: verticalSpacing),
+                  // Matched Pairs Section
                   Padding(
-                    padding: horizontalPadding,
+                    padding: dynamicPadding,
                     child: Column(
-                    children: userPairs.map((pair) {
-                      int index = userPairs.indexOf(pair);
-                      return Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTablet ? 12.0 : 8.0,
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            if (!isChecking) {
-                              _cancelSelection(pair['section1']!, pair['section2']!);
-                            }
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Left option (section1)
-                              Expanded(
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      constraints: BoxConstraints(
-                                        minHeight: isTablet ? 90 : 60
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white,
-                                        border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          pair['section1']!,
-                                          softWrap: true,
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.rubik(
-                                            fontSize: isTablet ? 22 : 16,
-                                            color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
+                      children: userPairs.map((pair) {
+                        int index = userPairs.indexOf(pair);
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!isChecking) {
+                                _cancelSelection(pair['section1']!, pair['section2']!);
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Left option (section1)
+                                Expanded(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        height: optionHeight,
+                                        decoration: BoxDecoration(
+                                          color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white,
+                                          border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            pair['section1']!,
+                                            softWrap: true,
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.rubik(
+                                              fontSize: optionFontSize,
+                                              color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    Positioned(
-                                      left: 2,
-                                      top: 2,
-                                      bottom: 2,
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 500),
-                                        curve: Curves.easeInOut,
-                                        width: isTablet ? 20 : 16,
-                                        decoration: BoxDecoration(
-                                          color: pair['section1']!.isEmpty ? Colors.transparent : pairColors[index],
-                                          borderRadius: BorderRadius.zero,
+                                      Positioned(
+                                        left: 2,
+                                        top: 2,
+                                        bottom: 2,
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 500),
+                                          curve: Curves.easeInOut,
+                                          width: colorBarWidth,
+                                          decoration: BoxDecoration(
+                                            color: pair['section1']!.isEmpty ? Colors.transparent : pairColors[index],
+                                            borderRadius: BorderRadius.zero,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                ),
-                                SizedBox(width: isTablet ? 24 : 8),
-                              // Right option (section2)
-                              Expanded(
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    minHeight: isTablet ? 90 : 60
+                                    ],
                                   ),
+                                ),
+                                SizedBox(width: horizontalSpacing),
+                                // Right option (section2)
+                                Expanded(
+                                  child: Container(
+                                    height: optionHeight,
                                     decoration: BoxDecoration(
                                       color: pair['section2']!.isEmpty ? Colors.grey : pairColors[index],
-                                    border: Border.all(color: Colors.black, width: 2),
+                                      border: Border.all(color: Colors.black, width: 2),
                                     ),
                                     child: Center(
                                       child: Text(
@@ -679,45 +681,41 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                         softWrap: true,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.rubik(
-                                          fontSize: isTablet ? 22 : 16,
-                                        color: Colors.white,
+                                          fontSize: optionFontSize,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }).toList(),
                     ),
                   ),
-                  SizedBox(height: isTablet ? 24 : 16),
-                  // Unmatched Options Section with same padding
+                  SizedBox(height: verticalSpacing),
+                  // Unmatched Options Section
                   Padding(
-                    padding: horizontalPadding,
+                    padding: dynamicPadding,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      children: [
                         // Left column (section1 options)
-                      Expanded(
-                        child: Column(
+                        Column(
                           children: section1Options.map((option) {
                             bool isSelected = selectedSection1Option == option;
                             bool isMatched = userPairs.any((pair) => pair['section1'] == option);
                             Color? pairColor = _getPairColor(option, 'section1');
                             return Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: isTablet ? 12.0 : 8.0,
-                              ),
+                              padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
                               child: Stack(
                                 children: [
-                                  Container(
-                                    width: containerWidth,
-                                    constraints: BoxConstraints(
-                                      minHeight: isTablet ? 90 : 60
-                                    ),
+                                  SizedBox(
+                                    width: screenWidth * (isTablet ? 0.3 : 0.4), // 30% of screen width for tablet, 40% for phone
+                                    height: optionHeight,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         if (isMatched) {
@@ -729,11 +727,11 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                       style: ElevatedButton.styleFrom(
                                         foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
                                         backgroundColor: isSelected ? Colors.grey : isMatched ? Colors.white : Colors.white,
-                                        padding: EdgeInsets.fromLTRB(
-                                          isTablet ? 32 : 24,
-                                          isTablet ? 20 : 12,
-                                          isTablet ? 12 : 8,
-                                          isTablet ? 20 : 12
+                                        padding: EdgeInsets.only(
+                                          left: colorBarWidth + horizontalSpacing,
+                                          right: horizontalSpacing,
+                                          top: verticalSpacing * 0.5,
+                                          bottom: verticalSpacing * 0.5
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(0),
@@ -744,7 +742,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                         child: Text(
                                           option,
                                           style: GoogleFonts.rubik(
-                                            fontSize: isTablet ? 22 : 16,
+                                            fontSize: optionFontSize,
                                             height: 1.2,
                                             color: Colors.black,
                                           ),
@@ -759,7 +757,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                     child: AnimatedContainer(
                                       duration: const Duration(milliseconds: 500),
                                       curve: Curves.easeInOut,
-                                      width: isTablet ? 20 : 16,
+                                      width: colorBarWidth,
                                       decoration: BoxDecoration(
                                         color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242),
                                         borderRadius: BorderRadius.zero,
@@ -771,24 +769,18 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                             );
                           }).toList(),
                         ),
-                      ),
-                      SizedBox(width: isTablet ? 24 : 8),
+                        SizedBox(width: horizontalSpacing),
                         // Right column (section2 options)
-                      Expanded(
-                        child: Column(
+                        Column(
                           children: section2Options.map((option) {
                             bool isSelected = selectedSection2Option == option;
                             bool isMatched = userPairs.any((pair) => pair['section2'] == option);
                             Color? pairColor = _getPairColor(option, 'section2');
                             return Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: isTablet ? 12.0 : 8.0,
-                              ),
-                              child: Container(
-                                width: containerWidth,
-                                constraints: BoxConstraints(
-                                  minHeight: isTablet ? 90 : 60
-                                ),
+                              padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
+                              child: SizedBox(
+                                width: screenWidth * (isTablet ? 0.3 : 0.4), // Same width as section1
+                                height: optionHeight,
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (isMatched) {
@@ -801,8 +793,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                     foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
                                     backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: isTablet ? 12 : 8,
-                                      vertical: isTablet ? 20 : 12
+                                      horizontal: horizontalSpacing,
+                                      vertical: verticalSpacing * 0.5
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(0),
@@ -814,7 +806,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                     softWrap: true,
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.rubik(
-                                      fontSize: isTablet ? 22 : 16,
+                                      fontSize: optionFontSize,
                                       height: 1.2,
                                       color: isSelected || isMatched ? Colors.white : Colors.black,
                                     ),
@@ -824,8 +816,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                             );
                           }).toList(),
                         ),
-                      ),
-                    ],
+                      ],
                     ),
                   ),
                 ],

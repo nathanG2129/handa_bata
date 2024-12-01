@@ -249,107 +249,211 @@ class MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                     ),
                   ),
                   SizedBox(height: isTablet ? 24 : 16),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      Color buttonColor = Colors.white;
-                      Color textColor = Colors.black;
-                      double opacity = 1.0;
+                  if (isTablet)
+                    // Tablet Layout: 2 columns
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 4.5,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        Color buttonColor = Colors.white;
+                        Color textColor = Colors.black;
+                        double opacity = 1.0;
 
-                      // If an option is selected but not showing all answers yet
-                      if (widget.selectedOptionIndex != null && !showAllAnswers) {
-                        opacity = (index == widget.selectedOptionIndex) ? 1.0 : 0.5;
-                      }
+                        // If an option is selected but not showing all answers yet
+                        if (widget.selectedOptionIndex != null && !showAllAnswers) {
+                          opacity = (index == widget.selectedOptionIndex) ? 1.0 : 0.5;
+                        }
 
-                      if (showSelectedAnswer && index == widget.selectedOptionIndex) {
-                        buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
-                        textColor = Colors.white;
-                      } else if (showAllAnswers) {
-                        opacity = 1.0;
-                        buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
-                        textColor = Colors.white;
-                      } else if (showAllRed) {
-                        buttonColor = Colors.red;
-                        textColor = Colors.white;
-                      }
+                        if (showSelectedAnswer && index == widget.selectedOptionIndex) {
+                          buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
+                          textColor = Colors.white;
+                        } else if (showAllAnswers) {
+                          opacity = 1.0;
+                          buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
+                          textColor = Colors.white;
+                        } else if (showAllRed) {
+                          buttonColor = Colors.red;
+                          textColor = Colors.white;
+                        }
 
-                      return Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTablet ? 12.0 : 8.0,
-                          horizontal: isTablet ? 250.0 : 25.0,
-                        ),
-                        child: Opacity(
-                          opacity: opacity,
-                          child: Stack(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeInOut,
-                                decoration: BoxDecoration(
-                                  color: buttonColor,
-                                  borderRadius: BorderRadius.circular(0),
-                                  border: Border.all(color: Colors.black, width: 1),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: widget.selectedOptionIndex == null
-                                      ? () => _handleOptionSelected(index)
-                                      : null,
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: textColor,
-                                    backgroundColor: Colors.transparent,
-                                    padding: EdgeInsets.all(isTablet ? 18 : 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0),
-                                      side: const BorderSide(color: Colors.black, width: 2),
-                                    ),
-                                    disabledBackgroundColor: Colors.transparent,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Opacity(
+                            opacity: opacity,
+                            child: Stack(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
+                                  decoration: BoxDecoration(
+                                    color: buttonColor,
+                                    borderRadius: BorderRadius.circular(0),
+                                    border: Border.all(color: Colors.black, width: 1),
                                   ),
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      left: isTablet ? 72.0 : 56.0
+                                  child: ElevatedButton(
+                                    onPressed: widget.selectedOptionIndex == null
+                                        ? () => _handleOptionSelected(index)
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      foregroundColor: textColor,
+                                      backgroundColor: Colors.transparent,
+                                      padding: const EdgeInsets.all(18),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                        side: const BorderSide(color: Colors.black, width: 2),
+                                      ),
+                                      disabledBackgroundColor: Colors.transparent,
                                     ),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        options[index],
-                                        style: GoogleFonts.rubik(
-                                          fontSize: isTablet ? 22 : 16,
-                                          color: textColor,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 72.0),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          options[index],
+                                          style: GoogleFonts.rubik(
+                                            fontSize: 22,
+                                            color: textColor,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: isTablet ? 60 : 50,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF241242),
-                                    borderRadius: BorderRadius.zero,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      String.fromCharCode(65 + index),
-                                      style: GoogleFonts.rubik(
-                                        fontSize: isTablet ? 28 : 20,
-                                        color: Colors.white
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 60,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF241242),
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        String.fromCharCode(65 + index),
+                                        style: GoogleFonts.rubik(
+                                          fontSize: 28,
+                                          color: Colors.white
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    )
+                  else
+                    // Phone Layout: Single column
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        Color buttonColor = Colors.white;
+                        Color textColor = Colors.black;
+                        double opacity = 1.0;
+
+                        // If an option is selected but not showing all answers yet
+                        if (widget.selectedOptionIndex != null && !showAllAnswers) {
+                          opacity = (index == widget.selectedOptionIndex) ? 1.0 : 0.5;
+                        }
+
+                        if (showSelectedAnswer && index == widget.selectedOptionIndex) {
+                          buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
+                          textColor = Colors.white;
+                        } else if (showAllAnswers) {
+                          opacity = 1.0;
+                          buttonColor = options[index] == correctAnswer ? Colors.green : Colors.red;
+                          textColor = Colors.white;
+                        } else if (showAllRed) {
+                          buttonColor = Colors.red;
+                          textColor = Colors.white;
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8.0,
+                            horizontal: 25.0,
+                          ),
+                          child: Opacity(
+                            opacity: opacity,
+                            child: Stack(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
+                                  decoration: BoxDecoration(
+                                    color: buttonColor,
+                                    borderRadius: BorderRadius.circular(0),
+                                    border: Border.all(color: Colors.black, width: 1),
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: widget.selectedOptionIndex == null
+                                        ? () => _handleOptionSelected(index)
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      foregroundColor: textColor,
+                                      backgroundColor: Colors.transparent,
+                                      padding: const EdgeInsets.all(14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                        side: const BorderSide(color: Colors.black, width: 2),
+                                      ),
+                                      disabledBackgroundColor: Colors.transparent,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 56.0),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          options[index],
+                                          style: GoogleFonts.rubik(
+                                            fontSize: 16,
+                                            color: textColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 50,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF241242),
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        String.fromCharCode(65 + index),
+                                        style: GoogleFonts.rubik(
+                                          fontSize: 20,
+                                          color: Colors.white
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   SizedBox(height: isTablet ? 24 : 16),
                   if (resultMessage != null)
                     Center(

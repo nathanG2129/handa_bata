@@ -132,6 +132,69 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     );
   }
 
+  String _getEnglishTitle(String localizedTitle) {
+    // Map Filipino titles back to English for navigation
+    switch (localizedTitle) {
+      case 'Mga Lindol':
+        return 'Earthquakes';
+      case 'Tungkol sa mga Lindol':
+        return 'About Earthquakes';
+      case 'Mga Mapaminsalang Lindol sa Pilipinas':
+        return 'Disastrous Earthquakes in the Philippines';
+      case 'Paghahanda sa mga Lindol':
+        return 'Preparing for Earthquakes';
+      case 'Iskala ng Lakas ng Lindol':
+        return 'Earthquake Intensity Scale';
+      case 'Mga Bagyo':
+        return 'Typhoons';
+      case 'Tungkol sa mga Bagyo':
+        return 'About Typhoons';
+      case 'Mga Mapaminsalang Bagyo sa Pilipinas':
+        return 'Disastrous Typhoons in the Philippines';
+      case 'Paghahanda sa mga Bagyo':
+        return 'Preparing for Typhoons';
+      case 'Sistema ng Babala sa mga Bagyo':
+        return 'Tropical Cyclone Warning Systems';
+      case 'Sistema ng Babala sa Pag-ulan':
+        return 'Rainfall Warning System';
+      case 'Iba Pang Impormasyon':
+        return 'Other Information';
+      case 'Mga Alituntunin sa Pagkansela o Pagsuspinde ng mga Klase':
+        return 'Guidelines on the Cancellation or Suspension of Classes';
+      case 'Mga Infographic':
+        return 'Infographics';
+      case 'Mga Video':
+        return 'Videos';
+      default:
+        return localizedTitle;
+    }
+  }
+
+  String _getCategory(String title) {
+    // First get English title if it's in Filipino
+    String englishTitle = _getEnglishTitle(title);
+    
+    // Then map to category
+    switch (englishTitle) {
+      case 'About Earthquakes':
+      case 'Disastrous Earthquakes in the Philippines':
+      case 'Preparing for Earthquakes':
+      case 'Earthquake Intensity Scale':
+        return 'Earthquakes';
+      case 'About Typhoons':
+      case 'Disastrous Typhoons in the Philippines':
+      case 'Preparing for Typhoons':
+      case 'Tropical Cyclone Warning Systems':
+      case 'Rainfall Warning System':
+        return 'Typhoons';
+      case 'Guidelines on the Cancellation or Suspension of Classes':
+      case 'Emergency Go Bag':
+        return 'Other Information';
+      default:
+        return 'Other Information';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
@@ -201,7 +264,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildMenuItem(
-                                  'Play',
+                                  widget.selectedLanguage == 'en' ? 'Play' : 'Maglaro',
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   onTap: () async {
@@ -239,7 +302,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 ),
                                 _buildDivider(),
                                 _buildExpandableMenuItem(
-                                  'Learn',
+                                  widget.selectedLanguage == 'en' ? 'Learn' : 'Matuto',
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   submenuPadding: submenuPadding,
@@ -249,7 +312,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 ),
                                 _buildDivider(),
                                 _buildExpandableMenuItem(
-                                  'Resources',
+                                  widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Resources',
                                   expandedNotifier: _resourcesExpanded,
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
@@ -257,7 +320,8 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                   submenuFontSize: submenuFontSize,
                                 ),
                                 _buildDivider(),
-                                _buildMenuItem('Hotlines', 
+                                _buildMenuItem(
+                                  widget.selectedLanguage == 'en' ? 'Hotlines' : 'Mga Hotline',
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   onTap: () async {
@@ -293,7 +357,8 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                   }
                                 ),
                                 _buildDivider(),
-                                _buildMenuItem('About', 
+                                _buildMenuItem(
+                                  widget.selectedLanguage == 'en' ? 'About' : 'Tungkol Dito',
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   onTap: () async {
@@ -331,7 +396,9 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 _buildDivider(),
                                 const SizedBox(height: 8),
                                 _buildMenuItem(
-                                  _userRole == 'guest' ? 'Register' : 'Log out',
+                                  _userRole == 'guest' 
+                                    ? (widget.selectedLanguage == 'en' ? 'Register' : 'Magparehistro')
+                                    : (widget.selectedLanguage == 'en' ? 'Log out' : 'Mag-log out'),
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   onTap: _userRole == 'guest' ? _navigateToRegister : _logout,
@@ -385,7 +452,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     required double submenuPadding,
     required double submenuFontSize,
   }) {
-    final notifier = expandedNotifier ?? (title == 'Learn' ? _learnExpanded : _resourcesExpanded);
+    final notifier = expandedNotifier ?? (title == (widget.selectedLanguage == 'en' ? 'Learn' : 'Matuto') ? _learnExpanded : _resourcesExpanded);
     
     return Theme(
       data: Theme.of(context).copyWith(
@@ -416,7 +483,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         children: children ?? [
           if (isLearn) ...[
             _buildExpandableMenuItem(
-              'Earthquakes',
+              widget.selectedLanguage == 'en' ? 'Earthquakes' : 'Mga Lindol',
               expandedNotifier: _earthquakesExpanded,
               fontSize: fontSize,
               padding: padding,
@@ -424,29 +491,29 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  'About Earthquakes',
+                  widget.selectedLanguage == 'en' ? 'About Earthquakes' : 'Tungkol sa mga Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Disastrous Earthquakes in the Philippines',
+                  widget.selectedLanguage == 'en' ? 'Disastrous Earthquakes in the Philippines' : 'Mga Mapaminsalang Lindol sa Pilipinas',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Preparing for Earthquakes',
+                  widget.selectedLanguage == 'en' ? 'Preparing for Earthquakes' : 'Paghahanda sa mga Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Earthquake Intensity Scale',
+                  widget.selectedLanguage == 'en' ? 'Earthquake Intensity Scale' : 'Iskala ng Lakas ng Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
               ],
             ),
             _buildExpandableMenuItem(
-              'Typhoons',
+              widget.selectedLanguage == 'en' ? 'Typhoons' : 'Mga Bagyo',
               expandedNotifier: _typhoonsExpanded,
               fontSize: fontSize,
               padding: padding,
@@ -454,34 +521,34 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  'About Typhoons',
+                  widget.selectedLanguage == 'en' ? 'About Typhoons' : 'Tungkol sa mga Bagyo',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Disastrous Typhoons in the Philippines',
+                  widget.selectedLanguage == 'en' ? 'Disastrous Typhoons in the Philippines' : 'Mga Mapaminsalang Bagyo sa Pilipinas',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Preparing for Typhoons',
+                  widget.selectedLanguage == 'en' ? 'Preparing for Typhoons' : 'Paghahanda sa mga Bagyo',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Tropical Cyclone Warning Systems',
+                  widget.selectedLanguage == 'en' ? 'Tropical Cyclone Warning Systems' : 'Sistema ng Babala sa mga Bagyo',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Rainfall Warning System',
+                  widget.selectedLanguage == 'en' ? 'Rainfall Warning System' : 'Sistema ng Babala sa Pag-ulan',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
               ],
             ),
             _buildExpandableMenuItem(
-              'Other Information',
+              widget.selectedLanguage == 'en' ? 'Other Information' : 'Iba Pang Impormasyon',
               expandedNotifier: _otherInfoExpanded,
               fontSize: fontSize,
               padding: padding,
@@ -489,20 +556,20 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  'Guidelines on the Cancellation or Suspension of Classes',
+                  widget.selectedLanguage == 'en' ? 'Guidelines on the Cancellation or Suspension of Classes' : 'Mga Alituntunin sa Pagkansela o Pagsuspinde ng mga Klase',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  'Emergency Go Bag',
+                  widget.selectedLanguage == 'en' ? 'Emergency Go Bag' : 'Emergency Go Bag',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
               ],
             ),
-          ] else if (title == 'Resources') ...[
+          ] else if (title == (widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Resources')) ...[
             _buildSubmenuItem(
-              'Infographics',
+              widget.selectedLanguage == 'en' ? 'Infographics' : 'Mga Infographic',
               fontSize: submenuFontSize,
               padding: submenuPadding,
               onTap: () async {
@@ -539,7 +606,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               },
             ),
             _buildSubmenuItem(
-              'Videos',
+              widget.selectedLanguage == 'en' ? 'Videos' : 'Mga Video',
               fontSize: submenuFontSize,
               padding: submenuPadding,
               onTap: () async {
@@ -589,44 +656,15 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     required double fontSize,
     required double padding,
   }) {
-    String getCategory(String title) {
-      // First, map the display title to the JSON key
-      // ignore: unused_local_variable
-      String jsonTitle = title;
-      switch (title) {
-        case 'Earthquake Intensity Scale':
-          jsonTitle = 'Other Information/Earthquake Intensity Scale';
-          return 'Other Information';
-        case 'Rainfall Warning System':
-          jsonTitle = 'Other Information/Rainfall Warning System';
-          return 'Other Information';
-        case 'Tropical Cyclone Warning Systems':
-          jsonTitle = 'Other Information/Tropical Cyclone Warning Systems';
-          return 'Other Information';
-        case 'About Earthquakes':
-        case 'Disastrous Earthquakes in the Philippines':
-        case 'Preparing for Earthquakes':
-          return 'Earthquakes';
-        case 'About Typhoons':
-        case 'Disastrous Typhoons in the Philippines':
-        case 'Preparing for Typhoons':
-          return 'Typhoons';
-        case 'Guidelines on the Cancellation or Suspension of Classes':
-        case 'Emergency Go Bag':
-          return 'Other Information';
-        default:
-          return 'Other Information';
-      }
-    }
-
     return InkWell(
       onTap: onTap ?? () async {
-        final category = getCategory(title);
+        final category = _getCategory(title);
+        final navigationTitle = _getEnglishTitle(title);
         
         // Store navigation data
         final navigationData = {
           'category': category,
-          'title': title,
+          'title': navigationTitle,
         };
 
         // Show loading overlay

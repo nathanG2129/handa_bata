@@ -132,69 +132,6 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     );
   }
 
-  String _getEnglishTitle(String localizedTitle) {
-    // Map Filipino titles back to English for navigation
-    switch (localizedTitle) {
-      case 'Mga Lindol':
-        return 'Earthquakes';
-      case 'Tungkol sa mga Lindol':
-        return 'About Earthquakes';
-      case 'Mga Mapaminsalang Lindol sa Pilipinas':
-        return 'Disastrous Earthquakes in the Philippines';
-      case 'Paghahanda sa mga Lindol':
-        return 'Preparing for Earthquakes';
-      case 'Iskala ng Lakas ng Lindol':
-        return 'Earthquake Intensity Scale';
-      case 'Mga Bagyo':
-        return 'Typhoons';
-      case 'Tungkol sa mga Bagyo':
-        return 'About Typhoons';
-      case 'Mga Mapaminsalang Bagyo sa Pilipinas':
-        return 'Disastrous Typhoons in the Philippines';
-      case 'Paghahanda sa mga Bagyo':
-        return 'Preparing for Typhoons';
-      case 'Sistema ng Babala sa mga Bagyo':
-        return 'Tropical Cyclone Warning Systems';
-      case 'Sistema ng Babala sa Pag-ulan':
-        return 'Rainfall Warning System';
-      case 'Iba Pang Impormasyon':
-        return 'Other Information';
-      case 'Mga Alituntunin sa Pagkansela o Pagsuspinde ng mga Klase':
-        return 'Guidelines on the Cancellation or Suspension of Classes';
-      case 'Mga Infographic':
-        return 'Infographics';
-      case 'Mga Video':
-        return 'Videos';
-      default:
-        return localizedTitle;
-    }
-  }
-
-  String _getCategory(String title) {
-    // First get English title if it's in Filipino
-    String englishTitle = _getEnglishTitle(title);
-    
-    // Then map to category
-    switch (englishTitle) {
-      case 'About Earthquakes':
-      case 'Disastrous Earthquakes in the Philippines':
-      case 'Preparing for Earthquakes':
-      case 'Earthquake Intensity Scale':
-        return 'Earthquakes';
-      case 'About Typhoons':
-      case 'Disastrous Typhoons in the Philippines':
-      case 'Preparing for Typhoons':
-      case 'Tropical Cyclone Warning Systems':
-      case 'Rainfall Warning System':
-        return 'Typhoons';
-      case 'Guidelines on the Cancellation or Suspension of Classes':
-      case 'Emergency Go Bag':
-        return 'Other Information';
-      default:
-        return 'Other Information';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
@@ -312,7 +249,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 ),
                                 _buildDivider(),
                                 _buildExpandableMenuItem(
-                                  widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Resources',
+                                  widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Sanggunian',
                                   expandedNotifier: _resourcesExpanded,
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
@@ -358,7 +295,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 ),
                                 _buildDivider(),
                                 _buildMenuItem(
-                                  widget.selectedLanguage == 'en' ? 'About' : 'Tungkol Dito',
+                                  widget.selectedLanguage == 'en' ? 'About' : 'Tungkol Sa',
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
                                   onTap: () async {
@@ -452,7 +389,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     required double submenuPadding,
     required double submenuFontSize,
   }) {
-    final notifier = expandedNotifier ?? (title == (widget.selectedLanguage == 'en' ? 'Learn' : 'Matuto') ? _learnExpanded : _resourcesExpanded);
+    final notifier = expandedNotifier ?? (title == 'Learn' || title == 'Matuto' ? _learnExpanded : _resourcesExpanded);
     
     return Theme(
       data: Theme.of(context).copyWith(
@@ -483,7 +420,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
         children: children ?? [
           if (isLearn) ...[
             _buildExpandableMenuItem(
-              widget.selectedLanguage == 'en' ? 'Earthquakes' : 'Mga Lindol',
+              widget.selectedLanguage == 'en' ? 'Earthquakes' : 'Lindol',
               expandedNotifier: _earthquakesExpanded,
               fontSize: fontSize,
               padding: padding,
@@ -491,7 +428,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'About Earthquakes' : 'Tungkol sa mga Lindol',
+                  widget.selectedLanguage == 'en' ? 'About Earthquakes' : 'Tungkol sa Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
@@ -501,19 +438,19 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Preparing for Earthquakes' : 'Paghahanda sa mga Lindol',
+                  widget.selectedLanguage == 'en' ? 'Preparing for Earthquakes' : 'Paghahanda para sa Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Earthquake Intensity Scale' : 'Iskala ng Lakas ng Lindol',
+                  widget.selectedLanguage == 'en' ? 'Earthquake Intensity Scale' : 'Panukat ng Lakas ng Lindol',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
               ],
             ),
             _buildExpandableMenuItem(
-              widget.selectedLanguage == 'en' ? 'Typhoons' : 'Mga Bagyo',
+              widget.selectedLanguage == 'en' ? 'Typhoons' : 'Bagyo',
               expandedNotifier: _typhoonsExpanded,
               fontSize: fontSize,
               padding: padding,
@@ -521,7 +458,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'About Typhoons' : 'Tungkol sa mga Bagyo',
+                  widget.selectedLanguage == 'en' ? 'About Typhoons' : 'Tungkol sa Bagyo',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
@@ -531,17 +468,17 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Preparing for Typhoons' : 'Paghahanda sa mga Bagyo',
+                  widget.selectedLanguage == 'en' ? 'Preparing for Typhoons' : 'Paghahanda para sa Bagyo',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Tropical Cyclone Warning Systems' : 'Sistema ng Babala sa mga Bagyo',
+                  widget.selectedLanguage == 'en' ? 'Tropical Cyclone Warning Systems' : 'Tropical Cyclone Warning System',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Rainfall Warning System' : 'Sistema ng Babala sa Pag-ulan',
+                  widget.selectedLanguage == 'en' ? 'Rainfall Warning System' : 'Rainfall Warning System',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
@@ -556,7 +493,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
               submenuFontSize: submenuFontSize,
               children: [
                 _buildSubmenuItem(
-                  widget.selectedLanguage == 'en' ? 'Guidelines on the Cancellation or Suspension of Classes' : 'Mga Alituntunin sa Pagkansela o Pagsuspinde ng mga Klase',
+                  widget.selectedLanguage == 'en' ? 'Guidelines on the Cancellation or Suspension of Classes' : 'Mga Alituntunin sa Pagkansela or Pagsuspinde ng Klase',
                   fontSize: submenuFontSize,
                   padding: submenuPadding,
                 ),
@@ -567,7 +504,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                 ),
               ],
             ),
-          ] else if (title == (widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Resources')) ...[
+          ] else if (title == 'Resources' || title == 'Mga Sanggunian') ...[
             _buildSubmenuItem(
               widget.selectedLanguage == 'en' ? 'Infographics' : 'Mga Infographic',
               fontSize: submenuFontSize,
@@ -656,15 +593,80 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
     required double fontSize,
     required double padding,
   }) {
+    String getCategory(String title) {
+      // Get the English category title regardless of display language
+      switch (title) {
+        case 'Earthquake Intensity Scale':
+        case 'Panukat ng Lakas ng Lindol':
+          return 'Other Information';
+        case 'Rainfall Warning System':
+        case 'Sistema ng Babala sa Pag-ulan':
+          return 'Other Information';
+        case 'Tropical Cyclone Warning Systems':
+        case 'Sistema ng Babala sa mga Bagyo':
+          return 'Other Information';
+        case 'About Earthquakes':
+        case 'Tungkol sa Lindol':
+        case 'Disastrous Earthquakes in the Philippines':
+        case 'Mga Mapaminsalang Lindol sa Pilipinas':
+        case 'Preparing for Earthquakes':
+        case 'Paghahanda para sa Lindol':
+          return 'Earthquakes';
+        case 'About Typhoons':
+        case 'Tungkol sa Bagyo':
+        case 'Disastrous Typhoons in the Philippines':
+        case 'Mga Mapaminsalang Bagyo sa Pilipinas':
+        case 'Preparing for Typhoons':
+        case 'Paghahanda para sa Bagyo':
+          return 'Typhoons';
+        case 'Guidelines on the Cancellation or Suspension of Classes':
+        case 'Mga Alituntunin sa Pagkansela or Pagsuspinde ng Klase':
+        case 'Emergency Go Bag':
+          return 'Other Information';
+        default:
+          return 'Other Information';
+      }
+    }
+
+    String getEnglishTitle(String title) {
+      // Map Filipino titles back to English for JSON keys
+      switch (title) {
+        case 'Tungkol sa Lindol':
+          return 'About Earthquakes';
+        case 'Mga Mapaminsalang Lindol sa Pilipinas':
+          return 'Disastrous Earthquakes in the Philippines';
+        case 'Paghahanda para sa Lindol':
+          return 'Preparing for Earthquakes';
+        case 'Panukat ng Lakas ng Lindol':
+          return 'Earthquake Intensity Scale';
+        case 'Tungkol sa Bagyo':
+          return 'About Typhoons';
+        case 'Mga Mapaminsalang Bagyo sa Pilipinas':
+          return 'Disastrous Typhoons in the Philippines';
+        case 'Paghahanda para sa Bagyo':
+          return 'Preparing for Typhoons';
+        case 'Tropical Cyclone Warning System':
+          return 'Tropical Cyclone Warning Systems';
+        case 'Rainfall Warning System':
+          return 'Rainfall Warning System';
+        case 'Mga Alituntunin sa Pagkansela or Pagsuspinde ng Klase':
+          return 'Guidelines on the Cancellation or Suspension of Classes';
+        case 'Emergency Go Bag':
+          return 'Emergency Go Bag';
+        default:
+          return title;
+      }
+    }
+
     return InkWell(
       onTap: onTap ?? () async {
-        final category = _getCategory(title);
-        final navigationTitle = _getEnglishTitle(title);
+        final category = getCategory(title);
+        final englishTitle = getEnglishTitle(title);
         
-        // Store navigation data
+        // Store navigation data using English titles for JSON keys
         final navigationData = {
           'category': category,
-          'title': navigationTitle,
+          'title': englishTitle,
         };
 
         // Show loading overlay

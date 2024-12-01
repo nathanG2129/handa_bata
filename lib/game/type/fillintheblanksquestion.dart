@@ -365,6 +365,8 @@ void _showAnswerVisually() async {
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
   
     List<Widget> questionWidgets = [];
     int inputIndex = 0;
@@ -372,6 +374,27 @@ void _showAnswerVisually() async {
     return ResponsiveBuilder(
       builder: (context, sizingInformation) {
         final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
+        
+        // Calculate dynamic sizes based on screen dimensions
+        final blankPadding = EdgeInsets.symmetric(
+          vertical: screenHeight * 0.008,
+          horizontal: screenWidth * 0.01
+        );
+        
+        final blankInnerPadding = EdgeInsets.symmetric(
+          vertical: screenHeight * 0.012,
+          horizontal: screenWidth * 0.015
+        );
+        
+        final wordSpacing = EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.008
+        );
+        
+        final titleSpacing = screenHeight * 0.02;
+        final optionsSpacing = screenHeight * 0.04;
+        
+        final optionHeight = screenHeight * (isTablet ? 0.09 : 0.08);
+        final gridSpacing = screenWidth * (isTablet ? 0.015 : 0.02);
   
         questionText.split(' ').forEach((word) {
           if (word.startsWith('<input>')) {
@@ -379,10 +402,7 @@ void _showAnswerVisually() async {
             
             questionWidgets.add(
               Container(
-                margin: EdgeInsets.symmetric(
-                  vertical: isTablet ? 6.0 : 4.0,
-                  horizontal: isTablet ? 6.0 : 4.0,
-                ),
+                margin: blankPadding,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.white,
@@ -393,10 +413,7 @@ void _showAnswerVisually() async {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
-                  padding: EdgeInsets.symmetric(
-                    vertical: isTablet ? 12.0 : 8.0,
-                    horizontal: isTablet ? 16.0 : 12.0,
-                  ),
+                  padding: blankInnerPadding,
                   color: selectedOptions[inputIndex] == null 
                       ? const Color(0xFF241242) 
                       : (correctness[inputIndex] != null
@@ -406,11 +423,11 @@ void _showAnswerVisually() async {
                     selectedOptions[inputIndex] ?? '____',
                     style: (selectedOptions[inputIndex] == null)
                       ? GoogleFonts.vt323(
-                          fontSize: isTablet ? 24 : 20,
+                          fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
                           color: Colors.white
                         )
                       : GoogleFonts.rubik(
-                          fontSize: isTablet ? 20 : 18,
+                          fontSize: screenWidth * (isTablet ? 0.018 : 0.04),
                           fontWeight: FontWeight.bold,
                           color: correctness[inputIndex] != null ? Colors.white : Colors.black,
                         ),
@@ -421,13 +438,11 @@ void _showAnswerVisually() async {
             if (suffix.isNotEmpty) {
               questionWidgets.add(
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isTablet ? 6.0 : 4.0
-                  ),
+                  padding: wordSpacing,
                   child: Text(
                     suffix,
                     style: GoogleFonts.rubik(
-                      fontSize: isTablet ? 24 : 18,
+                      fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
                       color: Colors.white
                     ),
                   ),
@@ -438,13 +453,11 @@ void _showAnswerVisually() async {
           } else {
             questionWidgets.add(
               Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 6.0 : 4.0
-                ),
+                padding: wordSpacing,
                 child: Text(
                   word,
                   style: GoogleFonts.rubik(
-                    fontSize: isTablet ? 24 : 18,
+                    fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
                     color: Colors.white,
                   ),
                 ),
@@ -458,29 +471,32 @@ void _showAnswerVisually() async {
             if (!showOptions && !showUserAnswers && !_isVisualDisplayComplete)
               TextWithShadow(
                 text: 'Fill in the Blanks',
-                fontSize: isTablet ? 36 : 28,
+                fontSize: screenWidth * (isTablet ? 0.03 : 0.06),
               ),
-            SizedBox(height: isTablet ? 24 : 16),
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: questionWidgets,
+            SizedBox(height: titleSpacing),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: questionWidgets,
+              ),
             ),
             if (showOptions)
-              SizedBox(height: isTablet ? 48 : 32),
+              SizedBox(height: optionsSpacing),
             if (showOptions)
               Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 150.0 : 16.0
+                  horizontal: screenWidth * (isTablet ? 0.15 : 0.05)
                 ),
                 child: GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: isTablet ? 10.0 : 8.0,
-                    crossAxisSpacing: isTablet ? 10.0 : 8.0,
-                    mainAxisExtent: isTablet ? 70 : 60,
+                    crossAxisCount: isTablet ? 3 : 2,
+                    mainAxisSpacing: gridSpacing,
+                    crossAxisSpacing: gridSpacing,
+                    mainAxisExtent: optionHeight,
                   ),
                   itemCount: options.length,
                   itemBuilder: (context, index) {
@@ -488,8 +504,8 @@ void _showAnswerVisually() async {
                     return isChecking
                         ? Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: isTablet ? 12 : 8,
-                              vertical: isTablet ? 12 : 8
+                              horizontal: screenWidth * 0.02,
+                              vertical: screenHeight * 0.01
                             ),
                             decoration: BoxDecoration(
                               color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
@@ -504,7 +520,7 @@ void _showAnswerVisually() async {
                                     softWrap: true,
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.rubik(
-                                      fontSize: isTablet ? 18 : 16,
+                                      fontSize: screenWidth * (isTablet ? 0.016 : 0.035),
                                       height: 1.2,
                                       color: optionSelected[index] ? Colors.transparent : Colors.black,
                                     ),
@@ -515,7 +531,7 @@ void _showAnswerVisually() async {
                                     child: Text(
                                       optionPositions[index].toString(),
                                       style: GoogleFonts.rubik(
-                                        fontSize: isTablet ? 24 : 20,
+                                        fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -526,7 +542,7 @@ void _showAnswerVisually() async {
                           )
                         : Container(
                             constraints: BoxConstraints(
-                              minHeight: isTablet ? 70 : 60
+                              minHeight: optionHeight
                             ),
                             child: ElevatedButton(
                               onPressed: () {
@@ -536,8 +552,8 @@ void _showAnswerVisually() async {
                                 foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
                                 backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: isTablet ? 10 : 8,
-                                  vertical: isTablet ? 16 : 12
+                                  horizontal: screenWidth * 0.02,
+                                  vertical: screenHeight * 0.015
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(0),
@@ -552,7 +568,7 @@ void _showAnswerVisually() async {
                                       softWrap: true,
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.rubik(
-                                        fontSize: isTablet ? 18 : 16,
+                                        fontSize: screenWidth * (isTablet ? 0.016 : 0.035),
                                         height: 1.2,
                                         color: optionSelected[index] ? Colors.transparent : Colors.black,
                                       ),
@@ -563,7 +579,7 @@ void _showAnswerVisually() async {
                                       child: Text(
                                         optionPositions[index].toString(),
                                         style: GoogleFonts.rubik(
-                                          fontSize: isTablet ? 24 : 20,
+                                          fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                         ),

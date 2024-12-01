@@ -463,58 +463,98 @@ class UserProfileHeaderState extends State<UserProfileHeader> {
                                 width: 28,
                                 height: 28,
                               ),
-                              color: const Color(0xFF241242), // Set the popup menu background color
+                              color: const Color(0xFF241242),
                               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                                 PopupMenuItem<String>(
                                   value: 'Change Avatar',
-                                  child: Container(
-                                    width: double.infinity, // Span the entire width
-                                    height: 40, // Adjusted height
-                                    color: Colors.white,
-                                    alignment: Alignment.center, // Center the text
-                                    child: Text(
-                                      PlayLocalization.translate('changeAvatar', widget.selectedLanguage),
-                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.transparent,
+                                      highlightColor: const Color(0xFFf1b33a),
+                                      onTap: () {
+                                        Navigator.pop(context, 'Change Avatar');
+                                      },
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 40,
+                                        color: Colors.white,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          PlayLocalization.translate('changeAvatar', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'Change Nickname',
-                                  child: Container(
-                                    width: double.infinity, // Span the entire width
-                                    height: 40, // Adjusted height
-                                    color: Colors.white,
-                                    alignment: Alignment.center, // Center the text
-                                    child: Text(
-                                      PlayLocalization.translate('changeNickname', widget.selectedLanguage),
-                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.transparent,
+                                      highlightColor: const Color(0xFFf1b33a),
+                                      onTap: () {
+                                        Navigator.pop(context, 'Change Nickname');
+                                      },
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 40,
+                                        color: Colors.white,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          PlayLocalization.translate('changeNickname', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'Change Banner',
-                                  child: Container(
-                                    width: double.infinity, // Span the entire width
-                                    height: 40, // Adjusted height
-                                    color: Colors.white,
-                                    alignment: Alignment.center, // Center the text
-                                    child: Text(
-                                      PlayLocalization.translate('changeBanner', widget.selectedLanguage),
-                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.transparent,
+                                      highlightColor: const Color(0xFFf1b33a),
+                                      onTap: () {
+                                        Navigator.pop(context, 'Change Banner');
+                                      },
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 40,
+                                        color: Colors.white,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          PlayLocalization.translate('changeBanner', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'Change Favorite Badges',
-                                  child: Container(
-                                    width: double.infinity, // Span the entire width
-                                    height: 44, // Adjusted height
-                                    color: Colors.white,
-                                    alignment: Alignment.center, // Center the text
-                                    child: Text(
-                                      PlayLocalization.translate('changeFavoriteBadges', widget.selectedLanguage),
-                                      style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
-                                      textAlign: TextAlign.center, // Add textAlign center
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      splashColor: Colors.transparent,
+                                      highlightColor: const Color(0xFFf1b33a),
+                                      onTap: () {
+                                        Navigator.pop(context, 'Change Favorite Badges');
+                                      },
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 44,
+                                        color: Colors.white,
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          PlayLocalization.translate('changeFavoriteBadges', widget.selectedLanguage),
+                                          style: GoogleFonts.vt323(color: Colors.black, fontSize: 18),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

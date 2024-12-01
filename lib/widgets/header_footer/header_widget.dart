@@ -281,8 +281,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'My Profile',
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                widget.selectedLanguage == 'en' ? 'My Profile' : 'Ang Aking Profile',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
               ),
             ],
           ),
@@ -293,8 +293,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Characters',
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                widget.selectedLanguage == 'en' ? 'Characters' : 'Mga Character',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
               ),
             ],
           ),
@@ -305,8 +305,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Badges',
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                widget.selectedLanguage == 'en' ? 'Badges' : 'Mga Badge',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
               ),
             ],
           ),
@@ -317,8 +317,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Banners',
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                widget.selectedLanguage == 'en' ? 'Banners' : 'Mga Banner',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
               ),
             ],
           ),
@@ -329,8 +329,8 @@ class HeaderWidgetState extends State<HeaderWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Account Settings',
-                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18), // Increased font size
+                widget.selectedLanguage == 'en' ? 'Account Settings' : 'Mga Setting ng Account',
+                style: GoogleFonts.vt323(color: Colors.white, fontSize: 18),
               ),
             ],
           ),

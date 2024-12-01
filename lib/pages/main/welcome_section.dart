@@ -5,6 +5,7 @@ import 'package:handabatamae/localization/main/localization.dart';
 import 'package:handabatamae/pages/play_page.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/widgets/dialogs/faq_dialog.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 
@@ -15,6 +16,20 @@ class WelcomeSection extends StatelessWidget {
     super.key,
     required this.selectedLanguage,
   });
+
+  Color _darken(Color color, [double amount = 0.3]) {
+    assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+
+  void _showFAQDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => FAQDialog(selectedLanguage: selectedLanguage),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +53,7 @@ class WelcomeSection extends StatelessWidget {
         final characterSize = ResponsiveUtils.valueByDevice(
           context: context,
           mobile: 200.0,
-          tablet: 300.0, // Increased for tablet side view
+          tablet: 300.0,
           desktop: 250.0,
         );
 
@@ -49,26 +64,21 @@ class WelcomeSection extends StatelessWidget {
           desktop: 24,
         );
 
-        // final buttonWidth = ResponsiveUtils.valueByDevice(
-        //   context: context,
-        //   mobile: 200.0,
-        //   tablet: 215.0,
-        //   desktop: 225.0,
-        // );
-
-        // final buttonHeight = ResponsiveUtils.valueByDevice(
-        //   context: context,
-        //   mobile: 55.0,
-        //   tablet: 60.0,
-        //   desktop: 65.0,
-        // );
-
         final buttonFontSize = ResponsiveUtils.valueByDevice(
           context: context,
           mobile: 24,
           tablet: 26,
           desktop: 28,
         );
+
+        final buttonSpacing = ResponsiveUtils.valueByDevice(
+          context: context,
+          mobile: 8.0,
+          tablet: 16.0,
+          desktop: 24.0,
+        );
+
+        const faqButtonColor = Color(0xFF32c067);
 
         // Mobile layout (vertical)
         if (sizingInformation.deviceScreenType == DeviceScreenType.mobile) {
@@ -109,25 +119,43 @@ class WelcomeSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 30),
-                Button3D(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PlayPage(
-                          selectedLanguage: selectedLanguage,
-                          title: 'Adventure',
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Button3D(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PlayPage(
+                              selectedLanguage: selectedLanguage,
+                              title: 'Adventure',
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        MainPageLocalization.translate('playNow', selectedLanguage),
+                        style: GoogleFonts.vt323(
+                          fontSize: buttonFontSize.toDouble(),
+                          color: Colors.white,
                         ),
                       ),
-                    );
-                  },
-                  child: Text(
-                    MainPageLocalization.translate('playNow', selectedLanguage),
-                    style: GoogleFonts.vt323(
-                      fontSize: buttonFontSize.toDouble(),
-                      color: Colors.white,
                     ),
-                  ),
+                    SizedBox(width: buttonSpacing),
+                    Button3D(
+                      onPressed: () => _showFAQDialog(context),
+                      backgroundColor: faqButtonColor,
+                      borderColor: _darken(faqButtonColor),
+                      child: Text(
+                        selectedLanguage == 'en' ? 'FAQ' : 'Mga FAQ',
+                        style: GoogleFonts.vt323(
+                          fontSize: buttonFontSize.toDouble(),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -172,25 +200,43 @@ class WelcomeSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    Button3D(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PlayPage(
-                              selectedLanguage: selectedLanguage,
-                              title: 'Adventure',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Button3D(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PlayPage(
+                                  selectedLanguage: selectedLanguage,
+                                  title: 'Adventure',
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            MainPageLocalization.translate('playNow', selectedLanguage),
+                            style: GoogleFonts.vt323(
+                              fontSize: buttonFontSize.toDouble(),
+                              color: Colors.white,
                             ),
                           ),
-                        );
-                      },
-                      child: Text(
-                        MainPageLocalization.translate('playNow', selectedLanguage),
-                        style: GoogleFonts.vt323(
-                          fontSize: buttonFontSize.toDouble(),
-                          color: Colors.white,
                         ),
-                      ),
+                        SizedBox(width: buttonSpacing),
+                        Button3D(
+                          onPressed: () => _showFAQDialog(context),
+                          backgroundColor: faqButtonColor,
+                          borderColor: _darken(faqButtonColor),
+                          child: Text(
+                            selectedLanguage == 'en' ? 'FAQs' : 'Mga FAQ',
+                            style: GoogleFonts.vt323(
+                              fontSize: buttonFontSize.toDouble(),
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

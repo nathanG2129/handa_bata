@@ -99,7 +99,7 @@ class _AdminBannerPageState extends State<AdminBannerPage> {
         error: null,
       ));
 
-      final banners = await _bannerService.fetchBanners();
+      final banners = await _bannerService.fetchBanners(isAdmin: true);
       
       if (mounted) {
         setState(() => _state = _state.copyWith(

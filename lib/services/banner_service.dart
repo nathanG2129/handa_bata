@@ -489,33 +489,59 @@ class BannerService {
 
   // Keep other existing methods unchanged for now
   Future<List<Map<String, dynamic>>> fetchBanners({
-    BannerPriority priority = BannerPriority.HIGH
+    BannerPriority priority = BannerPriority.HIGH,
+    bool isAdmin = false
   }) async {
     try {
-        final quality = await _connectionManager.checkConnectionQuality();
+      final cacheKey = 'all_banners${isAdmin ? '_admin' : ''}';
+      
+      if (isAdmin) {
+        // For admin, always fetch from server
+        DocumentSnapshot snapshot = await _bannerDoc.get();
+        if (!snapshot.exists) return [];
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<Map<String, dynamic>> banners = 
+            data['banners'] != null ? List<Map<String, dynamic>>.from(data['banners']) : [];
+            
+        // Update both caches
+        _addToBatchCache(cacheKey, banners);
+        for (var banner in banners) {
+          _addToCache(banner['id'], banner);
+        }
         
-      if (quality != ConnectionQuality.OFFLINE) {
-        try {
-          // Try server first when online
-          DocumentSnapshot snapshot = await _bannerDoc.get()
-              .timeout(const Duration(seconds: 5));
+        return banners;
+      }
+
+      // Check batch cache first for non-admin
+      if (_batchCache.containsKey(cacheKey) && _batchCache[cacheKey]!.isValid) {
+        return List<Map<String, dynamic>>.from(_batchCache[cacheKey]!.data['banners']);
+      }
+
+      // Get from local storage
+      List<Map<String, dynamic>> localBanners = await _getBannersFromLocal();
+      
+      // If local storage is empty, try fetching from server
+      if (localBanners.isEmpty) {
+        var connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult != ConnectivityResult.none) {
+          DocumentSnapshot snapshot = await _bannerDoc.get();
+          if (snapshot.exists) {
+            Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+            localBanners = data['banners'] != null ? 
+                List<Map<String, dynamic>>.from(data['banners']) : [];
             
-            if (snapshot.exists) {
-              Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-            List<Map<String, dynamic>> serverBanners = 
-                data['banners'] != null ? List<Map<String, dynamic>>.from(data['banners']) : [];
-            
-            // Update local storage with server data
-            await _storeBannersLocally(serverBanners);
-            return serverBanners;
+            // Update caches and local storage
+            _addToBatchCache(cacheKey, localBanners);
+            for (var banner in localBanners) {
+              _addToCache(banner['id'], banner);
+            }
+            await _storeBannersLocally(localBanners);
           }
-        } catch (e) {
         }
       }
       
-      // Fallback to local storage
-      return await _getBannersFromLocal();
-      
+      return localBanners;
     } catch (e) {
       await _logBannerOperation('fetch_error', -1, e.toString());
       return [];

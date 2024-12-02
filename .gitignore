@@ -38,6 +38,7 @@ app.*.symbols
 app.*.map.json
 service-account.json
 Members.psd
+Icon.psd
 
 # Android Studio will place build artifacts here
 /android/app/debug

@@ -44,14 +44,28 @@ class AdminLoginPage extends StatelessWidget {
                       padding: ResponsiveUtils.valueByDevice<EdgeInsets>(
                         context: context,
                         mobile: const EdgeInsets.symmetric(horizontal: 16),
-                        tablet: const EdgeInsets.symmetric(horizontal: 20),
-                        desktop: const EdgeInsets.symmetric(horizontal: 20),
+                        tablet: const EdgeInsets.symmetric(horizontal: 32),
+                        desktop: const EdgeInsets.symmetric(horizontal: 48),
                       ),
                       child: ResponsiveBuilder(
                         builder: (context, sizingInformation) {
                           final isTabletOrMobile = sizingInformation.deviceScreenType == DeviceScreenType.tablet || 
                                                  sizingInformation.deviceScreenType == DeviceScreenType.mobile;
                           final isMobile = sizingInformation.deviceScreenType == DeviceScreenType.mobile;
+
+                          final characterSize = ResponsiveUtils.valueByDevice<double>(
+                            context: context,
+                            mobile: MediaQuery.of(context).size.width * 0.40,
+                            tablet: MediaQuery.of(context).size.width * 0.30,
+                            desktop: MediaQuery.of(context).size.width * 0.20,
+                          );
+
+                          final spacingMultiplier = ResponsiveUtils.valueByDevice<double>(
+                            context: context,
+                            mobile: 1.0,
+                            tablet: 1.5,
+                            desktop: 2.0,
+                          );
 
                           if (isTabletOrMobile) {
                             // Mobile/Tablet Layout (Vertical)
@@ -61,19 +75,11 @@ class AdminLoginPage extends StatelessWidget {
                                 // Kladis and Kloud SVG with responsive size
                                 SvgPicture.asset(
                                   'assets/characters/KladisandKloud.svg',
-                                  width: ResponsiveUtils.valueByDevice<double>(
-                                    context: context,
-                                    mobile: 200,
-                                    tablet: 300,
-                                  ),
-                                  height: ResponsiveUtils.valueByDevice<double>(
-                                    context: context,
-                                    mobile: 200,
-                                    tablet: 300,
-                                  ),
+                                  width: characterSize,
+                                  height: characterSize,
                                 ),
-                                SizedBox(height: isMobile ? 20 : 40),
-                                _buildContent(isMobile, context),
+                                SizedBox(height: 20.0 * spacingMultiplier),
+                                _buildContent(isMobile, context, spacingMultiplier),
                               ],
                             );
                           }
@@ -82,12 +88,7 @@ class AdminLoginPage extends StatelessWidget {
                           return Center(
                             child: Container(
                               constraints: BoxConstraints(
-                                maxWidth: ResponsiveUtils.valueByDevice<double>(
-                                  context: context,
-                                  mobile: 600,
-                                  tablet: 900,
-                                  desktop: 1200,
-                                ),
+                                maxWidth: MediaQuery.of(context).size.width * 0.8,
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -95,15 +96,15 @@ class AdminLoginPage extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     flex: 3,
-                                    child: _buildContent(false, context),
+                                    child: _buildContent(false, context, spacingMultiplier),
                                   ),
-                                  const SizedBox(width: 20),
+                                  SizedBox(width: 20.0 * spacingMultiplier),
                                   Expanded(
                                     flex: 2,
                                     child: SvgPicture.asset(
                                       'assets/characters/KladisandKloud.svg',
-                                      width: 350,
-                                      height: 350,
+                                      width: characterSize,
+                                      height: characterSize,
                                     ),
                                   ),
                                 ],
@@ -124,7 +125,10 @@ class AdminLoginPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(bool isMobile, BuildContext context) {
+  Widget _buildContent(bool isMobile, BuildContext context, double spacingMultiplier) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -132,87 +136,52 @@ class AdminLoginPage extends StatelessWidget {
         // Title with responsive font size
         TextWithShadow(
           text: 'Download the App',
-          fontSize: ResponsiveUtils.valueByDevice<double>(
-            context: context,
-            mobile: 32,
-            tablet: 40,
-            desktop: 48,
-          ),
+          fontSize: screenHeight * (isMobile ? 0.04 : 0.05),
         ),
-        SizedBox(height: isMobile ? 12 : 20),
+        SizedBox(height: 12.0 * spacingMultiplier),
         // Description with responsive constraints and font size
         Container(
           constraints: BoxConstraints(
-            maxWidth: ResponsiveUtils.valueByDevice<double>(
-              context: context,
-              mobile: 300,
-              tablet: 400,
-              desktop: 500,
-            ),
+            maxWidth: screenWidth * (isMobile ? 0.8 : 0.6),
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: ResponsiveUtils.valueByDevice<double>(
-              context: context,
-              mobile: 12,
-              tablet: 20,
-              desktop: 20,
-            ),
+            horizontal: 12.0 * spacingMultiplier,
           ),
           child: Text(
             'Experience Handa Bata on your mobile device! Download the latest version of our app and start your disaster preparedness journey with Kladis and Kloud.',
             textAlign: TextAlign.center,
             style: GoogleFonts.rubik(
-              fontSize: ResponsiveUtils.valueByDevice<double>(
-                context: context,
-                mobile: 14,
-                tablet: 16,
-                desktop: 18,
-              ),
+              fontSize: screenHeight * (isMobile ? 0.018 : 0.022),
               color: Colors.white,
               height: 1.5,
             ),
           ),
         ),
-        SizedBox(height: isMobile ? 24 : 40),
+        SizedBox(height: 24.0 * spacingMultiplier),
         // Download Button with responsive width
         Stack(
           children: [
             Button3D(
-              width: ResponsiveUtils.valueByDevice<double>(
-                context: context,
-                mobile: 200,
-                tablet: 220,
-                desktop: 250,
-              ),
+              width: screenWidth * (isMobile ? 0.5 : 0.2),
               backgroundColor: const Color(0xFFF1B33A),
               borderColor: const Color(0xFF8B5A00),
               onPressed: _downloadAPK,
               child: Text(
                 'Download APK',
                 style: GoogleFonts.rubik(
-                  fontSize: ResponsiveUtils.valueByDevice<double>(
-                    context: context,
-                    mobile: 16,
-                    tablet: 18,
-                    desktop: 20,
-                  ),
+                  fontSize: screenHeight * (isMobile ? 0.02 : 0.025),
                   color: Colors.white,
                 ),
               ),
             ),
           ],
         ),
-        SizedBox(height: isMobile ? 12 : 20),
+        SizedBox(height: 12.0 * spacingMultiplier),
         // Version Info with responsive font size
         Text(
           'Version 1.0.0',
           style: GoogleFonts.rubik(
-            fontSize: ResponsiveUtils.valueByDevice<double>(
-              context: context,
-              mobile: 12,
-              tablet: 13,
-              desktop: 14,
-            ),
+            fontSize: screenHeight * (isMobile ? 0.015 : 0.018),
             color: Colors.white70,
           ),
         ),

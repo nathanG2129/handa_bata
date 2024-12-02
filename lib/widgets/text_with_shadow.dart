@@ -33,13 +33,13 @@ class TextWithShadow extends StatelessWidget {
               fontSize: responsiveFontSize,
               height: 1.5, // Adjust this value to control line height
               color: Colors.transparent,
-              shadows: [
-                const Shadow(
-                  offset: Offset(0, 5.5),
-                  blurRadius: 0.0,
-                  color: Color(0xFF241242), // Updated shadow color
-                ),
-              ],
+              // shadows: [
+              //   const Shadow(
+              //     offset: Offset(0, 2.0),
+              //     blurRadius: 0.0,
+              //     color: Color(0xFF241242), // Updated shadow color
+              //   ),
+              // ],
             ),
           ),
           Text(

@@ -365,10 +365,10 @@ void _showAnswerVisually() async {
   @override
   Widget build(BuildContext context) {
     String questionText = widget.questionData['question'];
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    // final screenWidth = MediaQuery.of(context).size.width;
+    // final screenHeight = MediaQuery.of(context).size.height;
   
-    List<Widget> questionWidgets = [];
+    // List<Widget> questionWidgets = [];
     int inputIndex = 0;
   
     return ResponsiveBuilder(

@@ -375,222 +375,206 @@ void _showAnswerVisually() async {
       builder: (context, sizingInformation) {
         final isTablet = sizingInformation.deviceScreenType == DeviceScreenType.tablet;
         
-        // Calculate dynamic sizes based on screen dimensions
-        final blankPadding = EdgeInsets.symmetric(
-          vertical: screenHeight * 0.008,
-          horizontal: screenWidth * 0.01
-        );
-        
-        final blankInnerPadding = EdgeInsets.symmetric(
-          vertical: screenHeight * 0.012,
-          horizontal: screenWidth * 0.015
-        );
-        
-        final wordSpacing = EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.008
-        );
-        
-        final titleSpacing = screenHeight * 0.02;
-        final optionsSpacing = screenHeight * 0.04;
-        
-        final optionHeight = screenHeight * (isTablet ? 0.09 : 0.08);
-        final gridSpacing = screenWidth * (isTablet ? 0.015 : 0.02);
-  
-        questionText.split(' ').forEach((word) {
-          if (word.startsWith('<input>')) {
-            String suffix = word.substring(7);
-            
-            questionWidgets.add(
-              Container(
-                margin: blankPadding,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(0),
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  padding: blankInnerPadding,
-                  color: selectedOptions[inputIndex] == null 
-                      ? const Color(0xFF241242) 
-                      : (correctness[inputIndex] != null
-                          ? (correctness[inputIndex]! ? Colors.green : Colors.red)
-                          : Colors.white),
-                  child: Text(
-                    selectedOptions[inputIndex] ?? '____',
-                    style: (selectedOptions[inputIndex] == null)
-                      ? GoogleFonts.vt323(
-                          fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
-                          color: Colors.white
-                        )
-                      : GoogleFonts.rubik(
-                          fontSize: screenWidth * (isTablet ? 0.018 : 0.04),
-                          fontWeight: FontWeight.bold,
-                          color: correctness[inputIndex] != null ? Colors.white : Colors.black,
-                        ),
-                  ),
-                ),
-              ),
-            );
-            if (suffix.isNotEmpty) {
-              questionWidgets.add(
-                Padding(
-                  padding: wordSpacing,
-                  child: Text(
-                    suffix,
-                    style: GoogleFonts.rubik(
-                      fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
-                      color: Colors.white
-                    ),
-                  ),
-                ),
-              );
-            }
-            inputIndex++;
-          } else {
-            questionWidgets.add(
-              Padding(
-                padding: wordSpacing,
-                child: Text(
-                  word,
-                  style: GoogleFonts.rubik(
-                    fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            );
-          }
-        });
-  
         return Column(
           children: [
             if (!showOptions && !showUserAnswers && !_isVisualDisplayComplete)
-              TextWithShadow(
-                text: 'Fill in the Blanks',
-                fontSize: screenWidth * (isTablet ? 0.03 : 0.06),
+              Column(
+                children: [
+                  TextWithShadow(
+                    text: 'Fill in the Blanks',
+                    fontSize: isTablet ? 36 : 28,
+                  ),
+                  SizedBox(height: isTablet ? 24 : 16),
+                ],
               ),
-            SizedBox(height: titleSpacing),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              padding: EdgeInsets.symmetric(horizontal: isTablet ? 12.0 : 8.0),
               child: Wrap(
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: questionWidgets,
+                spacing: 8,
+                runSpacing: 8,
+                children: questionText.split(' ').map((word) {
+                  if (word.startsWith('<input>')) {
+                    String suffix = word.substring(7);
+                    List<Widget> widgets = [
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(0),
+                        ),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                          padding: EdgeInsets.symmetric(
+                            vertical: isTablet ? 8 : 4,
+                            horizontal: isTablet ? 16 : 12
+                          ),
+                          color: selectedOptions[inputIndex] == null 
+                              ? const Color(0xFF241242) 
+                              : (correctness[inputIndex] != null
+                                  ? (correctness[inputIndex]! ? Colors.green : Colors.red)
+                                  : Colors.white),
+                          child: Text(
+                            selectedOptions[inputIndex] ?? '____',
+                            style: (selectedOptions[inputIndex] == null)
+                              ? GoogleFonts.vt323(
+                                  fontSize: isTablet ? 28 : 20,
+                                  color: Colors.white
+                                )
+                              : GoogleFonts.rubik(
+                                  fontSize: isTablet ? 24 : 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: correctness[inputIndex] != null ? Colors.white : Colors.black,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ];
+                    if (suffix.isNotEmpty) {
+                      widgets.add(
+                        Text(
+                          suffix,
+                          style: GoogleFonts.rubik(
+                            fontSize: isTablet ? 28 : 20,
+                            color: Colors.white
+                          ),
+                        ),
+                      );
+                    }
+                    inputIndex++;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: widgets,
+                    );
+                  } else {
+                    return Text(
+                      word,
+                      style: GoogleFonts.rubik(
+                        fontSize: isTablet ? 28 : 20,
+                        color: Colors.white,
+                      ),
+                    );
+                  }
+                }).toList(),
               ),
             ),
             if (showOptions)
-              SizedBox(height: optionsSpacing),
-            if (showOptions)
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * (isTablet ? 0.15 : 0.05)
-                ),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: isTablet ? 3 : 2,
-                    mainAxisSpacing: gridSpacing,
-                    crossAxisSpacing: gridSpacing,
-                    mainAxisExtent: optionHeight,
-                  ),
-                  itemCount: options.length,
-                  itemBuilder: (context, index) {
-                    String option = options[index];
-                    return isChecking
-                        ? Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.02,
-                              vertical: screenHeight * 0.01
-                            ),
-                            decoration: BoxDecoration(
-                              color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
-                              border: Border.all(color: Colors.black, width: 2),
-                              borderRadius: BorderRadius.circular(0),
-                            ),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Text(
-                                    option,
-                                    softWrap: true,
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.rubik(
-                                      fontSize: screenWidth * (isTablet ? 0.016 : 0.035),
-                                      height: 1.2,
-                                      color: optionSelected[index] ? Colors.transparent : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                if (optionSelected[index] && optionPositions[index] != null)
-                                  Center(
-                                    child: Text(
-                                      optionPositions[index].toString(),
-                                      style: GoogleFonts.rubik(
-                                        fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          )
-                        : Container(
-                            constraints: BoxConstraints(
-                              minHeight: optionHeight
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                _handleOptionSelection(index, option);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
-                                backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
+              Column(
+                children: [
+                  SizedBox(height: isTablet ? 32 : 24),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 48 : 24
+                    ),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isTablet ? 3 : 2,
+                        mainAxisSpacing: isTablet ? 16 : 12,
+                        crossAxisSpacing: isTablet ? 16 : 12,
+                        mainAxisExtent: isTablet ? 80 : 64,
+                      ),
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        String option = options[index];
+                        return isChecking
+                            ? Container(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: screenWidth * 0.02,
-                                  vertical: screenHeight * 0.015
+                                  horizontal: isTablet ? 16 : 12,
+                                  vertical: isTablet ? 12 : 8
                                 ),
-                                shape: RoundedRectangleBorder(
+                                decoration: BoxDecoration(
+                                  color: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
+                                  border: Border.all(color: Colors.black, width: 2),
                                   borderRadius: BorderRadius.circular(0),
-                                  side: const BorderSide(color: Colors.black, width: 2),
                                 ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: Text(
-                                      option,
-                                      softWrap: true,
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.rubik(
-                                        fontSize: screenWidth * (isTablet ? 0.016 : 0.035),
-                                        height: 1.2,
-                                        color: optionSelected[index] ? Colors.transparent : Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                  if (optionSelected[index] && optionPositions[index] != null)
+                                child: Stack(
+                                  children: [
                                     Center(
                                       child: Text(
-                                        optionPositions[index].toString(),
+                                        option,
+                                        softWrap: true,
+                                        textAlign: TextAlign.center,
                                         style: GoogleFonts.rubik(
-                                          fontSize: screenWidth * (isTablet ? 0.02 : 0.045),
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: isTablet ? 20 : 16,
+                                          height: 1.2,
+                                          color: optionSelected[index] ? Colors.transparent : Colors.black,
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
-                          );
-                  },
-                ),
+                                    if (optionSelected[index] && optionPositions[index] != null)
+                                      Center(
+                                        child: Text(
+                                          optionPositions[index].toString(),
+                                          style: GoogleFonts.rubik(
+                                            fontSize: isTablet ? 28 : 20,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              )
+                            : Container(
+                                constraints: BoxConstraints(
+                                  minHeight: isTablet ? 80 : 64
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    _handleOptionSelection(index, option);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: optionSelected[index] ? Colors.white : Colors.black,
+                                    backgroundColor: optionSelected[index] ? const Color(0xFF241242) : Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isTablet ? 16 : 12,
+                                      vertical: isTablet ? 8 : 4
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0),
+                                      side: const BorderSide(color: Colors.black, width: 2),
+                                    ),
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                        child: Text(
+                                          option,
+                                          softWrap: true,
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.rubik(
+                                            fontSize: isTablet ? 20 : 16,
+                                            height: 1.2,
+                                            color: optionSelected[index] ? Colors.transparent : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      if (optionSelected[index] && optionPositions[index] != null)
+                                        Center(
+                                          child: Text(
+                                            optionPositions[index].toString(),
+                                            style: GoogleFonts.rubik(
+                                              fontSize: isTablet ? 28 : 20,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                      },
+                    ),
+                  ),
+                ],
               ),
           ],
         );

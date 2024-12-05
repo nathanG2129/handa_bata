@@ -48,7 +48,7 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
   bool showOptions = false;
   String questionText = '';
   int correctPairCount = 0;
-  int incorrectPairCount = 0;
+  int incorrectPairCount = 0; 
   Timer? _timer;
   bool isChecking = false; // Add this flag
   bool isSubmitted = false; // Add this flag
@@ -548,21 +548,21 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
         
         // Calculate dynamic sizes based on screen dimensions
         final dynamicPadding = EdgeInsets.symmetric(
-          horizontal: screenWidth * (isTablet ? 0.15 : 0.05), // 15% for tablet, 5% for phone
+          horizontal: screenWidth * (isTablet ? 0.15 : 0.05),
           vertical: screenHeight * 0.01
         );
         
-        // Calculate dynamic option height
-        final optionHeight = screenHeight * (isTablet ? 0.12 : 0.08); // 12% for tablet, 8% for phone
-        
         // Calculate dynamic font sizes
-        final titleFontSize = screenWidth * (isTablet ? 0.035 : 0.06);
-        final questionFontSize = screenWidth * (isTablet ? 0.025 : 0.045);
-        final optionFontSize = screenWidth * (isTablet ? 0.018 : 0.035);
+        final titleFontSize = screenWidth * (isTablet ? 0.025 : 0.08);
+        final questionFontSize = screenWidth * (isTablet ? 0.022 : 0.055);
+        final optionFontSize = screenWidth * (isTablet ? 0.020 : 0.04);
         
         // Calculate dynamic spacing
         final verticalSpacing = screenHeight * 0.02;
         final horizontalSpacing = screenWidth * 0.02;
+        
+        // Calculate option widths (reduced to prevent overflow)
+        final optionWidth = screenWidth * (isTablet ? 0.25 : 0.35); // Reduced from 0.3/0.4
         
         // Calculate color bar width
         final colorBarWidth = screenWidth * (isTablet ? 0.015 : 0.03);
@@ -585,7 +585,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         questionText,
                         style: GoogleFonts.rubik(
                           fontSize: questionFontSize,
-                          color: Colors.white
+                          color: Colors.white,
+                          height: 1.3, // Added line height for better readability
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -603,7 +604,8 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                         questionText,
                         style: GoogleFonts.rubik(
                           fontSize: questionFontSize,
-                          color: Colors.white
+                          color: Colors.white,
+                          height: 1.3, // Added line height for better readability
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -632,19 +634,30 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                   child: Stack(
                                     children: [
                                       Container(
-                                        height: optionHeight,
+                                        constraints: BoxConstraints(
+                                          minHeight: screenHeight * 0.08,
+                                          maxWidth: optionWidth,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: pair['section1']!.isEmpty ? Colors.transparent : Colors.white,
                                           border: pair['section1']!.isEmpty ? null : Border.all(color: Colors.black, width: 2),
                                         ),
                                         child: Center(
-                                          child: Text(
-                                            pair['section1']!,
-                                            softWrap: true,
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.rubik(
-                                              fontSize: optionFontSize,
-                                              color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
+                                          child: Padding(
+                                            padding: EdgeInsets.fromLTRB(
+                                              colorBarWidth + 12,
+                                              12,
+                                              12,
+                                              12
+                                            ),
+                                            child: Text(
+                                              pair['section1']!,
+                                              softWrap: true,
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.rubik(
+                                                fontSize: optionFontSize,
+                                                color: pair['section1']!.isEmpty ? Colors.transparent : Colors.black,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -670,19 +683,25 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                                 // Right option (section2)
                                 Expanded(
                                   child: Container(
-                                    height: optionHeight,
+                                    constraints: BoxConstraints(
+                                      minHeight: screenHeight * 0.08,
+                                      maxWidth: optionWidth,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: pair['section2']!.isEmpty ? Colors.grey : pairColors[index],
                                       border: Border.all(color: Colors.black, width: 2),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        pair['section2']!,
-                                        softWrap: true,
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.rubik(
-                                          fontSize: optionFontSize,
-                                          color: Colors.white,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(
+                                          pair['section2']!,
+                                          softWrap: true,
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.rubik(
+                                            fontSize: optionFontSize,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -704,117 +723,121 @@ class MatchingTypeQuestionState extends State<MatchingTypeQuestion> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Left column (section1 options)
-                        Column(
-                          children: section1Options.map((option) {
-                            bool isSelected = selectedSection1Option == option;
-                            bool isMatched = userPairs.any((pair) => pair['section1'] == option);
-                            Color? pairColor = _getPairColor(option, 'section1');
-                            return Padding(
-                              padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
-                              child: Stack(
-                                children: [
-                                  SizedBox(
-                                    width: screenWidth * (isTablet ? 0.3 : 0.4), // 30% of screen width for tablet, 40% for phone
-                                    height: optionHeight,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        if (isMatched) {
-                                          _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
-                                        } else {
-                                          _handleSection1OptionTap(option);
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                        backgroundColor: isSelected ? Colors.grey : isMatched ? Colors.white : Colors.white,
-                                        padding: EdgeInsets.only(
-                                          left: colorBarWidth + horizontalSpacing,
-                                          right: horizontalSpacing,
-                                          top: verticalSpacing * 0.5,
-                                          bottom: verticalSpacing * 0.5
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(0),
-                                          side: const BorderSide(color: Colors.black, width: 2),
-                                        ),
+                        Expanded(
+                          child: Column(
+                            children: section1Options.map((option) {
+                              bool isSelected = selectedSection1Option == option;
+                              bool isMatched = userPairs.any((pair) => pair['section1'] == option);
+                              Color? pairColor = _getPairColor(option, 'section1');
+                              return Padding(
+                                padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      constraints: BoxConstraints(
+                                        minHeight: screenHeight * 0.08,
+                                        maxWidth: optionWidth,
                                       ),
-                                      child: Center(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (isMatched) {
+                                            _cancelSelection(option, userPairs.firstWhere((pair) => pair['section1'] == option)['section2']!);
+                                          } else {
+                                            _handleSection1OptionTap(option);
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
+                                          backgroundColor: isSelected ? Colors.grey : isMatched ? Colors.white : Colors.white,
+                                          padding: EdgeInsets.only(
+                                            left: colorBarWidth + 12,
+                                            right: 12,
+                                            top: 12,
+                                            bottom: 12
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(0),
+                                            side: const BorderSide(color: Colors.black, width: 2),
+                                          ),
+                                        ),
                                         child: Text(
                                           option,
+                                          softWrap: true,
+                                          textAlign: TextAlign.center,
                                           style: GoogleFonts.rubik(
                                             fontSize: optionFontSize,
-                                            height: 1.2,
                                             color: Colors.black,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Positioned(
-                                    left: 1,
-                                    top: 1,
-                                    bottom: 1,
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 500),
-                                      curve: Curves.easeInOut,
-                                      width: colorBarWidth,
-                                      decoration: BoxDecoration(
-                                        color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242),
-                                        borderRadius: BorderRadius.zero,
+                                    Positioned(
+                                      left: 1,
+                                      top: 1,
+                                      bottom: 1,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 500),
+                                        curve: Curves.easeInOut,
+                                        width: colorBarWidth,
+                                        decoration: BoxDecoration(
+                                          color: isMatched ? pairColor ?? const Color(0xFF241242) : const Color(0xFF241242),
+                                          borderRadius: BorderRadius.zero,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         ),
                         SizedBox(width: horizontalSpacing),
                         // Right column (section2 options)
-                        Column(
-                          children: section2Options.map((option) {
-                            bool isSelected = selectedSection2Option == option;
-                            bool isMatched = userPairs.any((pair) => pair['section2'] == option);
-                            Color? pairColor = _getPairColor(option, 'section2');
-                            return Padding(
-                              padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
-                              child: SizedBox(
-                                width: screenWidth * (isTablet ? 0.3 : 0.4), // Same width as section1
-                                height: optionHeight,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    if (isMatched) {
-                                      _cancelSelection(userPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
-                                    } else {
-                                      _handleSection2OptionTap(option);
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
-                                    backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: horizontalSpacing,
-                                      vertical: verticalSpacing * 0.5
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0),
-                                      side: const BorderSide(color: Colors.black, width: 2),
-                                    ),
+                        Expanded(
+                          child: Column(
+                            children: section2Options.map((option) {
+                              bool isSelected = selectedSection2Option == option;
+                              bool isMatched = userPairs.any((pair) => pair['section2'] == option);
+                              Color? pairColor = _getPairColor(option, 'section2');
+                              return Padding(
+                                padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                    minHeight: screenHeight * 0.08,
+                                    maxWidth: optionWidth,
                                   ),
-                                  child: Text(
-                                    option,
-                                    softWrap: true,
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.rubik(
-                                      fontSize: optionFontSize,
-                                      height: 1.2,
-                                      color: isSelected || isMatched ? Colors.white : Colors.black,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      if (isMatched) {
+                                        _cancelSelection(userPairs.firstWhere((pair) => pair['section2'] == option)['section1']!, option);
+                                      } else {
+                                        _handleSection2OptionTap(option);
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      foregroundColor: isSelected || isMatched ? Colors.white : Colors.black,
+                                      backgroundColor: isSelected ? Colors.grey : isMatched ? pairColor ?? Colors.white : Colors.white,
+                                      padding: const EdgeInsets.all(12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                        side: const BorderSide(color: Colors.black, width: 2),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      option,
+                                      softWrap: true,
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.rubik(
+                                        fontSize: optionFontSize,
+                                        height: 1.2,
+                                        color: isSelected || isMatched ? Colors.white : Colors.black,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ],
                     ),

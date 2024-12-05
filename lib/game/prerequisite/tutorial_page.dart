@@ -69,11 +69,31 @@ class _TutorialPageState extends State<TutorialPage> {
   }
 
   Widget _buildVideoPlayer() {
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isTablet = screenSize.shortestSide >= 600;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+    
+    // Calculate dimensions based on screen size and device type
+    final double videoWidth = isTablet 
+        ? screenWidth * 0.6  // 60% of screen width for tablets
+        : screenWidth * 0.85; // 85% of screen width for phones
+    
+    final double videoHeight = videoWidth * 9 / 16; // Maintain 16:9 aspect ratio
+    
+    // Ensure height doesn't exceed screen height
+    final double maxHeight = screenHeight * 0.4; // Max 40% of screen height
+    final double finalHeight = videoHeight > maxHeight ? maxHeight : videoHeight;
+
     return GestureDetector(
       onTap: () => _showFullScreenVideo(context),
       child: Container(
-        height: 200,
-        width: MediaQuery.of(context).size.width * 0.7,
+        height: finalHeight,
+        width: videoWidth,
+        margin: EdgeInsets.symmetric(
+          horizontal: isTablet ? 32.0 : 16.0,
+          vertical: 8.0,
+        ),
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -92,20 +112,21 @@ class _TutorialPageState extends State<TutorialPage> {
                   color: Colors.black,
                   width: 2,
                 ),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             // Play button overlay
             Container(
-              width: 60,
-              height: 60,
+              width: isTablet ? 80 : 60,
+              height: isTablet ? 80 : 60,
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.7),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.play_arrow,
                 color: Colors.white,
-                size: 40,
+                size: isTablet ? 60 : 40,
               ),
             ),
           ],
@@ -118,6 +139,21 @@ class _TutorialPageState extends State<TutorialPage> {
     if (_controller == null) {
       _initializeVideoPlayer();
     }
+
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isTablet = screenSize.shortestSide >= 600;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+    
+    // Calculate dimensions for full-screen mode
+    final double maxVideoWidth = isTablet ? screenWidth * 0.8 : screenWidth;
+    final double maxVideoHeight = maxVideoWidth * 9 / 16;
+    
+    // Ensure video doesn't exceed screen height
+    final double finalVideoHeight = maxVideoHeight > screenHeight * 0.9 
+        ? screenHeight * 0.9 
+        : maxVideoHeight;
+    final double finalVideoWidth = finalVideoHeight * 16 / 9;
 
     showDialog(
       context: context,
@@ -135,8 +171,9 @@ class _TutorialPageState extends State<TutorialPage> {
                 fit: StackFit.expand,
                 children: [
                   Center(
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
+                    child: Container(
+                      width: finalVideoWidth,
+                      height: finalVideoHeight,
                       child: YoutubePlayer(
                         controller: _controller!,
                         showVideoProgressIndicator: true,

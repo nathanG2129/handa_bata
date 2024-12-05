@@ -178,6 +178,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
       ];
     } else if (widget.stageName.contains('3')) {
       tutorials = [
+        // Fill in the Blanks Tutorial
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
@@ -187,6 +188,16 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/FillinTheBlanks04.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+          isGameTutorial: true,
+        ),
+        // PHIVOLCS Earthquake Intensity Scale Infographic
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/PHIVOLCSEarthquakeIntensityScale.jpg'],
+          description: 'PHIVOLCS Earthquake Intensity Scale',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -201,13 +212,16 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
-          isGameTutorial: true,
+          isGameTutorial: false,
         ),
       ];
     } else if (widget.stageName.contains('4')) {
       tutorials = [
+        // Matching Type Tutorial
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
@@ -218,6 +232,17 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
             'assets/instructions/MatchingType05.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+          isGameTutorial: true,
+        ),
+        // Earthquake Educational Video
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'XUoYj1fN2Cs',
+          imagePaths: const [],
+          description: 'Duck, Cover, and Hold',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -232,12 +257,43 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
-          isGameTutorial: true,
+          isGameTutorial: false,
+        ),
+      ];
+    } else if (widget.stageName.contains('6')) {
+      tutorials = [
+        // Earthquake Educational Video
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'zplJvqDQrVw',
+          imagePaths: const [],
+          description: 'When is the time to evacuate?',
+          onNext: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => GameplayPage(
+                  language: widget.language,
+                  category: widget.category,
+                  stageName: widget.stageName,
+                  stageData: widget.stageData,
+                  mode: widget.mode,
+                  gamemode: widget.gamemode,
+                ),
+              ),
+            );
+          },
+          isFirstPage: true,
+          isLastPage: true,
+          language: widget.language,
+          isGameTutorial: false,
         ),
       ];
     } else {
+      // For stages without tutorials (5, 7, or any other stage)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -252,7 +308,6 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           ),
         );
       });
-      
       return Container();
     }
 

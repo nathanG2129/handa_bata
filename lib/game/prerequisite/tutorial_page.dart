@@ -73,7 +73,7 @@ class _TutorialPageState extends State<TutorialPage> {
       onTap: () => _showFullScreenVideo(context),
       child: Container(
         height: 200,
-        width: double.infinity,
+        width: MediaQuery.of(context).size.width * 0.7,
         child: Stack(
           alignment: Alignment.center,
           children: [

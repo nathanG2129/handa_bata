@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_resources.dart';
 
 class StormPrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -121,6 +122,16 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
             'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+          isGameTutorial: true,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'uz9sclC3nBE',
+          imagePaths: const [],
+          description: 'Alam mo ba? Bagyo',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -135,8 +146,11 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: false,
         ),
       ];
     } else if (widget.stageName.contains('2')) {
@@ -164,11 +178,54 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
               ),
             );
           },
+          isFirstPage: true,
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else if (widget.stageName.contains('3')) {
+      tutorials = [
+        TutorialPage(
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
+          imagePaths: const [
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
+          ],
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+          isGameTutorial: true,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/RainfallWarningSystemPayongPAGASA.jpeg'],
+          description: 'PAGASA Rainfall Warning System',
+          onNext: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => GameplayPage(
+                  language: widget.language,
+                  category: widget.category,
+                  stageName: widget.stageName,
+                  stageData: widget.stageData,
+                  mode: widget.mode,
+                  gamemode: widget.gamemode,
+                ),
+              ),
+            );
+          },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
+          isLastPage: true,
+          language: widget.language,
+          isGameTutorial: false,
+        ),
+      ];
+    } else if (widget.stageName.contains('4')) {
       tutorials = [
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
@@ -180,35 +237,15 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
             'assets/instructions/MatchingType05.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
-          onNext: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => GameplayPage(
-                  language: widget.language,
-                  category: widget.category,
-                  stageName: widget.stageName,
-                  stageData: widget.stageData,
-                  mode: widget.mode,
-                  gamemode: widget.gamemode,
-                ),
-              ),
-            );
-          },
-          isLastPage: true,
+          onNext: _nextTutorial,
+          isFirstPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
-      ];
-    } else if (widget.stageName.contains('5')) {
-      tutorials = [
         TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
-          imagePaths: const [
-            'assets/instructions/FillinTheBlanks01.png',
-            'assets/instructions/FillinTheBlanks02.png',
-            'assets/instructions/FillinTheBlanks03.png',
-            'assets/instructions/FillinTheBlanks04.png',
-          ],
-          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/TropicalCycloneWarningSystemPayongPAGASA.jpeg'],
+          description: 'PAGASA Tropical Cyclone Warning System',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -223,8 +260,11 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: false,
         ),
       ];
     } else {

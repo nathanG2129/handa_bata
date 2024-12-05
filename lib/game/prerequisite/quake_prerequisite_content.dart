@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_resources.dart';
 
 class QuakePrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -51,6 +52,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           onNext: _nextTutorial,
           isFirstPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'identification', widget.language),
@@ -65,6 +67,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           onBack: () => setState(() => _currentTutorial--),
           isFirstPage: false,
           language: widget.language,
+          isGameTutorial: true,
         ),
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
@@ -81,6 +84,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           onBack: () => setState(() => _currentTutorial--),
           isFirstPage: false,
           language: widget.language,
+          isGameTutorial: true,
         ),
         TutorialPage(
           title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
@@ -110,6 +114,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           isFirstPage: false,
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else if (widget.stageName.contains('1')) {
@@ -135,8 +140,10 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
               ),
             );
           },
+          isFirstPage: true,
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else if (widget.stageName.contains('2')) {
@@ -166,6 +173,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           },
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else if (widget.stageName.contains('3')) {
@@ -195,6 +203,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           },
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else if (widget.stageName.contains('4')) {
@@ -225,6 +234,7 @@ class QuakePrerequisiteContentState extends State<QuakePrerequisiteContent> {
           },
           isLastPage: true,
           language: widget.language,
+          isGameTutorial: true,
         ),
       ];
     } else {

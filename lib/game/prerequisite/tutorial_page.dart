@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
 import 'package:handabatamae/widgets/learn/carousel_widget.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class TutorialPage extends StatefulWidget {
   final String title;
@@ -16,6 +17,8 @@ class TutorialPage extends StatefulWidget {
   final bool isLastPage;
   final bool isFirstPage;
   final String language;
+  final String? videoId;
+  final bool isGameTutorial;
 
   const TutorialPage({
     super.key,
@@ -27,6 +30,8 @@ class TutorialPage extends StatefulWidget {
     this.isLastPage = false,
     this.isFirstPage = true,
     required this.language,
+    this.videoId,
+    this.isGameTutorial = false,
   });
 
   @override
@@ -35,33 +40,140 @@ class TutorialPage extends StatefulWidget {
 
 class _TutorialPageState extends State<TutorialPage> {
   int _current = 0;
+  YoutubePlayerController? _controller;
+  // ignore: unused_field
+  bool _isFullScreen = false;
 
-  List<Widget> _buildCarouselContents() {
-    return widget.imagePaths.map((imagePath) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ImageZoomPage(
-                imagePaths: widget.imagePaths,
-                initialIndex: _current,
+  @override
+  void initState() {
+    super.initState();
+    // Don't initialize video player immediately
+  }
+
+  void _initializeVideoPlayer() {
+    _controller = YoutubePlayerController(
+      initialVideoId: widget.videoId!,
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+        hideControls: false,
+        showLiveFullscreenButton: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Widget _buildVideoPlayer() {
+    return GestureDetector(
+      onTap: () => _showFullScreenVideo(context),
+      child: Container(
+        height: 200,
+        width: double.infinity,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Video thumbnail
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(
+                    'https://img.youtube.com/vi/${widget.videoId}/hqdefault.jpg',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+                border: Border.all(
+                  color: Colors.black,
+                  width: 2,
+                ),
+              ),
+            ),
+            // Play button overlay
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenVideo(BuildContext context) {
+    if (_controller == null) {
+      _initializeVideoPlayer();
+    }
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) => TweenAnimationBuilder(
+        duration: const Duration(milliseconds: 300),
+        tween: Tween<double>(begin: 0, end: 1),
+        builder: (context, double value, child) {
+          return Opacity(
+            opacity: value,
+            child: Dialog(
+              backgroundColor: Colors.black,
+              insetPadding: EdgeInsets.zero,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Center(
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: YoutubePlayer(
+                        controller: _controller!,
+                        showVideoProgressIndicator: true,
+                        progressIndicatorColor: Colors.red,
+                        progressColors: const ProgressBarColors(
+                          playedColor: Colors.red,
+                          handleColor: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        _controller?.dispose();
+                        _controller = null;
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           );
         },
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(imagePath),
-              fit: BoxFit.fill,
-            ),
-          ),
-        ),
-      );
-    }).toList();
+      ),
+    ).then((_) {
+      _controller?.dispose();
+      _controller = null;
+    });
   }
 
   @override
@@ -81,23 +193,27 @@ class _TutorialPageState extends State<TutorialPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextWithShadow(
-                text: TutorialLocalization.getUIText('headers', 'how_to_play', widget.language),
-                fontSize: 36,
-              ),
+              if (widget.isGameTutorial) ...[
+                TextWithShadow(
+                  text: TutorialLocalization.getUIText('headers', 'how_to_play', widget.language),
+                  fontSize: 36,
+                ),
+              ],
               TextWithShadow(
                 text: widget.title,
                 fontSize: 36,
               ),
               const SizedBox(height: 20),
-              if (widget.imagePaths.isNotEmpty) ...[
+              if (widget.videoId != null) ...[
+                _buildVideoPlayer(),
+              ] else if (widget.imagePaths.isNotEmpty) ...[
                 CarouselWidget(
                   height: 200,
                   automatic: false,
                   contents: _buildCarouselContents(),
                 ),
-                const SizedBox(height: 20),
               ],
+              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
@@ -148,6 +264,34 @@ class _TutorialPageState extends State<TutorialPage> {
       ),
     );
   }
+
+  List<Widget> _buildCarouselContents() {
+    return widget.imagePaths.map((imagePath) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageZoomPage(
+                imagePaths: widget.imagePaths,
+                initialIndex: _current,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.fill,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
 }
 
 class ImageZoomPage extends StatelessWidget {
@@ -164,21 +308,39 @@ class ImageZoomPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: PhotoViewGallery.builder(
-        itemCount: imagePaths.length,
-        builder: (context, index) {
-          return PhotoViewGalleryPageOptions(
-            imageProvider: AssetImage(imagePaths[index]),
-            initialScale: PhotoViewComputedScale.contained,
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: PhotoViewComputedScale.covered * 2,
-          );
-        },
-        scrollPhysics: const BouncingScrollPhysics(),
-        backgroundDecoration: const BoxDecoration(
-          color: Colors.black,
-        ),
-        pageController: PageController(initialPage: initialIndex),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          PhotoViewGallery.builder(
+            itemCount: imagePaths.length,
+            builder: (context, index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: AssetImage(imagePaths[index]),
+                initialScale: PhotoViewComputedScale.contained,
+                minScale: PhotoViewComputedScale.contained,
+                maxScale: PhotoViewComputedScale.covered * 2,
+              );
+            },
+            scrollPhysics: const BouncingScrollPhysics(),
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.black,
+            ),
+            pageController: PageController(initialPage: initialIndex),
+          ),
+          // Close button at top-right
+          Positioned(
+            top: 16,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 32,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
       ),
     );
   }

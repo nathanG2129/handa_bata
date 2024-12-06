@@ -187,14 +187,15 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
     } else if (widget.stageName.contains('3')) {
       tutorials = [
         TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
+          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
           imagePaths: const [
-            'assets/instructions/FillinTheBlanks01.png',
-            'assets/instructions/FillinTheBlanks02.png',
-            'assets/instructions/FillinTheBlanks03.png',
-            'assets/instructions/FillinTheBlanks04.png',
+            'assets/instructions/MatchingType01.png',
+            'assets/instructions/MatchingType02.png',
+            'assets/instructions/MatchingType03.png',
+            'assets/instructions/MatchingType04.png',
+            'assets/instructions/MatchingType05.png',
           ],
-          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: _nextTutorial,
           isFirstPage: true,
           language: widget.language,
@@ -228,15 +229,14 @@ class StormPrerequisiteContentState extends State<StormPrerequisiteContent> {
     } else if (widget.stageName.contains('4')) {
       tutorials = [
         TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'matching_type', widget.language),
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
           imagePaths: const [
-            'assets/instructions/MatchingType01.png',
-            'assets/instructions/MatchingType02.png',
-            'assets/instructions/MatchingType03.png',
-            'assets/instructions/MatchingType04.png',
-            'assets/instructions/MatchingType05.png',
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
           ],
-          description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
           onNext: _nextTutorial,
           isFirstPage: true,
           language: widget.language,

@@ -18,6 +18,7 @@ import 'package:just_audio/just_audio.dart';
 import '../services/game_save_manager.dart';
 import '../models/game_state.dart';
 import 'package:handabatamae/widgets/character_animations.dart';
+import 'tutorial_dialog.dart';
 
 class GameplayPage extends StatefulWidget {
   final String language;
@@ -1042,89 +1043,117 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                   color: Colors.white
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.settings, 
-                                  color: Colors.white,
-                                  size: isTablet ? 32 : 24,
-                                ),
-                                onPressed: () async {
-                                  List<Map<String, String>> availableVoices = widget.language == 'fil'
-                                      ? [
-                                          {"name": _maleVoiceFil, "locale": "fil-PH"},
-                                          {"name": _femaleVoiceFil, "locale": "fil-PH"}
-                                        ]
-                                      : [
-                                          {"name": _maleVoiceEn, "locale": "en-US"},
-                                          {"name": _femaleVoiceEn, "locale": "en-US"}
-                                        ];
-  
-                                  // Ensure the selectedVoice is valid for the current language
-                                  if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
-                                    setState(() {
-                                      _selectedVoice = availableVoices.first['name']!;
-                                    });
-                                  }
-                                  await showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return SettingsDialog(
-                                        flutterTts: flutterTts, // Pass the flutterTts instance
-                                        isTextToSpeechEnabled: _isTextToSpeechEnabled,
-                                        onTextToSpeechChanged: (bool value) {
-                                          setState(() {
-                                            _isTextToSpeechEnabled = value;
-                                          });
-                                          if (value) {
-                                            String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                            flutterTts.setLanguage(locale);
-                                            flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
-                                            flutterTts.setSpeechRate(_speechRate);
-                                            flutterTts.setVolume(_ttsVolume);
-                                          }
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Text(
+                                      '?',
+                                      style: GoogleFonts.vt323(
+                                        fontSize: isTablet ? 32 : 24,
+                                        color: Colors.white,
+                                        height: 1,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return TutorialDialog(
+                                            questionType: _questions[currentQuestionIndex]['type'],
+                                            language: widget.language,
+                                            category: widget.category['name'],
+                                            stageName: widget.stageName,
+                                          );
                                         },
-                                        selectedVoice: _selectedVoice,
-                                        onVoiceChanged: (String? newValue) {
-                                          setState(() {
-                                            _selectedVoice = newValue!;
-                                          });
-                                          String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
-                                          flutterTts.setVoice({"name": newValue!, "locale": locale});
-                                        },
-                                        speed: _speechRate, // Use the state variable
-                                        onSpeedChanged: (double value) {
-                                          setState(() {
-                                            _speechRate = value;
-                                          });
-                                          flutterTts.setSpeechRate(value);
-                                        },
-                                        ttsVolume: _ttsVolume, // Use the state variable
-                                        onTtsVolumeChanged: (double value) {
-                                          setState(() {
-                                            _ttsVolume = value;
-                                          });
-                                          flutterTts.setVolume(value);
-                                        },
-                                        availableVoices: availableVoices,
-                                        musicVolume: _musicVolume, // Use the state variable
-                                        onMusicVolumeChanged: (double value) {
-                                          setState(() {
-                                            _musicVolume = value;
-                                          });
-                                          _audioPlayer.setVolume(value);
-                                        },
-                                        sfxVolume: _sfxVolume, // Use the state variable
-                                        onSfxVolumeChanged: (double value) {
-                                          setState(() {
-                                            _sfxVolume = value;
-                                          });
-                                        },
-                                        onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
-                                        isLastQuestion: _isLastAnsweredQuestion(),
                                       );
                                     },
-                                  );
-                                },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.settings, 
+                                      color: Colors.white,
+                                      size: isTablet ? 32 : 24,
+                                    ),
+                                    onPressed: () async {
+                                      List<Map<String, String>> availableVoices = widget.language == 'fil'
+                                          ? [
+                                              {"name": _maleVoiceFil, "locale": "fil-PH"},
+                                              {"name": _femaleVoiceFil, "locale": "fil-PH"}
+                                            ]
+                                          : [
+                                              {"name": _maleVoiceEn, "locale": "en-US"},
+                                              {"name": _femaleVoiceEn, "locale": "en-US"}
+                                            ];
+  
+                                      // Ensure the selectedVoice is valid for the current language
+                                      if (!availableVoices.any((voice) => voice['name'] == _selectedVoice)) {
+                                        setState(() {
+                                          _selectedVoice = availableVoices.first['name']!;
+                                        });
+                                      }
+                                      await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return SettingsDialog(
+                                            flutterTts: flutterTts, // Pass the flutterTts instance
+                                            isTextToSpeechEnabled: _isTextToSpeechEnabled,
+                                            onTextToSpeechChanged: (bool value) {
+                                              setState(() {
+                                                _isTextToSpeechEnabled = value;
+                                              });
+                                              if (value) {
+                                                String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                                flutterTts.setLanguage(locale);
+                                                flutterTts.setVoice({"name": _selectedVoice, "locale": locale});
+                                                flutterTts.setSpeechRate(_speechRate);
+                                                flutterTts.setVolume(_ttsVolume);
+                                              }
+                                            },
+                                            selectedVoice: _selectedVoice,
+                                            onVoiceChanged: (String? newValue) {
+                                              setState(() {
+                                                _selectedVoice = newValue!;
+                                              });
+                                              String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
+                                              flutterTts.setVoice({"name": newValue!, "locale": locale});
+                                            },
+                                            speed: _speechRate, // Use the state variable
+                                            onSpeedChanged: (double value) {
+                                              setState(() {
+                                                _speechRate = value;
+                                              });
+                                              flutterTts.setSpeechRate(value);
+                                            },
+                                            ttsVolume: _ttsVolume, // Use the state variable
+                                            onTtsVolumeChanged: (double value) {
+                                              setState(() {
+                                                _ttsVolume = value;
+                                              });
+                                              flutterTts.setVolume(value);
+                                            },
+                                            availableVoices: availableVoices,
+                                            musicVolume: _musicVolume, // Use the state variable
+                                            onMusicVolumeChanged: (double value) {
+                                              setState(() {
+                                                _musicVolume = value;
+                                              });
+                                              _audioPlayer.setVolume(value);
+                                            },
+                                            sfxVolume: _sfxVolume, // Use the state variable
+                                            onSfxVolumeChanged: (double value) {
+                                              setState(() {
+                                                _sfxVolume = value;
+                                              });
+                                            },
+                                            onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
+                                            isLastQuestion: _isLastAnsweredQuestion(),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),

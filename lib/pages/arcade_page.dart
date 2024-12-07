@@ -462,8 +462,8 @@ class ArcadePageState extends State<ArcadePage> {
                                 isUnlocked 
                                   ? categoryText['description']!
                                   : _selectedLanguage == 'fil'
-                                    ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
-                                    : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                                    ? 'Kumpletuhin ang ${category["name"]} sa Adventure para i-unlock ang game mode na ito.'
+                                    : 'Complete ${category["name"]} at Adventure to unlock this game mode.',
                                 style: GoogleFonts.vt323(
                                   fontSize: descriptionFontSize,
                                   color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),
@@ -616,8 +616,8 @@ class ArcadePageState extends State<ArcadePage> {
                         isUnlocked 
                           ? categoryText['description']!
                           : _selectedLanguage == 'fil'
-                            ? 'Kumpletuhin ang ${category["name"]} Quest sa Adventure para i-unlock ang game mode na ito.'
-                            : 'Complete ${category["name"]} Quest at Adventure to unlock this game mode.',
+                            ? 'Kumpletuhin ang ${category["name"]} sa Adventure para i-unlock ang game mode na ito.'
+                            : 'Complete ${category["name"]} at Adventure to unlock this game mode.',
                         style: GoogleFonts.vt323(
                           fontSize: descriptionFontSize,
                           color: Colors.white.withOpacity(isUnlocked ? 1.0 : 0.8),

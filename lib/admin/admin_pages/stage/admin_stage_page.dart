@@ -24,6 +24,7 @@ class AdminStagePage extends StatefulWidget {
 class _AdminStagePageState extends State<AdminStagePage> {
   final StageService _stageService = StageService();
   List<Map<String, dynamic>> _stages = [];
+  // ignore: unused_field
   List<Map<String, dynamic>> _categories = [];
   String _selectedLanguage = 'en';
   String _selectedCategory = 'Storm';

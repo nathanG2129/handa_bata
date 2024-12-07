@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
+import 'package:handabatamae/localization/faq/faq_localization.dart';
 
 class FAQDialog extends StatefulWidget {
   final String selectedLanguage;
@@ -87,6 +88,8 @@ class _FAQDialogState extends State<FAQDialog> with SingleTickerProviderStateMix
       desktop: 16,
     );
 
+    final List<Map<String, String>> faqs = FAQLocalization.getFAQs(widget.selectedLanguage);
+
     return WillPopScope(
       onWillPop: () async {
         await _handleClose();
@@ -112,18 +115,11 @@ class _FAQDialogState extends State<FAQDialog> with SingleTickerProviderStateMix
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextWithShadow(
-                          text: widget.selectedLanguage == 'en' ? 'Frequently Asked Questions' : 'Mga Madalas Itanong',
-                          fontSize: titleFontSize,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.black),
-                          onPressed: _handleClose,
-                        ),
-                      ],
+                    child: Center(
+                      child: TextWithShadow(
+                        text: FAQLocalization.translate('faq_title', widget.selectedLanguage),
+                        fontSize: titleFontSize,
+                      ),
                     ),
                   ),
                   Expanded(
@@ -132,39 +128,14 @@ class _FAQDialogState extends State<FAQDialog> with SingleTickerProviderStateMix
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildFAQItem(
-                            context,
-                            widget.selectedLanguage == 'en' 
-                                ? 'What is HandaBata Mobile?' 
-                                : 'Ano ang HandaBata Mobile?',
-                            widget.selectedLanguage == 'en'
-                                ? 'HandaBata Mobile is an educational game designed to teach children about disaster preparedness in a fun and engaging way.'
-                                : 'Ang HandaBata Mobile ay isang educational game na dinisenyo upang turuan ang mga bata tungkol sa paghahanda sa sakuna sa isang masaya at nakaka-engganyong paraan.',
-                            questionFontSize,
-                            answerFontSize,
-                          ),
-                          _buildFAQItem(
-                            context,
-                            widget.selectedLanguage == 'en'
-                                ? 'Who are Kladis and Kloud?'
-                                : 'Sino sina Kladis at Kloud?',
-                            widget.selectedLanguage == 'en'
-                                ? 'Kladis and Kloud are your friendly guide characters who will help you learn about disaster preparedness through various activities and adventures.'
-                                : 'Sina Kladis at Kloud ay ang inyong mga kaibigan na gagabay sa inyo upang matuto tungkol sa paghahanda sa sakuna sa pamamagitan ng iba\'t ibang aktibidad at pakikipagsapalaran.',
-                            questionFontSize,
-                            answerFontSize,
-                          ),
-                          _buildFAQItem(
-                            context,
-                            widget.selectedLanguage == 'en'
-                                ? 'How do I play the game?'
-                                : 'Paano laruin ang game?',
-                            widget.selectedLanguage == 'en'
-                                ? 'Simply click the "Play Now" button to start your adventure! Follow the instructions in each activity and learn while having fun.'
-                                : 'I-click lamang ang "Maglaro Na" button para simulan ang iyong adventure! Sundin ang mga tagubilin sa bawat aktibidad at matuto habang naglalaro.',
-                            questionFontSize,
-                            answerFontSize,
-                          ),
+                          for (var faq in faqs)
+                            _buildFAQItem(
+                              context,
+                              faq['question'] ?? '',
+                              faq['answer'] ?? '',
+                              questionFontSize,
+                              answerFontSize,
+                            ),
                         ],
                       ),
                     ),

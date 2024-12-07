@@ -7,6 +7,7 @@ import 'package:handabatamae/widgets/text_with_shadow.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/utils/responsive_utils.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:handabatamae/localization/hotlines/localization.dart';
 
 class HotlinesPage extends StatelessWidget {
   final String selectedLanguage;
@@ -84,7 +85,12 @@ class HotlinesPage extends StatelessWidget {
                         );
                       },
                       onChangeLanguage: (String newLanguage) {
-                        // Handle language change
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HotlinesPage(selectedLanguage: newLanguage),
+                          ),
+                        );
                       },
                     ),
                     // Main content with constrained width
@@ -106,25 +112,18 @@ class HotlinesPage extends StatelessWidget {
                                         child: Column(
                                           children: [
                                             TextWithShadow(
-                                              text: 'EMERGENCY',
+                                              text: HotlinesLocalization.translate('emergency_hotlines', selectedLanguage),
                                               fontSize: titleFontSize,
                                             ),
                                             Transform.translate(
-                                              offset: const Offset(0, -30),
-                                              child: TextWithShadow(
-                                                text: 'HOTLINES',
-                                                fontSize: titleFontSize,
-                                              ),
-                                            ),
-                                            Transform.translate(
-                                              offset: const Offset(0, -40),
+                                              offset: const Offset(0, -10),
                                               child: Padding(
                                                 padding: const EdgeInsets.symmetric(
                                                   horizontal: 20,
                                                   vertical: 20,
                                                 ),
                                                 child: Text(
-                                                  'Earthquakes, typhoons and volcanic eruptions of the most common and destructive natural disasters in the Philippines. Here are some important emergency numbers you should keep in mind in case of an earthquake or typhoon.',
+                                                  HotlinesLocalization.translate('emergency_hotlines_description', selectedLanguage),
                                                   style: GoogleFonts.rubik(
                                                     fontSize: descriptionFontSize,
                                                     color: Colors.white,
@@ -134,8 +133,11 @@ class HotlinesPage extends StatelessWidget {
                                               ),
                                             ),
                                             Transform.translate(
-                                              offset: const Offset(0, -30),
-                                              child: HotlinesList(sizingInformation: sizingInformation),
+                                              offset: const Offset(0, -10),
+                                              child: HotlinesList(
+                                                sizingInformation: sizingInformation,
+                                                selectedLanguage: selectedLanguage,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -165,10 +167,12 @@ class HotlinesPage extends StatelessWidget {
 
 class HotlinesList extends StatelessWidget {
   final SizingInformation sizingInformation;
+  final String selectedLanguage;
 
   const HotlinesList({
     super.key,
     required this.sizingInformation,
+    required this.selectedLanguage,
   });
 
   @override
@@ -187,7 +191,7 @@ class HotlinesList extends StatelessWidget {
           // National Emergency Hotline
           EmergencyHotlineCard(
             isNational: true,
-            name: 'NATIONAL EMERGENCY HOTLINE',
+            name: HotlinesLocalization.translate('national_emergency_hotline', selectedLanguage),
             hotline: '911',
             sizingInformation: sizingInformation,
           ),
@@ -199,42 +203,42 @@ class HotlinesList extends StatelessWidget {
             children: [
               DepartmentCard(
                 acronym: 'NDRRMC',
-                name: 'National Disaster Risk Reduction and Management Council',
+                name: HotlinesLocalization.translate('ndrrmc_name', selectedLanguage),
                 hotlines: ['8911 5061 to 65 Local 100'],
                 imagePath: 'assets/hotlines/NDRRMC.png',
                 sizingInformation: sizingInformation,
               ),
               DepartmentCard(
                 acronym: 'PRC',
-                name: 'Philippine Red Cross',
+                name: HotlinesLocalization.translate('prc_name', selectedLanguage),
                 hotlines: ['143', '(02) 8527-8385 to 95'],
                 imagePath: 'assets/hotlines/PRC.png',
                 sizingInformation: sizingInformation,
               ),
               DepartmentCard(
                 acronym: 'PHIVOLCS',
-                name: 'Philippine Institute of Volcanology and Seismology',
+                name: HotlinesLocalization.translate('phivolcs_name', selectedLanguage),
                 hotlines: ['8929-8958', '8426-1469-79'],
                 imagePath: 'assets/hotlines/PHIVOLCS.png',
                 sizingInformation: sizingInformation,
               ),
               DepartmentCard(
                 acronym: 'PAGASA',
-                name: 'Philippine Atmospheric, Geophysical and Astronomical Services Administration',
+                name: HotlinesLocalization.translate('pagasa_name', selectedLanguage),
                 hotlines: ['(02) 8284-0800'],
                 imagePath: 'assets/hotlines/PAGASA.png',
                 sizingInformation: sizingInformation,
               ),
               DepartmentCard(
                 acronym: 'PCG',
-                name: 'Philippine Coast Guard',
+                name: HotlinesLocalization.translate('pcg_name', selectedLanguage),
                 hotlines: ['(02) 8527-8482', '(02) 8527-3880 to 85'],
                 imagePath: 'assets/hotlines/PCG.png',
                 sizingInformation: sizingInformation,
               ),
               DepartmentCard(
                 acronym: 'DOH',
-                name: 'Department of Health',
+                name: HotlinesLocalization.translate('doh_name', selectedLanguage),
                 hotlines: ['(632) 8651-7800', 'Local 5003-5004'],
                 imagePath: 'assets/hotlines/DOH.png',
                 sizingInformation: sizingInformation,

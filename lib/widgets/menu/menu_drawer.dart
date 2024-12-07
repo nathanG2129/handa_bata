@@ -249,7 +249,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                                 ),
                                 _buildDivider(),
                                 _buildExpandableMenuItem(
-                                  widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Sanggunian',
+                                  widget.selectedLanguage == 'en' ? 'Resources' : 'Mga Resources',
                                   expandedNotifier: _resourcesExpanded,
                                   fontSize: menuFontSize,
                                   padding: menuPadding,
@@ -504,7 +504,7 @@ class MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateMi
                 ),
               ],
             ),
-          ] else if (title == 'Resources' || title == 'Mga Sanggunian') ...[
+          ] else if (title == 'Resources' || title == 'Mga Resources') ...[
             _buildSubmenuItem(
               widget.selectedLanguage == 'en' ? 'Infographics' : 'Mga Infographic',
               fontSize: submenuFontSize,

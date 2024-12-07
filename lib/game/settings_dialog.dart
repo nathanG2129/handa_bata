@@ -122,53 +122,83 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
+        final Size screenSize = MediaQuery.of(context).size;
+        final bool isTablet = screenSize.shortestSide >= 600;
+        final double dialogWidth = isTablet ? 450.0 : 300.0;
+
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-          child: AlertDialog(
-            backgroundColor: const Color(0xFF351B61),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(0),
-              side: const BorderSide(color: Colors.black),
-            ),
-            title: Text(
-              SettingsLocalization.translate('quitGame', widget.language),
-              style: GoogleFonts.vt323(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-            content: Text(
-              SettingsLocalization.translate('quitMessage', widget.language),
-              style: GoogleFonts.vt323(
-                color: Colors.white,
-                fontSize: 20,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  SettingsLocalization.translate('back', widget.language),
-                  style: GoogleFonts.vt323(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
+          child: Center(
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                width: dialogWidth,
+                margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF351B61),
+                  borderRadius: BorderRadius.circular(0),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        SettingsLocalization.translate('quitGame', widget.language),
+                        style: GoogleFonts.vt323(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        SettingsLocalization.translate('quitMessage', widget.language),
+                        style: GoogleFonts.vt323(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text(
+                              SettingsLocalization.translate('back', widget.language),
+                              style: GoogleFonts.vt323(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Button3D(
+                            backgroundColor: const Color(0xFFF1B33A),
+                            borderColor: const Color(0xFF8B5A00),
+                            width: 120,
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: Text(
+                              SettingsLocalization.translate('quitGame', widget.language),
+                              style: GoogleFonts.vt323(
+                                color: Colors.black,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Button3D(
-                backgroundColor: const Color(0xFFF1B33A),
-                borderColor: const Color(0xFF8B5A00),
-                width: 120,
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(
-                  SettingsLocalization.translate('quitGame', widget.language),
-                  style: GoogleFonts.vt323(
-                    color: Colors.black,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

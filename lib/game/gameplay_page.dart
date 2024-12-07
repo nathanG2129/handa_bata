@@ -1096,7 +1096,7 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                         context: context,
                                         builder: (BuildContext context) {
                                           return SettingsDialog(
-                                            flutterTts: flutterTts, // Pass the flutterTts instance
+                                            flutterTts: flutterTts,
                                             isTextToSpeechEnabled: _isTextToSpeechEnabled,
                                             onTextToSpeechChanged: (bool value) {
                                               setState(() {
@@ -1118,14 +1118,14 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                               String locale = widget.language == 'fil' ? 'fil-PH' : 'en-US';
                                               flutterTts.setVoice({"name": newValue!, "locale": locale});
                                             },
-                                            speed: _speechRate, // Use the state variable
+                                            speed: _speechRate,
                                             onSpeedChanged: (double value) {
                                               setState(() {
                                                 _speechRate = value;
                                               });
                                               flutterTts.setSpeechRate(value);
                                             },
-                                            ttsVolume: _ttsVolume, // Use the state variable
+                                            ttsVolume: _ttsVolume,
                                             onTtsVolumeChanged: (double value) {
                                               setState(() {
                                                 _ttsVolume = value;
@@ -1133,21 +1133,22 @@ void _handleIdentificationAnswerSubmission(String answer, bool isCorrect) {
                                               flutterTts.setVolume(value);
                                             },
                                             availableVoices: availableVoices,
-                                            musicVolume: _musicVolume, // Use the state variable
+                                            musicVolume: _musicVolume,
                                             onMusicVolumeChanged: (double value) {
                                               setState(() {
                                                 _musicVolume = value;
                                               });
                                               _audioPlayer.setVolume(value);
                                             },
-                                            sfxVolume: _sfxVolume, // Use the state variable
+                                            sfxVolume: _sfxVolume,
                                             onSfxVolumeChanged: (double value) {
                                               setState(() {
                                                 _sfxVolume = value;
                                               });
                                             },
-                                            onQuitGame: handleQuitGame, // Pass the handleQuitGame method directly
+                                            onQuitGame: handleQuitGame,
                                             isLastQuestion: _isLastAnsweredQuestion(),
+                                            language: widget.language,
                                           );
                                         },
                                       );

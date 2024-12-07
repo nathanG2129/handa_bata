@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart'; // Import Flutter TTS package
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
 import 'package:handabatamae/widgets/buttons/button_3d.dart';
+import 'package:handabatamae/localization/settings/localization.dart';
 
 class SettingsDialog extends StatefulWidget {
   final bool isTextToSpeechEnabled;
@@ -22,6 +23,7 @@ class SettingsDialog extends StatefulWidget {
   final ValueChanged<double> onSfxVolumeChanged; // Add this line
   final Future<void> Function() onQuitGame;
   final bool isLastQuestion;
+  final String language;
 
   const SettingsDialog({
     super.key,
@@ -41,6 +43,7 @@ class SettingsDialog extends StatefulWidget {
     required this.onSfxVolumeChanged, // Add this line
     required this.onQuitGame,
     required this.isLastQuestion,
+    required this.language,
   });
 
   @override
@@ -114,6 +117,71 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
     });
   }
 
+  Future<void> _showQuitConfirmationDialog() async {
+    final bool? shouldQuit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+          child: AlertDialog(
+            backgroundColor: const Color(0xFF351B61),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+              side: const BorderSide(color: Colors.black),
+            ),
+            title: Text(
+              SettingsLocalization.translate('quitGame', widget.language),
+              style: GoogleFonts.vt323(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+            content: Text(
+              SettingsLocalization.translate('quitMessage', widget.language),
+              style: GoogleFonts.vt323(
+                color: Colors.white,
+                fontSize: 20,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  SettingsLocalization.translate('back', widget.language),
+                  style: GoogleFonts.vt323(
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              Button3D(
+                backgroundColor: const Color(0xFFF1B33A),
+                borderColor: const Color(0xFF8B5A00),
+                width: 120,
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(
+                  SettingsLocalization.translate('quitGame', widget.language),
+                  style: GoogleFonts.vt323(
+                    color: Colors.black,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (shouldQuit == true) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        await widget.onQuitGame();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
@@ -162,7 +230,7 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                             padding: const EdgeInsets.symmetric(vertical: 16.0),
                             child: Center(
                               child: Text(
-                                'Settings',
+                                SettingsLocalization.translate('settings', widget.language),
                                 style: GoogleFonts.vt323(
                                   color: Colors.white,
                                   fontSize: isTablet ? 28 : 24,
@@ -184,9 +252,12 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Music Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
                                         Text(
-                                          '${_visualMusicVolume.round()}', 
+                                          SettingsLocalization.translate('musicVolume', widget.language),
+                                          style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                        ),
+                                        Text(
+                                          '${_visualMusicVolume.round()}',
                                           style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
                                         ),
                                       ],
@@ -215,9 +286,12 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('SFX Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
                                         Text(
-                                          '${_visualSfxVolume.round()}', 
+                                          SettingsLocalization.translate('sfxVolume', widget.language),
+                                          style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                        ),
+                                        Text(
+                                          '${_visualSfxVolume.round()}',
                                           style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
                                         ),
                                       ],
@@ -246,7 +320,8 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Text-to-Speech', 
+                                        Text(
+                                          SettingsLocalization.translate('textToSpeech', widget.language),
                                           style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
                                         ),
                                         Switch(
@@ -268,7 +343,10 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     const SizedBox(height: 8),
                                     Opacity(
                                       opacity: _isTextToSpeechEnabled ? 1.0 : 0.5,
-                                      child: Text('Language', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                      child: Text(
+                                        SettingsLocalization.translate('language', widget.language),
+                                        style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     Opacity(
@@ -335,7 +413,10 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text('Speed', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                          Text(
+                                            SettingsLocalization.translate('speed', widget.language),
+                                            style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                          ),
                                           Text(
                                             _visualSpeed.toStringAsFixed(2), 
                                             style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
@@ -373,7 +454,10 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text('TTS Volume', style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)),
+                                          Text(
+                                            SettingsLocalization.translate('ttsVolume', widget.language),
+                                            style: GoogleFonts.vt323(fontSize: 20, color: Colors.white)
+                                          ),
                                           Text(
                                             '${_visualVolume.round()}', 
                                             style: GoogleFonts.vt323(fontSize: 20, color: Colors.white),
@@ -426,7 +510,7 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                 TextButton(
                                   onPressed: _closeDialog,
                                   child: Text(
-                                    'Back',
+                                    SettingsLocalization.translate('back', widget.language),
                                     style: GoogleFonts.vt323(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -442,14 +526,10 @@ class SettingsDialogState extends State<SettingsDialog> with TickerProviderState
                                     width: 120,
                                     onPressed: () {
                                       if (widget.isLastQuestion) return;
-                                      
-                                      Navigator.of(context).pop();
-                                      widget.onQuitGame().then((_) {
-                                      }).catchError((e) {
-                                      });
+                                      _showQuitConfirmationDialog();
                                     },
                                     child: Text(
-                                      'Quit Game',
+                                      SettingsLocalization.translate('quitGame', widget.language),
                                       style: GoogleFonts.vt323(
                                         color: Colors.black,
                                         fontSize: 18,

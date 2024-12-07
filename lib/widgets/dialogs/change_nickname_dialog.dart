@@ -7,6 +7,7 @@ import '../../localization/play/localization.dart';
 import '../../utils/responsive_utils.dart';
 import '../../services/user_profile_service.dart';
 import '../../services/leaderboard_service.dart';
+import '../../utils/profanity_filter.dart';
 
 class ChangeNicknameDialog extends StatefulWidget {
   final String currentNickname;
@@ -30,6 +31,7 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   late TextEditingController _controller;
+  String? _errorText;
 
   @override
   void initState() {
@@ -64,6 +66,13 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
   }
 
   Future<void> _handleSave() async {
+    final newNickname = _controller.text.trim();
+    
+    // Validate nickname before proceeding
+    if (!_validateNickname(newNickname)) {
+      return;
+    }
+
     try {
       await _animationController.reverse();
       if (mounted) {
@@ -76,12 +85,12 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
           await leaderboardService.updateNicknameInLeaderboards(
             currentUser.profileId,
             widget.currentNickname,
-            _controller.text,
+            newNickname,
           );
         }
 
         Navigator.of(context).pop();
-        widget.onNicknameChanged(_controller.text);
+        widget.onNicknameChanged(newNickname);
       }
     } catch (e) {
       if (mounted) {
@@ -90,6 +99,40 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
         );
       }
     }
+  }
+
+  bool _validateNickname(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        _errorText = widget.selectedLanguage.toLowerCase().contains('fil')
+            ? 'Kinakailangan ang palayaw.'
+            : 'Nickname is required.';
+      });
+      return false;
+    }
+
+    if (value.length < 4 || value.length > 16) {
+      setState(() {
+        _errorText = widget.selectedLanguage.toLowerCase().contains('fil')
+            ? 'Ang palayaw ay dapat 4-16 na karakter.'
+            : 'Nickname must be 4-16 characters.';
+      });
+      return false;
+    }
+
+    // Check for profanity
+    final profanityCheck = ProfanityFilter.validateText(value, widget.selectedLanguage);
+    if (profanityCheck != null) {
+      setState(() {
+        _errorText = profanityCheck;
+      });
+      return false;
+    }
+
+    setState(() {
+      _errorText = null;
+    });
+    return true;
   }
 
   @override
@@ -193,6 +236,10 @@ class _ChangeNicknameDialogState extends State<ChangeNicknameDialog> with Single
                                 focusedBorder: const OutlineInputBorder(
                                   borderRadius: BorderRadius.zero,
                                   borderSide: BorderSide(color: Colors.white, width: 2),
+                                ),
+                                errorText: _errorText,
+                                errorStyle: GoogleFonts.rubik(
+                                  color: Colors.red,
                                 ),
                               ),
                             ),

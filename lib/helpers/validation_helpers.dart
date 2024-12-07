@@ -1,6 +1,7 @@
 // lib/helpers/validation_helpers.dart
 
 import '../localization/validation/localization.dart';
+import '../utils/profanity_filter.dart';
 
 String? validateEmail(String? value, String language) {
   if (value == null || value.isEmpty) {
@@ -46,6 +47,13 @@ String? validateUsername(String? value, String language) {
   if (value.length < 4 || value.length > 16) {
     return ValidationLocalization.translate('invalid_username', language);
   }
+  
+  // Check for profanity
+  final profanityCheck = ProfanityFilter.validateText(value, language);
+  if (profanityCheck != null) {
+    return profanityCheck;
+  }
+  
   return null;
 }
 

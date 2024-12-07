@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_resources.dart';
 
 class FloodPrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -121,6 +122,15 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
             'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'l0hsjostU_g',  // Heavy Rainfall and Thunderstorm Warning System
+          imagePaths: const [],
+          description: 'Heavy Rainfall and Thunderstorm Warning System',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -135,6 +145,8 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),
@@ -181,17 +193,23 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
           ],
           description: TutorialLocalization.getDescription(mode, 'matching_type', widget.language),
           onNext: _nextTutorial,
+          isFirstPage: true,
           language: widget.language,
         ),
         TutorialPage(
-          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
-          imagePaths: const [
-            'assets/instructions/FillinTheBlanks01.png',
-            'assets/instructions/FillinTheBlanks02.png',
-            'assets/instructions/FillinTheBlanks03.png',
-            'assets/instructions/FillinTheBlanks04.png',
-          ],
-          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'uys9waXWW3M',  // Ano-ano ang yellow, orange at red rainfall warning?
+          imagePaths: const [],
+          description: 'Ano-ano ang yellow, orange at red rainfall warning?',
+          onNext: _nextTutorial,
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg'],
+          description: 'Gabay sa mga Abiso, Klasipikasyon, at Sukat ng Ulan',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -207,6 +225,48 @@ class FloodPrerequisiteContentState extends State<FloodPrerequisiteContent> {
             );
           },
           onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
+          isLastPage: true,
+          language: widget.language,
+        ),
+      ];
+    } else if (widget.stageName.contains('4')) {
+      tutorials = [
+        TutorialPage(
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
+          imagePaths: const [
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
+            'assets/instructions/FillinTheBlanks05.png',
+            'assets/instructions/FillinTheBlanks06.png',
+          ],
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg'],
+          description: 'Heavy Rainfall Warnings',
+          onNext: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => GameplayPage(
+                  language: widget.language,
+                  category: widget.category,
+                  stageName: widget.stageName,
+                  stageData: widget.stageData,
+                  mode: widget.mode,
+                  gamemode: widget.gamemode,
+                ),
+              ),
+            );
+          },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),

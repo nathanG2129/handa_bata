@@ -31,6 +31,7 @@ class TutorialDialogState extends State<TutorialDialog> with TickerProviderState
   late Animation<Offset> _slideAnimation;
   YoutubePlayerController? _controller;
   bool _showingEducationalContent = false;
+  bool _showingFloodStage3Infographic = false;
 
   @override
   void initState() {
@@ -131,18 +132,53 @@ class TutorialDialogState extends State<TutorialDialog> with TickerProviderState
         description = 'PAGASA Tropical Cyclone Warning System';
       }
     } else if (lowerCategory.contains('quake')) {
-      if (widget.stageName.contains('1')) {
-        print('Quake Stage 1: Loading video content');
-        videoId = 'uz9sclC3nBE';
-        description = 'Alam mo ba? Lindol';
-      } else if (widget.stageName.contains('3')) {
+      if (widget.stageName.contains('3')) {
         print('Quake Stage 3: Loading earthquake intensity scale infographic');
         infographicPath = 'assets/images/infographics/PHIVOLCSEarthquakeIntensityScale.jpg';
         description = 'PHIVOLCS Earthquake Intensity Scale';
       } else if (widget.stageName.contains('4')) {
-        print('Quake Stage 4: Loading earthquake magnitude scale infographic');
-        infographicPath = 'assets/images/infographics/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png';
-        description = 'PHIVOLCS Earthquake Magnitude Scale';
+        print('Quake Stage 4: Loading video content');
+        videoId = 'XUoYj1fN2Cs';
+        description = 'Duck, Cover, and Hold';
+      }
+    } else if (lowerCategory.contains('drought')) {
+      if (widget.stageName.contains('1')) {
+        print('Drought Stage 1: Loading infographic');
+        infographicPath = 'assets/images/infographics/Drought_Preparedness.jpeg';
+        description = 'Drought Preparedness Guide';
+      } else if (widget.stageName.contains('4')) {
+        print('Drought Stage 4: Loading video content');
+        videoId = 'zddS3dJupno';
+        description = 'Mga Hakbang sa Pagbuo ng Community Based DRRMP';
+      }
+    } else if (lowerCategory.contains('flood')) {
+      if (widget.stageName.contains('1')) {
+        print('Flood Stage 1: Loading video content');
+        videoId = 'l0hsjostU_g';
+        description = 'Heavy Rainfall and Thunderstorm Warning System';
+      } else if (widget.stageName.contains('3')) {
+        print('Flood Stage 3: Loading content');
+        if (_showingFloodStage3Infographic) {
+          infographicPath = 'assets/images/infographics/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg';
+          description = 'Gabay sa mga Abiso, Klasipikasyon, at Sukat ng Ulan';
+        } else {
+          videoId = 'uys9waXWW3M';
+          description = 'Ano-ano ang yellow, orange at red rainfall warning?';
+        }
+      } else if (widget.stageName.contains('4')) {
+        print('Flood Stage 4: Loading heavy rainfall warnings');
+        infographicPath = 'assets/images/infographics/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg';
+        description = 'Heavy Rainfall Warnings';
+      }
+    } else if (lowerCategory.contains('volcanic')) {
+      if (widget.stageName.contains('1')) {
+        print('Volcanic Stage 1: Loading infographic');
+        infographicPath = 'assets/images/infographics/VolcanicEruption.jpg';
+        description = 'Volcanic Eruption Safety Guide';
+      } else if (widget.stageName.contains('4')) {
+        print('Volcanic Stage 4: Loading infographic');
+        infographicPath = 'assets/images/infographics/EmergencyGoBag.jfif';
+        description = 'Emergency Go Bag';
       }
     } else {
       print('No educational content found for this category');
@@ -456,25 +492,38 @@ class TutorialDialogState extends State<TutorialDialog> with TickerProviderState
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 if (_showingEducationalContent)
-                                  TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _showingEducationalContent = false;
-                                      });
-                                    },
-                                    child: Text(
-                                      'Back',
-                                      style: GoogleFonts.vt323(
-                                        color: Colors.white,
-                                        fontSize: 18,
+                                  Row(
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            if (widget.category.toLowerCase().contains('flood') && 
+                                                widget.stageName.contains('3')) {
+                                              _showingFloodStage3Infographic = !_showingFloodStage3Infographic;
+                                            } else {
+                                              _showingEducationalContent = false;
+                                            }
+                                          });
+                                        },
+                                        child: Text(
+                                          widget.category.toLowerCase().contains('flood') && 
+                                          widget.stageName.contains('3') && !_showingFloodStage3Infographic
+                                              ? 'View Infographic'
+                                              : 'Back',
+                                          style: GoogleFonts.vt323(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   )
                                 else if (_hasEducationalContent())
                                   TextButton(
                                     onPressed: () {
                                       setState(() {
                                         _showingEducationalContent = true;
+                                        _showingFloodStage3Infographic = false;
                                       });
                                     },
                                     child: Text(
@@ -516,10 +565,15 @@ class TutorialDialogState extends State<TutorialDialog> with TickerProviderState
     final bool hasContent = (widget.stageName.contains('1') && lowerCategory.contains('storm')) ||
            (widget.stageName.contains('3') && lowerCategory.contains('storm')) ||
            (widget.stageName.contains('4') && lowerCategory.contains('storm')) ||
-           (widget.stageName.contains('1') && lowerCategory.contains('quake')) ||
            (widget.stageName.contains('3') && lowerCategory.contains('quake')) ||
-           (widget.stageName.contains('4') && lowerCategory.contains('quake'));
-           // Add more conditions for other categories
+           (widget.stageName.contains('4') && lowerCategory.contains('quake')) ||
+           (widget.stageName.contains('1') && lowerCategory.contains('drought')) ||
+           (widget.stageName.contains('4') && lowerCategory.contains('drought')) ||
+           (widget.stageName.contains('1') && lowerCategory.contains('flood')) ||
+           (widget.stageName.contains('3') && lowerCategory.contains('flood')) ||
+           (widget.stageName.contains('4') && lowerCategory.contains('flood')) ||
+           (widget.stageName.contains('1') && lowerCategory.contains('volcanic')) ||
+           (widget.stageName.contains('4') && lowerCategory.contains('volcanic'));
 
     print('Checking for educational content:');
     print('Category: ${widget.category}');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_resources.dart';
 
 class VolcanicPrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -121,6 +122,14 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
             'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/VolcanicEruption.jpg'],
+          description: 'Volcanic Eruption Safety Guide',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -135,6 +144,8 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),
@@ -196,6 +207,47 @@ class VolcanicPrerequisiteContentState extends State<VolcanicPrerequisiteContent
               ),
             );
           },
+          isLastPage: true,
+          language: widget.language,
+        ),
+      ];
+    } else if (widget.stageName.contains('4')) {
+      tutorials = [
+        TutorialPage(
+          title: TutorialLocalization.getTitle(mode, 'fill_in_blanks', widget.language),
+          imagePaths: const [
+            'assets/instructions/FillinTheBlanks01.png',
+            'assets/instructions/FillinTheBlanks02.png',
+            'assets/instructions/FillinTheBlanks03.png',
+            'assets/instructions/FillinTheBlanks04.png',
+            'assets/instructions/FillinTheBlanks05.png',
+            'assets/instructions/FillinTheBlanks06.png',
+          ],
+          description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/EmergencyGoBag.jfif'],
+          description: 'Emergency Go Bag',
+          onNext: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => GameplayPage(
+                  language: widget.language,
+                  category: widget.category,
+                  stageName: widget.stageName,
+                  stageData: widget.stageData,
+                  mode: widget.mode,
+                  gamemode: widget.gamemode,
+                ),
+              ),
+            );
+          },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),

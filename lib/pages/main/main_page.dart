@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handabatamae/pages/splash_page.dart';
+import 'package:handabatamae/services/stage_service.dart';
 import 'package:handabatamae/widgets/header_footer/footer_widget.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'header_section.dart';
@@ -25,12 +26,37 @@ class MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _selectedLanguage = widget.selectedLanguage;
+    _printAllStageDescriptions();
   }
 
   void _changeLanguage(String language) {
     setState(() {
       _selectedLanguage = language;
     });
+  }
+
+  Future<void> _printAllStageDescriptions() async {
+    final stageService = StageService();
+    final categories = ['Quake', 'Storm', 'Flood', 'Tsunami', 'Volcanic', 'Drought'];
+
+    print('\n=== STAGE DESCRIPTIONS FOR ALL CATEGORIES ===\n');
+
+    for (var category in categories) {
+      print('\n--- $category Category ---');
+      final stages = await stageService.fetchStages('en', category);
+      
+      // Sort stages by name to ensure consistent order
+      stages.sort((a, b) => a['stageName'].compareTo(b['stageName']));
+      
+      for (var stage in stages) {
+        if (!stage['stageName'].toLowerCase().contains('arcade')) {
+          print('\nStage: ${stage['stageName']}');
+          print('Description: ${stage['stageDescription']}');
+        }
+      }
+    }
+
+    print('\n=== END OF STAGE DESCRIPTIONS ===\n');
   }
 
   @override

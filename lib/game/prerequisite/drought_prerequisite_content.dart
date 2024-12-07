@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:handabatamae/game/gameplay_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_page.dart';
 import 'package:handabatamae/game/prerequisite/tutorial_localization.dart';
+import 'package:handabatamae/game/prerequisite/tutorial_resources.dart';
 
 class DroughtPrerequisiteContent extends StatefulWidget {
   final String stageName;
@@ -121,6 +122,14 @@ class DroughtPrerequisiteContentState extends State<DroughtPrerequisiteContent> 
             'assets/instructions/MultipleChoice02.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'multiple_choice', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('infographic', widget.language),
+          imagePaths: const ['assets/images/infographics/Drought_Preparedness.jpeg'],
+          description: 'Drought Preparedness Guide',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -135,6 +144,8 @@ class DroughtPrerequisiteContentState extends State<DroughtPrerequisiteContent> 
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),
@@ -211,6 +222,15 @@ class DroughtPrerequisiteContentState extends State<DroughtPrerequisiteContent> 
             'assets/instructions/FillinTheBlanks06.png',
           ],
           description: TutorialLocalization.getDescription(mode, 'fill_in_blanks', widget.language),
+          onNext: _nextTutorial,
+          isFirstPage: true,
+          language: widget.language,
+        ),
+        TutorialPage(
+          title: TutorialResources.getResourceTypeTitle('video', widget.language),
+          videoId: 'zddS3dJupno',  // Mga Hakbang sa Pagbuo ng Community Based DRRMP
+          imagePaths: const [],
+          description: 'Mga Hakbang sa Pagbuo ng Community Based DRRMP',
           onNext: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -225,6 +245,8 @@ class DroughtPrerequisiteContentState extends State<DroughtPrerequisiteContent> 
               ),
             );
           },
+          onBack: () => setState(() => _currentTutorial--),
+          isFirstPage: false,
           isLastPage: true,
           language: widget.language,
         ),

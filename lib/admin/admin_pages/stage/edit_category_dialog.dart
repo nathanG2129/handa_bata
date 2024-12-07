@@ -43,6 +43,8 @@ class EditCategoryDialogState extends State<EditCategoryDialog> {
       await _stageService.updateCategory(widget.language, widget.categoryId, {
         'name': _name,
         'description': _description,
+        'color': widget.initialColor,
+        'position': widget.initialPosition,
       });
 
       if (!mounted) return;

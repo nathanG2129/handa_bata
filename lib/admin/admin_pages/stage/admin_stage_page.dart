@@ -91,7 +91,12 @@ class _AdminStagePageState extends State<AdminStagePage> {
 
   void _showEditCategoryDialog() async {
     try {
-      final selectedCategory = _categories.firstWhere((category) => category['id'] == _selectedCategory, orElse: () => {});
+      // Fetch the latest category data for the selected language
+      List<Map<String, dynamic>> currentCategories = await _stageService.fetchCategories(_selectedLanguage);
+      final selectedCategory = currentCategories.firstWhere(
+        (category) => category['id'] == _selectedCategory,
+        orElse: () => {},
+      );
   
       // Check if the required fields are present
       bool needsUpdate = false;
@@ -133,10 +138,10 @@ class _AdminStagePageState extends State<AdminStagePage> {
           return EditCategoryDialog(
             language: _selectedLanguage,
             categoryId: _selectedCategory,
-            initialName: selectedCategory['name'],
-            initialDescription: selectedCategory['description'],
-            initialColor: selectedCategory['color'], // Pass initial color
-            initialPosition: selectedCategory['position'], // Pass initial position
+            initialName: selectedCategory['name'] ?? 'Unnamed Category',
+            initialDescription: selectedCategory['description'] ?? 'No description available',
+            initialColor: selectedCategory['color'] ?? 'defaultColor',
+            initialPosition: selectedCategory['position'] ?? 0,
           );
         },
       ).then((_) {
@@ -144,12 +149,10 @@ class _AdminStagePageState extends State<AdminStagePage> {
       });
     } catch (e) {
       print('Error: $e');
-      // Handle the error, e.g., show a message to the user
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected category not found.')),
-        );
-      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error loading category data. Please try again.')),
+      );
     }
   }
 

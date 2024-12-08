@@ -14,7 +14,7 @@ class AdminLoginPage extends StatelessWidget {
 
   Future<void> _downloadAPK() async {
     // Replace this URL with your actual APK download URL
-    const url = 'https://firebasestorage.googleapis.com/v0/b/handabatamae.appspot.com/o/Handa%20Bata%20Mobile.apk?alt=media&token=c62ef9a2-7b13-49a5-b935-add434896901';
+    const url = 'https://firebasestorage.googleapis.com/v0/b/handabatamae.appspot.com/o/HandaBataMobile.apk?alt=media&token=eba85c83-6089-4ec4-af2d-16f63f1d06be';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
@@ -179,7 +179,7 @@ class AdminLoginPage extends StatelessWidget {
         SizedBox(height: 12.0 * spacingMultiplier),
         // Version Info with responsive font size
         Text(
-          'Version 1.0.1',
+          'Version 1.0.2',
           style: GoogleFonts.rubik(
             fontSize: screenHeight * (isMobile ? 0.015 : 0.018),
             color: Colors.white70,

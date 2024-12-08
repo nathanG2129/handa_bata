@@ -30,7 +30,7 @@ void main() async {
             const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
           ],
         ),
-        title: 'Your App Name',
+        title: 'Handa Bata Mobile',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),

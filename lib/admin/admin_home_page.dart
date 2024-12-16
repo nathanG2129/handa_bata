@@ -9,6 +9,7 @@ import 'admin_pages/stage/admin_stage_page.dart';
 import 'admin_pages/avatar/admin_avatar_page.dart';
 import 'admin_pages/badge/admin_badge_page.dart';
 import 'admin_pages/banner/admin_banner_page.dart';
+import 'admin_pages/resource/admin_resource_page.dart';
 import 'security/secure_route.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -60,6 +61,14 @@ class AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
+  void _navigateToResourcePage(BuildContext context) {
+    AdminSession().updateActivity();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SecureRoute(child: AdminResourcePage())),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SecureRoute(
@@ -100,6 +109,10 @@ class AdminHomePageState extends State<AdminHomePage> {
                         {
                           'text': 'Manage Banners',
                           'onPressed': () => _navigateToBannerPage(context),
+                        },
+                        {
+                          'text': 'Manage Resources',
+                          'onPressed': () => _navigateToResourcePage(context),
                         },
                         {
                           'text': 'Manage Stages',

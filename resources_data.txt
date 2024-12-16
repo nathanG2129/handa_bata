@@ -1,0 +1,210 @@
+VIDEOS:
+=======
+
+Title: Alam mo ba? Lindol
+Type: video
+Source (YouTube ID): zXLyMMFGbhM
+Reference: the Philippine Information Agency
+
+Title: DOST BLTB Series Lindol
+Type: video
+Source (YouTube ID): ZKdAH9uf1WE
+Reference: the Department of Science and Technology
+
+Title: Earthquake Epicenter
+Type: video
+Source (YouTube ID): nnHzsX11ofI
+Reference: the Department of Education
+
+Title: Earthquake and Its Hazards
+Type: video
+Source (YouTube ID): Py9k7dacoKo
+Reference: the Philippine Institute of Volcanology and Seismology
+
+Title: Mga Dapat Malaman sa Big One
+Type: video
+Source (YouTube ID): T-WoRReLpKY
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: Duck, Cover, and Hold
+Type: video
+Source (YouTube ID): XUoYj1fN2Cs
+Reference: Rappler
+
+Title: Earthquake Drill
+Type: video
+Source (YouTube ID): EKAhY84FPbs
+Reference: the Philippine Institute of Volcanology and Seismology
+
+Title: When is the time to evacuate?
+Type: video
+Source (YouTube ID): zplJvqDQrVw
+Reference: the Philippine Institute of Volcanology and Seismology
+
+Title: Are you ready for it?
+Type: video
+Source (YouTube ID): lpe_0P8sUZg
+Reference: the Philippine Information Agency
+
+Title: Alam mo ba? Bagyo
+Type: video
+Source (YouTube ID): uz9sclC3nBE
+Reference: the Philippine Information Agency
+
+Title: Typhoon
+Type: video
+Source (YouTube ID): eSxN7e6uCbo
+Reference: the Department of Science and Technology
+
+Title: DOST BLTB Series Bagyo
+Type: video
+Source (YouTube ID): nXfj-Id_La0
+Reference: the Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Modified Tropical Cyclone Warning Signal System
+Type: video
+Source (YouTube ID): ke2drZ-2YfU
+Reference: the Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Tropical Cyclone Wind Signals, Explained
+Type: video
+Source (YouTube ID): KyOnxOhnMaM
+Reference: GMA Integrated News
+
+Title: Heavy Rainfall and Thunderstorm Warning System
+Type: video
+Source (YouTube ID): l0hsjostU_g
+Reference: the Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Ano-ano ang yellow, orange at red rainfall warning?
+Type: video
+Source (YouTube ID): uys9waXWW3M
+Reference: GMA Integrated News
+
+Title: Mga Hakbang sa Pagbuo ng Community Based DRRMP
+Type: video
+Source (YouTube ID): zddS3dJupno
+Reference: the Department of Education
+
+Title: Emergency Go Bag
+Type: video
+Source (YouTube ID): m9whRKDsEAA
+Reference: the Office of Civil Defense Region XII - SOCCSKSARGEN
+
+
+INFOGRAPHICS:
+============
+
+Title: Community and Family Earthquake Safety Guide
+Type: infographic
+Source: assets/images/infographics/CommunityAndFamilyEarthquakeSafetyGuide.png
+Thumbnail: assets/images/infographics/previews/CommunityAndFamilyEarthquakeSafetyGuide.png
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: Earthquake: Are You Prepared?
+Type: infographic
+Source: assets/images/infographics/EarthquakeAreYouPrepared.jpg
+Thumbnail: assets/images/infographics/previews/EarthquakeAreYouPrepared.jpg
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: Emergency Go Bag
+Type: infographic
+Source: assets/images/infographics/EmergencyGoBag.jfif
+Thumbnail: assets/images/infographics/previews/EmergencyGoBag.jfif
+Reference: National Disaster Risk Reduction and Management Council
+
+Title: Gabay sa mga Abiso, Klasipikasyon, at Sukat ng Ulan
+Type: infographic
+Source: assets/images/infographics/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg
+Thumbnail: assets/images/infographics/previews/GabaySaMgaAbiso,Klasipikasyon,AtSukatNgUlan.jpg
+Reference: Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Heavy Rainfall Warnings
+Type: infographic
+Source: assets/images/infographics/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg
+Thumbnail: assets/images/infographics/previews/HeavyRainfallWarningsByThePhilippineInformationAgency.jpg
+Reference: Philippine Information Agency
+
+Title: Lindol... Handa Ka Na Ba?
+Type: infographic
+Source: assets/images/infographics/LindolHandaKaNaBa.jpg
+Thumbnail: assets/images/infographics/previews/LindolHandaKaNaBa.jpg
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: May Naramdamang Lindol: Gabay sa Pag-uulat ng Lindol
+Type: infographic
+Source: assets/images/infographics/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png
+Thumbnail: assets/images/infographics/previews/MayNaramdamangLindolGabaySaPag-uulatNgLindol.png
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: Mga Uri ng Bagyo
+Type: infographic
+Source: assets/images/infographics/MgaUriNgBagyoPhilippineInformationAgency.jpg
+Thumbnail: assets/images/infographics/previews/MgaUriNgBagyoPhilippineInformationAgency.jpg
+Reference: Philippine Information Agency
+
+Title: PHIVOLCS Earthquake Intensity Scale
+Type: infographic
+Source: assets/images/infographics/PHIVOLCSEarthquakeIntensityScale.jpg
+Thumbnail: assets/images/infographics/previews/PHIVOLCSEarthquakeIntensityScale.jpg
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: Rainfall Warning System
+Type: infographic
+Source: assets/images/infographics/RainfallWarningSystemPayongPAGASA.jpeg
+Thumbnail: assets/images/infographics/previews/RainfallWarningSystemPayongPAGASA.jpeg
+Reference: Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Tropical Cyclone Warning System
+Type: infographic
+Source: assets/images/infographics/TropicalCycloneWarningSystemPayongPAGASA.jpeg
+Thumbnail: assets/images/infographics/previews/TropicalCycloneWarningSystemPayongPAGASA.jpeg
+Reference: Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: Tropical Cyclone Wind Signal
+Type: infographic
+Source: assets/images/infographics/TropicalCycloneWindSignalPhilippineInformationAgency.jpg
+Thumbnail: assets/images/infographics/previews/TropicalCycloneWindSignalPhilippineInformationAgency.jpg
+Reference: Philippine Information Agency
+
+Title: Volcanic Eruption Safety Guide
+Type: infographic
+Source: assets/images/infographics/VolcanicEruption.jpg
+Thumbnail: assets/images/infographics/previews/VolcanicEruption.jpg
+Reference: Philippine Red Cross
+
+Title: Drought Preparedness Guide
+Type: infographic
+Source: assets/images/infographics/Drought_Preparedness.jpeg
+Thumbnail: assets/images/infographics/previews/Drought_Preparedness.jpeg
+Reference: National Disaster Risk Reduction and Management Council
+
+Title: Earthquake Preparedness
+Type: infographic
+Source: assets/images/infographics/EarthquakePreparedness.jpg
+Thumbnail: assets/images/infographics/previews/EarthquakePreparedness.jpg
+Reference: Philippine Institute of Volcanology and Seismology
+
+Title: First Aid Guide
+Type: infographic
+Source: assets/images/infographics/FirstAid.jpg
+Thumbnail: assets/images/infographics/previews/FirstAid.jpg
+Reference: Philippine Red Cross
+
+Title: Flood Preparedness Guide
+Type: infographic
+Source: assets/images/infographics/Flood_Preparedness.jpeg
+Thumbnail: assets/images/infographics/previews/Flood_Preparedness.jpeg
+Reference: National Disaster Risk Reduction and Management Council
+
+Title: Typhoon Preparedness Guide
+Type: infographic
+Source: assets/images/infographics/TyphoonPreparedness.jpeg
+Thumbnail: assets/images/infographics/previews/TyphoonPreparedness.jpeg
+Reference: Philippine Atmospheric, Geophysical and Astronomical Services Administration
+
+Title: What To Do During Volcanic Eruption
+Type: infographic
+Source: assets/images/infographics/WhatToDoVolcanicEruption.jpg
+Thumbnail: assets/images/infographics/previews/WhatToDoVolcanicEruption.jpg
+Reference: Philippine Red Cross 

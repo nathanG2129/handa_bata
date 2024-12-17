@@ -20,8 +20,6 @@ class ResourceService {
   static const String RESOURCE_CACHE_KEY = 'resource_cache';
   static const String RESOURCE_REVISION_KEY = 'resource_revision';
 
-  // Sync status
-  bool _isSyncing = false;
   final StreamController<bool> _syncStatusController = StreamController<bool>.broadcast();
   Stream<bool> get syncStatus => _syncStatusController.stream;
 
